@@ -8,6 +8,7 @@ from openhgnn.config import Config
 from openhgnn.start import OpenHGNN
 
 
+#just want to try
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', default='BPR', type=str, help='name of models')
