@@ -41,7 +41,8 @@ def train(model, g, config):
         node_emb, ns_prediction = model(g, ns_samples)
         # compute loss
         pairwise_loss = cal_node_pairwise_loss(node_emb, pos_edges, neg_edges)
-        cla_loss = cal_cla_loss(ns_prediction, ns_samples)
+        ns_label = th.cat([ns['label'] for ns in ns_samples]).type(th.float32)
+        cla_loss = cal_cla_loss(ns_prediction, ns_label)
         loss = pairwise_loss + cla_loss * config.beta
         loss.backward()
         epoch_dict = {'Epoch': epoch, 'train_loss': loss.item(),
