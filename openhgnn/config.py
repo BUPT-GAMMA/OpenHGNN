@@ -18,32 +18,17 @@ class Config(object):
                      'temp_fold': './output/temp/'+self.model+'/'}
 
         if model == "NSHE":
-            self.relation_category = conf.get("RHINE", "relation_category")
+            self.dim_size = {}
+            self.dim_size['emd'] = conf.getint("NSHE", "emd_dim")
+            self.dim_size['context'] = conf.getint("NSHE", "context_dim")
+            self.dim_size['project'] = conf.getint("NSHE", "project_dim")
 
-            self.data_set = conf.get("Model_Setup", "data_set")
-            self.combination = conf.get("RHINE", "combination")
-            self.link_type = conf.get("RHINE", "link_type")
-            self.mode = conf.get("Model_Setup", "mode")
-            self.IRs_nbatches = conf.getint("RHINE", "IRs_nbatches")
-            self.ARs_nbatches = conf.getint("RHINE", "ARs_nbatches")
+            self.lr = conf.getfloat("NSHE", "learning_rate")
+            self.max_epoch = conf.getint("NSHE", "max_epoch")
+            self.num_e_neg = conf.getint("NSHE", "num_e_neg")
+            self.num_ns_neg = conf.getint("NSHE", "num_ns_neg")
+            self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
 
-            self.margin = conf.getint("RHINE", "margin")
-            self.ent_neg_rate = conf.getint("Model_Setup", "ent_neg_rate")
-            self.rel_neg_rate = conf.getint("Model_Setup", "rel_neg_rate")
-            self.evaluation_flag = conf.get("Model_Setup", "evaluation_flag")
-            self.log_on = conf.getint("Model_Setup", "log_on")
-            self.exportName = conf.get("Model_Setup", "exportName")
-            if self.exportName == 'None':
-                self.importName = None
-            self.importName = conf.get("Model_Setup", "importName")
-            if self.importName == 'None':
-                self.importName = None
-            self.export_steps = conf.getint("Model_Setup", "export_steps")
-            self.opt_method = conf.get("Model_Setup", "opt_method")
-            self.optimizer = conf.get("Model_Setup", "optimizer")
-            if self.optimizer == 'None':
-                self.optimizer = None
-            self.weight_decay = conf.get("Model_Setup", "weight_decay")
 
         else:
             pass

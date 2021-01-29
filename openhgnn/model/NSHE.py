@@ -63,6 +63,6 @@ class NSHE(nn.Module):
         hg_2 = dgl.to_heterogeneous(g_homo, g.ntypes, g.etypes)
         self.context_encoder(hg_2, 'x', 'h_context')
         for ns_instance in ns_samples:
-            target = ns_instance
+            target = ns_instance['target_type']
             break
         return h, 1
