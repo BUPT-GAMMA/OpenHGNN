@@ -3,14 +3,14 @@ from openhgnn.model.NSHE import NSHE
 
 from openhgnn.utils.trainer import train
 # from openhgnn.utils.evaluater import evaluate
-
+from openhgnn.utils.evaluater import evaluate_acm
 
 def OpenHGNN(config):
     #load the graph
-    g = load_HIN()
+    g = load_HIN().to(config.device)
     #select the model
     model = NSHE(g=g, gnn_model="GCN", project_dim=config.dim_size['project'],
-                 emd_dim=config.dim_size['emd'], context_dim=config.dim_size['context'])
+                 emd_dim=config.dim_size['emd'], context_dim=config.dim_size['context']).to(config.device)
     #model.cuda()
 
     # train the model
@@ -18,5 +18,5 @@ def OpenHGNN(config):
     print("Train finished")
     # evaluate the performance
     model.eval()
-    evaluate(node_emb, g.t_info)
+    evaluate_acm(config.seed, node_emb['paper'].detach().numpy(), g.nodes['paper'].data['label'], 3)
     return

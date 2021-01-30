@@ -5,6 +5,7 @@ from openhgnn.utils.sampler import get_epoch_samples
 from openhgnn.utils.utils import print_dict
 import torch.nn.functional as F
 import dgl
+from openhgnn.utils.evaluater import evaluate_acm
 
 def cal_node_pairwise_loss(node_emd, edge, neg_edge):
     # cross entropy loss from LINE
@@ -30,15 +31,15 @@ def cal_cla_loss(predict, ns_label):
 def train(model, g, config):
     g_homo = dgl.to_homogeneous(g)
     pos_edges = g_homo.edges()
-
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
     model.train()
     for epoch in range(config.max_epoch):
+        model.train()
         epoch_start_time = time.time()
         neg_edges, ns_samples = get_epoch_samples(g, epoch, config.dataset, config.num_ns_neg)
 
         optimizer.zero_grad()
-        node_emb, ns_prediction = model(g, ns_samples)
+        node_emb, ns_prediction, eva_h = model(g, ns_samples)
         # compute loss
         pairwise_loss = cal_node_pairwise_loss(node_emb, pos_edges, neg_edges)
         ns_label = th.cat([ns['label'] for ns in ns_samples]).type(th.float32)
@@ -51,5 +52,8 @@ def train(model, g, config):
                       'time': time.time() - epoch_start_time}
         print_dict(epoch_dict, '\n')
         optimizer.step()
+        model.eval()
+        evaluate_acm(config.seed, eva_h['paper'].detach().numpy(), g.nodes['paper'].data['label'], 3)
+    return eva_h
 
 

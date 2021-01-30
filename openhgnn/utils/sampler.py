@@ -140,7 +140,8 @@ def get_epoch_samples(g, epoch, dataset, ns_neg):
         Y: load the file
         N: sample again and save
     """
-    epoch_seed = 0
+
+    epoch_seed = np.random.randint(1000)
     np.random.seed(epoch_seed)
     neg_edges = _get_neg_edge(g, epoch_seed, dataset, 1)
     ns_samples = _get_ns_instance(g, epoch_seed, dataset, ns_neg)

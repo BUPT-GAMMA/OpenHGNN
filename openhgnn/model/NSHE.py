@@ -94,5 +94,6 @@ class NSHE(nn.Module):
                         h_tar = th.cat((h_tar, h_con), dim=1)
                 p = self.linear_classifier(target, h_tar)
                 p_dict.append(p)
-            x = F.sigmoid(th.cat([p for p in p_dict])).flatten()
-        return h, x
+            x = th.sigmoid(th.cat([p for p in p_dict])).flatten()
+            out_h = hg_2.ndata['h']
+        return h, x, out_h
