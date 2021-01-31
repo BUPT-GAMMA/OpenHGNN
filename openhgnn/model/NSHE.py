@@ -16,6 +16,20 @@ class multi_Linear(nn.Module):
         h = self.encoder[name_linear](h)
         return h
 
+class multi_2Linear(nn.Module):
+    def __init__(self, linear_list, bias=False):
+        super(multi_2Linear, self).__init__()
+        hidden_dim = 16
+        self.hidden_layer = nn.ModuleDict({})
+        self.output_layer = nn.ModuleDict({})
+        for linear in linear_list:
+            self.hidden_layer[linear[0]] = nn.Linear(in_features=linear[1], out_features=hidden_dim, bias=bias)
+            self.output_layer[linear[0]] = nn.Linear(in_features=hidden_dim, out_features=linear[2], bias=bias)
+    def forward(self, name_linear, h):
+        h = F.relu(self.hidden_layer[name_linear](h))
+        h = self.output_layer[name_linear](h)
+        return h
+
 
 class hetero_linear(nn.Module):
     def __init__(self, linear_list, bias=False):
@@ -57,12 +71,16 @@ class NSHE(nn.Module):
         self.feature_proj = hetero_linear(linear_list1)
         # * ================== Neighborhood Agg(gnn_model)==================
         if self.gnn_model == "GCN":
-            self.gnn = GraphConv(self.project_dim, self.emd_dim, activation=F.relu)
+            self.gnn1 = GraphConv(self.project_dim, self.emd_dim, norm="none", activation=F.relu)
+            self.gnn2 = GraphConv(self.emd_dim, self.emd_dim, norm="none", activation=None)
+        elif self.gnn_model == "GAT":
+            self.gnn1 = GraphConv(self.project_dim, self.emd_dim, activation=F.relu, )
+            self.gnn2 = GraphConv(self.emd_dim, self.emd_dim, activation=None)
 
         # * ================== Context encoder(called CE in the paper)=================
         self.context_encoder = hetero_linear(linear_list2)
         # * ================== NSI Classification================
-        self.linear_classifier = multi_Linear(linear_list3)
+        self.linear_classifier = multi_2Linear(linear_list3)
 
     def forward(self, g, ns_samples):
         with g.local_scope():
@@ -72,12 +90,14 @@ class NSHE(nn.Module):
             g_homo = dgl.to_homogeneous(g, ndata=['h_proj'])
             # * =============== Node Embedding Generation ===================
             h = g_homo.ndata['h_proj']
-            h = self.gnn(g_homo, h)
+            h = self.gnn1(g_homo, h)
+            h = self.gnn2(g_homo, h)
             if self.norm_emb:
                 # Independently normalize each dimension
                 h = F.normalize(h, p=2, dim=1)
             # Context embedding generation
             g_homo.ndata['h'] = h
+
             hg_2 = dgl.to_heterogeneous(g_homo, g.ntypes, g.etypes)
             h_context = self.context_encoder(hg_2.ndata['h'])
             p_dict = []
@@ -95,5 +115,5 @@ class NSHE(nn.Module):
                 p = self.linear_classifier(target, h_tar)
                 p_dict.append(p)
             x = th.sigmoid(th.cat([p for p in p_dict])).flatten()
-            out_h = hg_2.ndata['h']
+            out_h = {'movie': h[4353:8029]}
         return h, x, out_h

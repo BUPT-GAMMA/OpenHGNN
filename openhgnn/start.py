@@ -18,5 +18,6 @@ def OpenHGNN(config):
     print("Train finished")
     # evaluate the performance
     model.eval()
-    evaluate_acm(config.seed, node_emb['paper'].detach().numpy(), g.nodes['paper'].data['label'], 3)
+    #evaluate_acm(config.seed, node_emb['paper'].detach().numpy(), g.nodes['paper'].data['label'], 3)
+    evaluate_acm(config.seed, node_emb['movie'].detach().numpy(), g.nodes['movie'].data['label'], 3)
     return

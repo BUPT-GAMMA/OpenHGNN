@@ -12,15 +12,16 @@ class evaluation:
         self.seed = seed
 
     def cluster(self, n, X, Y):
-
-        Y_pred = KMeans(n, random_state=self.seed).fit(np.array(X)).predict(X)
-        nmi = normalized_mutual_info_score(np.array(Y), Y_pred)
-        ari = adjusted_rand_score(np.array(Y), Y_pred)
+        X = np.array(X)
+        Y = np.array(Y)
+        Y_pred = KMeans(n, random_state=self.seed).fit(X).predict(X)
+        nmi = normalized_mutual_info_score(Y, Y_pred)
+        ari = adjusted_rand_score(Y, Y_pred)
         return nmi, ari
 
     def classification(self, X, Y):
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=self.seed)
-        LR = LogisticRegression()
+        LR = LogisticRegression(max_iter=10000)
         LR.fit(X_train, Y_train)
         Y_pred = LR.predict(X_test)
 

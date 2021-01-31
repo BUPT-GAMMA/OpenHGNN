@@ -33,16 +33,18 @@ def train(model, g, config):
     pos_edges = g_homo.edges()
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
     model.train()
+    evaluate_acm(config.seed, g.nodes['movie'].data['h'].to('cpu'), g.nodes['movie'].data['label'].to('cpu'), 3)
     for epoch in range(config.max_epoch):
         model.train()
         epoch_start_time = time.time()
-        neg_edges, ns_samples = get_epoch_samples(g, epoch, config.dataset, config.num_ns_neg)
+        neg_edges, ns_samples = get_epoch_samples(g, epoch, config.dataset, config.num_ns_neg, config.device)
+
 
         optimizer.zero_grad()
         node_emb, ns_prediction, eva_h = model(g, ns_samples)
         # compute loss
         pairwise_loss = cal_node_pairwise_loss(node_emb, pos_edges, neg_edges)
-        ns_label = th.cat([ns['label'] for ns in ns_samples]).type(th.float32)
+        ns_label = th.cat([ns['label'] for ns in ns_samples]).type(th.float32).to(config.device)
         cla_loss = cal_cla_loss(ns_prediction, ns_label)
         loss = pairwise_loss + cla_loss * config.beta
         loss.backward()
@@ -53,7 +55,7 @@ def train(model, g, config):
         print_dict(epoch_dict, '\n')
         optimizer.step()
         model.eval()
-        evaluate_acm(config.seed, eva_h['paper'].detach().numpy(), g.nodes['paper'].data['label'], 3)
+        evaluate_acm(config.seed, eva_h['movie'].detach().to('cpu'), g.nodes['movie'].data['label'].to('cpu'), 3)
     return eva_h
 
 

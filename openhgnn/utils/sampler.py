@@ -6,15 +6,15 @@ import torch as th
 import numpy as np
 
 
-def gen_neg_edges(g, num_neg):
+def gen_neg_edges(g, num_neg, device):
     if not g.is_homogeneous:
         g_homo = dgl.to_homogeneous(g)
     neg_sampler = dgl.dataloading.negative_sampler.Uniform(num_neg)
-    neg_edges = neg_sampler(g_homo, th.arange(0, g_homo.num_edges(), dtype=th.int64))
+    neg_edges = neg_sampler(g_homo, th.arange(0, g_homo.num_edges(), dtype=th.int64, device=device))
     return neg_edges
 
 
-def _get_neg_edge(g, epoch_seed, n_dataset, num_neg=1):
+def _get_neg_edge(g, epoch_seed, n_dataset, num_neg, device):
     fname = './openhgnn/output/NSHE/{}_NE-rate={:.0f}_seed={}.dat'.format(
         n_dataset, num_neg, epoch_seed)
     if os.path.exists(fname):
@@ -28,7 +28,7 @@ def _get_neg_edge(g, epoch_seed, n_dataset, num_neg=1):
                 print(epoch_seed, fname)
     else:
         # sample
-        neg_edges = gen_neg_edges(g, num_neg=num_neg)
+        neg_edges = gen_neg_edges(g, num_neg=num_neg, device=device)
         # save
         data_to_save = {'neg_edges': neg_edges}
         with open(fname, 'wb') as f:
@@ -132,7 +132,7 @@ def _get_ns_instance(g, epoch_seed, n_dataset, num_ns_neg):
     return ns_ins_list
 
 
-def get_epoch_samples(g, epoch, dataset, ns_neg):
+def get_epoch_samples(g, epoch, dataset, ns_neg, device):
     """
     Renew ns_instances and neg_edges in every epoch:
     1. get the seed for current epoch
@@ -143,7 +143,7 @@ def get_epoch_samples(g, epoch, dataset, ns_neg):
 
     epoch_seed = np.random.randint(1000)
     np.random.seed(epoch_seed)
-    neg_edges = _get_neg_edge(g, epoch_seed, dataset, 1)
+    neg_edges = _get_neg_edge(g, epoch_seed, dataset, 1, device)
     ns_samples = _get_ns_instance(g, epoch_seed, dataset, ns_neg)
 
     return neg_edges, ns_samples
