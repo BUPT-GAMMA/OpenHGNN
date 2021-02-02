@@ -8,29 +8,11 @@ from dgl.dataloading.negative_sampler import _BaseNegativeSampler
 from dgl import backend as F
 
 
-class Uniform(_BaseNegativeSampler):
-    """Negative sampler that randomly chooses negative destination nodes
-    for each source node according to a uniform distribution.
+class pro_sampler(_BaseNegativeSampler):
 
-    For each edge ``(u, v)`` of type ``(srctype, etype, dsttype)``, DGL generates
-    :attr:`k` pairs of negative edges ``(u, v')``, where ``v'`` is chosen
-    uniformly from all the nodes of type ``dsttype``.  The resulting edges will
-    also have type ``(srctype, etype, dsttype)``.
-
-    Parameters
-    ----------
-    k : int
-        The number of negative examples per edge.
-
-    Examples
-    --------
-    >>> g = dgl.graph(([0, 1, 2], [1, 2, 3]))
-    >>> neg_sampler = dgl.dataloading.negative_sampler.Uniform(2)
-    >>> neg_sampler(g, [0, 1])
-    (tensor([0, 0, 1, 1]), tensor([1, 0, 2, 3]))
-    """
-    def __init__(self, k):
+    def __init__(self, k, p):
         self.k = k
+        self.p = p
 
     def _generate(self, g, eids, canonical_etype):
         _, _, vtype = canonical_etype
@@ -40,20 +22,28 @@ class Uniform(_BaseNegativeSampler):
         shape = (shape[0] * self.k,)
         src, _ = g.find_edges(eids, etype=canonical_etype)
         src = F.repeat(src, self.k, 0)
-        dst = F.randint(shape, dtype, ctx, 0, g.number_of_nodes(vtype))
+        dst = np.random.choice(np.arange(0, g.number_of_nodes()), shape, replace=True, p=self.p)
+        # dst = F.randint(shape, dtype, ctx, 0, g.number_of_nodes(vtype))
+        dst = th.tensor(dst, dtype=dtype, device=ctx)
         return src, dst
 
 
 def gen_neg_edges(g, num_neg, device):
     if not g.is_homogeneous:
         g_homo = dgl.to_homogeneous(g)
-    neg_sampler = dgl.dataloading.negative_sampler.Uniform(num_neg)
+    node_degrees = g_homo.out_degrees().to('cpu').numpy()
+    node_weights = np.power(node_degrees, 0.75)
+    node_probs = node_weights / np.sum(node_weights)
+
+    # neg_sampler = dgl.dataloading.negative_sampler.Uniform(num_neg)
+    # neg_edges = neg_sampler(g_homo, th.arange(0, g_homo.num_edges(), dtype=th.int64, device=device))
+    neg_sampler = pro_sampler(num_neg, node_probs)
     neg_edges = neg_sampler(g_homo, th.arange(0, g_homo.num_edges(), dtype=th.int64, device=device))
     return neg_edges
 
 
 def _get_neg_edge(g, epoch_seed, n_dataset, num_neg, device):
-    epoch_seed =1000
+    epoch_seed =1001
     fname = './openhgnn/output/NSHE/{}_NE-rate={:.0f}_seed={}.dat'.format(
         n_dataset, num_neg, epoch_seed)
     if os.path.exists(fname):

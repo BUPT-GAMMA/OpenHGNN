@@ -5,6 +5,22 @@ from dgl.nn.pytorch import GraphConv
 import dgl
 
 
+'''
+In paper repo performance		
+ACM<Classification>     Micro-F1 = 0.8412, Macro-F1 = 0.8327
+Run author code		
+ACM-Deepwalk<Classification>     Micro-F1 = 0.8408, Macro-F1 = 0.8411
+OpenHGNN-DGL
+ACM<Classification>     Micro-F1 = 0.8495, Macro-F1 = 0.8478
+
+
+In paper repo performance		
+IMDB<Classification>     Micro-F1 = 0.5921, Macro-F1 = 0.5835
+Run author code		
+IMDB-Deepwalk<Classification>     Micro-F1 = 0.5938, Macro-F1 = 0.5804
+OpenHGNN-DGL
+IMDB<Classification>     Micro-F1 = 0.6209, Macro-F1 = 0.6053
+'''
 class multi_Linear(nn.Module):
     def __init__(self, linear_list, bias=False):
         super(multi_Linear, self).__init__()
