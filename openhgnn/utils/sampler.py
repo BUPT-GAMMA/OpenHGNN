@@ -43,7 +43,6 @@ def gen_neg_edges(g, num_neg, device):
 
 
 def _get_neg_edge(g, epoch_seed, n_dataset, num_neg, device):
-    epoch_seed =1001
     fname = './openhgnn/output/NSHE/{}_NE-rate={:.0f}_seed={}.dat'.format(
         n_dataset, num_neg, epoch_seed)
     if os.path.exists(fname):
