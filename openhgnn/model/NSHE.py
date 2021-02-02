@@ -86,34 +86,51 @@ class NSHE(nn.Module):
         with g.local_scope():
             # * =============== Encode heterogeneous feature ================
             h_dict = self.feature_proj(g.ndata['h'])
+            h_schema = {}
+            for i, value in h_dict.items():
+                h_schema[i] = value.shape
             g.ndata['h_proj'] = h_dict
             g_homo = dgl.to_homogeneous(g, ndata=['h_proj'])
+            pos_edges = g_homo.edges()
             # * =============== Node Embedding Generation ===================
             h = g_homo.ndata['h_proj']
-            h = self.gnn1(g_homo, h)
+            #h = self.gnn1(g_homo, h)
             h = self.gnn2(g_homo, h)
             if self.norm_emb:
                 # Independently normalize each dimension
                 h = F.normalize(h, p=2, dim=1)
             # Context embedding generation
-            g_homo.ndata['h'] = h
+            # g_homo.ndata['h'] = h
+            emd = self.h2dict(h, h_dict)
+            g.ndata['h'] = emd
 
-            hg_2 = dgl.to_heterogeneous(g_homo, g.ntypes, g.etypes)
-            h_context = self.context_encoder(hg_2.ndata['h'])
-            p_dict = []
-            for ns_type in ns_samples:
-                target = ns_type['target_type']
-                tar_index = ns_type[target]
-                h_type = hg_2.ndata['h'][target]
-                h_tar = h_type[tar_index]
-                for type in g.ntypes:
-                    if type != target:
-                        tar_index = ns_type[type]
-                        h_type = h_context[type]
-                        h_con = h_type[tar_index]
-                        h_tar = th.cat((h_tar, h_con), dim=1)
-                p = self.linear_classifier(target, h_tar)
-                p_dict.append(p)
-            x = th.sigmoid(th.cat([p for p in p_dict])).flatten()
-            out_h = {'movie': h[4353:8029]}
-        return h, x, out_h
+            # hg_2 = dgl.to_heterogeneous(g_homo, g.ntypes, g.etypes)
+
+            h_context = self.context_encoder(g.ndata['h'])
+            p_list = self.pre_ns(ns_samples, g.ndata['h'], h_context, g.ntypes)
+            x = th.sigmoid(th.cat([p for p in p_list])).flatten()
+        return h, x, emd
+
+    def pre_ns(self, ns_samples, h, h_context, ntypes):
+        p_list = []
+        for ns_type in ns_samples:
+            target = ns_type['target_type']
+            index_h = ns_type[target]
+            h_tar_type = h[target]
+            h_tar = h_tar_type[index_h]
+            for type in ntypes:
+                if type != target:
+                    index_h = ns_type[type]
+                    h_con_type = h_context[type]
+                    h_con = h_con_type[index_h]
+                    h_tar = th.cat((h_tar, h_con), dim=1)
+            p = self.linear_classifier(target, h_tar)
+            p_list.append(p)
+        return p_list
+
+    def h2dict(self, h, hdict):
+        pre = 0
+        for i, value in hdict.items():
+            hdict[i] = h[pre:value.shape[0]+pre]
+            pre += value.shape[0]
+        return hdict

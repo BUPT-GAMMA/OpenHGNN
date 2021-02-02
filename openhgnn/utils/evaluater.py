@@ -29,7 +29,8 @@ class evaluation:
         macro_f1 = f1_score(Y_test, Y_pred, average='macro')
         return micro_f1, macro_f1
 
-def evaluate_acm(seed, X, Y, n):
+
+def evaluate_(seed, X, Y, n):
     _evaluation = evaluation(seed)
     NMI, ARI = _evaluation.cluster(n, X, Y)
     micro, macro = _evaluation.classification(X, Y)
@@ -37,3 +38,14 @@ def evaluate_acm(seed, X, Y, n):
     print('<Cluster>        NMI = %.4f, ARI = %.4f' % (NMI, ARI))
 
     print('<Classification>     Micro-F1 = %.4f, Macro-F1 = %.4f' % (micro, macro))
+
+def evaluate(seed, dataset, emd, g):
+    if dataset == 'acm':
+        n = 3
+        X = emd['paper'].detach().to('cpu')
+        Y = g.nodes['paper'].data['label'].to('cpu')
+    elif dataset == 'imdb':
+        n = 3
+        X = emd['movie'].detach().to('cpu')
+        Y = g.nodes['movie'].data['label'].to('cpu')
+    evaluate_(seed, X, Y, n)

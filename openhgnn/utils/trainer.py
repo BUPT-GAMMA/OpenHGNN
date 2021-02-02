@@ -5,7 +5,7 @@ from openhgnn.utils.sampler import get_epoch_samples
 from openhgnn.utils.utils import print_dict
 import torch.nn.functional as F
 import dgl
-from openhgnn.utils.evaluater import evaluate_acm
+from openhgnn.utils.evaluater import evaluate
 
 def cal_node_pairwise_loss(node_emd, edge, neg_edge):
     # cross entropy loss from LINE
@@ -33,12 +33,11 @@ def train(model, g, config):
     pos_edges = g_homo.edges()
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
     model.train()
-    evaluate_acm(config.seed, g.nodes['movie'].data['h'].to('cpu'), g.nodes['movie'].data['label'].to('cpu'), 3)
+    evaluate(config.seed, config.dataset, g.ndata['h'], g)
     for epoch in range(config.max_epoch):
         model.train()
         epoch_start_time = time.time()
         neg_edges, ns_samples = get_epoch_samples(g, epoch, config.dataset, config.num_ns_neg, config.device)
-
 
         optimizer.zero_grad()
         node_emb, ns_prediction, eva_h = model(g, ns_samples)
@@ -55,7 +54,7 @@ def train(model, g, config):
         print_dict(epoch_dict, '\n')
         optimizer.step()
         model.eval()
-        evaluate_acm(config.seed, eva_h['movie'].detach().to('cpu'), g.nodes['movie'].data['label'].to('cpu'), 3)
+        evaluate(config.seed, config.dataset, eva_h, g)
     return eva_h
 
 
