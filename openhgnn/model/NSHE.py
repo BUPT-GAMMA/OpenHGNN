@@ -102,12 +102,8 @@ class NSHE(nn.Module):
         with g.local_scope():
             # * =============== Encode heterogeneous feature ================
             h_dict = self.feature_proj(g.ndata['h'])
-            h_schema = {}
-            for i, value in h_dict.items():
-                h_schema[i] = value.shape
             g.ndata['h_proj'] = h_dict
             g_homo = dgl.to_homogeneous(g, ndata=['h_proj'])
-            pos_edges = g_homo.edges()
             # * =============== Node Embedding Generation ===================
             h = g_homo.ndata['h_proj']
             #h = self.gnn1(g_homo, h)

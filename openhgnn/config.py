@@ -35,7 +35,19 @@ class Config(object):
             self.num_e_neg = conf.getint("NSHE", "num_e_neg")
             self.num_ns_neg = conf.getint("NSHE", "num_ns_neg")
             self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
+        elif model == "GTN":
+            self.lr = conf.getfloat("GTN", "learning_rate")
+            self.weight_decay = conf.getfloat("GTN", "weight_decay")
+            # self.seed = conf.getint("NSHE", "seed")
+            # np.random.seed(self.seed)
 
+            self.emd_size = conf.getint("GTN", "emd_dim")
+            self.num_channels = conf.getint("GTN", "num_channels")
+            self.num_layers = conf.getint("GTN", "num_layers")
+            self.max_epoch = conf.getint("GTN", "max_epoch")
+
+            self.norm_emd_flag = conf.get("GTN", "norm_emd_flag")
+            self.adaptive_lr = conf.get("GTN", "adaptive_lr_flag")
 
         else:
             pass
