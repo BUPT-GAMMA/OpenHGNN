@@ -4,9 +4,10 @@ import pickle
 import random
 import torch as th
 import numpy as np
+from scipy.sparse import coo_matrix
 from dgl.dataloading.negative_sampler import _BaseNegativeSampler
 from dgl import backend as F
-
+from dgl.data.utils import load_graphs, save_graphs
 
 class pro_sampler(_BaseNegativeSampler):
 
@@ -39,6 +40,7 @@ def gen_neg_edges(g, num_neg, device):
     # neg_edges = neg_sampler(g_homo, th.arange(0, g_homo.num_edges(), dtype=th.int64, device=device))
     neg_sampler = pro_sampler(num_neg, node_probs)
     neg_edges = neg_sampler(g_homo, th.arange(0, g_homo.num_edges(), dtype=th.int64, device=device))
+    # tensors used as indices must be long, byte or bool tensors， so it should be tensor.int64
     return neg_edges
 
 
@@ -91,7 +93,7 @@ def gen_ns_instances(g, num_ns_neg):
                 t_neighbors = g.out_edges(prev_nid, etype=etype)[1]
                 # random select one as postive ns_instance
                 if len(t_neighbors) == 0:  # if there is no neighbor to select
-                    print('Node {} has no {} type point!!'.format(id, t))
+                    print('Node {} has no {} type point!!'.format(id, v_ntype))
                     return None
                 elif len(t_neighbors) == 1:  # if there is only one selection
                     r = 0
@@ -175,3 +177,5 @@ def get_epoch_samples(g, epoch, dataset, ns_neg, device):
     ns_samples = _get_ns_instance(g, epoch_seed, dataset, ns_neg)
 
     return neg_edges, ns_samples
+
+
