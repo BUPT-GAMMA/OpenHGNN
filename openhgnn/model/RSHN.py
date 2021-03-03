@@ -1,4 +1,7 @@
 # The implementation of ICDM 2019 paper "Relation Structure-Aware Heterogeneous Graph Neural Network" RSHN.
+# @Time   : 2021/3/1
+# @Author : Tianyu Zhao
+# @Email  : tyzhao@bupt.edu.cn
 import dgl
 import torch as th
 import torch.nn as nn
@@ -7,11 +10,17 @@ from dgl import function as fn
 from dgl.utils import expand_as_pair
 from dgl.nn.functional import edge_softmax
 
+
 class RSHN(nn.Module):
+    '''
+    Note that
+    The four KG dataset in dgl(AIFB, MUTAG, BGS, AM) do not have nodes/edges feature.
+    So we should initialize the feature use nn.Parameter, dimension is the hyper-parameter.
+    '''
     def __init__(self, in_feats1, in_feats2, dim, num_classes, num_node_layer, num_edge_layer, dropout):
         super(RSHN, self).__init__()
         # map the node feature
-        self.feats = nn.Embedding(in_feats1, dim)
+        self.feats = nn.Parameter(th.FloatTensor(in_feats1, dim))
         # map the edge feature
         self.linear_e = nn.Linear(in_features=in_feats2, out_features=dim, bias=False)
         self.cl_conv1 = AGNNConv()
@@ -30,7 +39,7 @@ class RSHN(nn.Module):
 
     def init_para(self):
         nn.init.xavier_uniform_(self.linear_e.weight)
-        nn.init.xavier_uniform_(self.feats.weight)
+        nn.init.xavier_uniform_(self.feats)
         nn.init.xavier_uniform_(self.emd2pred.weight)
 
 
@@ -46,7 +55,7 @@ class RSHN(nn.Module):
 
         edge_weight = F.embedding(g.edata[dgl.ETYPE].long(), h)
         with g.local_scope():
-            h = self.feats(th.arange(g.number_of_nodes(), device=g.device))
+            h = self.feats
             edge_weight = self.linear_e(edge_weight)
             x = self.nn_conv1(g, h, edge_weight=edge_weight)
             x = F.dropout(x, p=self.dropout, training=False)

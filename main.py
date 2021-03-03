@@ -10,7 +10,7 @@ from openhgnn.start import OpenHGNN
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', '-m', default='RSHN', type=str, help='name of models')
+    parser.add_argument('--model', '-m', default='CompGCN', type=str, help='name of models')
     parser.add_argument('--dataset', '-d', default='am', type=str, help='name of datasets')
     parser.add_argument('--gpu', '-g', default='0', type=int, help='-1 means cpu')
     args = parser.parse_args()

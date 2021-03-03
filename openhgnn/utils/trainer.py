@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from openhgnn.utils.sampler import get_epoch_samples
-from openhgnn.utils.dgl_graph import give_one_hot_feats, normalize_edges
+from openhgnn.utils.dgl_graph import give_one_hot_feats, normalize_edges, edata_in_out_mask
 from openhgnn.utils.utils import print_dict, h2dict
 from openhgnn.utils.evaluater import evaluate,cal_loss_f1
 
@@ -194,6 +194,65 @@ def run_RSHN(model, hg, cl_graph, config):
     return
 
 
+def run_CompGCN(model, hg, config):
+
+    # optimizer
+    optimizer = th.optim.Adam(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
+
+    # training loop
+    print("start training...")
+    forward_time = []
+    backward_time = []
+
+    edata_in_out_mask(hg)
+    g = dgl.to_homogeneous(hg, edata=['in_edges_mask', 'out_edges_mask'])
+
+    target_idx, train_idx, test_idx, labels = get_idx(hg, g, config.category)
+    if config.validation:
+        val_idx = train_idx[:len(train_idx) // 5]
+        train_idx = train_idx[len(train_idx) // 5:]
+    else:
+        val_idx = train_idx
+    model.train()
+    best_test_acc = 0
+    for epoch in range(config.max_epoch):
+        optimizer.zero_grad()
+        t0 = time.time()
+        model.train()
+        logits = model(g)
+        logits = logits[target_idx]
+        loss = F.cross_entropy(logits[train_idx], labels[train_idx])
+        t1 = time.time()
+        loss.backward()
+        optimizer.step()
+        t2 = time.time()
+
+        forward_time.append(t1 - t0)
+        backward_time.append(t2 - t1)
+        print("Epoch {:05d} | Train Forward Time(s) {:.4f} | Backward Time(s) {:.4f}".
+              format(epoch, forward_time[-1], backward_time[-1]))
+        train_acc = th.sum(logits[train_idx].argmax(dim=1) == labels[train_idx]).item() / len(train_idx)
+        val_loss = F.cross_entropy(logits[val_idx], labels[val_idx])
+        val_acc = th.sum(logits[val_idx].argmax(dim=1) == labels[val_idx]).item() / len(val_idx)
+        print("Train Accuracy: {:.4f} | Train Loss: {:.4f} | Validation Accuracy: {:.4f} | Validation loss: {:.4f}".
+              format(train_acc, loss.item(), val_acc, val_loss.item()))
+        print()
+        model.eval()
+        logits = model.forward(g)
+        logits = logits[target_idx]
+        test_loss = F.cross_entropy(logits[test_idx], labels[test_idx])
+        test_acc = th.sum(logits[test_idx].argmax(dim=1) == labels[test_idx]).item() / len(test_idx)
+        print("Test Accuracy: {:.4f} | Test loss: {:.4f}".format(test_acc, test_loss.item()))
+        print()
+        print()
+        if test_acc > best_test_acc:
+            best_test_acc = test_acc
+
+        # print("Mean forward time: {:4f}".format(np.mean(forward_time[len(forward_time) // 4:])))
+        # print("Mean backward time: {:4f}".format(np.mean(backward_time[len(backward_time) // 4:])))
+    print('Test - ACC: {}'.format(best_test_acc))
+
+
 def run_RGCN(model, hg, config):
 
     # optimizer
@@ -224,7 +283,7 @@ def run_RGCN(model, hg, config):
     for epoch in range(config.max_epoch):
         optimizer.zero_grad()
         t0 = time.time()
-        logits = model(g, feats, edge_type, edge_norm)
+        logits = model(g, feats)
         logits = logits[target_idx]
         loss = F.cross_entropy(logits[train_idx], labels[train_idx])
         t1 = time.time()
@@ -241,16 +300,16 @@ def run_RGCN(model, hg, config):
         val_acc = th.sum(logits[val_idx].argmax(dim=1) == labels[val_idx]).item() / len(val_idx)
         print("Train Accuracy: {:.4f} | Train Loss: {:.4f} | Validation Accuracy: {:.4f} | Validation loss: {:.4f}".
               format(train_acc, loss.item(), val_acc, val_loss.item()))
-    print()
-    model.eval()
-    logits = model.forward(g, feats, edge_type, edge_norm)
-    logits = logits[target_idx]
-    test_loss = F.cross_entropy(logits[test_idx], labels[test_idx])
-    test_acc = th.sum(logits[test_idx].argmax(dim=1) == labels[test_idx]).item() / len(test_idx)
-    print("Test Accuracy: {:.4f} | Test loss: {:.4f}".format(test_acc, test_loss.item()))
-    print()
+        print()
+        model.eval()
+        logits = model.forward(g, feats, edge_type, edge_norm)
+        logits = logits[target_idx]
+        test_loss = F.cross_entropy(logits[test_idx], labels[test_idx])
+        test_acc = th.sum(logits[test_idx].argmax(dim=1) == labels[test_idx]).item() / len(test_idx)
+        print("Test Accuracy: {:.4f} | Test loss: {:.4f}".format(test_acc, test_loss.item()))
+        print()
 
-    print("Mean forward time: {:4f}".format(np.mean(forward_time[len(forward_time) // 4:])))
-    print("Mean backward time: {:4f}".format(np.mean(backward_time[len(backward_time) // 4:])))
+        print("Mean forward time: {:4f}".format(np.mean(forward_time[len(forward_time) // 4:])))
+        print("Mean backward time: {:4f}".format(np.mean(backward_time[len(backward_time) // 4:])))
 
 

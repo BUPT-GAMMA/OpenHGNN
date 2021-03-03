@@ -1,14 +1,14 @@
 from openhgnn.model.NSHE import NSHE
-from openhgnn.utils.trainer import run, run_GTN, run_RSHN, run_RGCN
+from openhgnn.utils.trainer import run, run_GTN, run_RSHN, run_RGCN, run_CompGCN
 from openhgnn.utils.evaluater import evaluate
 from openhgnn.utils.dgl_graph import load_HIN, load_KG
-import torch as th
+import torch.nn.functional as F
 
 def OpenHGNN(config):
     # load the graph(HIN or KG)
     if config.model in ['GTN', 'NSHE']:
         g = load_HIN(config.dataset).to(config.device)
-    elif config.model in ['RSHN', 'RGCN']:
+    elif config.model in ['RSHN', 'RGCN', 'CompGCN']:
         kg, category, num_classes = load_KG(config.dataset)
         config.category = category
         config.num_classes = num_classes
@@ -61,7 +61,20 @@ def OpenHGNN(config):
                                dropout=config.dropout,
                                use_self_loop=config.use_self_loop,use_cuda=True).to(config.device)
         run_RGCN(model, kg, config)
-
+    elif config.model == 'CompGCN':
+        from openhgnn.model.CompGCN import CompGCN
+        n_rels = len(kg.etypes)
+        model = CompGCN(in_dim=config.n_hidden,
+                            hid_dim=config.n_hidden,
+                            out_dim=config.num_classes,
+                            n_nodes=kg.number_of_nodes(),
+                            n_rels = n_rels,
+                            num_layers=config.n_layers,
+                            comp_fn=config.comp_fn,
+                            dropout=config.dropout,
+                            activation=F.relu,
+                            batchnorm=True).to(config.device)
+        run_CompGCN(model, kg, config)
 
     print("Train finished")
     # evaluate the performance

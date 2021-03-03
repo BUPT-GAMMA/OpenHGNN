@@ -4,6 +4,35 @@ import torch as th
 from scipy.sparse import coo_matrix
 import numpy as np
 
+
+def com_mult(a, b):
+    r1, i1 = a[..., 0], a[..., 1]
+    r2, i2 = b[..., 0], b[..., 1]
+    return th.stack([r1 * r2 - i1 * i2, r1 * i2 + i1 * r2], dim=-1)
+
+
+def conj(a):
+    a[..., 1] = -a[..., 1]
+    return a
+
+
+def ccorr(a, b):
+    """
+    Compute circular correlation of two tensors.
+    Parameters
+    ----------
+    a: Tensor, 1D or 2D
+    b: Tensor, 1D or 2D
+    Notes
+    -----
+    Input a and b should have the same dimensions. And this operation supports broadcasting.
+    Returns
+    -------
+    Tensor, having the same dimension as the input a.
+    """
+    return th.irfft(com_mult(conj(th.rfft(a, 1)), th.rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
+
+
 def extract_edge_with_id_edge(g):
     # input a homogeneous graph
     # return tensor with shape of [2,num_edges]
@@ -16,7 +45,7 @@ def extract_edge_with_id_edge(g):
     for i in range(num_edge_type + 1):
         index = th.nonzero(edata == i).squeeze()
         e_0 = edges[0][index]
-        e_1 = edges[1][index]   # edges is  tuple
+        e_1 = edges[1][index]  # edges is  tuple
         e = th.stack((e_0, e_1), dim=0)
         # turn the edge type(tuple) to tensor
         values = th.ones(e.shape[1], device=ctx)
@@ -54,11 +83,10 @@ def extract_mtx_with_id_edge(g):
     return A.to(ctx)
 
 
-
 def h2dict(h, hdict):
     pre = 0
     for i, value in hdict.items():
-        hdict[i] = h[pre:value.shape[0]+pre]
+        hdict[i] = h[pre:value.shape[0] + pre]
         pre += value.shape[0]
     return hdict
 

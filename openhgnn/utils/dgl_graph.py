@@ -91,7 +91,6 @@ class coarsened_line_graph():
             g = self.build_cl_graph(hg)
             save_graphs(fname, g)
             return g
-        return g
 
     def init_cl_graph(self, cl_graph):
         cl_graph = give_one_hot_feats(cl_graph, 'h')
@@ -100,7 +99,7 @@ class coarsened_line_graph():
         edge_attr = cl_graph.edata['w'].type(th.FloatTensor).to(cl_graph.device)
         row, col = cl_graph.edges()
         for i in range(cl_graph.num_nodes()):
-            mask = th.eq(row, i)
+            mask = th.eq(col, i)
             edge_attr[mask] = th.nn.functional.normalize(edge_attr[mask], p=2, dim=0)
         cl_graph.edata['w'] = edge_attr
 
@@ -154,3 +153,26 @@ class coarsened_line_graph():
         g = dgl.graph((u, v))
         sg = dgl.to_simple(g, return_counts='w')
         return sg
+
+
+def edata_in_out_mask(hg):
+
+    """
+    An API for CompGCN which needs identify the edge is IN or OUT.
+
+    :param a heterogeneous graph:
+    in_edges_mask means the edge is the original edge.
+    out_edges_mask means the edge is the inverse edge.
+
+    :return: hg
+    """
+    for canonical_etype in hg.canonical_etypes:
+        eid = hg.all_edges(form='eid', etype=canonical_etype)
+        if canonical_etype[1][:4] == 'rev-':
+            hg.edges[canonical_etype].data['in_edges_mask'] = th.zeros(eid.shape[0], device=hg.device).bool()
+            hg.edges[canonical_etype].data['out_edges_mask'] = th.ones(eid.shape[0], device=hg.device).bool()
+        else:
+            hg.edges[canonical_etype].data['out_edges_mask'] = th.zeros(eid.shape[0], device=hg.device).bool()
+            hg.edges[canonical_etype].data['in_edges_mask'] = th.ones(eid.shape[0], device=hg.device).bool()
+
+    return hg

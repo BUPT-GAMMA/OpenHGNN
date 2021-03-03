@@ -77,9 +77,21 @@ class Config(object):
             self.n_bases = conf.getint("RGCN", "n_bases")
             self.n_layers = conf.getint("RGCN", "n_layers")
             self.max_epoch = conf.getint("RGCN", "max_epoch")
-            self.l2norm = conf.getint("RGCN", "l2norm")
+            self.weight_decay = conf.getint("RGCN", "weight_decay")
 
             self.validation = conf.getboolean("RGCN", "validation")
             self.use_self_loop = conf.getboolean("RGCN", "use_self_loop")
-        else:
+        elif model == 'CompGCN':
+            self.lr = conf.getfloat("CompGCN", "learning_rate")
+
+            self.weight_decay = conf.getfloat("CompGCN", "weight_decay")
+            self.dropout = conf.getfloat("CompGCN", "dropout")
+
+            self.n_hidden = conf.getint("CompGCN", "n_hidden")
+            self.n_layers = conf.getint("CompGCN", "n_layers")
+            self.max_epoch = conf.getint("CompGCN", "max_epoch")
+
+            self.comp_fn = conf.get("CompGCN", "comp_fn")
+
+            self.validation = conf.getboolean("CompGCN", "validation")
             pass
