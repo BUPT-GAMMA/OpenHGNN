@@ -2,6 +2,7 @@ import torch as th
 import dgl
 import os
 import numpy as np
+from dgl.sampling.neighbor import select_topk
 from dgl.data.utils import load_graphs, save_graphs
 
 
@@ -13,13 +14,24 @@ def load_dgl_graph(path_file):
 def load_HIN(dataset):
     if dataset == 'acm':
         data_path = './openhgnn/dataset/acm_graph.bin'
+        category = 'paper'
+        num_classes = 3
     elif dataset == 'imdb':
         data_path = './openhgnn/dataset/imdb_graph.bin'
+        category = 'movie'
+        num_classes = 3
     elif dataset == 'acm1':
         data_path = './openhgnn/dataset/acm_graph1.bin'
+        category = 'paper'
+        num_classes = 3
+    elif dataset == 'academic':
+        # which is used in HetGNN
+        data_path = './openhgnn/dataset/academic.bin'
+        category = 'author'
+        num_classes = 4
     g = load_dgl_graph(data_path)
     g = g.long()
-    return g
+    return g, category, num_classes
 
 
 def load_KG(dataset):
@@ -176,3 +188,69 @@ def edata_in_out_mask(hg):
             hg.edges[canonical_etype].data['in_edges_mask'] = th.ones(eid.shape[0], device=hg.device).bool()
 
     return hg
+
+
+
+class hetgnn_graph():
+    def __init__(self, hg, n_dataset):
+        self.hg = hg
+        self.g = dgl.to_homogeneous(hg).to('cpu')
+        self.NID = self.g.ndata[dgl.NID]
+        self.NTYPE = self.g.ndata[dgl.NTYPE]
+        num_nodes = {}
+        for i in range(th.max(self.NTYPE) + 1):
+            num_nodes[self.hg.ntypes[i]] = int((self.NTYPE == i).sum())
+        self.num_nodes = num_nodes
+        self.weight_column = 'w'
+        self.n_dataset = n_dataset
+
+    def get_hetgnn_graph(self, length, walks, restart_prob):
+        fname = './openhgnn/output/HetGNN/{}.bin'.format(
+            self.n_dataset)
+        if os.path.exists(fname):
+            g, _ = load_graphs(fname)
+            return g[0]
+        else:
+            g = self.build_hetgnn_graph(length, walks, restart_prob)
+            save_graphs(fname, g)
+            return g
+
+    def build_hetgnn_graph(self, length, walks, restart_prob):
+        #edges = [[[[],[]]] * len(self.num_nodes)] * len(self.num_nodes)
+        edges = [[[[],[]], [[],[]], [[],[]]],
+                 [[[],[]], [[],[]], [[],[]]],
+                 [[[],[]], [[],[]], [[],[]]]]
+
+        for i in range(self.g.number_of_nodes()):
+            nodes = th.tensor([i]).repeat(walks)
+            traces, types = dgl.sampling.random_walk(self.g, nodes, length=length, restart_prob=restart_prob)
+            concat_vids, _, _, _ = dgl.sampling.pack_traces(traces, types)
+            concat_types = th.index_select(self.NTYPE, 0, concat_vids)
+            uid = concat_vids[0]
+            utype = concat_types[0]
+            for (vid, vtype) in zip(concat_vids, concat_types):
+                edges[int(utype)][int(vtype)][0].append(self.NID[uid])
+                edges[int(utype)][int(vtype)][1].append(self.NID[vid])
+
+        edge_dict = {}
+        k = {}
+        num_ntypes = self.NTYPE.max() + 1
+        for i in range(num_ntypes):
+            for j in range(num_ntypes):
+                edge = (self.hg.ntypes[j], self.hg.ntypes[j]+'-'+self.hg.ntypes[i], self.hg.ntypes[i])
+                edge_dict[edge] = (th.tensor(edges[i][j][1]), th.tensor(edges[i][j][0]))
+                if j == 2:
+                    k[edge] = 3
+                else:
+                    k[edge] = 10
+
+        neighbor_graph = dgl.heterograph(
+            edge_dict,
+            self.num_nodes
+        )
+
+        neighbor_graph = dgl.to_simple(neighbor_graph, return_counts=self.weight_column)
+        counts = neighbor_graph.edata[self.weight_column]
+        neighbor_graph = select_topk(neighbor_graph, k, self.weight_column)
+
+        return neighbor_graph

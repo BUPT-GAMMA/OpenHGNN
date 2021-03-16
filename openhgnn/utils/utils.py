@@ -30,6 +30,7 @@ def ccorr(a, b):
     -------
     Tensor, having the same dimension as the input a.
     """
+    import torch.fft as fft
     return th.irfft(com_mult(conj(th.rfft(a, 1)), th.rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
 
 

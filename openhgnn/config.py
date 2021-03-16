@@ -95,3 +95,16 @@ class Config(object):
 
             self.validation = conf.getboolean("CompGCN", "validation")
             pass
+        elif model == 'HetGNN':
+            self.lr = conf.getfloat("HetGNN", "learning_rate")
+
+            self.weight_decay = conf.getfloat("HetGNN", "weight_decay")
+            #self.dropout = conf.getfloat("CompGCN", "dropout")
+            self.max_epoch = conf.getint("HetGNN", "max_epoch")
+            self.dim = conf.getint("HetGNN", "dim")
+
+            self.rw_length = conf.getint("HetGNN", "rw_length")
+            self.rw_walks = conf.getint("HetGNN", "rw_walks")
+            self.rwr_prob = conf.getfloat("HetGNN", "rwr_prob")
+
+            pass

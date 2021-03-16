@@ -8,6 +8,125 @@ from scipy.sparse import coo_matrix
 from dgl.dataloading.negative_sampler import _BaseNegativeSampler
 from dgl import backend as F
 from dgl.data.utils import load_graphs, save_graphs
+import dgl.sampling
+from collections import Counter
+
+
+class randomwalk_on_heterograph(object):
+    def __init__(self, hg):
+        self.hg = hg
+        self.g = dgl.to_homogeneous(hg).to('cpu')
+        self.NID = self.g.ndata[dgl.NID]
+        self.NTYPE = self.g.ndata[dgl.NTYPE]
+        num_nodes = {}
+        for i in range(th.max(self.NTYPE) + 1):
+            num_nodes[self.hg.ntypes[i]] = int((self.NTYPE == i).sum())
+        self.num_nodes = num_nodes
+        self.weight_column = 'w'
+
+    def randomwalk(self, length, walks, restart_prob):
+        from dgl.sampling.neighbor import select_topk
+        from dgl.sampling.pinsage import RandomWalkNeighborSampler
+        #path, _ = dgl.sampling.random_walk(self.g, nodes, length=length)
+        #traces, types = dgl.sampling.random_walk(self.g, nodes, length=length)
+        edges = [[[[],[]], [[],[]], [[],[]]],
+                 [[[],[]], [[],[]], [[],[]]],
+                 [[[],[]], [[],[]], [[],[]]]]
+        for i in range(self.g.number_of_nodes()):
+            nodes = th.tensor([i]).repeat(walks)
+            traces, types = dgl.sampling.random_walk(self.g, nodes, length=length, restart_prob=restart_prob)
+            concat_vids, _, _, _ = dgl.sampling.pack_traces(traces, types)
+            concat_types = th.index_select(self.NTYPE, 0, concat_vids)
+            uid = concat_vids[0]
+            utype = concat_types[0]
+            for (vid, vtype) in zip(concat_vids, concat_types):
+                # if vid == uid:
+                #     pass
+                # else:
+                edges[int(utype)][int(vtype)][0].append(self.NID[uid])
+                edges[int(utype)][int(vtype)][1].append(self.NID[vid])
+
+        from dgl import convert
+        from dgl import transform
+        edge_dict = {}
+        k = {}
+        num_ntypes = self.NTYPE.max() + 1
+        for i in range(num_ntypes):
+            for j in range(num_ntypes):
+                edge = (self.hg.ntypes[j], self.hg.ntypes[j]+'-'+self.hg.ntypes[i], self.hg.ntypes[i])
+                edge_dict[edge] = (th.tensor(edges[i][j][1]), th.tensor(edges[i][j][0]))
+                if j == 2:
+                    k[edge] = 3
+                else:
+                    k[edge] = 10
+
+        neighbor_graph = convert.heterograph(
+            edge_dict,
+            self.num_nodes
+        )
+
+        neighbor_graph = transform.to_simple(neighbor_graph, return_counts=self.weight_column)
+        counts = neighbor_graph.edata[self.weight_column]
+        neighbor_graph = select_topk(neighbor_graph, k, self.weight_column)
+        from dgl.data.utils import load_graphs, save_graphs
+        fname = './openhgnn/output/HetGNN/Academic.bin'
+        save_graphs(fname, neighbor_graph)
+        return
+
+    def randomwalk_with_restart(self, nodes, length, restart_prob=None):
+
+        path = dgl.sampling.random_walk(self.g, nodes, length=length, restart_prob=restart_prob)
+        return path
+
+    def full_rwr(self, walks, length, restart_prob):
+        n = self.g.number_of_nodes()
+        # expand to 'walks' times n
+        nodes = th.arange(n).repeat(walks)
+        path = self.randomwalk(nodes, length)
+        return path
+
+    def path_hetro(self):
+        pass
+
+    def neighbour_hetero(self, path):
+        edges = {}
+        for p in path[0]:
+            center_node = p[0]
+            neigh_nodes = p[1:]
+            c_nid = int(self.NID[center_node])
+            c_ntype = int(self.NTYPE[center_node])
+            edges.setdefault(c_ntype, {})
+            edges[c_ntype].setdefault(c_nid, {})
+            for n in neigh_nodes:
+                if n >= 0:
+                    n_nid = self.NID[n]
+                    n_ntype = int(self.NTYPE[n])
+                    edges[c_ntype][c_nid].setdefault(n_ntype, [])
+                    edges[c_ntype][c_nid][n_ntype].append(n_nid)
+                else:
+                    break
+        import dgl.sampling.select_topk
+        a = 1
+        # src = F.reshape(paths[:, self.metapath_hops::self.metapath_hops], (-1,))
+        # dst = F.repeat(paths[:, 0], self.num_traversals, 0)
+        #
+        # src_mask = (src != -1)
+        # src = F.boolean_mask(src, src_mask)
+        # dst = F.boolean_mask(dst, src_mask)
+        # import dgl.convert as convert
+        # # count the number of visits and pick the K-most frequent neighbors for each node
+        # neighbor_graph = convert.heterograph(
+        #     {(self.ntype, '_E', self.ntype): (src, dst)},
+        #     {self.ntype: self.G.number_of_nodes(self.ntype)}
+        # )
+        # neighbor_graph = transform.to_simple(neighbor_graph, return_counts=self.weight_column)
+        # counts = neighbor_graph.edata[self.weight_column]
+        #
+        # neighbor_graph = select_topk(neighbor_graph, self.num_neighbors, self.weight_column)
+        # selected_counts = F.gather_row(counts, neighbor_graph.edata[EID])
+        # neighbor_graph.edata[self.weight_column] = selected_counts
+
+
 
 class pro_sampler(_BaseNegativeSampler):
 

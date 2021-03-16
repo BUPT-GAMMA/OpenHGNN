@@ -22,7 +22,8 @@ class RSHN(nn.Module):
         # map the node feature
         self.feats = nn.Parameter(th.FloatTensor(in_feats1, dim))
         # map the edge feature
-        self.linear_e = nn.Linear(in_features=in_feats2, out_features=dim, bias=False)
+        self.linear_e1 = nn.Linear(in_features=in_feats2, out_features=dim, bias=False)
+        self.linear_e2 = nn.Linear(in_features=dim, out_features=dim, bias=False)
         self.cl_conv1 = AGNNConv()
         self.num_node_layer = num_node_layer
         self.num_edge_layer = num_edge_layer
@@ -38,7 +39,8 @@ class RSHN(nn.Module):
         self.init_para()
 
     def init_para(self):
-        nn.init.xavier_uniform_(self.linear_e.weight)
+        nn.init.xavier_uniform_(self.linear_e1.weight)
+        nn.init.xavier_uniform_(self.linear_e2.weight)
         nn.init.xavier_uniform_(self.feats)
         nn.init.xavier_uniform_(self.emd2pred.weight)
 
@@ -56,10 +58,11 @@ class RSHN(nn.Module):
         edge_weight = F.embedding(g.edata[dgl.ETYPE].long(), h)
         with g.local_scope():
             h = self.feats
-            edge_weight = self.linear_e(edge_weight)
+            edge_weight = self.linear_e1(edge_weight)
             x = self.nn_conv1(g, h, edge_weight=edge_weight)
             x = F.dropout(x, p=self.dropout, training=False)
             if self.num_node_layer == 2:
+                #edge_weight = self.linear_e2(edge_weight)
                 x = self.nn_conv2(g, x, edge_weight=edge_weight)
                 x = F.dropout(x, p=self.dropout, training=False)
 

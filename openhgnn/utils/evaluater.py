@@ -30,6 +30,18 @@ class evaluation:
         return micro_f1, macro_f1
 
 
+def Hetgnn_evaluate(emd, labels, train_idx, test_idx):
+    Y_train = labels[train_idx]
+    Y_test = labels[test_idx]
+    from sklearn.linear_model import LogisticRegression
+    LR = LogisticRegression(max_iter=10000)
+    X_train = emd[train_idx]
+    X_test = emd[test_idx]
+    LR.fit(X_train, Y_train)
+    Y_pred = LR.predict(X_test)
+    macro_f1, micro_f1 = f1_node_classification(Y_test, Y_pred)
+    return micro_f1, macro_f1
+
 def f1_node_classification(y_label, y_pred):
     macro_f1 = f1_score(y_label, y_pred, average='macro')
     micro_f1 = f1_score(y_label, y_pred, average='micro')

@@ -1,13 +1,16 @@
 from openhgnn.model.NSHE import NSHE
-from openhgnn.utils.trainer import run, run_GTN, run_RSHN, run_RGCN, run_CompGCN
+from openhgnn.utils.trainer import run, run_GTN, run_RSHN, run_RGCN, run_CompGCN, run_HetGNN
 from openhgnn.utils.evaluater import evaluate
 from openhgnn.utils.dgl_graph import load_HIN, load_KG
 import torch.nn.functional as F
 
 def OpenHGNN(config):
     # load the graph(HIN or KG)
-    if config.model in ['GTN', 'NSHE']:
-        g = load_HIN(config.dataset).to(config.device)
+    if config.model in ['GTN', 'NSHE', 'HetGNN']:
+        hg, category, num_classes = load_HIN(config.dataset)
+        config.category = category
+        config.num_classes = num_classes
+        hg = hg.to(config.device)
     elif config.model in ['RSHN', 'RGCN', 'CompGCN']:
         kg, category, num_classes = load_KG(config.dataset)
         config.category = category
@@ -20,7 +23,7 @@ def OpenHGNN(config):
             from openhgnn.model.GTN_sparse import GTN
             model = GTN(num_edge=5,
                         num_channels=config.num_channels,
-                        w_in=g.ndata['h']['paper'].shape[1],
+                        w_in=hg.ndata['h']['paper'].shape[1],
                         w_out=config.emd_size,
                         num_class=3,
                         num_layers=config.num_layers)
@@ -28,18 +31,18 @@ def OpenHGNN(config):
             from openhgnn.model.GTN import GTN
             model = GTN(num_edge=5,
                         num_channels=config.num_channels,
-                        w_in=g.ndata['h']['paper'].shape[1],
+                        w_in=hg.ndata['h']['paper'].shape[1],
                         w_out=config.emd_size,
                         num_class=3,
                         num_layers=config.num_layers,
                         norm=None)
         model.to(config.device)
         # train the model
-        node_emb = run_GTN(model, g, config)  # 模型训练
+        node_emb = run_GTN(model, hg, config)  # 模型训练
     elif config.model == 'NSHE':
-        model = NSHE(g=g, gnn_model="GCN", project_dim=config.dim_size['project'],
+        model = NSHE(g=hg, gnn_model="GCN", project_dim=config.dim_size['project'],
                  emd_dim=config.dim_size['emd'], context_dim=config.dim_size['context']).to(config.device)
-        run(model, g, config)
+        run(model, hg, config)
     elif config.model == 'RSHN':
         from openhgnn.model.RSHN import RSHN
         from openhgnn.utils.dgl_graph import coarsened_line_graph
@@ -75,10 +78,26 @@ def OpenHGNN(config):
                             activation=F.relu,
                             batchnorm=True).to(config.device)
         run_CompGCN(model, kg, config)
-
+    elif config.model == 'HetGNN':
+        from openhgnn.utils.dgl_graph import hetgnn_graph
+        hetg = hetgnn_graph(hg, config.dataset)
+        het_graph = hetg.get_hetgnn_graph(config.rw_length, config.rw_walks, config.rwr_prob).to(config.device)
+        from openhgnn.model.HetGNN import HetGNN
+        het_graph = trans_feature(hg, het_graph)
+        model = HetGNN(hg.ntypes, config.dim).to(config.device)
+        run_HetGNN(model, het_graph, config)
+        pass
+    elif config.model == 'Metapath2vec':
+        pass
     print("Train finished")
     # evaluate the performance
     # evaluate(config.seed, config.dataset, node_emb, g)
     return
+def trans_feature(hg, het_gnn):
+    for i in hg.ntypes:
+        ndata = hg.nodes[i].data
+        for j in ndata:
+            het_gnn.nodes[i].data[j] = ndata[j]
+    return het_gnn
 
 

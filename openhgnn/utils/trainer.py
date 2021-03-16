@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from openhgnn.utils.sampler import get_epoch_samples
 from openhgnn.utils.dgl_graph import give_one_hot_feats, normalize_edges, edata_in_out_mask
 from openhgnn.utils.utils import print_dict, h2dict
-from openhgnn.utils.evaluater import evaluate,cal_loss_f1
+from openhgnn.utils.evaluater import evaluate, cal_loss_f1, Hetgnn_evaluate
 
 
 def cal_node_pairwise_loss(node_emd, edge, neg_edge):
@@ -146,6 +146,7 @@ def get_idx(hg, g, category):
     loc = (node_tids == category_id)
     target_idx = node_ids[loc]
     return target_idx, train_idx, test_idx, labels
+
 
 def run_RSHN(model, hg, cl_graph, config):
 
@@ -313,3 +314,97 @@ def run_RGCN(model, hg, config):
         print("Mean backward time: {:4f}".format(np.mean(backward_time[len(backward_time) // 4:])))
 
 
+
+class NegativeSampler(object):
+    def __init__(self, g, k):
+        # caches the probability distribution
+        self.weights = {
+            etype: g.in_degrees(etype=etype).float() ** 0.75
+            for _, etype, _ in g.canonical_etypes
+        }
+        self.k = k
+
+    def __call__(self, g, eids_dict):
+        result_dict = {}
+        for etype, eids in eids_dict.items():
+            src, _ = g.find_edges(eids, etype=etype)
+            src = src.repeat_interleave(self.k)
+            dst = self.weights[etype].multinomial(len(src), replacement=True)
+            result_dict[etype] = (src, dst)
+        return result_dict
+
+
+
+
+def run_HetGNN(model, hg, config):
+    hg = hg.to('cpu')
+    category = config.category
+    train_mask = hg.nodes[category].data.pop('train_mask')
+    test_mask = hg.nodes[category].data.pop('test_mask')
+    train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
+    test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
+    labels = hg.nodes[category].data.pop('label')
+    label_mask = hg.nodes[category].data.pop('label_mask')
+    emd =hg.nodes[category].data['dw_embedding']
+    a, b = Hetgnn_evaluate(emd, labels, train_idx, test_idx)
+
+
+    sampler = dgl.dataloading.MultiLayerFullNeighborSampler(1)
+    train_eid_dict = {etype:hg.edges(etype=etype, form='eid')
+        for etype in hg.etypes}
+    opt = th.optim.Adam(model.parameters())
+    dataloader = dgl.dataloading.EdgeDataLoader(
+        # The following arguments are specific to NodeDataLoader.
+        hg,  # The graph
+        train_eid_dict,  # The edges to iterate over
+        sampler,  # The neighbor sampler
+        negative_sampler=NegativeSampler(hg, 1),  # The negative sampler
+        device=config.device,  # Put the MFGs on CPU or GPU
+        # The following arguments are inherited from PyTorch DataLoader.
+        batch_size=1024,  # Batch size
+        shuffle=True,  # Whether to shuffle the nodes for every epoch
+        drop_last=False,  # Whether to drop the last incomplete batch
+        num_workers=0  # Number of sampler processes
+    )
+    for i in range(config.max_epoch):
+        model.train()
+        for input_nodes, positive_graph, negative_graph, blocks in dataloader:
+            blocks = [b.to(config.device) for b in blocks]
+            positive_graph = positive_graph.to(config.device)
+            negative_graph = negative_graph.to(config.device)
+            # we need extract multi-feature
+            input_features = extract_feature(blocks[0], hg.ntypes)
+
+            pos_score, neg_score = model(positive_graph, negative_graph, blocks, input_features)
+
+            loss = compute_loss(pos_score, neg_score)
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
+        model.eval()
+        input_features = extract_feature(hg, hg.ntypes)
+    pass
+
+
+def compute_loss(pos_score, neg_score):
+    # an example hinge loss
+    loss = []
+    for i in pos_score:
+        loss.append(F.logsigmoid(pos_score[i]))
+        loss.append(F.logsigmoid(neg_score[i]))
+    loss = th.cat(loss)
+    return loss.mean()
+
+
+def extract_feature(g, ntypes):
+    input_features = {}
+    for n in ntypes:
+        ndata = g.srcnodes[n].data
+        data = {}
+        data['dw_embedding'] = ndata['dw_embedding']
+        if n == 'paper':
+            data['title'] = ndata['title']
+            data['abstract'] = ndata['abstract']
+        input_features[n] = data
+
+    return input_features
