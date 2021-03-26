@@ -5,6 +5,18 @@ import numpy as np
 from dgl.sampling.neighbor import select_topk
 from dgl.data.utils import load_graphs, save_graphs
 
+def load_link_pred(path_file):
+    #path_file = './openhgnn/dataset/a_a_list_train.txt'
+    u_list = []
+    v_list = []
+    label_list = []
+    with open(path_file) as f:
+        for i in f.readlines():
+            u, v, label = i.strip().split(', ')
+            u_list.append(int(u))
+            v_list.append(int(v))
+            label_list.append(int(label))
+    return u_list, v_list, label_list
 
 def load_dgl_graph(path_file):
     g, _ = load_graphs(path_file)

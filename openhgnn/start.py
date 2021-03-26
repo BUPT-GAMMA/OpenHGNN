@@ -1,7 +1,7 @@
 from openhgnn.model.NSHE import NSHE
 from openhgnn.utils.trainer import run, run_GTN, run_RSHN, run_RGCN, run_CompGCN, run_HetGNN
 from openhgnn.utils.evaluater import evaluate
-from openhgnn.utils.dgl_graph import load_HIN, load_KG
+from openhgnn.utils.dgl_graph import load_HIN, load_KG, load_link_pred
 import torch.nn.functional as F
 
 def OpenHGNN(config):
@@ -16,6 +16,7 @@ def OpenHGNN(config):
         config.category = category
         config.num_classes = num_classes
         kg = kg.to(config.device)
+
 
     # select the model
     if config.model == 'GTN':
@@ -81,11 +82,12 @@ def OpenHGNN(config):
     elif config.model == 'HetGNN':
         from openhgnn.utils.dgl_graph import hetgnn_graph
         hetg = hetgnn_graph(hg, config.dataset)
-        het_graph = hetg.get_hetgnn_graph(config.rw_length, config.rw_walks, config.rwr_prob).to(config.device)
+        het_graph = hetg.get_hetgnn_graph(config.rw_length, config.rw_walks, config.rwr_prob).to('cpu')
         from openhgnn.model.HetGNN import HetGNN
+        hg = hg.to('cpu')
         het_graph = trans_feature(hg, het_graph)
         model = HetGNN(hg.ntypes, config.dim).to(config.device)
-        run_HetGNN(model, het_graph, config)
+        run_HetGNN(model, hg, het_graph, config)
         pass
     elif config.model == 'Metapath2vec':
         pass

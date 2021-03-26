@@ -102,6 +102,10 @@ class Config(object):
             #self.dropout = conf.getfloat("CompGCN", "dropout")
             self.max_epoch = conf.getint("HetGNN", "max_epoch")
             self.dim = conf.getint("HetGNN", "dim")
+            self.batch_size = conf.getint("HetGNN", "batch_size")
+            self.window_size = conf.getint("HetGNN", "window_size")
+            self.num_workers = conf.getint("HetGNN", "num_workers")
+            self.batches_per_epoch = conf.getint("HetGNN", "batches_per_epoch")
 
             self.rw_length = conf.getint("HetGNN", "rw_length")
             self.rw_walks = conf.getint("HetGNN", "rw_walks")

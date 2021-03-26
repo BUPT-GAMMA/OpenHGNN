@@ -18,13 +18,11 @@ class HetGNN(nn.Module):
     def __init__(self, ntypes, dim):
         super(HetGNN, self).__init__()
         self.Het_Aggrate = Het_Aggregate(ntypes, dim)
-        self.pred = ScorePredictor()
+        #self.pred = ScorePredictor()
 
-    def forward(self, positive_graph, negative_graph, blocks, h):
-        x = self.Het_Aggrate(blocks[0], h)
-        pos_score = self.pred(positive_graph, x)
-        neg_score = self.pred(negative_graph, x)
-        return pos_score, neg_score
+    def forward(self, hg, h):
+        x = self.Het_Aggrate(hg, h)
+        return x
 
 class ScorePredictor(nn.Module):
     def forward(self, edge_subgraph, x):
@@ -128,7 +126,7 @@ class aggregate_het_neigh(nn.Module):
                         continue
                     if stype not in inputs:
                         continue
-                    dstdata = self.mods[etype](
+                    dstdata = self.neigh_rnn[stype](
                         rel_graph,
                         inputs[stype])
                     outputs[dtype].append(dstdata)

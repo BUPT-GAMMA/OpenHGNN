@@ -1,14 +1,15 @@
 import dgl
 import time
+import tqdm
 import torch as th
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from openhgnn.utils.sampler import get_epoch_samples
-from openhgnn.utils.dgl_graph import give_one_hot_feats, normalize_edges, edata_in_out_mask
+from openhgnn.utils.dgl_graph import give_one_hot_feats, normalize_edges, edata_in_out_mask, load_link_pred
 from openhgnn.utils.utils import print_dict, h2dict
-from openhgnn.utils.evaluater import evaluate, cal_loss_f1, Hetgnn_evaluate
+from openhgnn.utils.evaluater import evaluate, cal_loss_f1, Hetgnn_evaluate, author_link_prediction
 
 
 def cal_node_pairwise_loss(node_emd, edge, neg_edge):
@@ -336,7 +337,8 @@ class NegativeSampler(object):
 
 
 
-def run_HetGNN(model, hg, config):
+def run_HetGNN(model, hg, het_graph, config):
+    # het_graph is used to sample neighbour
     hg = hg.to('cpu')
     category = config.category
     train_mask = hg.nodes[category].data.pop('train_mask')
@@ -346,54 +348,90 @@ def run_HetGNN(model, hg, config):
     labels = hg.nodes[category].data.pop('label')
     label_mask = hg.nodes[category].data.pop('label_mask')
     emd =hg.nodes[category].data['dw_embedding']
-    a, b = Hetgnn_evaluate(emd, labels, train_idx, test_idx)
+    train_batch = load_link_pred('./openhgnn/dataset/a_a_list_train.txt')
+    test_batch = load_link_pred('./openhgnn/dataset/a_a_list_test.txt')
+    author_link_prediction(emd, train_batch, test_batch)
+    micro_f1, macro_f1 = Hetgnn_evaluate(emd, labels, train_idx, test_idx)
+    print('<Classification> DW    Micro-F1 = %.4f, Macro-F1 = %.4f' % (micro_f1, macro_f1))
+    # HetGNN Sampler
+    from torch.utils.data import IterableDataset, DataLoader
+    from openhgnn.utils.sampler import SkipGramBatchSampler, HetGNNCollator, NeighborSampler
+    batch_sampler = SkipGramBatchSampler(hg, config.batch_size, config.window_size)
+    neighbor_sampler = NeighborSampler(het_graph, hg.ntypes, batch_sampler.num_nodes, config.device)
+    collator = HetGNNCollator(neighbor_sampler, hg)
+    dataloader = DataLoader(
+        batch_sampler,
+        collate_fn=collator.collate_train,
+        num_workers=config.num_workers)
 
-
-    sampler = dgl.dataloading.MultiLayerFullNeighborSampler(1)
-    train_eid_dict = {etype:hg.edges(etype=etype, form='eid')
-        for etype in hg.etypes}
+    # sampler = dgl.dataloading.MultiLayerFullNeighborSampler(1)
+    # train_eid_dict = {etype: hg.edges(etype=etype, form='eid')
+    #     for etype in hg.etypes}
     opt = th.optim.Adam(model.parameters())
-    dataloader = dgl.dataloading.EdgeDataLoader(
-        # The following arguments are specific to NodeDataLoader.
-        hg,  # The graph
-        train_eid_dict,  # The edges to iterate over
-        sampler,  # The neighbor sampler
-        negative_sampler=NegativeSampler(hg, 1),  # The negative sampler
-        device=config.device,  # Put the MFGs on CPU or GPU
-        # The following arguments are inherited from PyTorch DataLoader.
-        batch_size=1024,  # Batch size
-        shuffle=True,  # Whether to shuffle the nodes for every epoch
-        drop_last=False,  # Whether to drop the last incomplete batch
-        num_workers=0  # Number of sampler processes
-    )
+    # dataloader = dgl.dataloading.EdgeDataLoader(
+    #     # The following arguments are specific to NodeDataLoader.
+    #     hg,  # The graph
+    #     train_eid_dict,  # The edges to iterate over
+    #     sampler,  # The neighbor sampler
+    #     negative_sampler=NegativeSampler(hg, 1),  # The negative sampler
+    #     device=config.device,  # Put the MFGs on CPU or GPU
+    #     # The following arguments are inherited from PyTorch DataLoader.
+    #     batch_size=1024,  # Batch size
+    #     shuffle=True,  # Whether to shuffle the nodes for every epoch
+    #     drop_last=False,  # Whether to drop the last incomplete batch
+    #     num_workers=0  # Number of sampler processes
+    # )
+    pred = ScorePredictor()
+    dataloader_it = iter(dataloader)
+    het_graph = het_graph.to(config.device)
+    input_features = extract_feature(het_graph, hg.ntypes)
+    x = model(het_graph, input_features)
+    author_link_prediction(x['author'].to('cpu').detach(), train_batch, test_batch)
+
+    micro_f1, macro_f1 = Hetgnn_evaluate(x[config.category].to('cpu').detach(), labels, train_idx, test_idx)
+    print('<Classification>     Micro-F1 = %.4f, Macro-F1 = %.4f' % (micro_f1, macro_f1))
     for i in range(config.max_epoch):
         model.train()
-        for input_nodes, positive_graph, negative_graph, blocks in dataloader:
+        for batch_id in tqdm.trange(config.batches_per_epoch):
+            positive_graph, negative_graph, blocks = next(dataloader_it)
             blocks = [b.to(config.device) for b in blocks]
             positive_graph = positive_graph.to(config.device)
             negative_graph = negative_graph.to(config.device)
             # we need extract multi-feature
             input_features = extract_feature(blocks[0], hg.ntypes)
 
-            pos_score, neg_score = model(positive_graph, negative_graph, blocks, input_features)
+            x = model(blocks[0], input_features)
+            loss = compute_loss(pred(positive_graph, x), pred(negative_graph, x))
 
-            loss = compute_loss(pos_score, neg_score)
             opt.zero_grad()
             loss.backward()
             opt.step()
-        model.eval()
-        input_features = extract_feature(hg, hg.ntypes)
+        print('Epoch {:05d} |Train - Loss: {:.4f}'.format(i, loss.item()))
+        input_features = extract_feature(het_graph, hg.ntypes)
+        x = model(het_graph, input_features)
+        author_link_prediction(x['author'].to('cpu').detach(), train_batch, test_batch)
+        micro_f1, macro_f1 = Hetgnn_evaluate(x[config.category].to('cpu').detach(), labels, train_idx, test_idx)
+        print('<Classification>     Micro-F1 = %.4f, Macro-F1 = %.4f' % (micro_f1, macro_f1))
     pass
 
+
+class ScorePredictor(nn.Module):
+    def forward(self, edge_subgraph, x):
+        with edge_subgraph.local_scope():
+            edge_subgraph.ndata['x'] = x
+            for etype in edge_subgraph.canonical_etypes:
+                edge_subgraph.apply_edges(
+                    dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
+            return edge_subgraph.edata['score']
 
 def compute_loss(pos_score, neg_score):
     # an example hinge loss
     loss = []
     for i in pos_score:
         loss.append(F.logsigmoid(pos_score[i]))
-        loss.append(F.logsigmoid(neg_score[i]))
+        loss.append(F.logsigmoid(-neg_score[i]))
     loss = th.cat(loss)
-    return loss.mean()
+    return -loss.mean()
 
 
 def extract_feature(g, ntypes):
