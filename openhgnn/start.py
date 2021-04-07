@@ -1,10 +1,27 @@
-from openhgnn.model.NSHE import NSHE
 from openhgnn.utils.trainer import run, run_GTN, run_RSHN, run_RGCN, run_CompGCN, run_HetGNN
 from openhgnn.utils.evaluater import evaluate
+from openhgnn.utils import set_random_seed
 from openhgnn.utils.dgl_graph import load_HIN, load_KG, load_link_pred
 import torch.nn.functional as F
+import torch as th
+from openhgnn.tasks import build_task
 
-def OpenHGNN(config):
+
+def OpenHGNN(args):
+    set_random_seed(args.seed)
+
+    # TODO find the best parameter
+    # if getattr(args, "use_best_config", False):
+    #     args = set_best_config(args)
+
+    print(args)
+    task = build_task(args)
+    result = task.train()
+
+    return result
+
+
+def train(config):
     # load the graph(HIN or KG)
     if config.model in ['GTN', 'NSHE', 'HetGNN']:
         hg, category, num_classes = load_HIN(config.dataset)
@@ -18,10 +35,10 @@ def OpenHGNN(config):
         kg = kg.to(config.device)
 
 
-    # select the model
+    # select the models
     if config.model == 'GTN':
         if config.sparse_flag == 'True':
-            from openhgnn.model.GTN_sparse import GTN
+            from openhgnn.models.GTN_sparse import GTN
             model = GTN(num_edge=5,
                         num_channels=config.num_channels,
                         w_in=hg.ndata['h']['paper'].shape[1],
@@ -29,7 +46,7 @@ def OpenHGNN(config):
                         num_class=3,
                         num_layers=config.num_layers)
         else:
-            from openhgnn.model.GTN import GTN
+            from openhgnn.models.GTN import GTN
             model = GTN(num_edge=5,
                         num_channels=config.num_channels,
                         w_in=hg.ndata['h']['paper'].shape[1],
@@ -38,14 +55,14 @@ def OpenHGNN(config):
                         num_layers=config.num_layers,
                         norm=None)
         model.to(config.device)
-        # train the model
+        # train the models
         node_emb = run_GTN(model, hg, config)  # 模型训练
     elif config.model == 'NSHE':
         model = NSHE(g=hg, gnn_model="GCN", project_dim=config.dim_size['project'],
                  emd_dim=config.dim_size['emd'], context_dim=config.dim_size['context']).to(config.device)
         run(model, hg, config)
     elif config.model == 'RSHN':
-        from openhgnn.model.RSHN import RSHN
+        from openhgnn.models.RSHN import RSHN
         from openhgnn.utils.dgl_graph import coarsened_line_graph
         cl = coarsened_line_graph(rw_len=config.rw_len, batch_size=config.batch_size, n_dataset=config.dataset, symmetric=True)
         cl_graph = cl.get_cl_graph(kg).to(config.device)
@@ -54,8 +71,8 @@ def OpenHGNN(config):
                      num_edge_layer=config.num_edge_layer, dropout=config.dropout).to(config.device)
         run_RSHN(model, kg, cl_graph, config)
     elif config.model == 'RGCN':
-        # create model
-        from openhgnn.model.RGCN import EntityClassify
+        # create models
+        from openhgnn.models.RGCN import EntityClassify
         model = EntityClassify(kg.number_of_nodes(),
                                config.n_hidden,
                                config.num_classes,
@@ -66,7 +83,7 @@ def OpenHGNN(config):
                                use_self_loop=config.use_self_loop,use_cuda=True).to(config.device)
         run_RGCN(model, kg, config)
     elif config.model == 'CompGCN':
-        from openhgnn.model.CompGCN import CompGCN
+        from openhgnn.models.CompGCN import CompGCN
         n_rels = len(kg.etypes)
         model = CompGCN(in_dim=config.n_hidden,
                             hid_dim=config.n_hidden,
@@ -83,7 +100,7 @@ def OpenHGNN(config):
         from openhgnn.utils.dgl_graph import hetgnn_graph
         hetg = hetgnn_graph(hg, config.dataset)
         het_graph = hetg.get_hetgnn_graph(config.rw_length, config.rw_walks, config.rwr_prob).to('cpu')
-        from openhgnn.model.HetGNN import HetGNN
+        from openhgnn.models.HetGNN import HetGNN
         hg = hg.to('cpu')
         het_graph = trans_feature(hg, het_graph)
         model = HetGNN(hg.ntypes, config.dim).to(config.device)
@@ -95,6 +112,7 @@ def OpenHGNN(config):
     # evaluate the performance
     # evaluate(config.seed, config.dataset, node_emb, g)
     return
+
 def trans_feature(hg, het_gnn):
     for i in hg.ntypes:
         ndata = hg.nodes[i].data

@@ -3,7 +3,49 @@ from dgl import backend as F
 import torch as th
 from scipy.sparse import coo_matrix
 import numpy as np
+import random
+from . import load_HIN, load_KG
 
+
+def get_nodes_dict(hg):
+    n_dict = {}
+    for n in hg.ntypes:
+        n_dict[n] = hg.num_nodes(n)
+    return n_dict
+
+def get_idx(hg, g, category):
+    train_mask = hg.nodes[category].data.pop('train_mask')
+    test_mask = hg.nodes[category].data.pop('test_mask')
+    train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
+    test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
+    labels = hg.nodes[category].data.pop('labels')
+    # get target category id
+    node_ids = th.arange(g.number_of_nodes())
+    category_id = len(hg.ntypes)
+    for i, ntype in enumerate(hg.ntypes):
+        if ntype == category:
+            category_id = i
+    # find out the target node ids in g
+    node_tids = g.ndata[dgl.NTYPE]
+    loc = (node_tids == category_id)
+    target_idx = node_ids[loc]
+    return target_idx, train_idx, test_idx, labels
+
+
+def build_dataset(model_name, dataset_name):
+    # load the graph(HIN or KG)
+    if model_name in ['GTN', 'NSHE', 'HetGNN']:
+        g, category, num_classes = load_HIN(dataset_name)
+    elif model_name in ['RSHN', 'RGCN', 'CompGCN']:
+        g, category, num_classes = load_KG(dataset_name)
+    return g, category, num_classes
+
+
+def set_random_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    th.manual_seed(seed)
+    th.cuda.manual_seed(seed)
 
 def com_mult(a, b):
     r1, i1 = a[..., 0], a[..., 1]

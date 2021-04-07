@@ -109,7 +109,7 @@ def run_GTN(model, g, config):
         # Valid
         model.eval()
         with th.no_grad():
-            #y_test = model.forward(g_homo)
+            #y_test = models.forward(g_homo)
             emd = h2dict(y_train, g.ndata['h'])
             tar_y = emd['paper']
             loss, macro_f1, micro_f1 = cal_loss_f1(tar_y, tar_data, loss_func, 'valid_mask')
@@ -440,9 +440,12 @@ def extract_feature(g, ntypes):
         ndata = g.srcnodes[n].data
         data = {}
         data['dw_embedding'] = ndata['dw_embedding']
+        data['abstract'] = ndata['abstract']
         if n == 'paper':
             data['title'] = ndata['title']
-            data['abstract'] = ndata['abstract']
+            data['venue'] = ndata['venue']
+            data['author'] = ndata['author']
+            data['reference'] = ndata['reference']
         input_features[n] = data
 
     return input_features

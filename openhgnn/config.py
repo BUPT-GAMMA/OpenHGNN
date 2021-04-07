@@ -10,11 +10,11 @@ class Config(object):
         data_path = os.getcwd()
         if gpu == -1:
             self.device = th.device('cpu')
-        elif gpu >= 0 :
+        elif gpu >= 0:
             if th.cuda.is_available():
                 self.device = th.device('cuda', int(gpu))
             else:
-                print("cuda is not available")
+                print("cuda is not available, please set 'gpu' -1")
 
         try:
             conf.read(file_path)
@@ -23,7 +23,7 @@ class Config(object):
         # training dataset path
         self.model = model
         self.dataset = dataset
-        self.path = {'output_modelfold': './output/model/',
+        self.path = {'output_modelfold': './output/models/',
                      'input_fold': './dataset/'+self.dataset+'/',
                      'temp_fold': './output/temp/'+self.model+'/'}
 
@@ -90,9 +90,11 @@ class Config(object):
             self.n_hidden = conf.getint("CompGCN", "n_hidden")
             self.n_layers = conf.getint("CompGCN", "n_layers")
             self.max_epoch = conf.getint("CompGCN", "max_epoch")
+            self.seed = conf.getint("CompGCN", "seed")
+            self.patience = conf.getint("CompGCN", "patience")
 
             self.comp_fn = conf.get("CompGCN", "comp_fn")
-
+            self.task = 'node_classification'
             self.validation = conf.getboolean("CompGCN", "validation")
             pass
         elif model == 'HetGNN':

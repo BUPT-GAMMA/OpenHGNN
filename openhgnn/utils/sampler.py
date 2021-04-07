@@ -31,6 +31,8 @@ class SkipGramBatchSampler(IterableDataset):
         self.batch_size = batch_size
         self.window_size = window_size
         self.neg_hetero = True
+        self.edge_dict = {}
+        self.ntypes = hg.ntypes
 
     def __iter__(self):
         '''         u = []
@@ -45,7 +47,7 @@ class SkipGramBatchSampler(IterableDataset):
         # select tails through random walk skgram
         while True:
             heads = th.randint(0, self.g.number_of_nodes(), (self.batch_size,))
-            traces, _ = dgl.sampling.random_walk(self.g, heads, length=self.window_size * 2)
+            traces, _ = dgl.sampling.random_walk(self.g, heads, length=self.window_size)
             heads, tails = self.traces2pos(traces, self.window_size)
 
             heads = (self.NID[heads], self.NTYPE[heads])
@@ -57,6 +59,22 @@ class SkipGramBatchSampler(IterableDataset):
                 ntype = self.hg.ntypes[i]
                 neg_tails[0][mask] = th.randint(0, self.hg.number_of_nodes(ntype), size=neg_tails[0][mask].shape)
             yield heads, tails, neg_tails
+
+
+    def pre_process(self):
+        heads = th.arange(self.g.number_of_nodes())
+        traces, _ = dgl.sampling.random_walk(self.g, heads, length=self.window_size)
+        heads, tails = self.traces2pos(traces, self.window_size)
+
+        heads = (self.NID[heads], self.NTYPE[heads])
+        tails = (self.NID[tails], self.NTYPE[tails])
+        for i in range(self.num_ntypes):
+            for j in range(self.num_ntypes):
+                mask_h = (heads[1] == i)
+                mask_t = (tails[1] == j)
+                edge = (self.ntypes[i], self.ntypes[i] + '-' + self.ntypes[j], self.ntypes[j])
+                self.edge_dict[edge] = (heads[0][mask_h], tails[0][mask_t])
+
 
     def traces2pos(self, traces, window_size):
         '''
@@ -102,8 +120,8 @@ class NeighborSampler(object):
         num_ntypes = len(self.ntypes)
         for i in range(num_ntypes):
             for j in range(num_ntypes):
-                edge = (self.ntypes[j], self.ntypes[j]+'-' + self.ntypes[i], self.ntypes[i])
-                mask = (heads[1] == j) & (tails[1] == i)
+                edge = (self.ntypes[i], self.ntypes[i]+ '-' + self.ntypes[j], self.ntypes[j])
+                mask = (heads[1] == i) & (tails[1] == j)
                 edge_dict[edge] = (heads[0][mask], tails[0][mask])
         hg = dgl.heterograph(
             edge_dict,
@@ -119,13 +137,7 @@ class NeighborSampler(object):
 
         pos_graph, neg_graph = dgl.compact_graphs([pos_graph, neg_graph])
         pos_nodes = pos_graph.ndata[dgl.NID]
-        neg_nodes = neg_graph.ndata[dgl.NID]
-        seed_nodes = {}
-        for i in pos_nodes:
-            t = th.cat((pos_nodes[i], neg_nodes[i]))
-            t = th.unique(t)
-            seed_nodes[i] = t
-
+        seed_nodes = pos_nodes # same with neg_nodes from neg_graph
 
         blocks = self.sampler.sample_blocks(
             self.hg, seed_nodes, exclude_eids=None)
@@ -147,6 +159,12 @@ def assign_simple_node_features(ndata, g, ntypes, assign_id=False):
 def assign_features_to_blocks(blocks, g, ntypes):
     # For the first block (which is closest to the input), copy the features from
     # the original graph as well as the texts.
+    # for ntype in ntypes:
+    #     for col in g.nodes[ntype].data.keys():
+    #         if not assign_id and col == dgl.NID:
+    #             continue
+    #         induced_nodes = blocks[0].srcnodes[ntype].data[dgl.NID]
+    #         blocks[0].srcnodes[ntype].data[col] = g.nodes[ntype].data[col][induced_nodes]
     assign_simple_node_features(blocks[0].srcdata, g, ntypes)
     #assign_simple_node_features(blocks[-1].dstdata, g, ntypes)
 
@@ -164,11 +182,12 @@ class HetGNNCollator(object):
 
         return pos_graph, neg_graph, blocks
 
-    def collate_test(self, samples):
-        batch = th.LongTensor(samples)
-        blocks = self.sampler.sample_blocks(batch)
-        assign_features_to_blocks(blocks, self.g, self.g.ntypes)
-        return blocks
+    # def collate_test(self, samples):
+    #     batch = th.LongTensor(samples)
+    #     blocks = self.sampler.sample_blocks(batch)
+    #     assign_features_to_blocks(blocks, self.g, self.g.ntypes)
+    #     return blocks
+
 
 
 class randomwalk_on_heterograph(object):

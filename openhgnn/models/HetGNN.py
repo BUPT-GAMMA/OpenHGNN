@@ -194,3 +194,40 @@ class encoder_het_content(nn.Module):
                 out_h = th.mean(all_state, 1).squeeze()
                 content_h[ntype] = out_h
             return content_h
+
+
+
+from openhgnn.models.micro_layer.LSTM_conv import LSTMConv
+from openhgnn.models.HeteroGraphConv import HeteroGraphConv
+class HetGNNConv(nn.Module):
+    def __init__(self, graph, ntypes, dim):
+        super(HetGNNConv, self).__init__()
+        # ntypes means nodes type name
+        self.ntypes =ntypes
+        self.dim = dim
+
+        # hetero conv modules
+        self.micro_conv = HeteroGraphConv({
+            etype: LSTMConv(dim=dim)
+            for srctype, etype, dsttype in graph.canonical_etypes
+        })
+
+        # different types aggregation module
+        self.macro_conv = AttConv(in_feats=hidden_dim * n_heads, out_feats=hidden_dim,
+                                                             num_heads=n_heads,
+                                                             dropout=dropout, negative_slope=0.2)
+
+        self.atten_w = nn.ModuleDict({})
+        for n in self.ntypes:
+            self.atten_w[n] = nn.Linear(in_features=dim * 2, out_features=1)
+
+        self.softmax = nn.Softmax(dim=1)
+        self.activation = nn.LeakyReLU()
+        self.drop = nn.Dropout(p=0.5)
+        self.bn = nn.BatchNorm1d(dim)
+        self.embed_d = dim
+
+    def forward(self, hg, h):
+        x = self.Het_Aggrate(hg, h)
+        return x
+
