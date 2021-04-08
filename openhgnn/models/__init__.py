@@ -43,14 +43,13 @@ def try_import_model(model):
     return True
 
 
-def build_model(args):
-    if not try_import_model(args.model):
+def build_model(model):
+    if not try_import_model(model):
         exit(1)
-    return MODEL_REGISTRY[args.model].build_model_from_args(args)
+    return MODEL_REGISTRY[model]
 
 
 SUPPORTED_MODELS = {
     "CompGCN": "openhgnn.models.CompGCN",
-    "spectral": "cogdl.models.emb.spectral",
-    "hin2vec": "cogdl.models.emb.hin2vec",
+    "HetGNN": "openhgnn.models.HetGNN",
 }

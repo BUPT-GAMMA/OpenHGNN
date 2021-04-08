@@ -9,6 +9,8 @@ from openhgnn.models import build_model
 
 from . import BaseTask, register_task
 from ..utils import build_dataset, get_nodes_dict
+from ..utils import cal_acc
+
 
 @register_task("node_classification")
 class NodeClassification(BaseTask):
@@ -32,17 +34,15 @@ class NodeClassification(BaseTask):
         self.hg = self.hg.to(self.device)
         self.g = dgl.to_homogeneous(self.hg)
 
-        self.args.n_nodes = get_nodes_dict(self.hg)     # number of nodes dict
 
-        self.args.n_rels = len(self.hg.etypes)
         self.args.num_classes = num_classes
 
-        self.model = build_model(self.args)
+        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model.set_device(self.device)
 
 
         self.set_loss_fn(F.cross_entropy)
-        # self.set_evaluator(dataset)
+        self.evaluator = cal_acc
 
         self.trainer = self.get_trainer(self.model, self.args)
         if not self.trainer:
@@ -58,10 +58,10 @@ class NodeClassification(BaseTask):
 
     def preprocess(self):
         from openhgnn.utils import get_idx
-        self.target_idx, train_idx, self.test_idx, self.labels = get_idx(self.hg, self.g, self.category)
+        train_idx, self.test_idx, self.labels = get_idx(self.hg, self.g, self.category)
         if self.args.validation:
-            self.val_idx = train_idx[:len(train_idx) // 5]
-            self.train_idx = train_idx[len(train_idx) // 5:]
+            self.val_idx = train_idx[:len(train_idx) // 10]
+            self.train_idx = train_idx[len(train_idx) // 10:]
         else:
             self.val_idx = train_idx
             self.train_idx = train_idx
@@ -135,11 +135,11 @@ class NodeClassification(BaseTask):
 
         if mask is not None:
             loss = self.loss_fn(logits[mask], self.labels[mask])
-            metric = self.evaluator(logits[mask], self.data.y[mask])
+            metric = self.evaluator(logits[mask], self.labels[mask])
             return metric, loss
         else:
 
             masks = {'train': self.train_idx, 'val': self.val_idx, 'test': self.test_idx}
-            #metrics = {key: self.evaluator(logits[mask], self.labels[mask]) for key, mask in masks.items()}
+            metrics = {key: self.evaluator(logits[mask], self.labels[mask]) for key, mask in masks.items()}
             losses = {key: self.loss_fn(logits[mask], self.labels[mask]) for key, mask in masks.items()}
             return metrics, losses

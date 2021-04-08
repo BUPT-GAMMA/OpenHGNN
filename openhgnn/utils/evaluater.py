@@ -31,7 +31,7 @@ class evaluation:
         return micro_f1, macro_f1
 
 
-def Hetgnn_evaluate(emd, labels, train_idx, test_idx):
+def nc_with_split(emd, labels, train_idx, test_idx):
     Y_train = labels[train_idx]
     Y_test = labels[test_idx]
     LR = LogisticRegression(max_iter=10000)
@@ -40,6 +40,7 @@ def Hetgnn_evaluate(emd, labels, train_idx, test_idx):
     LR.fit(X_train, Y_train)
     Y_pred = LR.predict(X_test)
     macro_f1, micro_f1 = f1_node_classification(Y_test, Y_pred)
+    print('\t<node classification> macro_f1: {:.4f}, micro_f1: {:.4f}'.format(macro_f1, micro_f1))
     return micro_f1, macro_f1
 
 #from openhgnn.utils.dgl_graph import load_link_pred
@@ -71,7 +72,7 @@ def LR_pred(train_X, train_Y, test_X):
 def link_prediction(train_X, train_Y, test_X, test_Y):
     pred_Y = LR_pred(train_X, train_Y, test_X)
     AUC_score = Metric.roc_auc_score(test_Y, pred_Y)
-    print('AUC=%.4f' % AUC_score)
+    print('\t<Link prediction> AUC=%.4f' % AUC_score, end='\t')
     macro_f1, micro_f1 = f1_node_classification(test_Y, pred_Y)
     print('macro_f1: {:.4f}, micro_f1: {:.4f}'.format(macro_f1, micro_f1))
 
@@ -131,3 +132,6 @@ def cal_loss_f1(y, node_data, loss_func, mode):
     loss = loss_func(y, y_label)
     macro_f1, micro_f1 = f1_node_classification(y_label.cpu(), y_pred.cpu())
     return loss, macro_f1, micro_f1
+
+def cal_acc(y_pred, y_true):
+    return th.sum(y_pred.argmax(dim=1) == y_true).item() / len(y_true)

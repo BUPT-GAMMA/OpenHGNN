@@ -1,15 +1,16 @@
 from typing import Optional, Type, Any
+from abc import ABCMeta, abstractmethod
 import torch.nn as nn
 
 
-class BaseModel(nn.Module):
+class BaseModel(nn.Module, metaclass=ABCMeta):
     @staticmethod
     def add_args(parser):
         """Add models-specific arguments to the parser."""
         pass
 
     @classmethod
-    def build_model_from_args(cls, args):
+    def build_model_from_args(cls, args, hg):
         """Build a new models instance."""
         raise NotImplementedError("Models must implement the build_model_from_args method")
 
@@ -46,7 +47,8 @@ class BaseModel(nn.Module):
         return None
 
     def set_device(self, device):
-        self.device = device
+        #self.device = device
+        pass
 
     def set_loss_fn(self, loss_fn):
         self.loss_fn = loss_fn

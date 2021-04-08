@@ -108,9 +108,12 @@ class Config(object):
             self.window_size = conf.getint("HetGNN", "window_size")
             self.num_workers = conf.getint("HetGNN", "num_workers")
             self.batches_per_epoch = conf.getint("HetGNN", "batches_per_epoch")
-
+            self.seed = conf.getint("HetGNN", "seed")
+            self.patience = conf.getint("HetGNN", "patience")
             self.rw_length = conf.getint("HetGNN", "rw_length")
             self.rw_walks = conf.getint("HetGNN", "rw_walks")
             self.rwr_prob = conf.getfloat("HetGNN", "rwr_prob")
+
+            self.task = 'unsupervised_train'
 
             pass

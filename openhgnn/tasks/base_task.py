@@ -1,20 +1,20 @@
-from abc import ABC, ABCMeta
+from abc import ABC, ABCMeta, abstractmethod
 import argparse
 import atexit
 import os
 import torch
 
 
-class LoadFrom(ABCMeta):
-    def __call__(cls, *args, **kwargs):
-        obj = type.__call__(cls, *args, **kwargs)
-        obj.load_from_pretrained()
-        if hasattr(obj, "models") and hasattr(obj, "device"):
-            obj.model.set_device(obj.device)
-        return obj
+# class LoadFrom(ABCMeta):
+#     def __call__(cls, *args, **kwargs):
+#         obj = type.__call__(cls, *args, **kwargs)
+#         obj.load_from_pretrained()
+#         if hasattr(obj, "models") and hasattr(obj, "device"):
+#             obj.model.set_device(obj.device)
+#         return obj
 
 
-class BaseTask(ABC, metaclass=LoadFrom):
+class BaseTask(ABC):
     @staticmethod
     def add_args(parser: argparse.ArgumentParser):
         """Add tasks-specific arguments to the parser."""
@@ -33,8 +33,9 @@ class BaseTask(ABC, metaclass=LoadFrom):
         else:
             self._checkpoint = None
 
+    @abstractmethod
     def train(self):
-        raise NotImplementedError
+        pass
 
     def load_from_pretrained(self):
         if self.load_from_checkpoint:

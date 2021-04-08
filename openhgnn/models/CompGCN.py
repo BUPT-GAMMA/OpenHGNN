@@ -7,6 +7,102 @@ from openhgnn.utils.utils import ccorr
 from . import BaseModel, register_model
 from openhgnn.utils.dgl_graph import edata_in_out_mask
 from . import HeteroEmbedLayer
+from ..utils import get_nodes_dict
+'''
+Here, we present the implementation details for each task used for evaluation in the paper. 
+For all the tasks, we used COMPGCN build on PyTorch geometric framework (Fey & Lenssen, 2019).
+
+Link Prediction: For evaluation, 200-dimensional embeddings for node and relation embeddings are used. 
+    For selecting the best model we perform a hyperparameter search using the validation data over the values listed in Table 8. 
+    For training link prediction models, we use the standard binary cross entropy loss with label smoothing Dettmers et al. (2018).
+
+Node Classification: Following Schlichtkrull et al. (2017), we use 10% training data as validation for selecting the best model for both the datasets. 
+    We restrict the number of hidden units to 32. We use cross-entropy loss for training our model.
+
+For all the experiments, training is done using Adam optimizer (Kingma & Ba, 2014) and Xavier initialization (Glorot & Bengio, 2010) is used for initializing parameters.
+'''
+@register_model('CompGCN')
+class CompGCN(BaseModel):
+    """The models of the simplified CompGCN, without using basis vector, for a homogeneous graph.
+    """
+    @classmethod
+    def build_model_from_args(cls, args, hg):
+        return cls(args.n_hidden, args.n_hidden, args.num_classes, get_nodes_dict(hg), len(hg.etypes),
+            args.n_layers, comp_fn=args.comp_fn, dropout=args.dropout
+        )
+
+    def __init__(self, in_dim, hid_dim, out_dim, n_nodes, n_rels, num_layers=2, comp_fn='sub', dropout=0.0,
+                 activation=F.relu, batchnorm=True):
+        super(CompGCN, self).__init__()
+        self.in_dim = in_dim
+        self.hid_dim = hid_dim
+        self.out_dim = out_dim
+        self.n_rels = n_rels
+        self.n_nodes = n_nodes
+        self.num_layer = num_layers
+        self.comp_fn = comp_fn
+        self.dropout = dropout
+        self.activation = activation
+        self.batchnorm = batchnorm
+
+        self.layers = nn.ModuleList()
+
+        # Input layer and initial relation embedding
+        # relations & nodes don't have the feature, so set the initial embedding
+        self.h_n_dict = HeteroEmbedLayer(n_nodes, self.in_dim)
+
+        self.r_embedding = nn.Parameter(th.FloatTensor(self.n_rels + 1, self.in_dim))
+
+        self.layers.append(CompGraphConv(self.in_dim,
+                                         self.hid_dim,
+                                         comp_fn=self.comp_fn,
+                                         activation=self.activation,
+                                         batchnorm=self.batchnorm,
+                                         dropout=self.dropout))
+
+        # Hidden layers with n - 1 CompGraphConv layers
+        for i in range(self.num_layer - 2):
+            self.layers.append(CompGraphConv(self.hid_dim,
+                                             self.hid_dim,
+                                             comp_fn=self.comp_fn,
+                                             activation=self.activation,
+                                             batchnorm=self.batchnorm,
+                                             dropout=self.dropout))
+
+        # Output layer with the output class
+        self.layers.append(CompGraphConv(self.hid_dim,
+                                         self.out_dim,
+                                         comp_fn=self.comp_fn))
+
+
+        nn.init.xavier_uniform_(self.r_embedding)
+
+    def forward(self, hg, n_feats=None):
+
+        # For full graph training, directly use the graph
+        if n_feats is None:
+            # full graph training
+            n_feats = self.h_n_dict()
+
+        # Forward of n layers of CompGraphConv
+        r_feats = self.r_embedding
+
+        for layer in self.layers:
+            n_feats, r_feats = layer(hg, n_feats, r_feats)
+
+        return n_feats
+
+    def preprocess(self, hg):
+        edata_in_out_mask(hg)
+
+    def trainer(self):
+        pass
+
+    def node_classification_loss(self, hg, label, mask, category):
+        #assert mask.shape[0] == label.shape[0]
+        pred = self.forward(hg)[category]
+        return self.loss_fn(pred[mask], label[mask])
+
 
 class CompGraphConv(nn.Module):
     """One layer of simplified CompGCN."""
@@ -114,85 +210,3 @@ class CompGraphConv(nn.Module):
         if self.actvation is not None:
             r_out_feats = self.actvation(r_out_feats)
         return outputs, r_out_feats
-
-@register_model('CompGCN')
-class CompGCN(BaseModel):
-    """The models of the simplified CompGCN, without using basis vector, for a homogeneous graph.
-    """
-    @classmethod
-    def build_model_from_args(cls, args):
-        return cls(args.n_hidden, args.n_hidden, args.num_classes, args.n_nodes, args.n_rels,
-            args.n_layers, dropout=args.dropout
-        )
-
-    def __init__(self, in_dim, hid_dim, out_dim, n_nodes, n_rels, num_layers=2, comp_fn='sub', dropout=0.0,
-                 activation=None, batchnorm=False):
-        super(CompGCN, self).__init__()
-        self.in_dim = in_dim
-        self.hid_dim = hid_dim
-        self.out_dim = out_dim
-        self.n_rels = n_rels
-        self.n_nodes = n_nodes
-        self.num_layer = num_layers
-        self.comp_fn = comp_fn
-        self.dropout = dropout
-        self.activation = activation
-        self.batchnorm = batchnorm
-
-        self.layers = nn.ModuleList()
-
-        # Input layer and initial relation embedding
-        # relations & nodes don't have the feature, so set the initial embedding
-        self.h_n_dict = HeteroEmbedLayer(n_nodes, self.in_dim)
-
-        self.r_embedding = nn.Parameter(th.FloatTensor(self.n_rels + 1, self.in_dim))
-
-        self.layers.append(CompGraphConv(self.in_dim,
-                                         self.hid_dim,
-                                         comp_fn=self.comp_fn,
-                                         activation=self.activation,
-                                         batchnorm=self.batchnorm,
-                                         dropout=self.dropout))
-
-        # Hidden layers with n - 1 CompGraphConv layers
-        for i in range(self.num_layer - 2):
-            self.layers.append(CompGraphConv(self.hid_dim,
-                                             self.hid_dim,
-                                             comp_fn=self.comp_fn,
-                                             activation=self.activation,
-                                             batchnorm=self.batchnorm,
-                                             dropout=self.dropout))
-
-        # Output layer with the output class
-        self.layers.append(CompGraphConv(self.hid_dim,
-                                         self.out_dim,
-                                         comp_fn=self.comp_fn))
-
-
-        nn.init.xavier_uniform_(self.r_embedding)
-
-    def forward(self, hg, n_feats=None):
-
-        # For full graph training, directly use the graph
-        if n_feats is None:
-            # full graph training
-            n_feats = self.h_n_dict()
-
-        # Forward of n layers of CompGraphConv
-        r_feats = self.r_embedding
-
-        for layer in self.layers:
-            n_feats, r_feats = layer(hg, n_feats, r_feats)
-
-        return n_feats
-
-    def preprocess(self, hg):
-        edata_in_out_mask(hg)
-
-    def trainer(self):
-        pass
-
-    def node_classification_loss(self, hg, label, mask, category):
-        #assert mask.shape[0] == label.shape[0]
-        pred = self.forward(hg)[category]
-        return self.loss_fn(pred[mask], label[mask])

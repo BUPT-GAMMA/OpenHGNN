@@ -13,16 +13,75 @@ import torch.nn as nn
 import dgl.function as fn
 import torch.nn.functional as F
 from dgl.nn.pytorch import RelGraphConv
+from openhgnn.utils import hetgnn_graph
+from torch.utils.data import IterableDataset, DataLoader
+from openhgnn.utils.sampler import SkipGramBatchSampler, HetGNNCollator, NeighborSampler
+from . import BaseModel, register_model
+from openhgnn.utils.evaluater import evaluate, cal_loss_f1, nc_with_split, author_link_prediction
 
-class HetGNN(nn.Module):
+@register_model('HetGNN')
+class HetGNN(BaseModel):
+    @classmethod
+    def build_model_from_args(cls, args, hg):
+        return cls(hg.ntypes, args.dim)
+
     def __init__(self, ntypes, dim):
         super(HetGNN, self).__init__()
         self.Het_Aggrate = Het_Aggregate(ntypes, dim)
+        self.lp_evaluator = author_link_prediction
+        self.nc_evaluator = nc_with_split
         #self.pred = ScorePredictor()
 
     def forward(self, hg, h):
         x = self.Het_Aggrate(hg, h)
         return x
+
+    @staticmethod
+    def extract_feature(g, ntypes):
+        input_features = {}
+        for n in ntypes:
+            ndata = g.srcnodes[n].data
+            data = {}
+            data['dw_embedding'] = ndata['dw_embedding']
+            data['abstract'] = ndata['abstract']
+            if n == 'paper':
+                data['title'] = ndata['title']
+                data['venue'] = ndata['venue']
+                data['author'] = ndata['author']
+                data['reference'] = ndata['reference']
+            input_features[n] = data
+
+        return input_features
+
+    @staticmethod
+    def get_dataloader(hg, args):
+        hg = hg.to('cpu')
+        het_graph = HetGNN.preprocess(hg, args)
+        batch_sampler = SkipGramBatchSampler(hg, args.batch_size, args.window_size)
+        neighbor_sampler = NeighborSampler(het_graph, hg.ntypes, batch_sampler.num_nodes, args.device)
+        collator = HetGNNCollator(neighbor_sampler, hg)
+        dataloader = DataLoader(
+            batch_sampler,
+            collate_fn=collator.collate_train,
+            num_workers=args.num_workers)
+        dataloader_it = iter(dataloader)
+        return dataloader_it
+    @staticmethod
+    def preprocess(hg, args):
+        hetg = hetgnn_graph(hg, args.dataset)
+        het_graph = hetg.get_hetgnn_graph(args.rw_length, args.rw_walks, args.rwr_prob).to('cpu')
+        return het_graph
+
+    @staticmethod
+    def pred(edge_subgraph, x):
+        with edge_subgraph.local_scope():
+            edge_subgraph.ndata['x'] = x
+            for etype in edge_subgraph.canonical_etypes:
+                edge_subgraph.apply_edges(
+                    dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
+            return edge_subgraph.edata['score']
+
+
 
 class ScorePredictor(nn.Module):
     def forward(self, edge_subgraph, x):
@@ -197,37 +256,37 @@ class encoder_het_content(nn.Module):
 
 
 
-from openhgnn.models.micro_layer.LSTM_conv import LSTMConv
-from openhgnn.models.HeteroGraphConv import HeteroGraphConv
-class HetGNNConv(nn.Module):
-    def __init__(self, graph, ntypes, dim):
-        super(HetGNNConv, self).__init__()
-        # ntypes means nodes type name
-        self.ntypes =ntypes
-        self.dim = dim
-
-        # hetero conv modules
-        self.micro_conv = HeteroGraphConv({
-            etype: LSTMConv(dim=dim)
-            for srctype, etype, dsttype in graph.canonical_etypes
-        })
-
-        # different types aggregation module
-        self.macro_conv = AttConv(in_feats=hidden_dim * n_heads, out_feats=hidden_dim,
-                                                             num_heads=n_heads,
-                                                             dropout=dropout, negative_slope=0.2)
-
-        self.atten_w = nn.ModuleDict({})
-        for n in self.ntypes:
-            self.atten_w[n] = nn.Linear(in_features=dim * 2, out_features=1)
-
-        self.softmax = nn.Softmax(dim=1)
-        self.activation = nn.LeakyReLU()
-        self.drop = nn.Dropout(p=0.5)
-        self.bn = nn.BatchNorm1d(dim)
-        self.embed_d = dim
-
-    def forward(self, hg, h):
-        x = self.Het_Aggrate(hg, h)
-        return x
+# from openhgnn.models.micro_layer.LSTM_conv import LSTMConv
+# from openhgnn.models.HeteroGraphConv import HeteroGraphConv
+# class HetGNNConv(nn.Module):
+#     def __init__(self, graph, ntypes, dim):
+#         super(HetGNNConv, self).__init__()
+#         # ntypes means nodes type name
+#         self.ntypes =ntypes
+#         self.dim = dim
+#
+#         # hetero conv modules
+#         self.micro_conv = HeteroGraphConv({
+#             etype: LSTMConv(dim=dim)
+#             for srctype, etype, dsttype in graph.canonical_etypes
+#         })
+#
+#         # different types aggregation module
+#         self.macro_conv = AttConv(in_feats=hidden_dim * n_heads, out_feats=hidden_dim,
+#                                                              num_heads=n_heads,
+#                                                              dropout=dropout, negative_slope=0.2)
+#
+#         self.atten_w = nn.ModuleDict({})
+#         for n in self.ntypes:
+#             self.atten_w[n] = nn.Linear(in_features=dim * 2, out_features=1)
+#
+#         self.softmax = nn.Softmax(dim=1)
+#         self.activation = nn.LeakyReLU()
+#         self.drop = nn.Dropout(p=0.5)
+#         self.bn = nn.BatchNorm1d(dim)
+#         self.embed_d = dim
+#
+#     def forward(self, hg, h):
+#         x = self.Het_Aggrate(hg, h)
+#         return x
 

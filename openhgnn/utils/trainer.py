@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from openhgnn.utils.sampler import get_epoch_samples
 from openhgnn.utils.dgl_graph import give_one_hot_feats, normalize_edges, edata_in_out_mask, load_link_pred
 from openhgnn.utils.utils import print_dict, h2dict
-from openhgnn.utils.evaluater import evaluate, cal_loss_f1, Hetgnn_evaluate, author_link_prediction
+from openhgnn.utils.evaluater import evaluate, cal_loss_f1, nc_with_split, author_link_prediction
 
 
 def cal_node_pairwise_loss(node_emd, edge, neg_edge):
@@ -351,7 +351,7 @@ def run_HetGNN(model, hg, het_graph, config):
     train_batch = load_link_pred('./openhgnn/dataset/a_a_list_train.txt')
     test_batch = load_link_pred('./openhgnn/dataset/a_a_list_test.txt')
     author_link_prediction(emd, train_batch, test_batch)
-    micro_f1, macro_f1 = Hetgnn_evaluate(emd, labels, train_idx, test_idx)
+    micro_f1, macro_f1 = nc_with_split(emd, labels, train_idx, test_idx)
     print('<Classification> DW    Micro-F1 = %.4f, Macro-F1 = %.4f' % (micro_f1, macro_f1))
     # HetGNN Sampler
     from torch.utils.data import IterableDataset, DataLoader
@@ -388,7 +388,7 @@ def run_HetGNN(model, hg, het_graph, config):
     x = model(het_graph, input_features)
     author_link_prediction(x['author'].to('cpu').detach(), train_batch, test_batch)
 
-    micro_f1, macro_f1 = Hetgnn_evaluate(x[config.category].to('cpu').detach(), labels, train_idx, test_idx)
+    micro_f1, macro_f1 = nc_with_split(x[config.category].to('cpu').detach(), labels, train_idx, test_idx)
     print('<Classification>     Micro-F1 = %.4f, Macro-F1 = %.4f' % (micro_f1, macro_f1))
     for i in range(config.max_epoch):
         model.train()
@@ -410,7 +410,7 @@ def run_HetGNN(model, hg, het_graph, config):
         input_features = extract_feature(het_graph, hg.ntypes)
         x = model(het_graph, input_features)
         author_link_prediction(x['author'].to('cpu').detach(), train_batch, test_batch)
-        micro_f1, macro_f1 = Hetgnn_evaluate(x[config.category].to('cpu').detach(), labels, train_idx, test_idx)
+        micro_f1, macro_f1 = nc_with_split(x[config.category].to('cpu').detach(), labels, train_idx, test_idx)
         print('<Classification>     Micro-F1 = %.4f, Macro-F1 = %.4f' % (micro_f1, macro_f1))
     pass
 

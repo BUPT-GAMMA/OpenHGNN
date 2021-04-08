@@ -10,8 +10,8 @@ from openhgnn.start import OpenHGNN
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', '-m', default='CompGCN', type=str, help='name of models')
-    parser.add_argument('--dataset', '-d', default='aifb', type=str, help='name of datasets')
+    parser.add_argument('--model', '-m', default='HetGNN', type=str, help='name of models')
+    parser.add_argument('--dataset', '-d', default='academic', type=str, help='name of datasets')
     parser.add_argument('--gpu', '-g', default='0', type=int, help='-1 means cpu')
     args = parser.parse_args()
 
