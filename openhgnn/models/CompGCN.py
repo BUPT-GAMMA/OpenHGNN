@@ -21,6 +21,8 @@ Node Classification: Following Schlichtkrull et al. (2017), we use 10% training 
 
 For all the experiments, training is done using Adam optimizer (Kingma & Ba, 2014) and Xavier initialization (Glorot & Bengio, 2010) is used for initializing parameters.
 '''
+
+
 @register_model('CompGCN')
 class CompGCN(BaseModel):
     """The models of the simplified CompGCN, without using basis vector, for a homogeneous graph.
@@ -87,10 +89,17 @@ class CompGCN(BaseModel):
         # Forward of n layers of CompGraphConv
         r_feats = self.r_embedding
 
-        for layer in self.layers:
-            n_feats, r_feats = layer(hg, n_feats, r_feats)
+        if hasattr(hg, 'ntypes'):
+
+            # full graph training
+            for layer in self.layers:
+                n_feats, r_feats = layer(hg, n_feats, r_feats)
+        else:
+            # minibatch training
+            pass
 
         return n_feats
+
 
     def preprocess(self, hg):
         edata_in_out_mask(hg)

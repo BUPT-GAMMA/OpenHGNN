@@ -6,19 +6,10 @@ import torch as th
 from tqdm import tqdm
 import torch.nn.functional as F
 from openhgnn.models import build_model
-
+from ogb.nodeproppred import Evaluator
 from . import BaseTask, register_task
 from ..utils import build_dataset, get_idx, cal_acc, load_link_pred
 
-
-def compute_loss(pos_score, neg_score):
-    # an example hinge loss
-    loss = []
-    for i in pos_score:
-        loss.append(F.logsigmoid(pos_score[i]))
-        loss.append(F.logsigmoid(-neg_score[i]))
-    loss = th.cat(loss)
-    return -loss.mean()
 
 @register_task("unsupervised_train")
 class UnsupervisedTrain(BaseTask):
@@ -29,17 +20,34 @@ class UnsupervisedTrain(BaseTask):
         self.model_name = args.model
         self.device = args.device
 
-        self.hg, self.category, num_classes = build_dataset(args.model, args.dataset)
+        if args.dataset in ['mag']:
+            dataset = build_dataset(args.model, args.dataset)
+
+            split_idx = dataset.get_idx_split()
+            self.train_idx, self.valid_idx, self.test_idx = split_idx["train"], split_idx["valid"], split_idx["test"]
+            self.hg, self.label = dataset[0]
+            # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+        else:
+            self.hg, self.category, num_classes = build_dataset(args.model, args.dataset)
+
+
+
         self.hg = self.hg.to(self.device)
-        self.g = dgl.to_homogeneous(self.hg)
+        #self.g = dgl.to_homogeneous(self.hg)
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model.set_device(self.device)
         self.model = self.model.to(self.device)
 
-
-        self.set_loss_fn(compute_loss)
         self.evaluator = cal_acc
+
+        evaluator = Evaluator(name='ogbn-mag')
+        print(evaluator.expected_input_format)
+        print(evaluator.expected_output_format)
+
+        # In most cases, input_dict is
+        # input_dict = {"y_true": y_true, "y_pred": y_pred}
+        result_dict = evaluator.eval(input_dict)
 
         if hasattr(self.model, "split_dataset"):
             pass
@@ -50,11 +58,11 @@ class UnsupervisedTrain(BaseTask):
         self.patience = args.patience
         self.grad_norm = 1.5
         self.optimizer = th.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-        self.mini_batch_flag = True
-        if self.mini_batch_flag == True:
-            self.dataloader_it = self.model.get_dataloader(self.hg, self.args)
+
 
     def preprocess(self):
+        if hasattr(self.model, 'preprocess'):
+            self.model.preprocess()
         self.train_batch = load_link_pred('./openhgnn/dataset/a_a_list_train.txt')
         self.test_batch = load_link_pred('./openhgnn/dataset/a_a_list_test.txt')
         self.train_idx, self.test_idx, self.labels = get_idx(self.hg, self.category)
@@ -62,57 +70,48 @@ class UnsupervisedTrain(BaseTask):
     def train(self):
         self.preprocess()
         best_model = None
-        best_score = 0
+        min_loss = np.inf
         patience = 0
-        auc_score = 0
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
             train_loss = self._train_step()
-            print('Epoch {:05d} |Train - Loss: {:.4f}'.format(epoch, train_loss))
+            epoch_iter.set_description(f"Epoch {epoch: 3d}: TrainLoss: {train_loss: .4f}")
             if (epoch + 1) % self.evaluate_interval == 0:
-                self.link_preddiction()
-                self.node_classification()
-                # if auc_score > best_score:
-                #     best_score = auc_score
-                #     best_model = copy.deepcopy(self.model)
-                #     patience = 0
-                # else:
-                #     patience += 1
-                #     if patience == self.patience:
-                #         break
-            epoch_iter.set_description(f"Epoch {epoch: 3d}: TrainLoss: {train_loss: .4f}, AUC: {auc_score: .4f}")
+                self.model.evaluator()
+            if train_loss < min_loss:
+                min_loss = train_loss
+                best_model = copy.deepcopy(self.model)
+                patience = 0
+            else:
+                patience += 1
+                if patience == self.patience:
+                    break
+
         self.model = best_model
-        test_score = self._test_step(split="test")
-        val_score = self._test_step(split="val")
-        print(f"Val: {val_score: .4f}, Test: {test_score: .4f}")
-        return dict(AUC=test_score)
+        self.link_preddiction()
+        self.node_classification()
+        return
 
     def _train_step(self):
         self.model.train()
         self.optimizer.zero_grad()
-        if self.mini_batch_flag == True:
-            for batch_id in tqdm(range(self.args.batches_per_epoch)):
-                positive_graph, negative_graph, blocks = next(self.dataloader_it)
-                blocks = [b.to(self.device) for b in blocks]
-                positive_graph = positive_graph.to(self.device)
-                negative_graph = negative_graph.to(self.device)
-                # we need extract multi-feature
-                input_features = self.model.extract_feature(blocks[0], self.hg.ntypes)
-
-                x = self.model(blocks[0], input_features)
-                loss = self.loss_fn(self.model.pred(positive_graph, x), self.model.pred(negative_graph, x))
-
+        if self.mini_batch_flag == True and hasattr(self.model, 'minibatch_train'):
+            for batch_id in range(self.args.batches_per_epoch):
+                loss = self.model.minibatch_train()
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
             return loss.item()
-        else:
-            pass
+        elif hasattr(self.model, 'full_train'):
+            loss = self.model.full_train()
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+        return loss.item()
 
     def get_embedding(self):
         self.model.eval()
-        input_features = self.model.extract_feature(self.hg, self.hg.ntypes)
-        x = self.model(self.model.preprocess(self.hg, self.args).to(self.args.device), input_features)
+        x = self.model.get_embedding(self.hg)
         return x
 
     def link_preddiction(self):

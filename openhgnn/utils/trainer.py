@@ -47,6 +47,7 @@ def run(model, g, config):
         node_emb, ns_prediction, eva_h = model(g, ns_samples)
         # compute loss
         pairwise_loss = cal_node_pairwise_loss(node_emb, pos_edges, neg_edges)
+
         ns_label = th.cat([ns['label'] for ns in ns_samples]).type(th.float32).to(config.device)
         cla_loss = cal_cla_loss(ns_prediction, ns_label)
         loss = pairwise_loss + cla_loss * config.beta

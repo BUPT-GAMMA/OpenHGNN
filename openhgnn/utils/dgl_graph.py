@@ -4,6 +4,8 @@ import os
 import numpy as np
 from dgl.sampling.neighbor import select_topk
 from dgl.data.utils import load_graphs, save_graphs
+from ogb.nodeproppred import DglNodePropPredDataset
+from ogb.linkproppred import DglLinkPropPredDataset
 
 def load_link_pred(path_file):
     #path_file = './openhgnn/dataset/a_a_list_train.txt'
@@ -21,6 +23,23 @@ def load_link_pred(path_file):
 def load_dgl_graph(path_file):
     g, _ = load_graphs(path_file)
     return g[0]
+
+
+def load_OGB(dataset):
+    if dataset == 'mag':
+        dataset = DglNodePropPredDataset(name='ogbn-mag')
+        return dataset
+        # split_idx = dataset.get_idx_split()
+        # train_idx, valid_idx, test_idx = split_idx["train"], split_idx["valid"], split_idx["test"]
+        # graph, label = dataset[0]  # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+    elif dataset in ['biokg', 'wikikg']:
+        d_name = 'ogbl-' + dataset
+        dataset = DglLinkPropPredDataset(name=d_name)
+
+        split_edge = dataset.get_edge_split()
+        train_edge, valid_edge, test_edge = split_edge["train"], split_edge["valid"], split_edge["test"]
+        graph = dataset[0]  # dgl graph object containing only training edges
+
 
 
 def load_HIN(dataset):

@@ -58,7 +58,7 @@ class NodeClassification(BaseTask):
 
     def preprocess(self):
         from openhgnn.utils import get_idx
-        train_idx, self.test_idx, self.labels = get_idx(self.hg, self.g, self.category)
+        train_idx, self.test_idx, self.labels = get_idx(self.hg, self.category)
         if self.args.validation:
             self.val_idx = train_idx[:len(train_idx) // 10]
             self.train_idx = train_idx[len(train_idx) // 10:]

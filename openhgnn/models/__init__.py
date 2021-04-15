@@ -52,4 +52,6 @@ def build_model(model):
 SUPPORTED_MODELS = {
     "CompGCN": "openhgnn.models.CompGCN",
     "HetGNN": "openhgnn.models.HetGNN",
+    'RGCN': 'openhgnn.models.RGCN',
+    'RSHN': 'openhgnn.models.RSHN'
 }

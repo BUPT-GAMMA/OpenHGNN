@@ -19,22 +19,67 @@ from openhgnn.utils.sampler import SkipGramBatchSampler, HetGNNCollator, Neighbo
 from . import BaseModel, register_model
 from openhgnn.utils.evaluater import evaluate, cal_loss_f1, nc_with_split, author_link_prediction
 
+
 @register_model('HetGNN')
 class HetGNN(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
-        return cls(hg.ntypes, args.dim)
+        return cls(hg, args)
 
-    def __init__(self, ntypes, dim):
+    def __init__(self, hg, args):
         super(HetGNN, self).__init__()
-        self.Het_Aggrate = Het_Aggregate(ntypes, dim)
+        self.Het_Aggrate = Het_Aggregate(hg.ntypes, args.dim)
+        self.ntypes = hg.ntypes
         self.lp_evaluator = author_link_prediction
         self.nc_evaluator = nc_with_split
+        self.device = args.device
+        if args.minibatch_flag:
+            self.dataloader_it = self.get_dataloader(hg, args)
+        self.loss_fn = HetGNN.compute_loss
         #self.pred = ScorePredictor()
 
     def forward(self, hg, h):
         x = self.Het_Aggrate(hg, h)
         return x
+
+    def minibatch_train(self):
+        positive_graph, negative_graph, blocks = next(self.dataloader_it)
+        blocks = [b.to(self.device) for b in blocks]
+        positive_graph = positive_graph.to(self.device)
+        negative_graph = negative_graph.to(self.device)
+        # we need extract multi-feature
+        input_features = self.extract_feature(blocks[0], self.ntypes)
+
+        x = self.__call__(blocks[0], input_features)
+        loss = self.loss_fn(self.pred(positive_graph, x), self.pred(negative_graph, x))
+        return loss
+
+    def evaluator(self):
+        self.link_preddiction()
+        self.node_classification()
+
+    def get_embedding(self):
+        input_features = self.model.extract_feature(self.hg, self.hg.ntypes)
+        x = self.model(self.model.preprocess(self.hg, self.args).to(self.args.device), input_features)
+        return x
+
+    def link_preddiction(self):
+        x = self.get_embedding()
+        self.model.lp_evaluator(x[self.category].to('cpu').detach(), self.train_batch, self.test_batch)
+
+    def node_classification(self):
+        x = self.get_embedding()
+        self.model.nc_evaluator(x[self.category].to('cpu').detach(), self.labels, self.train_idx, self.test_idx)
+
+    @staticmethod
+    def compute_loss(pos_score, neg_score):
+        # an example hinge loss
+        loss = []
+        for i in pos_score:
+            loss.append(F.logsigmoid(pos_score[i]))
+            loss.append(F.logsigmoid(-neg_score[i]))
+        loss = th.cat(loss)
+        return -loss.mean()
 
     @staticmethod
     def extract_feature(g, ntypes):
@@ -56,7 +101,7 @@ class HetGNN(BaseModel):
     @staticmethod
     def get_dataloader(hg, args):
         hg = hg.to('cpu')
-        het_graph = HetGNN.preprocess(hg, args)
+        het_graph = HetGNN.get_aggre_graph(hg, args)
         batch_sampler = SkipGramBatchSampler(hg, args.batch_size, args.window_size)
         neighbor_sampler = NeighborSampler(het_graph, hg.ntypes, batch_sampler.num_nodes, args.device)
         collator = HetGNNCollator(neighbor_sampler, hg)
@@ -67,7 +112,7 @@ class HetGNN(BaseModel):
         dataloader_it = iter(dataloader)
         return dataloader_it
     @staticmethod
-    def preprocess(hg, args):
+    def get_aggre_graph(hg, args):
         hetg = hetgnn_graph(hg, args.dataset)
         het_graph = hetg.get_hetgnn_graph(args.rw_length, args.rw_walks, args.rwr_prob).to('cpu')
         return het_graph

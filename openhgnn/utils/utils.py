@@ -4,7 +4,7 @@ import torch as th
 from scipy.sparse import coo_matrix
 import numpy as np
 import random
-from . import load_HIN, load_KG
+from . import load_HIN, load_KG, load_OGB
 
 
 def get_nodes_dict(hg):
@@ -41,6 +41,9 @@ def get_idx(hg, category):
 
 def build_dataset(model_name, dataset_name):
     # load the graph(HIN or KG)
+    if dataset_name in ['mag']:
+        dataset = load_OGB(dataset_name)
+        return dataset
     if model_name in ['GTN', 'NSHE', 'HetGNN']:
         g, category, num_classes = load_HIN(dataset_name)
     elif model_name in ['RSHN', 'RGCN', 'CompGCN']:
