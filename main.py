@@ -18,3 +18,5 @@ if __name__ == '__main__':
     config_file = ["./openhgnn/config.ini"]
     config = Config(file_path=config_file, model=args.model, dataset=args.dataset, gpu=args.gpu)
     OpenHGNN(args=config)
+
+    
