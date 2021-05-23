@@ -1,11 +1,26 @@
+import dgl
 import torch as th
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import math
 from openhgnn.utils.utils import extract_mtx_with_id_edge
+from . import BaseModel, register_model
 
-class GTN(nn.Module):
+
+@register_model('GTN')
+class GTN(BaseModel):
+    @classmethod
+    def build_model_from_args(cls, args, hg):
+        num_edges = len(hg.canonical_etypes) + 1
+        in_dim = hg.ndata['h']['paper'].shape[1]
+
+        return cls(num_edge=num_edges, num_channels=args.num_channels,
+                    w_in=in_dim,
+                    w_out=args.hidden_dim,
+                    num_class=args.out_dim,
+                    num_layers=args.num_layers,
+                   norm=args.norm_emd_flag)
 
     def __init__(self, num_edge, num_channels, w_in, w_out, num_class, num_layers, norm):
         super(GTN, self).__init__()
@@ -65,7 +80,8 @@ class GTN(nn.Module):
         H = H.t()
         return H
 
-    def forward(self, g_homo):
+    def forward(self, g):
+        g_homo = dgl.to_homogeneous(g, ndata=['h'])
         with g_homo.local_scope():
             ctx = g_homo.device
             A = extract_mtx_with_id_edge(g_homo)
@@ -96,7 +112,7 @@ class GTN(nn.Module):
             X_ = self.linear1(X_)
             X_ = F.relu(X_)
             y = self.linear2(X_)
-        return y
+        return {'paper': y}
 
 
 class GTLayer(nn.Module):

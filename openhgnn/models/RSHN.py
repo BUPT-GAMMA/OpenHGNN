@@ -2,7 +2,6 @@
 # @Time   : 2021/3/1
 # @Author : Tianyu Zhao
 # @Email  : tyzhao@bupt.edu.cn
-import dgl
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
@@ -24,7 +23,7 @@ class RSHN(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
         rshn = cls(get_nodes_dict(hg), 10,
-                   args.dim, args.num_classes, args.num_node_layer, args.num_edge_layer, dropout=args.dropout
+                   args.dim, args.num_node_layer, args.num_edge_layer, dropout=args.dropout
             )
         cl = coarsened_line_graph(rw_len=args.rw_len, batch_size=args.batch_size, n_dataset=args.dataset,
                                   symmetric=True)
@@ -37,7 +36,7 @@ class RSHN(BaseModel):
         rshn.linear_e1 = linear_e1
         return rshn
 
-    def __init__(self, n_nodes, in_feats2, dim, num_classes, num_node_layer, num_edge_layer, dropout):
+    def __init__(self, n_nodes, in_feats2, dim, num_node_layer, num_edge_layer, dropout):
         super(RSHN, self).__init__()
         # map the node feature
         self.h_n_dict = HeteroEmbedLayer(n_nodes, dim)
@@ -49,15 +48,14 @@ class RSHN(BaseModel):
 
         self.node_layers = nn.ModuleList()
         for i in range(num_node_layer):
-            self.node_layers.append(GraphConv(in_feats=dim, out_feats=dim, activation=th.tanh))
+            self.node_layers.append(GraphConv(in_feats=dim, out_feats=dim, dropout=dropout, activation=th.tanh))
 
         self.dropout = dropout
 
-        self.emd2pred = nn.Linear(dim, num_classes)
         self.init_para()
 
     def init_para(self):
-        nn.init.xavier_uniform_(self.emd2pred.weight)
+        return
 
     def forward(self, hg, n_feats=None):
 
@@ -74,6 +72,7 @@ class RSHN(BaseModel):
             h = th.relu(layer(self.cl_graph, h, h_e))
             h = F.dropout(h, p=self.dropout, training=False)
 
+        h = self.linear_e1(h)
         edge_weight = {}
         for i, e in enumerate(hg.canonical_etypes):
             edge_weight[e] = h[i].expand(hg.num_edges(e), -1)
@@ -85,15 +84,12 @@ class RSHN(BaseModel):
             #edge_weight = F.embedding(hg.edata[dgl.ETYPE].long(), h)
 
             # full graph training
-           # edge_weight = self.linear_e1(edge_weight)
+
             for layer in self.node_layers:
                 n_feats = layer(hg, n_feats, edge_weight)
-                n_feats = F.dropout(n_feats, p=self.dropout, training=False)
         else:
             # minibatch training
             pass
-        n_feats = self.emd2pred(n_feats)
-        n_feats = F.dropout(n_feats, p=self.dropout, training=False)
         return n_feats
 
 
@@ -134,7 +130,7 @@ class AGNNConv(nn.Module):
 class GraphConv(nn.Module):
     def __init__(self,
                  in_feats,
-                 out_feats,
+                 out_feats, dropout,
                  activation=None,
                  ):
         super(GraphConv, self).__init__()
@@ -145,7 +141,7 @@ class GraphConv(nn.Module):
         self.weight2 = nn.Parameter(th.Tensor(in_feats, out_feats))
 
         self.reset_parameters()
-
+        self.dropout = dropout
         self.activation = activation
 
     def reset_parameters(self):
@@ -153,28 +149,41 @@ class GraphConv(nn.Module):
         nn.init.xavier_uniform_(self.weight2)
 
 
-    def forward(self, graph, feat, edge_weight=None):
+    def forward(self, hg, feat, edge_weight=None):
 
-        with graph.local_scope():
-
+        with hg.local_scope():
+            outputs = {}
             aggregate_fn = fn.copy_src('h', 'm')
             if edge_weight is not None:
                 #assert edge_weight.shape[0] == graph.number_of_edges()
-                graph.edata['_edge_weight'] = edge_weight
+                hg.edata['_edge_weight'] = edge_weight
                 aggregate_fn = fn.u_sub_e('h', '_edge_weight', 'm')
 
-            feat_src, feat_dst = expand_as_pair(feat, graph)
+            feat_src, feat_dst = expand_as_pair(feat, hg)
 
             # aggregate first then mult W
-            graph.srcdata['h'] = feat_src
-            graph.apply_edges(lambda edges: {'h': edges.data['_edge_weight'] * 2})
-            graph.update_all(aggregate_fn, fn.sum(msg='m', out='h'))
-            rst = graph.dstdata['h']
-            rst = th.matmul(feat_src, self.weight1) + th.matmul(rst, self.weight2)
+            hg.srcdata['h'] = feat_src
+            for e in hg.canonical_etypes:
+                stype, etype, dtype = e
+                sub_graph = hg[stype, etype, dtype]
+                sub_graph.update_all(aggregate_fn, fn.sum(msg='m', out='out'))
+                temp = hg.ndata['out'].pop(dtype)
+                if isinstance(temp, dict):
+                    temp = temp[dtype]
+                if outputs.get(dtype) is None:
+                    outputs[dtype] = temp
+                else:
+                    outputs[dtype].add_(temp)
+
+            def _apply(ntype, h):
+
+                h = th.matmul(feat[ntype], self.weight1) + th.matmul(h, self.weight2)
+
+                if self.activation:
+                    h = self.activation(h)
+                return F.dropout(h, p=self.dropout, training=False)
+
+            return {ntype: _apply(ntype, h) for ntype, h in outputs.items()}
 
 
-            if self.activation is not None:
-                rst = self.activation(rst)
-
-            return rst
 

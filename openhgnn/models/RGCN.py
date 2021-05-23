@@ -7,25 +7,21 @@ import torch.nn.functional as F
 import dgl
 import dgl.nn as dglnn
 import tqdm
-from . import BaseModel, register_model
+from . import BaseModel, register_model, HeteroEmbedLayer
 
 
 @register_model('RGCN')
-class EntityClassify(BaseModel):
+class RGCN(BaseModel):
 
     @classmethod
     def build_model_from_args(cls, args, hg):
-        return cls(hg, args.n_hidden, args.num_classes, args.n_bases, args.n_layers -2 , dropout=args.dropout
-        )
+        return cls(hg, args.hidden_dim, args.out_dim, args.n_bases, args.n_layers - 2,
+                   dropout=args.dropout)
 
-    def __init__(self,
-                 g,
-                 h_dim, out_dim,
-                 num_bases,
-                 num_hidden_layers=1,
-                 dropout=0,
+    def __init__(self, g, h_dim, out_dim, num_bases,
+                 num_hidden_layers=1, dropout=0,
                  use_self_loop=False):
-        super(EntityClassify, self).__init__()
+        super(RGCN, self).__init__()
         self.g = g
         self.h_dim = h_dim
         self.out_dim = out_dim
@@ -41,18 +37,18 @@ class EntityClassify(BaseModel):
 
         self.embed_layer = RelGraphEmbed(g, self.h_dim)
         self.layers = nn.ModuleList()
-        # i2h
+        # input 2 hidden
         self.layers.append(RelGraphConvLayer(
             self.h_dim, self.h_dim, self.rel_names,
             self.num_bases, activation=F.relu, self_loop=self.use_self_loop,
             dropout=self.dropout, weight=False))
-        # h2h
+        # hidden 2 hidden
         for i in range(self.num_hidden_layers):
             self.layers.append(RelGraphConvLayer(
                 self.h_dim, self.h_dim, self.rel_names,
                 self.num_bases, activation=F.relu, self_loop=self.use_self_loop,
                 dropout=self.dropout))
-        # h2o
+        # hidden 2 output
         self.layers.append(RelGraphConvLayer(
             self.h_dim, self.out_dim, self.rel_names,
             self.num_bases, activation=None,
@@ -71,46 +67,9 @@ class EntityClassify(BaseModel):
             for layer, block in zip(self.layers, hg):
                 h = layer(block, h)
         return h
-
-
-    def inference(self, g, batch_size, device, num_workers, x=None):
-        """Minibatch inference of final representation over all node types.
-        ***NOTE***
-        For node classification, the model is trained to predict on only one node type's
-        label.  Therefore, only that type's final representation is meaningful.
-        """
-
-        if x is None:
-            x = self.embed_layer()
-
-        for l, layer in enumerate(self.layers):
-            y = {
-                k: th.zeros(
-                    g.number_of_nodes(k),
-                    self.h_dim if l != len(self.layers) - 1 else self.out_dim)
-                for k in g.ntypes}
-
-            sampler = dgl.dataloading.MultiLayerFullNeighborSampler(1)
-            dataloader = dgl.dataloading.NodeDataLoader(
-                g,
-                {k: th.arange(g.number_of_nodes(k)) for k in g.ntypes},
-                sampler,
-                batch_size=batch_size,
-                shuffle=True,
-                drop_last=False,
-                num_workers=num_workers)
-
-            for input_nodes, output_nodes, blocks in tqdm.tqdm(dataloader):
-                block = blocks[0].to(device)
-
-                h = {k: x[k][input_nodes[k]].to(device) for k in input_nodes.keys()}
-                h = layer(block, h)
-
-                for k in h.keys():
-                    y[k][output_nodes[k]] = h[k].cpu()
-
-            x = y
-        return y
+    def l2_penalty(self):
+        loss = 0.0005 * th.norm(self.layers[0].weight, p=2, dim=1)
+        return loss
 
 class RelGraphConvLayer(nn.Module):
     r"""Relational graph convolution layer.
@@ -154,6 +113,7 @@ class RelGraphConvLayer(nn.Module):
         self.bias = bias
         self.activation = activation
         self.self_loop = self_loop
+        self.batchnorm = False
 
         self.conv = dglnn.HeteroGraphConv({
                 rel : dglnn.GraphConv(in_feat, out_feat, norm='right', weight=False, bias=False)
@@ -179,6 +139,9 @@ class RelGraphConvLayer(nn.Module):
             self.loop_weight = nn.Parameter(th.Tensor(in_feat, out_feat))
             nn.init.xavier_uniform_(self.loop_weight,
                                     gain=nn.init.calculate_gain('relu'))
+        # define batch norm layer
+        if self.batchnorm:
+            self.bn = nn.BatchNorm1d(out_feat)
 
         self.dropout = nn.Dropout(dropout)
 
@@ -218,8 +181,11 @@ class RelGraphConvLayer(nn.Module):
                 h = h + self.h_bias
             if self.activation:
                 h = self.activation(h)
+            if self.batchnorm:
+                h = self.bn(h)
             return self.dropout(h)
-        return {ntype : _apply(ntype, h) for ntype, h in hs.items()}
+        return {ntype: _apply(ntype, h) for ntype, h in hs.items()}
+
 
 class RelGraphEmbed(nn.Module):
     r"""Embedding layer for featureless heterograph."""
@@ -240,7 +206,7 @@ class RelGraphEmbed(nn.Module):
         self.embeds = nn.ParameterDict()
         for ntype in g.ntypes:
             embed = nn.Parameter(th.Tensor(g.number_of_nodes(ntype), self.embed_size))
-            nn.init.xavier_uniform_(embed, gain=nn.init.calculate_gain('relu'))
+            nn.init.uniform_(embed,a=-1,b=1)
             self.embeds[ntype] = embed
 
     def forward(self, block=None):

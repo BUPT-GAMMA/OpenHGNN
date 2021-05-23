@@ -31,17 +31,23 @@ def register_task(name):
     return register_task_cls
 
 
-for file in os.listdir(os.path.dirname(__file__)):
-    if file.endswith(".py") and not file.startswith("_"):
-        task_name = file[: file.find(".py")]
-        module = importlib.import_module("openhgnn.tasks." + task_name)
+def build_task(args):
+    if not try_import_task(args.task):
+        exit(1)
+    return TASK_REGISTRY[args.task](args)
 
 
-def build_task(args, dataset=None, model=None):
-    if dataset is None and model is None:
-        return TASK_REGISTRY[args.task](args)
-    elif dataset is not None and model is None:
-        return TASK_REGISTRY[args.task](args, dataset=dataset)
-    elif dataset is None and model is not None:
-        return TASK_REGISTRY[args.task](args, model=model)
-    return TASK_REGISTRY[args.task](args, dataset=dataset, model=model)
+def try_import_task(task):
+    if task not in TASK_REGISTRY:
+        if task in SUPPORTED_TASKS:
+            importlib.import_module(SUPPORTED_TASKS[task])
+        else:
+            print(f"Failed to import {task} task.")
+            return False
+    return True
+
+
+SUPPORTED_TASKS = {
+    'node_classification': 'openhgnn.tasks.node_classification',
+    'link_prediction': 'openhgnn.tasks.link_prediction'
+}

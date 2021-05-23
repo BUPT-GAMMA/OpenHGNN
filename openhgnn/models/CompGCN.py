@@ -25,11 +25,12 @@ For all the experiments, training is done using Adam optimizer (Kingma & Ba, 201
 
 @register_model('CompGCN')
 class CompGCN(BaseModel):
-    """The models of the simplified CompGCN, without using basis vector, for a homogeneous graph.
+    """
+    The models of the simplified CompGCN, without using basis vector, for a heterogeneous graph.
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
-        return cls(args.n_hidden, args.n_hidden, args.num_classes, get_nodes_dict(hg), len(hg.etypes),
+        return cls(args.h_dim, args.h_dim, args.out_dim, get_nodes_dict(hg), len(hg.etypes),
             args.n_layers, comp_fn=args.comp_fn, dropout=args.dropout
         )
 

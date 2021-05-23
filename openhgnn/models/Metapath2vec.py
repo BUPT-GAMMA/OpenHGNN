@@ -1,28 +1,44 @@
+import dgl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import init
-
+from . import BaseModel, register_model, HeteroEmbedLayer
+from ..utils import get_nodes_dict
 """
     u_embedding: Embedding for center word.
     v_embedding: Embedding for neighbor words.
 """
 
+@register_model('Metapath2vec')
+class HeteroEmbedding(BaseModel):
+    @classmethod
+    def build_model_from_args(cls, args, hg):
+        return cls(get_nodes_dict(hg), args.dim)
 
-class SkipGramModel(nn.Module):
+    def __init__(self, n_nodes, dim):
+        super(HeteroEmbedding, self).__init__()
+        self.dim = dim
+        self.u_embeddings = HeteroEmbedLayer(n_nodes, self.dim)
+        self.n_nodes = n_nodes
+        #self.v_embeddings = HeteroEmbedLayer(n_nodes, self.dim)
 
-    def __init__(self, emb_size, emb_dimension):
-        super(SkipGramModel, self).__init__()
-        self.emb_size = emb_size
-        self.emb_dimension = emb_dimension
-        self.u_embeddings = nn.Embedding(emb_size, emb_dimension, sparse=True)
-        self.v_embeddings = nn.Embedding(emb_size, emb_dimension, sparse=True)
+    def forward(self, graph):
+        seed_nodes = graph.ndata[dgl.NID]
+        emd = self.u_embeddings.forward()
+        h = {}
+        for ntype, idx in seed_nodes.items():
+            h[ntype] = emd[ntype][idx]
+        return h
 
-        initrange = 1.0 / self.emb_dimension
-        init.uniform_(self.u_embeddings.weight.data, -initrange, initrange)
-        init.constant_(self.v_embeddings.weight.data, 0)
+    def extract_feature(self, *args, **kwargs):
+        emd = self.u_embeddings.forward()
+        h = {}
+        for ntype in self.n_nodes:
+            h[ntype] = emd[ntype]
+        return h
 
-    def forward(self, pos_u, pos_v, neg_v):
+    def __(self, pos_u, pos_v, neg_v):
         emb_u = self.u_embeddings(pos_u)
         emb_v = self.v_embeddings(pos_v)
         emb_neg_v = self.v_embeddings(neg_v)

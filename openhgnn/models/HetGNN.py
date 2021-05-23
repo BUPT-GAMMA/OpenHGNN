@@ -17,7 +17,7 @@ from openhgnn.utils import hetgnn_graph
 from torch.utils.data import IterableDataset, DataLoader
 from openhgnn.utils.sampler import SkipGramBatchSampler, HetGNNCollator, NeighborSampler
 from . import BaseModel, register_model
-from openhgnn.utils.evaluater import evaluate, cal_loss_f1, nc_with_split, author_link_prediction
+
 
 
 @register_model('HetGNN')
@@ -30,29 +30,16 @@ class HetGNN(BaseModel):
         super(HetGNN, self).__init__()
         self.Het_Aggrate = Het_Aggregate(hg.ntypes, args.dim)
         self.ntypes = hg.ntypes
-        self.lp_evaluator = author_link_prediction
-        self.nc_evaluator = nc_with_split
         self.device = args.device
-        if args.minibatch_flag:
-            self.dataloader_it = self.get_dataloader(hg, args)
+
         self.loss_fn = HetGNN.compute_loss
         #self.pred = ScorePredictor()
 
-    def forward(self, hg, h):
+    def forward(self, hg, h=None):
+        if h is None:
+            h = self.extract_feature(hg, self.ntypes)
         x = self.Het_Aggrate(hg, h)
         return x
-
-    def minibatch_train(self):
-        positive_graph, negative_graph, blocks = next(self.dataloader_it)
-        blocks = [b.to(self.device) for b in blocks]
-        positive_graph = positive_graph.to(self.device)
-        negative_graph = negative_graph.to(self.device)
-        # we need extract multi-feature
-        input_features = self.extract_feature(blocks[0], self.ntypes)
-
-        x = self.__call__(blocks[0], input_features)
-        loss = self.loss_fn(self.pred(positive_graph, x), self.pred(negative_graph, x))
-        return loss
 
     def evaluator(self):
         self.link_preddiction()

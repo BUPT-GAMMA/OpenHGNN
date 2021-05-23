@@ -1,5 +1,5 @@
 import importlib
-
+from.NEW_model import MLP_follow_model
 from .base_model import BaseModel
 from .EmbedLayer import HeteroEmbedLayer
 
@@ -53,5 +53,10 @@ SUPPORTED_MODELS = {
     "CompGCN": "openhgnn.models.CompGCN",
     "HetGNN": "openhgnn.models.HetGNN",
     'RGCN': 'openhgnn.models.RGCN',
-    'RSHN': 'openhgnn.models.RSHN'
+    'RSHN': 'openhgnn.models.RSHN',
+    'Metapath2vec': 'openhgnn.models.Metapath2vec',
+    'HAN': 'openhgnn.models.HAN',
+    #'HGT': 'openhgnn.models.HGT',
+    'HGT': 'openhgnn.models.HGT_hetero',
+    'GTN': 'openhgnn.models.GTN_sparse'
 }

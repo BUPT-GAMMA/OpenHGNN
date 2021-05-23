@@ -1,15 +1,6 @@
 import importlib
-
-from openhgnn.data.dataset import Dataset
-from .customized_data import CustomizedGraphClassificationDataset, CustomizedNodeClassificationDataset, BaseDataset
-
-try:
-    import torch_geometric
-except ImportError:
-    pyg = False
-else:
-    pyg = True
-
+from .base_dataset import BaseDataset
+from .utils import load_acm, load_acm_raw
 
 DATASET_REGISTRY = {}
 
@@ -30,9 +21,9 @@ def register_dataset(name):
     """
 
     def register_dataset_cls(cls):
-        # if name in DATASET_REGISTRY:
-        #     raise ValueError("Cannot register duplicate dataset ({})".format(name))
-        if not issubclass(cls, Dataset) and (pyg and not issubclass(cls, torch_geometric.data.Dataset)):
+        if name in DATASET_REGISTRY:
+            raise ValueError("Cannot register duplicate dataset ({})".format(name))
+        if not issubclass(cls, BaseDataset):
             raise ValueError("Dataset ({}: {}) must extend cogdl.data.Dataset".format(name, cls.__name__))
         DATASET_REGISTRY[name] = cls
         return cls
@@ -40,42 +31,32 @@ def register_dataset(name):
     return register_dataset_cls
 
 
-def try_import_dataset(dataset):
-    if dataset not in DATASET_REGISTRY:
-        if dataset in SUPPORTED_DATASETS:
-            importlib.import_module(SUPPORTED_DATASETS[dataset])
+def try_import_task_dataset(task):
+    if task not in DATASET_REGISTRY:
+        if task in SUPPORTED_DATASETS:
+            importlib.import_module(SUPPORTED_DATASETS[task])
         else:
-            print(f"Failed to import {dataset} dataset.")
+            print(f"Failed to import {task} dataset.")
             return False
     return True
 
 
-def build_dataset(args):
-    if not try_import_dataset(args.dataset):
-        assert hasattr(args, "task")
-        dataset = build_dataset_from_path(args.dataset, args.task)
-        if dataset is not None:
-            return dataset
+def build_dataset(dataset, task):
+    if not try_import_task_dataset(task):
         exit(1)
-    return DATASET_REGISTRY[args.dataset]()
-
-
-def build_dataset_from_name(dataset):
-    if not try_import_dataset(dataset):
-        exit(1)
-    return DATASET_REGISTRY[dataset]()
-
-
-def build_dataset_from_path(data_path, task):
-    if "node_classification" in task:
-        return CustomizedNodeClassificationDataset(data_path)
-    elif "graph_classification" in task:
-        return CustomizedGraphClassificationDataset(data_path)
-    else:
-        return None
+    if dataset in ['aifb', 'mutag', 'bgs', 'am']:
+        _dataset = 'rdf_' + task
+    elif dataset in ['acm', 'imdb', 'acm1', 'academic', 'acm_han', 'acm_han_raw']:
+        _dataset = 'hin_' + task
+    elif dataset in ['ogbn-mag']:
+        _dataset = 'ogbn_' + task
+    elif dataset in ['wn18', 'FB15k', 'FB15k-237']:
+        assert task == 'link_prediction'
+        _dataset = 'kg_link_prediction'
+    return DATASET_REGISTRY[_dataset](dataset)
 
 
 SUPPORTED_DATASETS = {
-    "kdd_icdm": "cogdl.datasets.gcc_data",
-    "sigir_cikm": "cogdl.datasets.gcc_data",
+    "node_classification": "openhgnn.dataset.NodeClassificationDataset",
+    "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
 }

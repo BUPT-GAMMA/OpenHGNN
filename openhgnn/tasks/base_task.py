@@ -15,10 +15,6 @@ import torch
 
 
 class BaseTask(ABC):
-    @staticmethod
-    def add_args(parser: argparse.ArgumentParser):
-        """Add tasks-specific arguments to the parser."""
-        pass
 
     def __init__(self, args):
         super(BaseTask, self).__init__()
@@ -32,10 +28,6 @@ class BaseTask(ABC):
             atexit.register(self.save_checkpoint)
         else:
             self._checkpoint = None
-
-    @abstractmethod
-    def train(self):
-        pass
 
     def load_from_pretrained(self):
         if self.load_from_checkpoint:

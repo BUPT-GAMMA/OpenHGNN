@@ -14,7 +14,7 @@ from torch.utils.data import IterableDataset, DataLoader
 
 
 class SkipGramBatchSampler(IterableDataset):
-    def __init__(self, hg, batch_size, window_size):
+    def __init__(self, hg, batch_size, window_size, rw_len=None):
         self.hg = hg
         self.g = dgl.to_homogeneous(hg).to('cpu')
         self.NID = self.g.ndata[dgl.NID]
@@ -30,6 +30,10 @@ class SkipGramBatchSampler(IterableDataset):
         # }
         self.batch_size = batch_size
         self.window_size = window_size
+        if rw_len is not None:
+            self.rw_len = rw_len
+        else:
+            self.rw_len = self.window_size * 2
         self.neg_hetero = True
         self.edge_dict = {}
         self.ntypes = hg.ntypes
@@ -47,7 +51,7 @@ class SkipGramBatchSampler(IterableDataset):
         # select tails through random walk skgram
         while True:
             heads = th.randint(0, self.g.number_of_nodes(), (self.batch_size,))
-            traces, _ = dgl.sampling.random_walk(self.g, heads, length=self.window_size)
+            traces, _ = dgl.sampling.random_walk(self.g, heads, length=self.rw_len)
             heads, tails = self.traces2pos(traces, self.window_size)
 
             heads = (self.NID[heads], self.NTYPE[heads])
@@ -86,7 +90,7 @@ class SkipGramBatchSampler(IterableDataset):
         for b in range(batch_size):
             walk = traces[b]
             if -1 in walk:
-                walk = traces[i]
+                #walk = traces[b]
                 mask = (walk != -1)
                 walk = walk[mask]
             for i in range(len(walk)):
@@ -98,6 +102,8 @@ class SkipGramBatchSampler(IterableDataset):
                     if j < len(walk):
                         idx_list_u.append(walk[j])
                         idx_list_v.append(walk[i])
+                    else:
+                        break
 
         # [num_pos * batch_size]
         u = th.LongTensor(idx_list_u)
@@ -123,10 +129,7 @@ class NeighborSampler(object):
                 edge = (self.ntypes[i], self.ntypes[i]+ '-' + self.ntypes[j], self.ntypes[j])
                 mask = (heads[1] == i) & (tails[1] == j)
                 edge_dict[edge] = (heads[0][mask], tails[0][mask])
-        hg = dgl.heterograph(
-            edge_dict,
-            self.num_nodes
-        )
+        hg = dgl.heterograph(edge_dict, self.num_nodes)
         return hg
 
     def sample_from_item_pairs(self, heads, tails, neg_tails):
@@ -153,7 +156,7 @@ def assign_simple_node_features(ndata, g, ntypes, assign_id=False):
             if not assign_id and col == dgl.NID:
                 continue
             induced_nodes = ndata[dgl.NID][ntype]
-            ndata[col] = {ntype : g.nodes[ntype].data[col][induced_nodes]}
+            ndata[col] = {ntype: g.nodes[ntype].data[col][induced_nodes]}
 
 
 def assign_features_to_blocks(blocks, g, ntypes):
@@ -187,6 +190,37 @@ class HetGNNCollator(object):
     #     blocks = self.sampler.sample_blocks(batch)
     #     assign_features_to_blocks(blocks, self.g, self.g.ntypes)
     #     return blocks
+class MP2vecCollator(object):
+    def __init__(self, ntypes, num_nodes):
+        # the new graph
+        self.ntypes = ntypes
+        self.num_nodes = num_nodes
+
+    def build_hetero_graph(self, heads, tails):
+        edge_dict = {}
+        num_ntypes = len(self.ntypes)
+        for i in range(num_ntypes):
+            for j in range(num_ntypes):
+                edge = (self.ntypes[i], self.ntypes[i] + '-' + self.ntypes[j], self.ntypes[j])
+                mask = (heads[1] == i) & (tails[1] == j)
+                edge_dict[edge] = (heads[0][mask], tails[0][mask])
+        hg = dgl.heterograph(edge_dict, self.num_nodes)
+        return hg
+
+    def construct_from_item_pairs(self, heads, tails, neg_tails):
+        pos_graph = self.build_hetero_graph(heads, tails)
+        neg_graph = self.build_hetero_graph(heads, neg_tails)
+
+        pos_graph, neg_graph = dgl.compact_graphs([pos_graph, neg_graph])
+        # pos_nodes = pos_graph.ndata[dgl.NID]
+        # seed_nodes = pos_nodes  # same with neg_nodes from neg_graph
+
+        return pos_graph, neg_graph, [pos_graph]
+
+    def collate_train(self, batches):
+        heads, tails, neg_tails = batches[0]
+        pos_graph, neg_graph, block = self.construct_from_item_pairs(heads, tails, neg_tails)
+        return pos_graph, neg_graph, block
 
 
 

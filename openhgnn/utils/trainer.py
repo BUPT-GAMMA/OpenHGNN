@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from openhgnn.utils.sampler import get_epoch_samples
 from openhgnn.utils.dgl_graph import give_one_hot_feats, normalize_edges, edata_in_out_mask, load_link_pred
 from openhgnn.utils.utils import print_dict, h2dict
-from openhgnn.utils.evaluater import evaluate, cal_loss_f1, nc_with_split, author_link_prediction
+from openhgnn.utils.evaluater import evaluate, cal_loss_f1
 
 
 def cal_node_pairwise_loss(node_emd, edge, neg_edge):

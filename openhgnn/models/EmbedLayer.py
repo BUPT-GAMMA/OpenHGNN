@@ -20,6 +20,8 @@ class HeteroEmbedLayer(nn.Module):
         self.embeds = nn.ParameterDict()
         for ntype, nodes in n_nodes.items():
             embed = nn.Parameter(th.Tensor(nodes, self.embed_size))
+           # initrange = 1.0 / self.embed_size
+            #nn.init.uniform_(embed, -initrange, initrange)
             nn.init.xavier_uniform_(embed, gain=nn.init.calculate_gain('relu'))
             self.embeds[ntype] = embed
 

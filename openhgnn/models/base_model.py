@@ -27,7 +27,7 @@ class BaseModel(nn.Module, metaclass=ABCMeta):
         raise NotImplementedError
 
     def predict(self, data):
-        return self.forward(data)
+        raise NotImplementedError
 
     def node_classification_loss(self, data, label, mask, category):
         if mask is None:
