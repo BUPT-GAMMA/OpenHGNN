@@ -1,7 +1,7 @@
 # OpenHGNN
 This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on DGL. We will integrate SOTA models of heterogeneous graph.
 
-### Two Keys
+### Keys
 
 - Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and datasets. TODO: [Feature]AutoML & hyper-parameter search.
 - Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
