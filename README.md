@@ -1,4 +1,4 @@
-# OpenHGNN-DGL
+# OpenHGNN
 This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on DGL. We will integrate SOTA models of heterogeneous graph.
 
 ### Two Keys
@@ -42,9 +42,9 @@ It is under development, and we release it in a nightly build version. For now, 
 
 ### Contributors
 
-GAMMA LAB [BUPT]: Tianyu Zhao, Cheng Yang, Chuan Shi
-
-DGL Team: Quan Gan, Jian Zhang
+GAMMA LAB [BUPT]: Tianyu Zhao, Cheng Yang, Xiao Wang, Chuan Shi
 
 BUPT: Jiahang Li
+
+DGL Team: Quan Gan, Jian Zhang
 
