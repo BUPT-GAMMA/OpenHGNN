@@ -1,8 +1,11 @@
+import os
 import dgl
 import numpy as np
 from dgl.data.knowledge_graph import load_data
 import torch as th
+from dgl.data.utils import download
 from openhgnn.dataset import BaseDataset, register_dataset
+from . import AcademicDataset
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
 from ogb.nodeproppred import DglNodePropPredDataset
@@ -24,12 +27,11 @@ class HIN_Link_Prediction(LinkPredictionDataset):
         super(HIN_Link_Prediction, self).__init__()
         self.g = self.load_HIN(dataset_name)
 
-    def load_link_pred(self, path_file):
-        # path_file = './openhgnn/dataset/a_a_list_train.txt'
+    def load_link_pred(self, path):
         u_list = []
         v_list = []
         label_list = []
-        with open(path_file) as f:
+        with open(path) as f:
             for i in f.readlines():
                 u, v, label = i.strip().split(', ')
                 u_list.append(int(u))
@@ -37,15 +39,15 @@ class HIN_Link_Prediction(LinkPredictionDataset):
                 label_list.append(int(label))
         return u_list, v_list, label_list
 
-    def load_HIN(self, dataset):
-        if dataset == 'academic':
+    def load_HIN(self, dataset_name):
+        if dataset_name == 'academic4HetGNN':
             # which is used in HetGNN
-            data_path = './openhgnn/dataset/academic.bin'
-            self.train_batch = self.load_link_pred('./openhgnn/dataset/a_a_list_train.txt')
-            self.test_batch = self.load_link_pred('./openhgnn/dataset/a_a_list_test.txt')
+            dataset = AcademicDataset(name='academic4HetGNN', raw_dir='')
+            g = dataset[0].long()
+
+            self.train_batch = self.load_link_pred('./openhgnn/dataset/' + dataset_name + '/a_a_list_train.txt')
+            self.test_batch = self.load_link_pred('./openhgnn/dataset/' + dataset_name + '/a_a_list_test.txt')
             self.category = 'author'
-        g, _ = load_graphs(data_path)
-        g = g[0].long()
         return g
 
 

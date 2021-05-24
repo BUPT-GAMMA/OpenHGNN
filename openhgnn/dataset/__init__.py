@@ -1,6 +1,7 @@
 import importlib
 from .base_dataset import BaseDataset
 from .utils import load_acm, load_acm_raw
+from .academic_graph import AcademicDataset
 
 DATASET_REGISTRY = {}
 
@@ -46,7 +47,7 @@ def build_dataset(dataset, task):
         exit(1)
     if dataset in ['aifb', 'mutag', 'bgs', 'am']:
         _dataset = 'rdf_' + task
-    elif dataset in ['acm', 'imdb', 'acm1', 'academic', 'acm_han', 'acm_han_raw']:
+    elif dataset in ['acm', 'imdb', 'acm1', 'academic4HetGNN', 'acm_han', 'acm_han_raw']:
         _dataset = 'hin_' + task
     elif dataset in ['ogbn-mag']:
         _dataset = 'ogbn_' + task

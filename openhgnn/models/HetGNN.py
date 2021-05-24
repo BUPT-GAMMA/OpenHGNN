@@ -12,10 +12,7 @@ import torch as th
 import torch.nn as nn
 import dgl.function as fn
 import torch.nn.functional as F
-from dgl.nn.pytorch import RelGraphConv
-from openhgnn.utils import hetgnn_graph
 from torch.utils.data import IterableDataset, DataLoader
-from openhgnn.utils.sampler import SkipGramBatchSampler, HetGNNCollator, NeighborSampler
 from . import BaseModel, register_model
 
 
@@ -85,24 +82,24 @@ class HetGNN(BaseModel):
 
         return input_features
 
-    @staticmethod
-    def get_dataloader(hg, args):
-        hg = hg.to('cpu')
-        het_graph = HetGNN.get_aggre_graph(hg, args)
-        batch_sampler = SkipGramBatchSampler(hg, args.batch_size, args.window_size)
-        neighbor_sampler = NeighborSampler(het_graph, hg.ntypes, batch_sampler.num_nodes, args.device)
-        collator = HetGNNCollator(neighbor_sampler, hg)
-        dataloader = DataLoader(
-            batch_sampler,
-            collate_fn=collator.collate_train,
-            num_workers=args.num_workers)
-        dataloader_it = iter(dataloader)
-        return dataloader_it
-    @staticmethod
-    def get_aggre_graph(hg, args):
-        hetg = hetgnn_graph(hg, args.dataset)
-        het_graph = hetg.get_hetgnn_graph(args.rw_length, args.rw_walks, args.rwr_prob).to('cpu')
-        return het_graph
+    # @staticmethod
+    # def get_dataloader(hg, args):
+    #     hg = hg.to('cpu')
+    #     het_graph = HetGNN.get_aggre_graph(hg, args)
+    #     batch_sampler = SkipGramBatchSampler(hg, args.batch_size, args.window_size)
+    #     neighbor_sampler = NeighborSampler(het_graph, hg.ntypes, batch_sampler.num_nodes, args.device)
+    #     collator = HetGNNCollator(neighbor_sampler, hg)
+    #     dataloader = DataLoader(
+    #         batch_sampler,
+    #         collate_fn=collator.collate_train,
+    #         num_workers=args.num_workers)
+    #     dataloader_it = iter(dataloader)
+    #     return dataloader_it
+    # @staticmethod
+    # def get_aggre_graph(hg, args):
+    #     hetg = hetgnn_graph(hg, args.dataset)
+    #     het_graph = hetg.get_hetgnn_graph(args.rw_length, args.rw_walks, args.rwr_prob).to('cpu')
+    #     return het_graph
 
     @staticmethod
     def pred(edge_subgraph, x):

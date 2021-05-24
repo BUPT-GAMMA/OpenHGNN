@@ -1,25 +1,30 @@
-import argparse
 import copy
 import dgl
 import torch as th
 import numpy as np
-import torch
 from tqdm import tqdm
 import torch.nn.functional as F
-from openhgnn.models import build_model
-from openhgnn.utils.dgl_graph import hetgnn_graph
+from torch.utils.data import DataLoader
+from ..models import build_model
 from . import BaseFlow, register_flow
 from ..tasks import build_task
-from torch.utils.data import IterableDataset, DataLoader
-from openhgnn.utils.sampler import SkipGramBatchSampler, HetGNNCollator, NeighborSampler, MP2vecCollator
+from ..sampler.HetGNN_sampler import SkipGramBatchSampler, HetGNNCollator, NeighborSampler, hetgnn_graph
+from ..utils import EarlyStopping
 
 
-@register_flow("skipgram")
-class SkipGram(BaseFlow):
-    """SkipGram flows."""
+@register_flow("hetgnntrainer")
+class HetGNNTrainer(BaseFlow):
+    """SkipGram flows.
+
+    Supported Model: HetGNN
+    Supported Dataset：Academic4HetGNN
+    Dataset description can be found in HetGNN paper.
+    The trainerflow supports node classification and author link prediction.
+
+    """
 
     def __init__(self, args):
-        super(SkipGram, self).__init__(args)
+        super(HetGNNTrainer, self).__init__(args)
 
         self.args = args
         self.model_name = args.model
@@ -29,11 +34,9 @@ class SkipGram(BaseFlow):
         self.hg = self.task.get_graph().to(self.device)
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
-        #self.model.set_device(self.device)
-        self.model.cuda()
 
         self.optimizer = (
-            torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+            th.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         )
 
         self.model = self.model.to(self.device)
@@ -41,20 +44,10 @@ class SkipGram(BaseFlow):
         self.max_epoch = args.max_epoch
 
     def preprocess(self):
-        if self.args.task == 'node_classification':
-            self.labels = self.task.get_labels()
-            self.category = self.task.dataset.category
-            self.args.num_classes = self.task.dataset.num_classes
-            self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
-            self.evaluator = self.task.get_evaluator('f1_lr')
-        elif self.args.task == 'link_prediction':
-            self.category = self.task.dataset.category
-            self.train_batch, self.test_batch = self.task.get_batch()
-            self.evaluator = self.task.get_evaluator('academic_lp')
+        self.category = self.task.dataset.category
 
         if self.args.mini_batch_flag:
             if self.args.model == 'HetGNN':
-
                 hetg = hetgnn_graph(self.hg, self.args.dataset)
                 self.hg = self.hg.to('cpu')
                 self.het_graph = hetg.get_hetgnn_graph(self.args.rw_length, self.args.rw_walks, self.args.rwr_prob).to('cpu')
@@ -69,21 +62,17 @@ class SkipGram(BaseFlow):
                 self.dataloader_it = iter(dataloader)
                 self.hg = self.hg.to(self.args.device)
                 self.het_graph = self.het_graph.to(self.args.device)
-            elif self.args.model == 'Metapath2vec':
-                batch_sampler = SkipGramBatchSampler(self.hg, self.args.batch_size, self.args.window_size, self.args.rw_length)
-                collator = MP2vecCollator(self.hg.ntypes, batch_sampler.num_nodes)
-                dataloader = DataLoader(batch_sampler, collate_fn=collator.collate_train, num_workers=self.args.num_workers)
-                self.dataloader_it = iter(dataloader)
+            # elif self.args.model == 'Metapath2vec':
+            #     batch_sampler = SkipGramBatchSampler(self.hg, self.args.batch_size, self.args.window_size, self.args.rw_length)
+            #     collator = MP2vecCollator(self.hg.ntypes, batch_sampler.num_nodes)
+            #     dataloader = DataLoader(batch_sampler, collate_fn=collator.collate_train, num_workers=self.args.num_workers)
+            #     self.dataloader_it = iter(dataloader)
 
         return
 
     def train(self):
         self.preprocess()
-        patience = 0
-        best_score = 0
-        best_loss = np.inf
-        max_score = 0
-        min_loss = np.inf
+        stopper = EarlyStopping(self.args.patience)
         best_model = copy.deepcopy(self.model)
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
@@ -92,58 +81,24 @@ class SkipGram(BaseFlow):
             else:
                 loss = self._full_train_setp()
 
-            self._test_step()
-
-            if loss <= min_loss:
-                best_model = copy.deepcopy(self.model)
-                min_loss = loss
-                patience = 0
-            else:
-                patience += 1
-                if patience == self.patience:
-                    epoch_iter.close()
-                    break
+            early_stop = stopper.loss_step(loss, self.model)
+            if early_stop:
+                print('Early Stop!\tEpoch:' + str(epoch))
+                break
         self.model = best_model
         metrics = self._test_step()
-        print(f"Test accuracy = {metrics:.4f}")
+        #print(f"Test accuracy = {metrics:.4f}")
         return dict(metrics=metrics)
-
-    def loss_fn(self, pos_score, neg_score):
-        # an example hinge loss
-        loss = []
-        for i in pos_score:
-            loss.append(F.logsigmoid(pos_score[i]))
-            loss.append(F.logsigmoid(-neg_score[i]))
-        loss = th.cat(loss)
-        return -loss.mean()
 
     def _full_train_setp(self):
         self.model.train()
         negative_graph = self.construct_negative_graph()
-
-        logits = self.model(self.he)[self.category]
-        loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
+        x = self.model(self.het_graph)[self.category]
+        loss = self.loss_calculation(self.ScorePredictor(self.hg, x), self.ScorePredictor(negative_graph, x))
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        pass
-
-    def metapath2vec(self, ):
-        self.model.train()
-        all_loss = 0
-        for batch_id in range(self.args.batches_per_epoch):
-            positive_graph, negative_graph, seeds = next(self.dataloader_it)
-            blocks = [b.to(self.device) for b in blocks]
-            positive_graph = positive_graph.to(self.device)
-            negative_graph = negative_graph.to(self.device)
-            # we need extract multi-feature
-            x = self.model(blocks[0])
-            loss = self.loss_fn(self.ScorePredictor(positive_graph, x), self.ScorePredictor(negative_graph, x))
-            all_loss += loss.item()
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-        return all_loss/self.args.batches_per_epoch
+        return loss.item()
 
     def _mini_train_step(self, ):
         self.model.train()
@@ -155,12 +110,21 @@ class SkipGram(BaseFlow):
             negative_graph = negative_graph.to(self.device)
             # we need extract multi-feature
             x = self.model(blocks[0])
-            loss = self.loss_fn(self.ScorePredictor(positive_graph, x), self.ScorePredictor(negative_graph, x))
+            loss = self.loss_calculation(self.ScorePredictor(positive_graph, x), self.ScorePredictor(negative_graph, x))
             all_loss += loss.item()
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
         return all_loss/self.args.batches_per_epoch
+
+    def loss_calculation(self, pos_score, neg_score):
+        # an example hinge loss
+        loss = []
+        for i in pos_score:
+            loss.append(F.logsigmoid(pos_score[i]))
+            loss.append(F.logsigmoid(-neg_score[i]))
+        loss = th.cat(loss)
+        return -loss.mean()
 
     def ScorePredictor(self, edge_subgraph, x):
         with edge_subgraph.local_scope():
@@ -172,17 +136,33 @@ class SkipGram(BaseFlow):
 
     def _test_step(self, logits=None):
         self.model.eval()
-        with torch.no_grad():
+        with th.no_grad():
             h = self.model.extract_feature(self.hg, self.hg.ntypes)
             logits = logits if logits else self.model(self.het_graph, h)
             logits = logits[self.category].to('cpu')
             if self.args.task == 'node_classification':
-                #loss = self.loss_fn(logits[self.train_idx], self.labels[self.test_idx])
-                metric = self.evaluator(logits, self.labels, self.train_idx, self.test_idx)
+                metric = self.task.evaluate(logits, 'f1_lr')
                 return metric
             elif self.args.task == 'link_prediction':
-                metric = self.evaluator(logits, self.train_batch, self.test_batch)
+                metric = self.task.evaluate(logits, 'academic_lp')
                 return metric
+
+    # def metapath2vec(self, ):
+    #     self.model.train()
+    #     all_loss = 0
+    #     for batch_id in range(self.args.batches_per_epoch):
+    #         positive_graph, negative_graph, seeds = next(self.dataloader_it)
+    #         blocks = [b.to(self.device) for b in blocks]
+    #         positive_graph = positive_graph.to(self.device)
+    #         negative_graph = negative_graph.to(self.device)
+    #         # we need extract multi-feature
+    #         x = self.model(blocks[0])
+    #         loss = self.loss_fn(self.ScorePredictor(positive_graph, x), self.ScorePredictor(negative_graph, x))
+    #         all_loss += loss.item()
+    #         self.optimizer.zero_grad()
+    #         loss.backward()
+    #         self.optimizer.step()
+    #     return all_loss/self.args.batches_per_epoch
 
 
 

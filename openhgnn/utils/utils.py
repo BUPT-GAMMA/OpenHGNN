@@ -50,6 +50,22 @@ class EarlyStopping(object):
             self.counter = 0
         return self.early_stop
 
+    def loss_step(self, loss, model):
+        if self.best_loss is None:
+            self.best_loss = loss
+            self.best_model = copy.deepcopy(model)
+        elif loss > self.best_loss:
+            self.counter += 1
+            #print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            if loss <= self.best_loss:
+                self.best_model = copy.deepcopy(model)
+            self.best_loss = np.min((loss, self.best_loss))
+            self.counter = 0
+        return self.early_stop
+
 
 def get_nodes_dict(hg):
     n_dict = {}

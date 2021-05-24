@@ -7,7 +7,7 @@ from openhgnn.dataset import BaseDataset, register_dataset
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
 from ogb.nodeproppred import DglNodePropPredDataset
-
+from . import AcademicDataset
 
 @register_dataset('node_classification')
 class NodeClassificationDataset(BaseDataset):
@@ -90,10 +90,13 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             data_path = './openhgnn/dataset/acm_graph1.bin'
             category = 'paper'
             num_classes = 3
-        elif dataset == 'academic':
+            g, _ = load_graphs(data_path)
+            g = g[0]
+        elif dataset == 'academic4HetGNN':
             # which is used in HetGNN
-            data_path = './openhgnn/dataset/academic.bin'
+            dataset = AcademicDataset(name='academic4HetGNN', raw_dir='')
             category = 'author'
+            g = dataset[0].long()
             num_classes = 4
         elif dataset in ['acm_han', 'acm_han_raw']:
             if dataset == 'acm_han':
@@ -103,8 +106,8 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             else:
                 return NotImplementedError('Unsupported dataset {}'.format(dataset))
             return g, category, num_classes
-        g, _ = load_graphs(data_path)
-        g = g[0].long()
+        #g, _ = load_graphs(data_path)
+        #g = g[0]
         return g, category, num_classes
 
     def get_idx(self, validation=True):

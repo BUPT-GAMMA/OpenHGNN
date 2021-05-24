@@ -10,12 +10,12 @@ from openhgnn.start import OpenHGNN
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', '-m', default='GTN', type=str, help='name of models')
-    parser.add_argument('--task', '-t', default='node_classification', type=str, help='name of task')
+    parser.add_argument('--model', '-m', default='HetGNN', type=str, help='name of models')
+    parser.add_argument('--task', '-t', default='link_prediction', type=str, help='name of task')
     # link_prediction / node_classification
-    parser.add_argument('--dataset', '-d', default='acm1', type=str, help='name of datasets')
+    parser.add_argument('--dataset', '-d', default='academic4HetGNN', type=str, help='name of datasets')
     # ['wn18', 'FB15k', 'FB15k-237']
-    parser.add_argument('--gpu', '-g', default='0', type=int, help='-1 means cpu')
+    parser.add_argument('--gpu', '-g', default='-1', type=int, help='-1 means cpu')
     args = parser.parse_args()
 
     config_file = ["./openhgnn/config.ini"]

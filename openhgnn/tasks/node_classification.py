@@ -24,6 +24,7 @@ class NodeClassification(BaseTask):
         else:
             self.train_idx, self.val_idx, self.test_idx = self.dataset.get_idx()
         self.evaluator = Evaluator(args.seed)
+        self.labels = self.dataset.get_labels()
 
     def get_graph(self):
         return self.dataset.g
@@ -39,9 +40,17 @@ class NodeClassification(BaseTask):
         elif name == 'f1':
             return self.evaluator.f1_node_classification
 
+    def evaluate(self, logits, name):
+        if name == 'acc':
+            return self.evaluator.cal_acc
+        elif name == 'f1_lr':
+            return self.evaluator.nc_with_LR(logits, self.labels, self.train_idx, self.test_idx)
+        elif name == 'f1':
+            return self.evaluator.f1_node_classification
+
     def get_idx(self):
         return self.train_idx, self.val_idx, self.test_idx
 
     def get_labels(self):
-        return self.dataset.get_labels()
+        return self.labels
 

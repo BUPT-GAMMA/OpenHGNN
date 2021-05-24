@@ -4,7 +4,18 @@ This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) 
 ### Two Keys
 
 - Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and datasets. TODO: [Feature]AutoML & hyper-parameter search.
+
 - Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
+
+  
+
+## Getting Started
+
+#### Requirements and Installation
+
+- Python >=3.6
+- [PyTorch](https://pytorch.org/get-started/locally/) >= 1.7.1
+- [dgl](https://github.com/dmlc/dgl) >= 0.6.1
 
 #### Running an existing baseline model on an existing benchmark dataset
 
