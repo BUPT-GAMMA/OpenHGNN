@@ -22,7 +22,7 @@ OpenHGNN is a high-level package built on top of DGL; it will not cover efficien
 
 
 
-![image](https://github.com/BUPT-GAMMA/OpenHGNN-DGL/tree/main/docs/source/image-001.jpg)
+![image](./docs/source/image-001.jpg)
 
 ## Get Started
 
