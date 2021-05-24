@@ -18,11 +18,19 @@ OpenHGNN is a high-level package built on top of DGL; it will not cover efficien
 | Package  | Heterograph structure | Models                            | Efficiency  | Others                                     |
 | -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
 | OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
-| OpenHGNN | API from DGL          | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
+| OpenHGNN | dgl.heterograph       | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
 
 
 
-![image-20210524165402379](/Users/ztany/Library/Application Support/typora-user-images/image-20210524165402379.png)
+![image](https://github.com/BUPT-GAMMA/OpenHGNN-DGL/tree/main/docs/source/image-001.jpg)
+
+## Get Started
+
+#### Requirements and Installation
+
+- Python  >= 3.6
+- PyTorch  >= 1.7.1
+- DGL >= 0.6.1
 
 #### Running an existing baseline model on an existing benchmark dataset
 
@@ -37,6 +45,7 @@ It is under development, and we release it in a nightly build version. For now, 
 - [HetGNN](https://github.com/BUPT-GAMMA/OpenHGNN-DGL/tree/main/openhgnn/output/HetGNN)[KDD2019] for node classification and link prediction
 - RSHE[ICDM2019] for entity classification
 - [GTN](https://github.com/BUPT-GAMMA/OpenHGNN-DGL/tree/main/openhgnn/output/GTN)[NeurIPS 2019] for node classification
+- HAN[WWW 2019] for node classification
 - NSHE[IJCAI2020]
 - MAGNN[WWW2020]
 
