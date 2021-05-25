@@ -77,34 +77,34 @@ class HIN_NodeCLassification(NodeClassificationDataset):
         super(NodeClassificationDataset, self).__init__()
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
 
-    def load_HIN(self, dataset):
-        if dataset == 'acm':
+    def load_HIN(self, name_dataset):
+        if name_dataset == 'acm':
             data_path = './openhgnn/dataset/acm_graph.bin'
             category = 'paper'
             num_classes = 3
-        elif dataset == 'imdb':
+        elif name_dataset == 'imdb':
             data_path = './openhgnn/dataset/imdb_graph.bin'
             category = 'movie'
             num_classes = 3
-        elif dataset == 'acm1':
-            data_path = './openhgnn/dataset/acm_graph1.bin'
+        elif name_dataset == 'acm4GTN':
+            dataset = AcademicDataset(name='acm4GTN', raw_dir='')
             category = 'paper'
+            g = dataset[0].long()
             num_classes = 3
-            g, _ = load_graphs(data_path)
-            g = g[0]
-        elif dataset == 'academic4HetGNN':
+            self.in_dim = g.ndata['h'][category].shape[1]
+        elif name_dataset == 'academic4HetGNN':
             # which is used in HetGNN
             dataset = AcademicDataset(name='academic4HetGNN', raw_dir='')
             category = 'author'
             g = dataset[0].long()
             num_classes = 4
-        elif dataset in ['acm_han', 'acm_han_raw']:
-            if dataset == 'acm_han':
+        elif name_dataset in ['acm_han', 'acm_han_raw']:
+            if name_dataset == 'acm_han':
                 g, category, num_classes = load_acm(True)
-            elif dataset == 'acm_han_raw':
+            elif name_dataset == 'acm_han_raw':
                 g, category, num_classes = load_acm_raw(False)
             else:
-                return NotImplementedError('Unsupported dataset {}'.format(dataset))
+                return NotImplementedError('Unsupported dataset {}'.format(name_dataset))
             return g, category, num_classes
         #g, _ = load_graphs(data_path)
         #g = g[0]

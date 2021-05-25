@@ -20,7 +20,7 @@ class AcademicDataset(DGLDataset):
         self.g_path = './openhgnn/dataset/' + name + '/graph.bin'
         raw_dir = './openhgnn/dataset'
         url = self._prefix + self._urls[name]
-        super(AcademicDataset, self).__init__(name='academic4HetGNN',
+        super(AcademicDataset, self).__init__(name=name,
                                         url=url,
                                         raw_dir=raw_dir,
                                         force_reload=force_reload,

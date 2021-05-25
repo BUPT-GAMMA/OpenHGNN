@@ -33,7 +33,7 @@ class NodeClassification(BaseFlow):
 
         self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
-
+        self.args.in_dim = self.task.dataset.dim
         # Build the model. If the output dim is not equal the number of classes, a MLP will follow the gnn model.
         if args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
