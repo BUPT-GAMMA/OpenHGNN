@@ -40,13 +40,13 @@ class NodeClassification(BaseTask):
         elif name == 'f1':
             return self.evaluator.f1_node_classification
 
-    def evaluate(self, logits, name):
+    def evaluate(self, logits, name, mask=None):
         if name == 'acc':
             return self.evaluator.cal_acc
         elif name == 'f1_lr':
             return self.evaluator.nc_with_LR(logits, self.labels, self.train_idx, self.test_idx)
         elif name == 'f1':
-            return self.evaluator.f1_node_classification
+            return self.evaluator.f1_node_classification(self.labels[mask], logits)
 
     def get_idx(self):
         return self.train_idx, self.val_idx, self.test_idx

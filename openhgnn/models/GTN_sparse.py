@@ -44,8 +44,7 @@ class GTN(BaseModel):
         norm_H = []
         for i in range(self.num_channels):
             g = H[i]
-            #edge, value = remove_self_loops(edge, value)
-            #g = dgl.remove_self_loop(g)
+            g = dgl.remove_self_loop(g)
             g = self.norm(g)
             norm_H.append(g)
         return norm_H
@@ -69,7 +68,7 @@ class GTN(BaseModel):
                     H, W = self.layers[i](A)
                 else:
                     H, W = self.layers[i](A, H)
-                if self.is_norm:
+                if self.is_norm == 'True':
                     H = self.normalization(H)
                 #Ws.append(W)
             # * =============== GCN Encoder ================
@@ -80,8 +79,7 @@ class GTN(BaseModel):
                     X_ = self.gcn(g, h, edge_weight=edge_weight)
                     X_ = F.relu(X_)
                 else:
-                    X_ = th.cat((X_, F.relu(self.gcn(g, h, edge_weight=edge_weight))),
-                                   dim=1)
+                    X_ = th.cat((X_, F.relu(self.gcn(g, h, edge_weight=edge_weight))), dim=1)
             X_ = self.linear1(X_)
             X_ = F.relu(X_)
             y = self.linear2(X_)
@@ -128,7 +126,6 @@ class GTConv(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        n = self.in_channels
         nn.init.normal_(self.weight, std=0.01)
         if self.bias is not None:
             fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)

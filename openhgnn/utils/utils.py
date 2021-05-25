@@ -149,7 +149,6 @@ def extract_edge_with_id_edge(hg):
     sg = dgl.graph((x, x))
     sg.edata['w'] = th.ones(g.num_nodes(), device=ctx)
     graph_list.append(sg)
-
     return graph_list, h
 
 

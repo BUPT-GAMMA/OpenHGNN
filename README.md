@@ -1,5 +1,7 @@
 # OpenHGNN
-This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on DGL. We will integrate SOTA models of heterogeneous graph.
+This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on [DGL](https://github.com/dmlc/dgl). We will integrate SOTA models of heterogeneous graph.
+
+[Test Version]For now, we just release some models for some researchers to run the experiments.
 
 ### Keys
 
@@ -9,18 +11,18 @@ This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) 
 
 #### Why OpenHGNN
 
-##### Relation with dgl
+##### Relation with [dgl](https://github.com/dmlc/dgl)
 
 OpenHGNN is a high-level package built on top of DGL; it will not cover efficient implementation of low-level components in C++.
 
-##### Relation with OpenHINE
+##### Relation with [OpenHINE](https://github.com/BUPT-GAMMA/OpenHINE)
 
 | Package  | Heterograph structure | Models                            | Efficiency  | Others                                     |
 | -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
 | OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
 | OpenHGNN | dgl.heterograph       | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
 
-
+To avoid reinventing the wheel, we use the dgl as our backend. So we build the new toolkit OpenHGNN and more models will be integrate into it. OpenHINE will not continue updating.
 
 ![image](./docs/source/image-001.jpg)
 
@@ -29,8 +31,8 @@ OpenHGNN is a high-level package built on top of DGL; it will not cover efficien
 #### Requirements and Installation
 
 - Python  >= 3.6
-- PyTorch  >= 1.7.1
-- DGL >= 0.6.1
+- [PyTorch](https://pytorch.org/get-started/locally/)  >= 1.7.1
+- [DGL](https://github.com/dmlc/dgl) >= 0.6.1
 
 #### Running an existing baseline model on an existing benchmark dataset
 

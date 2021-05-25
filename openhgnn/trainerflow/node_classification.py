@@ -15,7 +15,7 @@ from ..utils import extract_embed, EarlyStopping
 class NodeClassification(BaseFlow):
 
     """Node classification flows.
-    Supported Model: HAN/MAGNN
+    Supported Model: HAN/MAGNN/GTN
     Supported Dataset：ACM
 
     The task is to classify the nodes of HIN(Heterogeneous Information Network).
@@ -33,17 +33,14 @@ class NodeClassification(BaseFlow):
 
         self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
-        self.args.in_dim = self.task.dataset.dim
+        if hasattr(self.task.dataset, 'in_dim'):
+            self.args.in_dim = self.task.dataset.in_dim
         # Build the model. If the output dim is not equal the number of classes, a MLP will follow the gnn model.
         if args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
             args.out_dim = self.num_classes
+
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
-        if not hasattr(args, 'out_dim') or args.out_dim == self.num_classes:
-            pass
-        else:
-            #self.model = MLP_follow_model(self.model, args.out_dim, self.num_classes)
-            pass
         self.model = self.model.to(self.device)
 
         self.evaluator = self.task.get_evaluator('f1')
@@ -73,18 +70,22 @@ class NodeClassification(BaseFlow):
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
             if self.args.mini_batch_flag:
-                self._mini_train_step()
+                loss = self._mini_train_step()
             else:
-                self._full_train_setp()
+                loss = self._full_train_setp()
             #if (epoch + 1) % self.evaluate_interval == 0:
             f1, losses = self._test_step()
 
             train_f1 = f1["train"]
             val_f1 = f1["val"]
             val_loss = losses["val"]
-            epoch_iter.set_description(
-                f"Epoch: {epoch:03d}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, Val_macro_f1: {val_f1[0]:.4f}, Val_micro_f1: {val_f1[1]:.4f}, ValLoss:{val_loss: .4f}"
-            )
+            # epoch_iter.set_description(
+            #     f"Epoch: {epoch:03d}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, Val_macro_f1: {val_f1[0]:.4f}, Val_micro_f1: {val_f1[1]:.4f}, ValLoss:{val_loss: .4f}"
+            # )
+            print((
+                f"Epoch: {epoch:03d}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, "
+                f"Val_macro_f1: {val_f1[0]:.4f}, Val_micro_f1: {val_f1[1]:.4f}, ValLoss:{val_loss: .4f}"
+            ))
             early_stop = stopper.step(val_loss, val_f1[0], self.model)
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))
@@ -104,23 +105,24 @@ class NodeClassification(BaseFlow):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        return
+        return loss.item()
 
     def _mini_train_step(self,):
         self.model.train()
+        loss_all = 0
         for i, (input_nodes, seeds, blocks) in enumerate(self.loader):
             blocks = [blk.to(self.device) for blk in blocks]
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
             # batch_tic = time.time()
             emb = extract_embed(self.model.embed_layer(), input_nodes)
             lbl = self.labels[seeds].to(self.device)
-
             logits = self.model(blocks, emb)[self.category]
             loss = self.loss_fn(logits, lbl)
+            loss_all += loss.item()
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-        return
+        return loss_all
 
     def _test_step(self, split=None, logits=None):
         self.model.eval()
@@ -137,11 +139,11 @@ class NodeClassification(BaseFlow):
 
             if mask is not None:
                 loss = self.loss_fn(logits[mask], self.labels[mask])
-                metric = self.evaluator(self.labels[mask].to('cpu'), logits[mask].argmax(dim=1).to('cpu'))
+                metric = self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), name='f1', mask=mask)
                 return metric, loss
             else:
                 masks = {'train': self.train_idx, 'val': self.val_idx, 'test': self.test_idx}
-                metrics = {key: self.evaluator(self.labels[mask].to('cpu'), logits[mask].argmax(dim=1).to('cpu')) for key, mask in masks.items()}
+                metrics = {key: self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), name='f1', mask=mask) for key, mask in masks.items()}
                 losses = {key: self.loss_fn(logits[mask], self.labels[mask]) for key, mask in masks.items()}
                 return metrics, losses
 
