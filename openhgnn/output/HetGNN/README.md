@@ -98,3 +98,6 @@ patience = 100
 mini_batch_flag = True
 ```
 
+#### If you have any questions,
+
+Submit an issue or email to [tyzhao@bupt.edu.cn](mailto:tyzhao@bupt.edu.cn).

@@ -73,19 +73,20 @@ class HetGNNTrainer(BaseFlow):
     def train(self):
         self.preprocess()
         stopper = EarlyStopping(self.args.patience)
-        best_model = copy.deepcopy(self.model)
+        #best_model = copy.deepcopy(self.model)
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
             if self.args.mini_batch_flag:
                 loss = self._mini_train_step()
             else:
                 loss = self._full_train_setp()
+            metrics = self._test_step()
             print('Epoch{}: Loss{}'.format(epoch, loss))
             early_stop = stopper.loss_step(loss, self.model)
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))
                 break
-        self.model = best_model
+        self.model = stopper.best_model
         metrics = self._test_step()
         #print(f"Test accuracy = {metrics:.4f}")
         return dict(metrics=metrics)
