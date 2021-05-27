@@ -44,10 +44,10 @@ It is under development, and we release it in a nightly build version. For now, 
 
 ### Some models
 
-- [HetGNN](https://github.com/BUPT-GAMMA/OpenHGNN-DGL/tree/main/openhgnn/output/HetGNN)[KDD2019] for node classification and link prediction
+- [HetGNN](./openhgnn/output/HetGNN)[KDD2019] for node classification and link prediction
 - RSHE[ICDM2019] for entity classification
-- [GTN](https://github.com/BUPT-GAMMA/OpenHGNN-DGL/tree/main/openhgnn/output/GTN)[NeurIPS 2019] for node classification
-- HAN[WWW 2019] for node classification
+- [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
+- [HAN](./openhgnn/output/HAN)[WWW 2019] for node classification
 - NSHE[IJCAI2020]
 - MAGNN[WWW2020]
 
