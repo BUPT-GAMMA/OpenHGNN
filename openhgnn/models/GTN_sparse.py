@@ -17,9 +17,9 @@ class GTN(BaseModel):
         # add self-loop edge
         return cls(num_edge_type=num_edge_type, num_channels=args.num_channels,
                     in_dim=args.in_dim, hidden_dim=args.hidden_dim, num_class=args.out_dim,
-                    num_layers=args.num_layers, norm=args.norm_emd_flag)
+                    num_layers=args.num_layers, category=args.category, norm=args.norm_emd_flag)
 
-    def __init__(self, num_edge_type, num_channels, in_dim, hidden_dim, num_class, num_layers, norm):
+    def __init__(self, num_edge_type, num_channels, in_dim, hidden_dim, num_class, num_layers, category,  norm):
         super(GTN, self).__init__()
         self.num_edge_type = num_edge_type
         self.num_channels = num_channels
@@ -28,6 +28,7 @@ class GTN(BaseModel):
         self.num_class = num_class
         self.num_layers = num_layers
         self.is_norm = norm
+        self.category = category
 
         layers = []
         for i in range(num_layers):
@@ -36,32 +37,43 @@ class GTN(BaseModel):
             else:
                 layers.append(GTLayer(num_edge_type, num_channels, first=False))
         self.layers = nn.ModuleList(layers)
-        self.gcn = GraphConv(in_feats=self.in_dim, out_feats=hidden_dim)
+        self.gcn = GraphConv(in_feats=self.in_dim, out_feats=hidden_dim, norm='both', activation=F.relu)
         self.linear1 = nn.Linear(self.hidden_dim * self.num_channels, self.hidden_dim)
         self.linear2 = nn.Linear(self.hidden_dim, self.num_class)
+        self.category_idx = None
+        self.A = None
+        self.h = None
 
     def normalization(self, H):
         norm_H = []
         for i in range(self.num_channels):
             g = H[i]
             g = dgl.remove_self_loop(g)
-            g = self.norm(g)
+            g.edata['w_sum'] = self.norm(g, g.edata['w_sum'])
             norm_H.append(g)
         return norm_H
 
-    def norm(self, g):
-        in_deg = g.in_degrees(range(g.number_of_nodes())).float()
-        norm = 1.0 / in_deg
-        norm[th.isinf(norm)] = 0
-        g.ndata['norm'] = norm
-        g.apply_edges(fn.e_mul_v('w_sum', 'norm', 'w_sum'))
-        return g
+    def norm(self, g, edge_weight):
+        with g.local_scope():
+            in_deg = g.in_degrees(range(g.number_of_nodes())).float()
+            norm = in_deg.pow(-1)
+            norm[norm == float('inf')] = 0
+            g.ndata['norm'] = norm
+            g.edata['tmp'] = edge_weight
+            g.apply_edges(fn.e_mul_v('tmp', 'norm', 'out'))
+            e_w = g.edata['out']
+        return e_w
 
     def forward(self, hg, h=None):
         with hg.local_scope():
             #Ws = []
             # * =============== Extract edges in original graph ================
-            A, h = extract_edge_with_id_edge(hg)
+            if self.category_idx is None:
+                self.A, self.h, self.category_idx = extract_edge_with_id_edge(hg, category=self.category)
+            # g = dgl.to_homogeneous(hg, ndata='h')
+            #X_ = self.gcn(g, self.h)
+            A = self.A
+            h = self.h
             # * =============== Get new graph structure ================
             for i in range(self.num_layers):
                 if i == 0:
@@ -74,16 +86,20 @@ class GTN(BaseModel):
             # * =============== GCN Encoder ================
             for i in range(self.num_channels):
                 g = H[i]
+                g = dgl.remove_self_loop(g)
                 edge_weight = g.edata['w_sum']
+                g = dgl.add_self_loop(g)
+                #g.edata['w_sum'] = th.cat((edge_weight, th.full((g.number_of_nodes(),), 2, device=g.device)))
+                edge_weight = th.cat((edge_weight, th.full((g.number_of_nodes(),), 2, device=g.device)))
+                # edge_weight = self.norm(g, g.edata['w_sum'])
                 if i == 0:
                     X_ = self.gcn(g, h, edge_weight=edge_weight)
-                    X_ = F.relu(X_)
                 else:
-                    X_ = th.cat((X_, F.relu(self.gcn(g, h, edge_weight=edge_weight))), dim=1)
+                    X_ = th.cat((X_, self.gcn(g, h, edge_weight=edge_weight)), dim=1)
             X_ = self.linear1(X_)
             X_ = F.relu(X_)
             y = self.linear2(X_)
-            return {'paper': y[5912:8937]}
+            return {self.category: y[self.category_idx]}
 
 
 class GTLayer(nn.Module):
@@ -126,7 +142,7 @@ class GTConv(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        nn.init.normal_(self.weight, std=0.01)
+        nn.init.normal_(self.weight, std=1)
         if self.bias is not None:
             fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
             bound = 1 / math.sqrt(fan_in)

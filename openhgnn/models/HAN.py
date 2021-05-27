@@ -20,11 +20,18 @@ from . import BaseModel, register_model
 class HAN(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
-        in_dim = hg.nodes['paper'].data['h'].shape[1]
-        return cls(meta_paths=[['pa', 'ap'], ['pf', 'fp']], category='paper',
-                    in_size=in_dim, hidden_size=args.hidden_dim,
+        etypes = hg.canonical_etypes
+        mps = []
+        for etype in etypes:
+            if etype[0] == args.category:
+                for dst_e in etypes:
+                    if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
+                        mps.append([etype, dst_e])
+
+        return cls(meta_paths=mps, category=args.category,
+                    in_size=args.in_dim, hidden_size=args.hidden_dim,
                     out_size=args.out_dim,
-                    num_heads=[2,2],
+                    num_heads=args.num_heads,
                     dropout=args.dropout)
 
     def __init__(self, meta_paths, category, in_size, hidden_size, out_size, num_heads, dropout):

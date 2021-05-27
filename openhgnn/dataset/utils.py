@@ -20,7 +20,7 @@ Refer to https://github.com/dmlc/dgl/blob/master/examples/pytorch/han/utils.py
 
 def load_acm(remove_self_loop):
     url = 'dataset/ACM3025.pkl'
-    data_path = '.openhgnn/dataset/ACM3025.pkl'
+    data_path = './openhgnn/dataset/ACM3025.pkl'
     download(_get_dgl_url(url), path=data_path)
 
     with open(data_path, 'rb') as f:
@@ -66,7 +66,7 @@ def load_acm(remove_self_loop):
 def load_acm_raw(remove_self_loop):
     assert not remove_self_loop
     url = 'dataset/ACM.mat'
-    data_path = get_download_dir() + '/ACM.mat'
+    data_path = './openhgnn/dataset/ACM.mat'
     if not os.path.exists(data_path):
         download(_get_dgl_url(url), path=data_path)
 
@@ -125,7 +125,7 @@ def load_acm_raw(remove_self_loop):
     hg.nodes['paper'].data['val_mask'] = val_mask
     hg.nodes['paper'].data['test_mask'] = test_mask
 
-    return hg, 'paper', num_classes
+    return hg, 'paper', num_classes, features.shape[1]
 
 
 def get_binary_mask(total_size, indices):

@@ -155,7 +155,8 @@ class Config(object):
 
             self.hidden_dim = conf.getint('HAN', 'hidden_dim')
             self.out_dim = conf.getint('HAN', 'out_dim')
-            self.num_heads = conf.getint('HAN', 'num_heads')
+            num_heads = conf.get('HAN', 'num_heads').split('-')
+            self.num_heads = [int(i) for i in num_heads]
             self.patience = conf.getint('HAN', 'patience')
             self.max_epoch = conf.getint('HAN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")

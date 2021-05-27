@@ -22,9 +22,9 @@ class LinkPredictionDataset(BaseDataset):
 
 
 @register_dataset('hin_link_prediction')
-class HIN_Link_Prediction(LinkPredictionDataset):
+class HIN_LinkPrediction(LinkPredictionDataset):
     def __init__(self, dataset_name):
-        super(HIN_Link_Prediction, self).__init__()
+        super(HIN_LinkPrediction, self).__init__()
         self.g = self.load_HIN(dataset_name)
 
     def load_link_pred(self, path):

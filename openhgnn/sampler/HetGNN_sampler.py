@@ -202,8 +202,8 @@ class hetgnn_graph():
         self.n_dataset = n_dataset
 
     def get_hetgnn_graph(self, length, walks, restart_prob):
-        fname = './openhgnn/output/HetGNN/{}.bin'.format(
-            self.n_dataset)
+        fname = './openhgnn/output/HetGNN/{}_{}_{}.bin'.format(
+            self.n_dataset, length, walks)
         if os.path.exists(fname):
             g, _ = load_graphs(fname)
             return g[0]

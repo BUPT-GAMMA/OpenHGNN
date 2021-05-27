@@ -40,6 +40,8 @@ class NodeClassification(BaseFlow):
             print('Modify the out_dim with num_classes')
             args.out_dim = self.num_classes
 
+        self.args.category = self.task.dataset.category
+        self.category = self.args.category
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
@@ -47,11 +49,9 @@ class NodeClassification(BaseFlow):
         self.loss_fn = self.task.get_loss_fn()
         self.optimizer = (
             torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay))
-
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
-        self.category = self.task.dataset.category
         self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
         self.labels = self.task.get_labels().to(self.device)
         if self.args.mini_batch_flag:
@@ -62,6 +62,15 @@ class NodeClassification(BaseFlow):
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
     def preprocess(self):
+        if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == 'True':
+            self.optimizer = torch.optim.Adam([{'params': self.model.gcn.parameters()},
+                                               {'params': self.model.linear1.parameters()},
+                                               {'params': self.model.linear2.parameters()},
+                                               {"params": self.model.layers.parameters(), "lr": 0.5}
+                                               ], lr=0.005, weight_decay=0.001)
+        else:
+            # self.model = MLP_follow_model(self.model, args.out_dim, self.num_classes)
+            pass
         return
 
     def train(self):
@@ -69,6 +78,9 @@ class NodeClassification(BaseFlow):
         stopper = EarlyStopping(self.args.patience)
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
+            for param_group in self.optimizer.param_groups:
+                if param_group['lr'] > 0.005:
+                    param_group['lr'] = param_group['lr'] * 0.9
             if self.args.mini_batch_flag:
                 loss = self._mini_train_step()
             else:
@@ -86,20 +98,21 @@ class NodeClassification(BaseFlow):
                 f"Epoch: {epoch:03d}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, "
                 f"Val_macro_f1: {val_f1[0]:.4f}, Val_micro_f1: {val_f1[1]:.4f}, ValLoss:{val_loss: .4f}"
             ))
-            early_stop = stopper.step(val_loss, val_f1[0], self.model)
+            early_stop = stopper.step(val_loss, val_f1[1], self.model)
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))
                 break
 
-        print(f"Valid accurracy = {stopper.best_score: .4f}")
+        print(f"Valid_micro_f1 = {stopper.best_score: .4f}")
         self.model = stopper.best_model
         test_f1, _ = self._test_step(split="test")
         val_f1, _ = self._test_step(split="val")
-        print(f"Test accuracy = {test_f1[0]:.4f}")
+        print(f"Test_macro_f1 = {test_f1[0]:.4f}, Test_micro_f1: {test_f1[1]:.4f}")
         return dict(Acc=test_f1, ValAcc=val_f1)
 
     def _full_train_setp(self):
         self.model.train()
+
         logits = self.model(self.hg)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
         self.optimizer.zero_grad()

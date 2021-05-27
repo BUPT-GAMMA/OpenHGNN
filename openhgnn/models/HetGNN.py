@@ -12,7 +12,6 @@ import torch as th
 import torch.nn as nn
 import dgl.function as fn
 import torch.nn.functional as F
-from torch.utils.data import IterableDataset, DataLoader
 from . import BaseModel, register_model
 
 
@@ -82,25 +81,6 @@ class HetGNN(BaseModel):
 
         return input_features
 
-    # @staticmethod
-    # def get_dataloader(hg, args):
-    #     hg = hg.to('cpu')
-    #     het_graph = HetGNN.get_aggre_graph(hg, args)
-    #     batch_sampler = SkipGramBatchSampler(hg, args.batch_size, args.window_size)
-    #     neighbor_sampler = NeighborSampler(het_graph, hg.ntypes, batch_sampler.num_nodes, args.device)
-    #     collator = HetGNNCollator(neighbor_sampler, hg)
-    #     dataloader = DataLoader(
-    #         batch_sampler,
-    #         collate_fn=collator.collate_train,
-    #         num_workers=args.num_workers)
-    #     dataloader_it = iter(dataloader)
-    #     return dataloader_it
-    # @staticmethod
-    # def get_aggre_graph(hg, args):
-    #     hetg = hetgnn_graph(hg, args.dataset)
-    #     het_graph = hetg.get_hetgnn_graph(args.rw_length, args.rw_walks, args.rwr_prob).to('cpu')
-    #     return het_graph
-
     @staticmethod
     def pred(edge_subgraph, x):
         with edge_subgraph.local_scope():
@@ -109,7 +89,6 @@ class HetGNN(BaseModel):
                 edge_subgraph.apply_edges(
                     dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
             return edge_subgraph.edata['score']
-
 
 
 class ScorePredictor(nn.Module):
@@ -229,6 +208,7 @@ class lstm_aggr(nn.Module):
         super(lstm_aggr, self).__init__()
         self.lstm = nn.LSTM(dim, int(dim / 2), 1, batch_first=True, bidirectional=True)
 
+        self.lstm.flatten_parameters()
     def _lstm_reducer(self, nodes):
         m = nodes.mailbox['m']  # (B, L, D)
         batch_size = m.shape[0]
@@ -263,6 +243,7 @@ class encoder_het_content(nn.Module):
         self.content_rnn = nn.ModuleDict({})
         for n in ntypes:
             self.content_rnn[n] = nn.LSTM(dim, int(dim / 2), 1, batch_first=True, bidirectional=True)
+            self.content_rnn[n].flatten_parameters()
         self.ntypes = ntypes
         self.dim = dim
 

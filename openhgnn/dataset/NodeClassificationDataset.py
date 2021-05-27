@@ -86,6 +86,16 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             data_path = './openhgnn/dataset/imdb_graph.bin'
             category = 'movie'
             num_classes = 3
+            g, _ = load_graphs(data_path)
+            g = g[0].long()
+            self.in_dim = g.ndata['h'][category].shape[1]
+        elif name_dataset =='dblp':
+            data_path = './openhgnn/dataset/dblp_graph.bin'
+            category = 'author'
+            num_classes = 4
+            g, _ = load_graphs(data_path)
+            g = g[0].long()
+            self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset == 'acm4GTN':
             dataset = AcademicDataset(name='acm4GTN', raw_dir='')
             category = 'paper'
@@ -102,7 +112,7 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             if name_dataset == 'acm_han':
                 g, category, num_classes = load_acm(True)
             elif name_dataset == 'acm_han_raw':
-                g, category, num_classes = load_acm_raw(False)
+                g, category, num_classes, self.in_dim = load_acm_raw(False)
             else:
                 return NotImplementedError('Unsupported dataset {}'.format(name_dataset))
             return g, category, num_classes

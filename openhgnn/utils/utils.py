@@ -43,8 +43,9 @@ class EarlyStopping(object):
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
-            if (loss <= self.best_loss) and (score >= self.best_score):
+            if (score > self.best_score) and (loss < self.best_loss):
                 self.best_model = copy.deepcopy(model)
+
             self.best_loss = np.min((loss, self.best_loss))
             self.best_score = np.max((score, self.best_score))
             self.counter = 0
@@ -129,13 +130,25 @@ def ccorr(a, b):
     return th.irfft(com_mult(conj(th.rfft(a, 1)), th.rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
 
 
-def extract_edge_with_id_edge(hg):
-    # input a heterogensous graph
-    # return graph list
+def extract_edge_with_id_edge(hg, category):
+    '''
+    input a heterogensous graph
+    return graph list
+    '''
+
+    # get target category id
+    for i, ntype in enumerate(hg.ntypes):
+        if ntype == category:
+            category_id = i
+
     g = dgl.to_homogeneous(hg, ndata='h')
+    # find out the target node ids in g
+    loc = (g.ndata[dgl.NTYPE] == category_id)
+    category_idx = th.arange(g.num_nodes())[loc]
+
+
     edges = g.edges()
     etype = g.edata[dgl.ETYPE]
-    h = g.ndata['h']
     ctx = g.device
     #g.edata['w'] = th.ones(g.num_edges(), device=ctx)
     num_edge_type = th.max(etype).item()
@@ -149,7 +162,7 @@ def extract_edge_with_id_edge(hg):
     sg = dgl.graph((x, x))
     sg.edata['w'] = th.ones(g.num_nodes(), device=ctx)
     graph_list.append(sg)
-    return graph_list, h
+    return graph_list, g.ndata['h'], category_idx
 
 
 def extract_mtx_with_id_edge(g):
