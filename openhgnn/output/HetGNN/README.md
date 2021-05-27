@@ -28,7 +28,7 @@ Author link prediction
 | A-II(type-1) authors link prediction | AUC    | F1     |
 | ------------------------------------ | ------ | ------ |
 | paper                                | 0.717  | 0.669  |
-| OpenHGNN                             | 0.7175 | 0.7178 |
+| OpenHGNN                             | 0.7235 | 0.7205 |
 
 ### Dataset
 
@@ -61,11 +61,13 @@ Number of edges:
 #### TrainerFlow: HetGNNTrainer
 
 - Sampling Heterogeneous Neighbors (C1)
-  - Build a hetgnn_graph, which is used in aggregation neighbours. So it limit the scale of graph though we give the mini-batch trainer. [openhgnn/sampler/HetGNN_sampler.py]
+  - It designs a heterogeneous neighbors sampling strategy based on random walk with restart (RWR). Build a hetgnn_graph, which is used in aggregation neighbours in form of a full graph. So it limits the scale of graph though we give the mini-batch trainer. [openhgnn/sampler/HetGNN_sampler.py]
   - [TODO] Combine the sampler with NeighborSampler without generating the hetgnn_graph.
 - Encoding Heterogeneous Contents (C2)
-  - 
+  - encoder_het_content(nn.Module)
+  - Note: A node can carry unstructured heterogeneous con- tents,e.g.,attributes,textorimage. So if you build a new dataset, overwrite the *extract_feature* func in HetGNN(BaseModel) [openhgnn/models/HetGNN.py]
 - Aggregating Heterogeneous Neighbors (C3)
+  - aggregate_het_neigh(nn.Module)
 
 #### Parameter
 
@@ -78,17 +80,20 @@ seed = 0
 learning_rate = 0.01
 weight_decay = 0.0001
 
-dim = 128
-max_epoch = 100
-batch_size = 32
-window_size = 5
-num_workers = 0
-batches_per_epoch = 20
+dim = 128 #hidden dimensions
 
+batch_size = 32 # the batch_size of nodes sampled in SkipGramBatchSampler
+window_size = 5 # used in sample positive edges through random walk
+num_workers = 0
+batches_per_epoch = 20 # the batches trained in a epoch
+
+#the three parameters decided in what nodes aggregated.
 rw_length = 10
 rw_walks = 30
 rwr_prob = 0.5
 
+#train epoch and early stop patience
+max_epoch = 100
 patience = 100
 mini_batch_flag = True
 ```
