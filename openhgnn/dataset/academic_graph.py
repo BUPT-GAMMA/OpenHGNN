@@ -12,10 +12,12 @@ class AcademicDataset(DGLDataset):
     _urls = {
         'academic4HetGNN': 'dataset/academic4HetGNN.zip',
         'acm4GTN': 'dataset/acm4GTN.zip',
+        'imdb4MAGNN': 'dataset/imdb4MAGNN.zip',
+        'dblp4MAGNN': 'dataset/dblp4MAGNN.zip'
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
-        assert name in ['acm4GTN', 'academic4HetGNN']
+        assert name in ['acm4GTN', 'academic4HetGNN', 'imdb4MAGNN', 'dblp4MAGNN']
         self.data_path = './openhgnn/' + self._urls[name]
         self.g_path = './openhgnn/dataset/' + name + '/graph.bin'
         raw_dir = './openhgnn/dataset'

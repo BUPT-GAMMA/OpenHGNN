@@ -22,12 +22,11 @@ class BaseFlow(ABC):
 
     def __init__(self, args):
         super(BaseFlow, self).__init__()
-        os.makedirs("./checkpoints", exist_ok=True)
         self.evaluator = None
 
-        self.load_from_checkpoint = hasattr(args, "checkpoint") and args.checkpoint
+        self.load_from_checkpoint = True
         if self.load_from_checkpoint:
-            self._checkpoint = os.path.join("checkpoints", f"{args.model}_{args.dataset}.pt")
+            self._checkpoint = os.path.join("./openhgnn/output/{}".format(args.model), f"{args.model}_{args.dataset}.pt")
             atexit.register(self.save_checkpoint)
         else:
             self._checkpoint = None

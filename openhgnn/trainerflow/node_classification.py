@@ -75,7 +75,7 @@ class NodeClassification(BaseFlow):
 
     def train(self):
         self.preprocess()
-        stopper = EarlyStopping(self.args.patience)
+        stopper = EarlyStopping(self.args.patience, self._checkpoint)
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
             for param_group in self.optimizer.param_groups:
@@ -104,7 +104,7 @@ class NodeClassification(BaseFlow):
                 break
 
         print(f"Valid_micro_f1 = {stopper.best_score: .4f}")
-        self.model = stopper.best_model
+        stopper.load_model(self.model)
         test_f1, _ = self._test_step(split="test")
         val_f1, _ = self._test_step(split="val")
         print(f"Test_macro_f1 = {test_f1[0]:.4f}, Test_micro_f1: {test_f1[1]:.4f}")

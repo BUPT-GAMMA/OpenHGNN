@@ -47,7 +47,8 @@ def build_dataset(dataset, task):
         exit(1)
     if dataset in ['aifb', 'mutag', 'bgs', 'am']:
         _dataset = 'rdf_' + task
-    elif dataset in ['acm', 'imdb', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'dblp']:
+    elif dataset in ['acm', 'imdb', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'dblp', 'dblp4MAGNN',
+                     'imdb4MAGNN']:
         _dataset = 'hin_' + task
     elif dataset in ['ogbn-mag']:
         _dataset = 'ogbn_' + task

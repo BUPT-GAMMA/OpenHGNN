@@ -72,7 +72,7 @@ class HetGNNTrainer(BaseFlow):
 
     def train(self):
         self.preprocess()
-        stopper = EarlyStopping(self.args.patience)
+        stopper = EarlyStopping(self.args.patience, self._checkpoint)
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
             if self.args.mini_batch_flag:
@@ -84,7 +84,7 @@ class HetGNNTrainer(BaseFlow):
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))
                 break
-        self.model = stopper.best_model
+        stopper.load_model(self.model)
         metrics = self._test_step()
         return dict(metrics=metrics)
 

@@ -15,7 +15,6 @@ import torch.nn.functional as F
 from . import BaseModel, register_model
 
 
-
 @register_model('HetGNN')
 class HetGNN(BaseModel):
     @classmethod
