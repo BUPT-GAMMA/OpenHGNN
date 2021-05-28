@@ -9,7 +9,8 @@ from dgl import function as fn
 from dgl.utils import expand_as_pair
 from dgl.nn.functional import edge_softmax
 from . import HeteroEmbedLayer, BaseModel, register_model
-from ..utils import get_nodes_dict, coarsened_line_graph
+from ..sampler.RSHN_sampler import coarsened_line_graph
+from ..utils import get_nodes_dict
 
 
 @register_model('RSHN')

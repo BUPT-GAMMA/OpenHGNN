@@ -3,26 +3,26 @@ This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) 
 
 [Test Version]For now, we just release some models for some researchers to run the experiments.
 
-### Keys
+## Keys
 
 - Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and datasets. TODO: [Feature]AutoML & hyper-parameter search.
 - Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
 - Efficiency: The backend dgl provides efficient APIs.
 
-#### Why OpenHGNN
+## Why OpenHGNN
 
-##### Relation with [dgl](https://github.com/dmlc/dgl)
+### Relation with [dgl](https://github.com/dmlc/dgl)
 
 OpenHGNN is a high-level package built on top of DGL; it will not cover efficient implementation of low-level components in C++.
 
-##### Relation with [OpenHINE](https://github.com/BUPT-GAMMA/OpenHINE)
+### Relation with [OpenHINE](https://github.com/BUPT-GAMMA/OpenHINE)
 
 | Package  | Heterograph structure | Models                            | Efficiency  | Others                                     |
 | -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
 | OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
 | OpenHGNN | dgl.heterograph       | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
 
-To avoid reinventing the wheel, we use the dgl as our backend. So we build the new toolkit OpenHGNN and more models will be integrate into it. OpenHINE will not continue updating.
+To avoid reinventing the wheel, we use the dgl as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
 
 ![image](./docs/source/image-001.jpg)
 
@@ -34,7 +34,7 @@ To avoid reinventing the wheel, we use the dgl as our backend. So we build the n
 - [PyTorch](https://pytorch.org/get-started/locally/)  >= 1.7.1
 - [DGL](https://github.com/dmlc/dgl) >= 0.6.1
 
-#### Running an existing baseline model on an existing benchmark dataset
+#### Running an existing baseline model on an existing benchmark [dataset](./openhgnn/dataset)
 
 ```python
 python main.py -m model_name -d dataset_name -t task_name -g 0
@@ -44,20 +44,20 @@ python main.py -m model_name -d dataset_name -t task_name -g 0
 
 It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.
 
-### Some models
+## Some models
 
 - [HetGNN](./openhgnn/output/HetGNN)[KDD2019] for node classification and link prediction
 - [RSHE](./openhgnn/output/RSHN)[ICDM2019] for entity classification
 - [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
 - [HAN](./openhgnn/output/HAN)[WWW 2019] for node classification
-- [NSHE](./openhgnn/output/NSHE)[IJCAI2020]
-- [MAGNN](./openhgnn/output/MAGNN)[WWW2020]
+- [NSHE](./openhgnn/output/NSHE)[IJCAI2020] for node classification
+- [MAGNN](./openhgnn/output/MAGNN)[WWW2020] for node classification
 
-### Contributors
+## Contributors
 
-GAMMA LAB [BUPT]: Tianyu Zhao, Cheng Yang, Xiao Wang, Chuan Shi
+**GAMMA LAB [BUPT]**: [Tianyu Zhao](https://github.com/Theheavens), Cheng Yang, Xiao Wang, [Chuan Shi](http://shichuan.org/)
 
-BUPT: Jiahang Li
+**BUPT**: Jiahang Li
 
-DGL Team: Quan Gan, Jian Zhang
+**DGL Team**: Quan Gan, Jian Zhang
 

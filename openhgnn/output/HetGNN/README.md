@@ -42,7 +42,7 @@ wget https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/academic4HetGNN.zip
 
 Or run the code mentioned above and it will download automaticlly.
 
-##### Description
+##### Description: [academic4HetGNN](../../dataset/#academic4HetGNN)
 
 Number of nodes:
 
@@ -69,7 +69,7 @@ Number of edges:
 - Aggregating Heterogeneous Neighbors (C3)
   - aggregate_het_neigh(nn.Module)
 
-## Parameter
+## Hyper-Parameter
 
 You can modify the parameters in openhgnn/config.ini
 

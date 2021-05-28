@@ -45,7 +45,7 @@
 
 ### Description
 
--   [imdb4MAGNN](../../dataset/#imdb)
+-   [imdb4MAGNN](../../dataset/#IMDB)
 
     -   Number of nodes
 
@@ -62,7 +62,7 @@
 
     -   Types of metapath: `MDM, MAM, DMD, DMAMD, AMA, AMDMA`. Please note that the `M` is movie, `D` is director, `A` is actor, and the edges above are all bidirectional.
 
--   [dblp4MAGNN](../../dataset/dblp)
+-   [dblp4MAGNN](../../dataset/DBLP)
 
     -   Number of nodes
 
