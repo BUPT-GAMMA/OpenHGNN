@@ -37,18 +37,20 @@ To avoid reinventing the wheel, we use the dgl as our backend. So we build the n
 #### Running an existing baseline model on an existing benchmark dataset
 
 ```python
-python main.py -m model_name -d dataset_name -t task_name
+python main.py -m model_name -d dataset_name -t task_name -g 0
 ```
+
+-g controls which gpu you will use. If you do not have gpu, set -g -1.
 
 It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.
 
 ### Some models
 
 - [HetGNN](./openhgnn/output/HetGNN)[KDD2019] for node classification and link prediction
-- RSHE[ICDM2019] for entity classification
+- [RSHE](./openhgnn/output/RSHN)[ICDM2019] for entity classification
 - [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
 - [HAN](./openhgnn/output/HAN)[WWW 2019] for node classification
-- NSHE[IJCAI2020]
+- [NSHE](./openhgnn/output/NSHE)[IJCAI2020]
 - [MAGNN](./openhgnn/output/MAGNN)[WWW2020]
 
 ### Contributors

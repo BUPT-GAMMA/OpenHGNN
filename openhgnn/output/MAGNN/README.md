@@ -5,9 +5,15 @@
 
 ## How to run
 
--   Clone the Openhgnn-DGL
+- Clone the Openhgnn-DGL
 
-[TODO]
+  ```python
+  python main.py -m MAGNN -t node_classification -d imdb4MAGNN -g 0
+  ```
+
+  If you do not have gpu, set -gpu -1.
+
+  the dataset imdb4MAGNN/dblp4MAGNN is supported.
 
 ## Performance: Node classification
 
@@ -39,7 +45,7 @@
 
 ### Description
 
--   IMDB
+-   [imdb4MAGNN](../../dataset/#imdb)
 
     -   Number of nodes
 
@@ -56,7 +62,7 @@
 
     -   Types of metapath: `MDM, MAM, DMD, DMAMD, AMA, AMDMA`. Please note that the `M` is movie, `D` is director, `A` is actor, and the edges above are all bidirectional.
 
--   DBLP
+-   [dblp4MAGNN](../../dataset/dblp)
 
     -   Number of nodes
 
@@ -77,7 +83,7 @@
 
 [TODO]
 
-## TrainerFlow: MAGNNTrainer
+## TrainerFlow: Node classification trainer
 
 -   **Node content transformation**
     -   It applies different type-specific linear transformations on different types of ndoes to project their node features into the same vector space, thus all nodes' features share the same dimension after the transformation. This part addresses the heterogeneity of the original heterogeneous graph.
@@ -140,4 +146,14 @@ patience = 30
 mini_batch_flag = False
 encoder_type = RotateE
 ```
+
+## More
+
+#### Contirbutor
+
+Jiahang Li[GAMMA LAB]
+
+#### If you have any questions,
+
+Submit an issue or email to ljh1064126026@bupt.edu.cn.
 

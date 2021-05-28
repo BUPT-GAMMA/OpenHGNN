@@ -14,7 +14,7 @@ For now, we have two downstream tasks, which are node classification and link pr
 
   - acm4GTN/academic4HetGNN
 
-  - DBLP
+  - <a name="dblp"></a>DBLP
 
     - 
 
@@ -26,7 +26,7 @@ For now, we have two downstream tasks, which are node classification and link pr
 
       
 
-  - IMDB
+  - <a name="imdb"></a>IMDB
 
     - |            | Movie | Actor | Director | Movie-Actor | Movie-Director | Train | Val  | Test  |
       | ---------- | ----- | ----- | -------- | ----------- | -------------- | ----- | ---- | ----- |

@@ -4,7 +4,7 @@ Paper: [Heterogeneous Graph Neural Network](https://dl.acm.org/doi/abs/10.1145/3
 
 Code from author: https://github.com/chuxuzhang/KDD2019_HetGNN
 
-#### How to run
+## How to run
 
 Clone the Openhgnn-DGL
 
@@ -14,23 +14,23 @@ python main.py -m HetGNN -t node_classification -d academic4HetGNN -g 0
 
 If you do not have gpu, set -gpu -1.
 
-#### Performance
+## Performance
 
-Node classification 
+#### Node classification for academic4HetGNN
 
 | Node classification | Macro-F1 | Micro-F1 |
 | ------------------- | -------- | -------- |
 | paper               | 0.978    | 0.979    |
 | OpenHGNN            | 0.9701   | 0.9705   |
 
-Author link prediction
+#### Author link prediction for academic4HetGNN
 
 | A-II(type-1) authors link prediction | AUC    | F1     |
 | ------------------------------------ | ------ | ------ |
 | paper                                | 0.717  | 0.669  |
 | OpenHGNN                             | 0.7235 | 0.7205 |
 
-### Dataset
+## Dataset
 
 We process the Academic II dataset given by [HetGNN](https://github.com/chuxuzhang/KDD2019_HetGNN/tree/master/data/academic). It saved as dgl.heterograph and can be loaded by [dgl.load_graphs](https://docs.dgl.ai/en/latest/generated/dgl.load_graphs.html)
 
@@ -58,7 +58,7 @@ Number of edges:
 - Paper-venue: 21044
 - Venue-paper:21044
 
-#### TrainerFlow: HetGNNTrainer
+## TrainerFlow: HetGNNTrainer
 
 - Sampling Heterogeneous Neighbors (C1)
   - It designs a heterogeneous neighbors sampling strategy based on random walk with restart (RWR). Build a hetgnn_graph, which is used in aggregation neighbours in form of a full graph. So it limits the scale of graph though we give the mini-batch trainer. [openhgnn/sampler/HetGNN_sampler.py]
@@ -69,11 +69,11 @@ Number of edges:
 - Aggregating Heterogeneous Neighbors (C3)
   - aggregate_het_neigh(nn.Module)
 
-#### Parameter
+## Parameter
 
 You can modify the parameters in openhgnn/config.ini
 
-##### Description
+#### Description
 
 ```
 seed = 0
@@ -98,6 +98,13 @@ patience = 100
 mini_batch_flag = True
 ```
 
+## More
+
+#### Contirbutor
+
+Tianyu Zhao[GAMMA LAB]
+
 #### If you have any questions,
 
 Submit an issue or email to [tyzhao@bupt.edu.cn](mailto:tyzhao@bupt.edu.cn).
+
