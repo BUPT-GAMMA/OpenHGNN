@@ -49,7 +49,7 @@ It is under development, and we release it in a nightly build version. For now, 
 - [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
 - [HAN](./openhgnn/output/HAN)[WWW 2019] for node classification
 - NSHE[IJCAI2020]
-- MAGNN[WWW2020]
+- [MAGNN](./openhgnn/output/MAGNN)[WWW2020]
 
 ### Contributors
 

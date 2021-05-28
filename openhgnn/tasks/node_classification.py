@@ -42,7 +42,7 @@ class NodeClassification(BaseTask):
 
     def evaluate(self, logits, name, mask=None):
         if name == 'acc':
-            return self.evaluator.cal_acc
+            return self.evaluator.cal_acc(logits, self.labels[mask])
         elif name == 'f1_lr':
             return self.evaluator.nc_with_LR(logits, self.labels, self.train_idx, self.test_idx)
         elif name == 'f1':

@@ -65,7 +65,7 @@ class Config(object):
             self.dropout = conf.getfloat("RSHN", "dropout")
 
             self.seed = conf.getint("RSHN", "seed")
-            self.dim = conf.getint("RSHN", "dim")
+            self.hidden_dim = conf.getint("RSHN", "hidden_dim")
             self.max_epoch = conf.getint("RSHN", "max_epoch")
             self.rw_len = conf.getint("RSHN", "rw_len")
             self.batch_size = conf.getint("RSHN", "batch_size")

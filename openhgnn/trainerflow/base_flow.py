@@ -23,11 +23,11 @@ class BaseFlow(ABC):
     def __init__(self, args):
         super(BaseFlow, self).__init__()
         self.evaluator = None
-
+        self.evaluate_interval = 1
         self.load_from_checkpoint = True
         if self.load_from_checkpoint:
             self._checkpoint = os.path.join("./openhgnn/output/{}".format(args.model), f"{args.model}_{args.dataset}.pt")
-            atexit.register(self.save_checkpoint)
+            #atexit.register(self.save_checkpoint)
         else:
             self._checkpoint = None
 

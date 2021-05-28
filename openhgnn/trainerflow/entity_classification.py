@@ -1,16 +1,13 @@
-import argparse
 import copy
 import dgl
 import numpy as np
 import torch
 from tqdm import tqdm
-import torch.nn.functional as F
-from openhgnn.models import build_model, MLP_follow_model
+from openhgnn.models import build_model
 
 from . import BaseFlow, register_flow
 from ..tasks import build_task
-from ..utils import extract_embed
-
+from ..utils import extract_embed, EarlyStopping
 
 @register_flow("entity_classification")
 class EntityClassification(BaseFlow):
@@ -35,15 +32,15 @@ class EntityClassification(BaseFlow):
         self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
 
-        # Build the model. If the output dim is not equal the number of classes, a MLP will follow the gnn model.
+        if hasattr(self.task.dataset, 'in_dim'):
+            self.args.in_dim = self.task.dataset.in_dim
+        # Build the model. If the output dim is not equal the number of classes, modify the dim.
+        if not hasattr(self.task.dataset, 'in_dim') or args.out_dim != self.num_classes:
+            print('Modify the out_dim with num_classes')
+            args.out_dim = self.num_classes
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
-        # if not hasattr(args, 'out_dim') or args.out_dim == self.num_classes:
-        #     pass
-        # else:
-        #     self.model = MLP_follow_model(self.model, args.out_dim, self.num_classes)
         self.model = self.model.to(self.device)
 
-        self.evaluator = self.task.get_evaluator('acc')
         self.loss_fn = self.task.get_loss_fn()
         self.optimizer = (
             torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay))
@@ -66,6 +63,7 @@ class EntityClassification(BaseFlow):
 
     def train(self):
         self.preprocess()
+        stopper = EarlyStopping(self.args.patience, self._checkpoint)
         patience = 0
         best_score = 0
         best_loss = np.inf
@@ -75,33 +73,28 @@ class EntityClassification(BaseFlow):
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
             if self.args.mini_batch_flag:
-                self._mini_train_step()
+                loss = self._mini_train_step()
             else:
-                self._full_train_setp()
-            #if (epoch + 1) % self.evaluate_interval == 0:
-            acc, losses = self._test_step()
+                loss = self._full_train_setp()
 
-            train_acc = acc["train"]
-            val_acc = acc["val"]
-            val_loss = losses["val"]
-            epoch_iter.set_description(
-                f"Epoch: {epoch:03d}, Train: {train_acc:.4f}, Val: {val_acc:.4f}, ValLoss:{val_loss: .4f}"
-            )
-            if val_loss < min_loss or val_acc > max_score:
-                if val_loss <= best_loss:  # and val_acc >= best_score:
-                    best_loss = val_loss
-                    best_score = val_acc
-                    best_model = copy.deepcopy(self.model)
-                min_loss = np.min((min_loss, val_loss.cpu()))
-                max_score = np.max((max_score, val_acc))
-                patience = 0
-            else:
-                patience += 1
-                if patience == self.patience:
-                    epoch_iter.close()
+            if (epoch + 1) % self.evaluate_interval == 0:
+                acc, losses = self._test_step()
+                train_acc = acc["train"]
+                val_acc = acc["val"]
+                val_loss = losses["val"]
+                epoch_iter.set_description(
+                    f"Epoch: {epoch:03d}, Loss:{loss: .4f}, Train_acc: {train_acc:.4f}, Val_acc: {val_acc:.4f}, Val_loss: {val_loss:.4f}"
+                )
+                # print(
+                #     f"Epoch: {epoch:03d}, Loss:{loss: .4f}, Train_acc: {train_acc:.4f}, Val_acc: {val_acc:.4f}, Val_loss: {val_loss:.4f}"
+                # )
+                early_stop = stopper.step(val_loss, val_acc, self.model)
+                if early_stop:
+                    print('Early Stop!\tEpoch:' + str(epoch))
                     break
-        print(f"Valid accurracy = {best_score: .4f}")
-        self.model = best_model
+
+        print(f"Valid accurracy = {stopper.best_score: .4f}")
+        stopper.load_model(self.model)
         test_acc, _ = self._test_step(split="test")
         val_acc, _ = self._test_step(split="val")
         print(f"Test accuracy = {test_acc:.4f}")
@@ -113,10 +106,13 @@ class EntityClassification(BaseFlow):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        pass
+        return loss.item()
 
     def _mini_train_step(self,):
+
+        loss_all = 0
         for i, (input_nodes, seeds, blocks) in enumerate(self.loader):
+            n = i +1
             blocks = [blk.to(self.device) for blk in blocks]
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
             # batch_tic = time.time()
@@ -125,10 +121,11 @@ class EntityClassification(BaseFlow):
 
             logits = self.model(blocks, emb)[self.category]
             loss = self.loss_fn(logits, lbl)
+            loss_all += loss.item()
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-        return
+        return loss_all / n
 
     def _test_step(self, split=None, logits=None):
         self.model.eval()
@@ -145,11 +142,11 @@ class EntityClassification(BaseFlow):
 
         if mask is not None:
             loss = self.loss_fn(logits[mask], self.labels[mask])
-            metric = self.evaluator(self.labels[mask], logits[mask])
+            metric = self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), 'acc', mask)
             return metric, loss
         else:
             masks = {'train': self.train_idx, 'val': self.val_idx, 'test': self.test_idx}
-            metrics = {key: self.evaluator(self.labels[mask], logits[mask]) for key, mask in masks.items()}
+            metrics = {key: self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), 'acc', mask) for key, mask in masks.items()}
             losses = {key: self.loss_fn(logits[mask], self.labels[mask]) for key, mask in masks.items()}
             return metrics, losses
 

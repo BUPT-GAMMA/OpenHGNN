@@ -22,8 +22,11 @@ class RSHN(BaseModel):
 
     @classmethod
     def build_model_from_args(cls, args, hg):
-        rshn = cls(get_nodes_dict(hg), 10,
-                   args.dim, args.num_node_layer, args.num_edge_layer, dropout=args.dropout
+        rshn = cls(n_nodes=get_nodes_dict(hg),
+                   dim=args.hidden_dim,
+                   num_node_layer=args.num_node_layer,
+                   num_edge_layer=args.num_edge_layer,
+                   dropout=args.dropout
             )
         cl = coarsened_line_graph(rw_len=args.rw_len, batch_size=args.batch_size, n_dataset=args.dataset,
                                   symmetric=True)
@@ -31,12 +34,12 @@ class RSHN(BaseModel):
         cl_graph = cl.init_cl_graph(cl_graph)
         rshn.cl_graph = cl_graph
 
-        linear_e1 = nn.Linear(in_features=cl_graph.num_nodes(), out_features=args.dim, bias=False)
+        linear_e1 = nn.Linear(in_features=cl_graph.num_nodes(), out_features=args.hidden_dim, bias=False)
         nn.init.xavier_uniform_(linear_e1.weight)
         rshn.linear_e1 = linear_e1
         return rshn
 
-    def __init__(self, n_nodes, in_feats2, dim, num_node_layer, num_edge_layer, dropout):
+    def __init__(self, n_nodes, dim, num_node_layer, num_edge_layer, dropout):
         super(RSHN, self).__init__()
         # map the node feature
         self.h_n_dict = HeteroEmbedLayer(n_nodes, dim)
