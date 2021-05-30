@@ -48,7 +48,7 @@ class MAGNN(BaseModel):
         return cls(in_feats=in_feats,
                    h_feats=args.hidden_dim,
                    inter_attn_feats=args.inter_attn_feats,
-                   num_heads=args.inter_attn_feats,
+                   num_heads=args.num_heads,
                    num_classes=args.out_dim,
                    num_layers=args.num_layers,
                    metapath_list=metapath_list,

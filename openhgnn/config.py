@@ -170,7 +170,7 @@ class Config(object):
             self.inter_attn_feats = conf.getint("MAGNN", "inter_attn_feats")
             self.hidden_dim = conf.getint('MAGNN', 'hidden_dim')
             self.out_dim = conf.getint('MAGNN', 'out_dim')
-            self.num_heads = conf.get('MAGNN', 'num_heads')
+            self.num_heads = conf.getint('MAGNN', 'num_heads')
             self.num_layers = conf.getint("MAGNN", "num_layers")
 
             self.patience = conf.getint('MAGNN', 'patience')
