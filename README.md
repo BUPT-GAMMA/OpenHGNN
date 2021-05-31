@@ -11,7 +11,7 @@ This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) 
 
 ## Why OpenHGNN
 
-### Relation with [dgl](https://github.com/dmlc/dgl)
+### Relation with [DGL](https://github.com/dmlc/dgl)
 
 OpenHGNN is a high-level package built on top of DGL; it will not cover efficient implementation of low-level components in C++.
 
@@ -34,7 +34,7 @@ To avoid reinventing the wheel, we use the dgl as our backend. So we build the n
 - [PyTorch](https://pytorch.org/get-started/locally/)  >= 1.7.1
 - [DGL](https://github.com/dmlc/dgl) >= 0.6.1
 
-#### Running an existing baseline model on an existing benchmark [dataset](./openhgnn/dataset)
+#### Running an existing baseline model on an existing benchmark [dataset](./openhgnn/dataset/#Dataset)
 
 ```python
 python main.py -m model_name -d dataset_name -t task_name -g 0

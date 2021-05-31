@@ -56,7 +56,7 @@ class Config(object):
             self.patience = conf.getint("GTN", "patience")
 
             self.norm_emd_flag = conf.get("GTN", "norm_emd_flag")
-            self.adaptive_lr = conf.get("GTN", "adaptive_lr_flag")
+            self.adaptive_lr_flag = conf.get("GTN", "adaptive_lr_flag")
             self.mini_batch_flag = conf.getboolean("GTN", "mini_batch_flag")
             self.sparse_flag = conf.get("GTN", "sparse")
         elif model == "RSHN":
@@ -170,7 +170,7 @@ class Config(object):
             self.inter_attn_feats = conf.getint("MAGNN", "inter_attn_feats")
             self.hidden_dim = conf.getint('MAGNN', 'hidden_dim')
             self.out_dim = conf.getint('MAGNN', 'out_dim')
-            self.num_heads = conf.get('MAGNN', 'num_heads')
+            self.num_heads = conf.getint('MAGNN', 'num_heads')
             self.num_layers = conf.getint("MAGNN", "num_layers")
 
             self.patience = conf.getint('MAGNN', 'patience')
