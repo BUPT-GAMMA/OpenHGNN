@@ -67,7 +67,7 @@ class NodeClassification(BaseFlow):
                                                {'params': self.model.linear1.parameters()},
                                                {'params': self.model.linear2.parameters()},
                                                {"params": self.model.layers.parameters(), "lr": 0.5}
-                                               ], lr=0.05, weight_decay=0.001)
+                                               ], lr=0.005, weight_decay=0.001)
         else:
             # self.model = MLP_follow_model(self.model, args.out_dim, self.num_classes)
             pass
@@ -98,7 +98,7 @@ class NodeClassification(BaseFlow):
                 f"Epoch: {epoch:03d}, Loss: {loss}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, "
                 f"Val_macro_f1: {val_f1[0]:.4f}, Val_micro_f1: {val_f1[1]:.4f}, ValLoss:{val_loss: .4f}"
             ))
-            early_stop = stopper.step(loss, val_f1[1], self.model)
+            early_stop = stopper.step(loss, val_f1[0], self.model)
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))
                 break

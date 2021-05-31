@@ -96,6 +96,13 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             g, _ = load_graphs(data_path)
             g = g[0].long()
             self.in_dim = g.ndata['h'][category].shape[1]
+        elif name_dataset == 'dblp4MAGNN':
+            dataset = AcademicDataset(name='dblp4MAGNN', raw_dir='')
+            category = 'A'
+            g = dataset[0].long()
+            num_classes = 4
+            self.in_dim = g.ndata['feat'][category].shape[1]
+
         elif name_dataset == 'imdb4MAGNN':
             dataset = AcademicDataset(name='imdb4MAGNN', raw_dir='')
             category = 'M'

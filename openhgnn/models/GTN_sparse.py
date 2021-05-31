@@ -4,7 +4,7 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 import dgl.function as fn
-from dgl.nn.pytorch import GraphConv
+from dgl.nn.pytorch import GraphConv, EdgeWeightNorm
 from ..utils import extract_edge_with_id_edge
 from . import BaseModel, register_model
 
@@ -37,7 +37,8 @@ class GTN(BaseModel):
             else:
                 layers.append(GTLayer(num_edge_type, num_channels, first=False))
         self.layers = nn.ModuleList(layers)
-        self.gcn = GraphConv(in_feats=self.in_dim, out_feats=hidden_dim, norm='both', activation=F.relu)
+        self.gcn = GraphConv(in_feats=self.in_dim, out_feats=hidden_dim, norm='none', activation=F.relu)
+        self.norm = EdgeWeightNorm(norm='right')
         self.linear1 = nn.Linear(self.hidden_dim * self.num_channels, self.hidden_dim)
         self.linear2 = nn.Linear(self.hidden_dim, self.num_class)
         self.category_idx = None
@@ -53,16 +54,6 @@ class GTN(BaseModel):
             norm_H.append(g)
         return norm_H
 
-    def norm(self, g, edge_weight):
-        with g.local_scope():
-            in_deg = g.in_degrees(range(g.number_of_nodes())).float()
-            norm = in_deg.pow(-1)
-            norm[norm == float('inf')] = 0
-            g.ndata['norm'] = norm
-            g.edata['tmp'] = edge_weight
-            g.apply_edges(fn.e_mul_v('tmp', 'norm', 'out'))
-            e_w = g.edata['out']
-        return e_w
 
     def forward(self, hg, h=None):
         with hg.local_scope():
@@ -91,7 +82,7 @@ class GTN(BaseModel):
                 g = dgl.add_self_loop(g)
                 #g.edata['w_sum'] = th.cat((edge_weight, th.full((g.number_of_nodes(),), 2, device=g.device)))
                 edge_weight = th.cat((edge_weight, th.full((g.number_of_nodes(),), 2, device=g.device)))
-                # edge_weight = self.norm(g, g.edata['w_sum'])
+                edge_weight = self.norm(g, edge_weight)
                 if i == 0:
                     X_ = self.gcn(g, h, edge_weight=edge_weight)
                 else:
@@ -142,7 +133,7 @@ class GTConv(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        nn.init.normal_(self.weight, std=1)
+        nn.init.normal_(self.weight, std=0.01)
         if self.bias is not None:
             fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
             bound = 1 / math.sqrt(fan_in)
