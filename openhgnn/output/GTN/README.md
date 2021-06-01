@@ -27,12 +27,12 @@ Node classification
 
 #### model
 
-- [transform_relation_graph_list](../../openhgnn/utils/utils.py)
+- [transform_relation_graph_list](../../utils/utils.py)
   - Extract a  graph list where every graph just contains a relation.
-- [GTLayer](../../openhgnn/models/GTN_sparse.py)
+- [GTLayer](../../models/GTN_sparse.py)
   - Contain GTConv
   - Contain the product of the adjacency matrices of two graphs getting from GTConv.
-- [GTConv](../../openhgnn/models/GTN_sparse.py)
+- [GTConv](../../models/GTN_sparse.py)
   - Create a weighted graph whose adjacency matrix is the sum of the adjacency matrices of the given graph list.
 
 ### Dataset
