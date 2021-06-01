@@ -12,8 +12,14 @@ BEST_CONFIGS = {
         'GTN':{
             'general': {},
             'acm4GTN': {
-                'num_layers': 2, 'num_heads': 2, 'adaptive_lr_flag': True,
-            }
+                'hidden_dim': 64, 'num_layers': 2, 'num_channels': 2, 'adaptive_lr_flag': True, 'norm_emd_flag': True
+            },
+            'imdb4GTN':{
+                'hidden_dim': 64, 'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': True, 'norm_emd_flag': True
+            },
+            'dblp4GTN': {
+                'hidden_dim': 64, 'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False, 'norm_emd_flag': True
+            },
         }
 
     },

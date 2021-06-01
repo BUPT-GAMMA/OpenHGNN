@@ -3,9 +3,8 @@ import math
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
-import dgl.function as fn
 from dgl.nn.pytorch import GraphConv, EdgeWeightNorm
-from ..utils import extract_edge_with_id_edge
+from ..utils import transform_relation_graph_list
 from . import BaseModel, register_model
 
 
@@ -13,13 +12,16 @@ from . import BaseModel, register_model
 class GTN(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
-        num_edge_type = len(hg.canonical_etypes) + 1
+        if args.identity == True:
+            num_edge_type = len(hg.canonical_etypes) + 1
+        else:
+            num_edge_type = len(hg.canonical_etypes)
         # add self-loop edge
         return cls(num_edge_type=num_edge_type, num_channels=args.num_channels,
                     in_dim=args.in_dim, hidden_dim=args.hidden_dim, num_class=args.out_dim,
-                    num_layers=args.num_layers, category=args.category, norm=args.norm_emd_flag)
+                    num_layers=args.num_layers, category=args.category, norm=args.norm_emd_flag, identity=args.identity)
 
-    def __init__(self, num_edge_type, num_channels, in_dim, hidden_dim, num_class, num_layers, category,  norm):
+    def __init__(self, num_edge_type, num_channels, in_dim, hidden_dim, num_class, num_layers, category, norm, identity):
         super(GTN, self).__init__()
         self.num_edge_type = num_edge_type
         self.num_channels = num_channels
@@ -29,6 +31,7 @@ class GTN(BaseModel):
         self.num_layers = num_layers
         self.is_norm = norm
         self.category = category
+        self.identity = identity
 
         layers = []
         for i in range(num_layers):
@@ -60,7 +63,8 @@ class GTN(BaseModel):
             #Ws = []
             # * =============== Extract edges in original graph ================
             if self.category_idx is None:
-                self.A, self.h, self.category_idx = extract_edge_with_id_edge(hg, category=self.category)
+                self.A, self.h, self.category_idx = transform_relation_graph_list(hg, category=self.category,
+                                                        identity=self.identity)
             # g = dgl.to_homogeneous(hg, ndata='h')
             #X_ = self.gcn(g, self.h)
             A = self.A
@@ -71,17 +75,15 @@ class GTN(BaseModel):
                     H, W = self.layers[i](A)
                 else:
                     H, W = self.layers[i](A, H)
-                if self.is_norm == 'True':
+                if self.is_norm == True:
                     H = self.normalization(H)
                 #Ws.append(W)
             # * =============== GCN Encoder ================
             for i in range(self.num_channels):
-                g = H[i]
-                g = dgl.remove_self_loop(g)
+                g = dgl.remove_self_loop(H[i])
                 edge_weight = g.edata['w_sum']
                 g = dgl.add_self_loop(g)
-                #g.edata['w_sum'] = th.cat((edge_weight, th.full((g.number_of_nodes(),), 2, device=g.device)))
-                edge_weight = th.cat((edge_weight, th.full((g.number_of_nodes(),), 2, device=g.device)))
+                edge_weight = th.cat((edge_weight, th.full((g.number_of_nodes(),), 1, device=g.device)))
                 edge_weight = self.norm(g, edge_weight)
                 if i == 0:
                     X_ = self.gcn(g, h, edge_weight=edge_weight)

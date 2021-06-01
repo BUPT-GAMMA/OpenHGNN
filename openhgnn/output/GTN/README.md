@@ -18,22 +18,30 @@ If you do not have gpu, set -gpu -1.
 
 Node classification 
 
-| Node classification | GTN-I | GTN(proposed) |
-| ------------------- | ----- | ------------- |
-| paper               | 91.13 | 92.68         |
-| OpenHGNN            | -     | -             |
+| Node classification | acm4GTN | imdb4GTN |
+| ------------------- | ------- | -------- |
+| paper               | 92.68   | 60.92    |
+| OpenHGNN            | 92.22   | 61.58    |
 
 ### TrainerFlow: nodeclassification
 
+#### model
 
+- [transform_relation_graph_list](../../openhgnn/utils/utils.py)
+  - Extract a  graph list where every graph just contains a relation.
+- [GTLayer](../../openhgnn/models/GTN_sparse.py)
+  - Contain GTConv
+  - Contain the product of the adjacency matrices of two graphs getting from GTConv.
+- [GTConv](../../openhgnn/models/GTN_sparse.py)
+  - Create a weighted graph whose adjacency matrix is the sum of the adjacency matrices of the given graph list.
 
 ### Dataset
 
-Supported dataset: acm4GTN
+Supported dataset: acm4GTN, imdb4GTN
 
 Note: Every node in dataset should have the same features dimension.
 
-#### acm4GTN
+#### [acm4GTN](../../dataset/#acm4GTN)/[imdb4GTN](../../dataset/#IMDB)
 
 We process the acm dataset given by [HAN](https://github.com/Jhy1993/HAN). It saved as dgl.heterograph and can be loaded by [dgl.load_graphs](https://docs.dgl.ai/en/latest/generated/dgl.load_graphs.html)
 
@@ -41,42 +49,50 @@ You can download the dataset by
 
 ```
 wget https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/acm4GTN.zip
+wget https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/imdb4GTN.zip
 ```
 
 Or run the code mentioned above and it will download automaticlly.
 
-##### Description
-
-Number of nodes:
-
-- Author: 3025
-- Paper: 5912
-- Subject: 57
-
-Number of edges:
-
-- author-paper: 9936
-- paper-author: 9936
-- paper-subject: 3025
-- subject-paper: 3025
-
-Dimensions of features is 1902
-
 ### Hyper-parameter
 
-```
-learning_rate = 0.1
+```python
+learning_rate = 0.005
 weight_decay = 0.001
-max_epoch = 1000
+
 hidden_dim = 64
 out_dim = 16
 num_channels = 2
 num_layers = 3
+
 seed = 0
+max_epoch = 1000
 patience = 40
 
-norm_emd_flag = False
-adaptive_lr_flag = False
+identity = False
+norm_emd_flag = True
+adaptive_lr_flag = True
 sparse = True
 mini_batch_flag = False
 ```
+
+Best config can be found in [best_config](../../utils/beest_config.py)
+
+### Related API in DGL
+
+[dgl.adj_product_graph](https://docs.dgl.ai/en/latest/generated/dgl.adj_product_graph.html#dgl-adj-product-graph) which is equivalent SpSpMM.
+
+[dgl.adj_sum_graph](https://docs.dgl.ai/en/latest/generated/dgl.adj_sum_graph.html#dgl.adj_sum_graph)
+
+[GraphConv](https://docs.dgl.ai/en/latest/api/python/nn.pytorch.html?#graphconv), [EdgeWeightNorm](https://docs.dgl.ai/en/latest/api/python/nn.pytorch.html?#edgeweightnorm)
+
+## More
+
+#### Contirbutor
+
+Tianyu Zhao[GAMMA LAB]
+
+#### If you have any questions,
+
+Submit an issue or email to [tyzhao@bupt.edu.cn](mailto:tyzhao@bupt.edu.cn).
+

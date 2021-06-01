@@ -82,13 +82,6 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             data_path = './openhgnn/dataset/acm_graph.bin'
             category = 'paper'
             num_classes = 3
-        elif name_dataset == 'imdb':
-            data_path = './openhgnn/dataset/imdb_graph.bin'
-            category = 'movie'
-            num_classes = 3
-            g, _ = load_graphs(data_path)
-            g = g[0].long()
-            self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset =='dblp':
             data_path = './openhgnn/dataset/dblp_graph.bin'
             category = 'author'
@@ -109,6 +102,12 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             g = dataset[0].long()
             num_classes = 3
             self.in_dim = g.ndata['feat'][category].shape[1]
+        elif name_dataset == 'imdb4GTN':
+            dataset = AcademicDataset(name='imdb4GTN', raw_dir='')
+            category = 'movie'
+            g = dataset[0].long()
+            num_classes = 3
+            self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset == 'acm4GTN':
             dataset = AcademicDataset(name='acm4GTN', raw_dir='')
             category = 'paper'

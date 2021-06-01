@@ -55,10 +55,10 @@ class Config(object):
             self.max_epoch = conf.getint("GTN", "max_epoch")
             self.patience = conf.getint("GTN", "patience")
 
-            self.norm_emd_flag = conf.get("GTN", "norm_emd_flag")
-            self.adaptive_lr_flag = conf.get("GTN", "adaptive_lr_flag")
+            self.identity = conf.getboolean("GTN", "identity")
+            self.norm_emd_flag = conf.getboolean("GTN", "norm_emd_flag")
+            self.adaptive_lr_flag = conf.getboolean("GTN", "adaptive_lr_flag")
             self.mini_batch_flag = conf.getboolean("GTN", "mini_batch_flag")
-            self.sparse_flag = conf.get("GTN", "sparse")
         elif model == "RSHN":
             self.lr = conf.getfloat("RSHN", "learning_rate")
             self.weight_decay = conf.getfloat("RSHN", "weight_decay")

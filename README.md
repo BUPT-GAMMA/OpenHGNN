@@ -46,12 +46,26 @@ It is under development, and we release it in a nightly build version. For now, 
 
 ## Some models
 
-- [HetGNN](./openhgnn/output/HetGNN)[KDD2019] for node classification and link prediction
-- [RSHE](./openhgnn/output/RSHN)[ICDM2019] for entity classification
+### Supported Models
+
+- [HetGNN](./openhgnn/output/HetGNN)[KDD 2019] for node classification and link prediction
+- [RSHE](./openhgnn/output/RSHN)[ICDM 2019] for entity classification
 - [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
 - [HAN](./openhgnn/output/HAN)[WWW 2019] for node classification
-- [NSHE](./openhgnn/output/NSHE)[IJCAI2020] for node classification
-- [MAGNN](./openhgnn/output/MAGNN)[WWW2020] for node classification
+- [NSHE](./openhgnn/output/NSHE)[IJCAI 2020] for node classification
+- [MAGNN](./openhgnn/output/MAGNN)[WWW 2020] for node classification
+
+### To be supported models
+
+- Metapath2vec[KDD 2017]
+- [RGCN](./openhgnn/output/RGCN)[ESWC 2018] for node classification
+- CompGCN[ICLR 2020] for node classification
+
+### Candidate models
+
+- Heterogeneous Graph Attention Networks for Semi-supervised Short Text Classification[EMNLP 2019]
+- Heterogeneous Graph Structure Learning for Graph Neural Networks[AAAI 2021]
+- [Self-supervised Heterogeneous Graph Neural Network with Co-contrastive Learning[KDD 2021]](https://arxiv.org/abs/2105.09111)
 
 ## Contributors
 

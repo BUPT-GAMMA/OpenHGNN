@@ -12,7 +12,14 @@ For now, we have two downstream tasks, which are node classification and link pr
 
 - ##### HIN_NodeCLassification
 
-  - ###### acm4GTN/academic4HetGNN
+  - ###### acm4GTN
+
+    |             | author | paper | Subject | Paper-Author | Paper-Subject | Features | Train | Val  | Test  |
+    | ----------- | ------ | ----- | ------- | ------------ | ------------- | -------- | ----- | ---- | ----- |
+    | acm4GTN     | 5,912  | 3,025 | 57      | 9,936        | 3,025         | 1,902    | 600   | 300  | 2,125 |
+    | acm_han_raw | 17,351 | 4,025 | 72      | 13,407       | 4,025         | 1,903    | 808   | 401  | 2,816 |
+
+  - ###### academic4HetGNN
 
   - ###### DBLP
 
@@ -29,7 +36,7 @@ For now, we have two downstream tasks, which are node classification and link pr
     |            | Movie | Actor | Director | Movie-Actor | Movie-Director | Train | Val  | Test  |
     | ---------- | ----- | ----- | -------- | ----------- | -------------- | ----- | ---- | ----- |
     | imdb4HAN   | 4,780 | 5,841 | 2,269    | 14,340      | 4,780          | 300   | 300  | 2,687 |
-    | imdb4GTN   |       |       |          |             |                | 300   | 300  | 2,339 |
+    | imdb4GTN   | 4,661 | 5,841 | 2,270    | 13,983      | 4,661          | 300   | 300  | 2,339 |
     | imdb4MAGNN | 4,278 | 5,257 | 2,081    | 12,828      | 4,278          | 400   | 400  | 3,478 |
 
 - ##### OGB_NodeCLassification

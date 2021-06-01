@@ -64,12 +64,6 @@ class EntityClassification(BaseFlow):
     def train(self):
         self.preprocess()
         stopper = EarlyStopping(self.args.patience, self._checkpoint)
-        patience = 0
-        best_score = 0
-        best_loss = np.inf
-        max_score = 0
-        min_loss = np.inf
-        best_model = copy.deepcopy(self.model)
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
             if self.args.mini_batch_flag:

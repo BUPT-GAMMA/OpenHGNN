@@ -45,7 +45,7 @@ class EarlyStopping(object):
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
-            if (score > self.best_score) and (loss < self.best_loss):
+            if (score >= self.best_score) or (loss <= self.best_loss):
                 self.save_model(model)
 
             self.best_loss = np.min((loss, self.best_loss))
@@ -145,10 +145,10 @@ def ccorr(a, b):
     return th.irfft(com_mult(conj(th.rfft(a, 1)), th.rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
 
 
-def extract_edge_with_id_edge(hg, category):
+def transform_relation_graph_list(hg, category, identity=True):
     '''
     input a heterogensous graph
-    return graph list
+    return graph list where every graph just contains a relation.
     '''
 
     # get target category id
@@ -173,10 +173,11 @@ def extract_edge_with_id_edge(hg, category):
         sg = dgl.graph((edges[0][e_ids], edges[1][e_ids]), num_nodes=g.num_nodes())
         sg.edata['w'] = th.ones(sg.num_edges(), device=ctx)
         graph_list.append(sg)
-    x = th.arange(0, g.num_nodes(), device=ctx)
-    sg = dgl.graph((x, x))
-    sg.edata['w'] = th.ones(g.num_nodes(), device=ctx)
-    graph_list.append(sg)
+    if identity == True:
+        x = th.arange(0, g.num_nodes(), device=ctx)
+        sg = dgl.graph((x, x))
+        sg.edata['w'] = th.ones(g.num_nodes(), device=ctx)
+        graph_list.append(sg)
     return graph_list, g.ndata['h'], category_idx
 
 

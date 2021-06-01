@@ -62,15 +62,16 @@ class NodeClassification(BaseFlow):
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
     def preprocess(self):
-        if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == 'True':
-            self.optimizer = torch.optim.Adam([{'params': self.model.gcn.parameters()},
-                                               {'params': self.model.linear1.parameters()},
-                                               {'params': self.model.linear2.parameters()},
-                                               {"params": self.model.layers.parameters(), "lr": 0.5}
-                                               ], lr=0.005, weight_decay=0.001)
-        else:
-            # self.model = MLP_follow_model(self.model, args.out_dim, self.num_classes)
-            pass
+        if self.args.model == 'GTN':
+            if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == True:
+                self.optimizer = torch.optim.Adam([{'params': self.model.gcn.parameters()},
+                                                   {'params': self.model.linear1.parameters()},
+                                                   {'params': self.model.linear2.parameters()},
+                                                   {"params": self.model.layers.parameters(), "lr": 0.5}
+                                                   ], lr=0.005, weight_decay=0.001)
+            else:
+                # self.model = MLP_follow_model(self.model, args.out_dim, self.num_classes)
+                pass
         return
 
     def train(self):
@@ -78,9 +79,6 @@ class NodeClassification(BaseFlow):
         stopper = EarlyStopping(self.args.patience, self._checkpoint)
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
-            for param_group in self.optimizer.param_groups:
-                if param_group['lr'] > 0.005:
-                    param_group['lr'] = param_group['lr'] * 0.9
             if self.args.mini_batch_flag:
                 loss = self._mini_train_step()
             else:
@@ -90,20 +88,21 @@ class NodeClassification(BaseFlow):
 
             train_f1 = f1["train"]
             val_f1 = f1["val"]
+            test_f1 = f1['test']
             val_loss = losses["val"]
             # epoch_iter.set_description(
             #     f"Epoch: {epoch:03d}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, Val_macro_f1: {val_f1[0]:.4f}, Val_micro_f1: {val_f1[1]:.4f}, ValLoss:{val_loss: .4f}"
             # )
             print((
                 f"Epoch: {epoch:03d}, Loss: {loss}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, "
-                f"Val_macro_f1: {val_f1[0]:.4f}, Val_micro_f1: {val_f1[1]:.4f}, ValLoss:{val_loss: .4f}"
+                f"Val_macro_f1: {val_f1[0]:.4f}, Test_macro_f1: {test_f1[0]:.4f}, ValLoss:{val_loss: .4f}"
             ))
-            early_stop = stopper.step(loss, val_f1[0], self.model)
+            early_stop = stopper.step(val_loss, val_f1[0], self.model)
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))
                 break
 
-        print(f"Valid_micro_f1 = {stopper.best_score: .4f}")
+        print(f"Valid_micro_f1 = {stopper.best_score: .4f}, Min_loss = {stopper.best_loss: .4f}")
         stopper.load_model(self.model)
         test_f1, _ = self._test_step(split="test")
         val_f1, _ = self._test_step(split="val")
