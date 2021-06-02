@@ -36,6 +36,8 @@ def get_trainerflow(model, task):
             return 'node_classification'
     elif model in ['HGT', 'HGT_hetero']:
         return 'hgttrainer'
+    elif model in ['NSHE']:
+        return 'nshetrainer'
 
 
 def trans_feature(hg, het_gnn):

@@ -14,10 +14,11 @@ For now, we have two downstream tasks, which are node classification and link pr
 
   - ###### acm4GTN
 
-    |             | author | paper | Subject | Paper-Author | Paper-Subject | Features | Train | Val  | Test  |
-    | ----------- | ------ | ----- | ------- | ------------ | ------------- | -------- | ----- | ---- | ----- |
-    | acm4GTN     | 5,912  | 3,025 | 57      | 9,936        | 3,025         | 1,902    | 600   | 300  | 2,125 |
-    | acm_han_raw | 17,351 | 4,025 | 72      | 13,407       | 4,025         | 1,903    | 808   | 401  | 2,816 |
+    |             | author | paper | Subject | Paper-Author | Paper-Subject | Features                      | Train | Val  | Test  |
+    | ----------- | ------ | ----- | ------- | ------------ | ------------- | ----------------------------- | ----- | ---- | ----- |
+    | acm4GTN     | 5,912  | 3,025 | 57      | 9,936        | 3,025         | 1,902                         | 600   | 300  | 2,125 |
+    | acm_han_raw | 17,351 | 4,025 | 72      | 13,407       | 4,025         | 1,903                         | 808   | 401  | 2,816 |
+    | acm4NSHE    | 7,167  | 4,019 | 60      | 13,407       | 4,019         | 128(Embedding from deep walk) | -     | -    | -     |
 
   - ###### academic4HetGNN
 

@@ -94,7 +94,7 @@ class NodeClassification(BaseFlow):
             #     f"Epoch: {epoch:03d}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, Val_macro_f1: {val_f1[0]:.4f}, Val_micro_f1: {val_f1[1]:.4f}, ValLoss:{val_loss: .4f}"
             # )
             print((
-                f"Epoch: {epoch:03d}, Loss: {loss}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, "
+                f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, "
                 f"Val_macro_f1: {val_f1[0]:.4f}, Test_macro_f1: {test_f1[0]:.4f}, ValLoss:{val_loss: .4f}"
             ))
             early_stop = stopper.step(val_loss, val_f1[0], self.model)

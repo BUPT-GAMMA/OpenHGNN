@@ -88,43 +88,9 @@ class NSHE(BaseModel):
             # Context embedding generation
             # g_homo.ndata['h'] = h
             emd = self.h2dict(h, h_dict)
-            hg.ndata['h'] = emd
+            #hg.ndata['h'] = emd
 
-        return emd
-
-    def full_train(self, hg):
-        h = hg.ndata['h']
-        x = self.__call__(hg, h)
-        neg_edges, ns_samples = get_epoch_samples(g, epoch, config.dataset, config.num_ns_neg, config.device)
-        h_context = self.context_encoder(x)
-        p_list = self.pre_ns(ns_samples, x, h_context, g.ntypes)
-        x = th.sigmoid(th.cat([p for p in p_list])).flatten()
-
-        node_emb, ns_prediction, eva_h = model(g, ns_samples)
-        # compute loss
-        pos_edges = g_homo.edges()
-        pairwise_loss = cal_node_pairwise_loss(node_emb, pos_edges, neg_edges)
-        ns_label = th.cat([ns['label'] for ns in ns_samples]).type(th.float32).to(config.device)
-        cla_loss = th.nn.BCELoss(ns_prediction, ns_label)
-        loss = pairwise_loss + cla_loss * config.beta
-        return loss
-
-    def pre_ns(self, ns_samples, h, h_context, ntypes):
-        p_list = []
-        for ns_type in ns_samples:
-            target = ns_type['target_type']
-            index_h = ns_type[target]
-            h_tar_type = h[target]
-            h_tar = h_tar_type[index_h]
-            for type in ntypes:
-                if type != target:
-                    index_h = ns_type[type]
-                    h_con_type = h_context[type]
-                    h_con = h_con_type[index_h]
-                    h_tar = th.cat((h_tar, h_con), dim=1)
-            p = self.linear_classifier(target, h_tar)
-            p_list.append(p)
-        return p_list
+        return emd, h
 
     def h2dict(self, h, hdict):
         pre = 0
@@ -132,24 +98,6 @@ class NSHE(BaseModel):
             hdict[i] = h[pre:value.shape[0]+pre]
             pre += value.shape[0]
         return hdict
-    @staticmethod
-    def cal_node_pairwise_loss(node_emd, edge, neg_edge):
-        # cross entropy loss from LINE
-        # pos loss
-        inner_product = cal_inner_product(node_emd, edge)
-        pos_loss = - th.mean(F.logsigmoid(inner_product))
-        # neg loss
-        inner_product = cal_inner_product(node_emd, neg_edge)
-        neg_loss = - th.mean(F.logsigmoid(-1 * inner_product))
-        loss = pos_loss + neg_loss
-        return loss
-
-    @staticmethod
-    def cal_inner_product(node_emd, edge):
-        emb_u_i = node_emd[edge[0]]
-        emb_u_j = node_emd[edge[1]]
-        inner_product = th.sum(emb_u_i * emb_u_j, dim=1)
-        return inner_product
 
 
 class multi_Linear(nn.Module):
@@ -189,7 +137,8 @@ class hetero_linear(nn.Module):
         self.encoder = multi_Linear(linear_list, bias)
 
     def forward(self, h_dict):
+        h_out = {}
         for ntype, h in h_dict.items():
             h = self.encoder(ntype, h)
-            h_dict[ntype] = h
-        return h_dict
+            h_out[ntype] = h
+        return h_out

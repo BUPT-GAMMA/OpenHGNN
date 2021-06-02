@@ -78,10 +78,12 @@ class HIN_NodeCLassification(NodeClassificationDataset):
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
 
     def load_HIN(self, name_dataset):
-        if name_dataset == 'acm':
-            data_path = './openhgnn/dataset/acm_graph.bin'
+        if name_dataset == 'acm4NSHE':
+            dataset = AcademicDataset(name='acm4NSHE', raw_dir='')
             category = 'paper'
+            g = dataset[0].long()
             num_classes = 3
+            self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset =='dblp':
             data_path = './openhgnn/dataset/dblp_graph.bin'
             category = 'author'

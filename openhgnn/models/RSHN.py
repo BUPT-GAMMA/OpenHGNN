@@ -25,6 +25,7 @@ class RSHN(BaseModel):
     def build_model_from_args(cls, args, hg):
         rshn = cls(n_nodes=get_nodes_dict(hg),
                    dim=args.hidden_dim,
+                   out_dim=args.out_dim,
                    num_node_layer=args.num_node_layer,
                    num_edge_layer=args.num_edge_layer,
                    dropout=args.dropout
@@ -40,7 +41,7 @@ class RSHN(BaseModel):
         rshn.linear_e1 = linear_e1
         return rshn
 
-    def __init__(self, n_nodes, dim, num_node_layer, num_edge_layer, dropout):
+    def __init__(self, n_nodes, dim, out_dim, num_node_layer, num_edge_layer, dropout):
         super(RSHN, self).__init__()
         # map the node feature
         self.h_n_dict = HeteroEmbedLayer(n_nodes, dim)
@@ -53,7 +54,7 @@ class RSHN(BaseModel):
         self.node_layers = nn.ModuleList()
         for i in range(num_node_layer):
             self.node_layers.append(GraphConv(in_feats=dim, out_feats=dim, dropout=dropout, activation=th.tanh))
-
+        self.linear = nn.Linear(in_features=dim, out_features=out_dim, bias=False)
         self.dropout = dropout
 
         self.init_para()
@@ -66,7 +67,10 @@ class RSHN(BaseModel):
         # For full graph training, directly use the graph
         if n_feats is None:
             # full graph training
-            n_feats = self.h_n_dict()
+            temp = self.h_n_dict()
+            n_feats = {}
+            for n in hg.ntypes:
+                n_feats[n] = F.dropout(temp[n], p=self.dropout, training=False)
 
         # Forward of n layers of CompGraphConv
 
@@ -80,20 +84,17 @@ class RSHN(BaseModel):
         edge_weight = {}
         for i, e in enumerate(hg.canonical_etypes):
             edge_weight[e] = h[i].expand(hg.num_edges(e), -1)
-        temp = self.h_n_dict()
-        n_feats = {}
-        for n in hg.ntypes:
-            n_feats[n] = temp[n]
         if hasattr(hg, 'ntypes'):
             #edge_weight = F.embedding(hg.edata[dgl.ETYPE].long(), h)
 
             # full graph training
-
             for layer in self.node_layers:
                 n_feats = layer(hg, n_feats, edge_weight)
         else:
             # minibatch training
             pass
+        for n in n_feats:
+            n_feats[n] = self.linear(n_feats[n])
         return n_feats
 
 

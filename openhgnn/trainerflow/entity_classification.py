@@ -37,13 +37,12 @@ class EntityClassification(BaseFlow):
         # Build the model. If the output dim is not equal the number of classes, modify the dim.
         if not hasattr(self.task.dataset, 'in_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
-            args.out_dim = self.num_classes
+            self.args.out_dim = self.num_classes
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
         self.loss_fn = self.task.get_loss_fn()
-        self.optimizer = (
-            torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay))
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
         self.patience = args.patience
         self.max_epoch = args.max_epoch

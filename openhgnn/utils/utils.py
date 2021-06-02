@@ -53,6 +53,23 @@ class EarlyStopping(object):
             self.counter = 0
         return self.early_stop
 
+    def step_value(self, score, model):
+        if self.best_score is None:
+            self.best_score = score
+            self.save_model(model)
+        elif score < self.best_score:
+            self.counter += 1
+            #print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            if score >= self.best_score:
+                self.save_model(model)
+            self.best_score = np.max((score, self.best_score))
+            self.counter = 0
+        return self.early_stop
+
+
     def loss_step(self, loss, model):
         if self.best_loss is None:
             self.best_loss = loss

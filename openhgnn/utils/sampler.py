@@ -186,6 +186,8 @@ class pro_sampler(_BaseNegativeSampler):
 def gen_neg_edges(g, num_neg, device):
     if not g.is_homogeneous:
         g_homo = dgl.to_homogeneous(g)
+    else:
+        g_homo = g
     node_degrees = g_homo.out_degrees().to('cpu').numpy()
     node_weights = np.power(node_degrees, 0.75)
     node_probs = node_weights / np.sum(node_weights)
