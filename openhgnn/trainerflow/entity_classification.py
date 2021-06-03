@@ -35,7 +35,7 @@ class EntityClassification(BaseFlow):
         if hasattr(self.task.dataset, 'in_dim'):
             self.args.in_dim = self.task.dataset.in_dim
         # Build the model. If the output dim is not equal the number of classes, modify the dim.
-        if not hasattr(self.task.dataset, 'in_dim') or args.out_dim != self.num_classes:
+        if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
             self.args.out_dim = self.num_classes
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
@@ -78,6 +78,7 @@ class EntityClassification(BaseFlow):
                 epoch_iter.set_description(
                     f"Epoch: {epoch:03d}, Loss:{loss: .4f}, Train_acc: {train_acc:.4f}, Val_acc: {val_acc:.4f}, Val_loss: {val_loss:.4f}"
                 )
+                print(f'Test_acc:{acc["test"]:.4f}')
                 # print(
                 #     f"Epoch: {epoch:03d}, Loss:{loss: .4f}, Train_acc: {train_acc:.4f}, Val_acc: {val_acc:.4f}, Val_loss: {val_loss:.4f}"
                 # )

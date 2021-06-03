@@ -9,7 +9,7 @@ Code from author: https://github.com/Andy-Border/NSHE
 Clone the Openhgnn-DGL
 
 ```python
-python main.py -m NSHE -t node_classification -d acm4NSHE -g 0
+python main.py -m NSHE -t node_classification -d acm4NSHE -g 0 --use_best_config
 ```
 
 If you do not have gpu, set -gpu -1.
@@ -48,6 +48,13 @@ Or run the code mentioned above and it will download automaticlly.
   - Network Schema Instance Sampling
 
 Note: [TODO] We will use the dataloader to combine the two sampler without storing the temporal file and use mini-batch trainer to improve the training efficiency.
+
+## Hyper-parameter specific to the model
+
+```python
+num_e_neg = 2 # number of negative edges
+num_ns_neg = 3 # number of negative schemas
+```
 
 ## More
 

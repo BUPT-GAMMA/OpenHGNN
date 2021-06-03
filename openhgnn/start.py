@@ -1,18 +1,14 @@
-from openhgnn.utils.trainer import run, run_GTN, run_RSHN, run_RGCN, run_CompGCN, run_HetGNN
-from openhgnn.utils.evaluater import evaluate
-from openhgnn.utils import set_random_seed
-from openhgnn.utils.dgl_graph import load_HIN, load_KG, load_link_pred
-import torch.nn.functional as F
-import torch as th
-from openhgnn.trainerflow import build_flow
+from .utils import set_random_seed, set_best_config
+from .trainerflow import build_flow
+
 
 
 def OpenHGNN(args):
     set_random_seed(args.seed)
 
     # TODO find the best parameter
-    # if getattr(args, "use_best_config", False):
-    #     args = set_best_config(args)
+    if getattr(args, "use_best_config", False):
+        args = set_best_config(args)
     if hasattr(args, 'trainerflow'):
         trainerflow = args.trainerflow
     else:

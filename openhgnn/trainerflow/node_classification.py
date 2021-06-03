@@ -36,7 +36,7 @@ class NodeClassification(BaseFlow):
         if hasattr(self.task.dataset, 'in_dim'):
             self.args.in_dim = self.task.dataset.in_dim
         # Build the model. If the output dim is not equal the number of classes, a MLP will follow the gnn model.
-        if args.out_dim != self.num_classes:
+        if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
             args.out_dim = self.num_classes
 

@@ -12,7 +12,7 @@ Clone the Openhgnn-DGL
 python main.py -m HetGNN -t node_classification -d academic4HetGNN -g 0
 ```
 
-If you do not have gpu, set -gpu -1.
+If you do not have gpu, set -g -1.
 
 ## Performance
 
@@ -44,24 +44,10 @@ Or run the code mentioned above and it will download automaticlly.
 
 ##### Description: [academic4HetGNN](../../dataset/#academic4HetGNN)
 
-Number of nodes:
-
-- Author: 28646
-- Paper: 21044
-- Venue: 18
-
-Number of edges:
-
-- author-paper: 69311
-- paper-author: 69311
-- Paper-paper: 21357
-- Paper-venue: 21044
-- Venue-paper:21044
-
 ## TrainerFlow: HetGNNTrainer
 
 - Sampling Heterogeneous Neighbors (C1)
-  - It designs a heterogeneous neighbors sampling strategy based on random walk with restart (RWR). Build a hetgnn_graph, which is used in aggregation neighbours in form of a full graph. So it limits the scale of graph though we give the mini-batch trainer. [openhgnn/sampler/HetGNN_sampler.py]
+  - It designs a heterogeneous neighbors sampling strategy based on random walk with restart (RWR). Build a [hetgnn_graph](../../sampler/HetGNN_sampler.py), which is used in aggregation neighbours in form of a full graph. So it limits the scale of graph though we give the mini-batch trainer. [openhgnn/sampler/HetGNN_sampler.py]
   - [TODO] Combine the sampler with NeighborSampler without generating the hetgnn_graph.
 - Encoding Heterogeneous Contents (C2)
   - encoder_het_content(nn.Module)
@@ -75,7 +61,7 @@ You can modify the parameters in openhgnn/config.ini
 
 #### Description
 
-```
+```python
 seed = 0
 learning_rate = 0.01
 weight_decay = 0.0001
@@ -83,20 +69,22 @@ weight_decay = 0.0001
 dim = 128 #hidden dimensions
 
 batch_size = 32 # the batch_size of nodes sampled in SkipGramBatchSampler
-window_size = 5 # used in sample positive edges through random walk
-num_workers = 0
+window_size = 5 # window size for relation extration
+num_workers = 0 # how many subprocesses to use for data loading. ''0'' means that the data 										will be loaded in the main process.
 batches_per_epoch = 20 # the batches trained in a epoch
 
-#the three parameters decided in what nodes aggregated.
-rw_length = 10
-rw_walks = 30
-rwr_prob = 0.5
+# the three parameters decided in what nodes aggregated.[used in building hetgnn_graph]
+rw_length # length of each walk
+rw_walks # window size for relation extration
+rwr_prob # the probability of restart
 
 #train epoch and early stop patience
 max_epoch = 100
-patience = 100
-mini_batch_flag = True
+patience = 10
+mini_batch_flag = True # we only support the mini-batch training.
 ```
+
+Best config can be found in [best_config](../../utils/best_config.py)
 
 ## More
 

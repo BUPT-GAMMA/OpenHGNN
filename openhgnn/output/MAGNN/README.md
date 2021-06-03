@@ -99,53 +99,19 @@
     -   This part employs attention mechanism on graph  to aggregate the features of different types of metapath. Consequently we obtain the node embeddings. **inter_metapath_trans() in openhgnn/models/MAGNN.py**
     -   Then project the node embeddings to the vector space with desired output dimension. **output_projection() in openhgnn/models/MAGNN.py**
 
-## Parameter
+## Hyper-parameter specific to the model
 
 You can modify the parameters in openhgnn/config.ini
 
 ### Description
 
-```
-seed = 0
-learning_rate = 0.005
-weight_decay = 0.001 # the weight decay of Adam optimizer
-dropout = 0.2 # the dropout rate
-
-hidden_dim = 32 # the dimension of feature vectors in hidden layer
-out_dim = 16 # the dimension of output projection. It's the number of classes
-			 # in the node classification task
-inter_attn_feats = 32 # the dimension of the attention vector in inter metapath 							  # aggregation
-num_heads = 4 # the number of heads in the attention mechanism of intra metapath 		 			   # aggregation
+```python
+inter_attn_feats = 32 # the dimension of the attention vector in inter metapath 						
+num_heads = 4 # the number of heads in the attention mechanism of intra metapath 		 			   
 num_layers = 2 # the number of layers.
-
-max_epoch = 500
-patience = 40
-mini_batch_flag = False
-encoder_type = Linear
 ```
 
-### Best config
-
->   This is the best config for node classification on IMDB dataset.
-
-```
-seed = 0
-learning_rate = 0.005
-weight_decay = 0.001 # the weight decay of Adam optimizer
-dropout = 0.5 # the dropout rate
-
-hidden_dim = 64 # the dimension of feature vectors in hidden layer
-out_dim = 3 # the dimension of output projection. It's the number of classes
-			 # in the node classification task
-inter_attn_feats = 128 # the dimension of the attention vector in inter metapath 							  # aggregation
-num_heads = 8 # the number of heads in the attention mechanism of intra metapath 		 			   # aggregation
-num_layers = 2 # the number of layers.
-
-max_epoch = 100
-patience = 30
-mini_batch_flag = False
-encoder_type = RotateE
-```
+Best config can be found in [best_config](../../utils/best_config.py)
 
 ## More
 

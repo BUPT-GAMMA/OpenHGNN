@@ -22,6 +22,10 @@ For now, we have two downstream tasks, which are node classification and link pr
 
   - ###### academic4HetGNN
 
+    |                 | author | paper  | Venue | Paper-Author | Paper-venue | Paper-paper |
+    | --------------- | ------ | ------ | ----- | ------------ | ----------- | ----------- |
+    | academic4HetGNN | 28,646 | 21,044 | 18    | 69,311       | 21,044      | 21,357      |
+
   - ###### DBLP
 
     |            | author | paper  | Conf | Venue | Paper-Author | Paper-Conf | Paper-Term | Train | Val  | Test  |

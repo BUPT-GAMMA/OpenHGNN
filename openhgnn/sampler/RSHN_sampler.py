@@ -30,17 +30,16 @@ class coarsened_line_graph():
 
         cl_graph = dgl.remove_self_loop(cl_graph)
         edge_attr = cl_graph.edata['w'].type(th.FloatTensor).to(cl_graph.device)
+
+
         row, col = cl_graph.edges()
         for i in range(cl_graph.num_nodes()):
             mask = th.eq(col, i)
             edge_attr[mask] = th.nn.functional.normalize(edge_attr[mask], p=2, dim=0)
-        cl_graph.edata['w'] = edge_attr
 
         # add_self_loop, set 1 as edge feature
         cl_graph = dgl.add_self_loop(cl_graph)
-        edge_attr = cl_graph.edata['w']
-        mask = th.eq(edge_attr, 0)
-        edge_attr[mask] = 1
+        edge_attr = th.cat([edge_attr, th.ones(cl_graph.num_nodes(), device=edge_attr.device)], dim=0)
         cl_graph.edata['w'] = edge_attr
         return cl_graph
 

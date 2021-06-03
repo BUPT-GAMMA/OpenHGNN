@@ -1,5 +1,5 @@
 # OpenHGNN
-This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on [DGL](https://github.com/dmlc/dgl). We will integrate SOTA models of heterogeneous graph.
+This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl). We integrate SOTA models of heterogeneous graph.
 
 [Test Version]For now, we just release some models for some researchers to run the experiments.
 
@@ -22,7 +22,7 @@ OpenHGNN is a high-level package built on top of DGL; it will not cover efficien
 | OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
 | OpenHGNN | dgl.heterograph       | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
 
-To avoid reinventing the wheel, we use the dgl as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
+To avoid reinventing the wheel, we use the DGL as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
 
 ![image](./docs/source/image-001.jpg)
 
@@ -37,19 +37,27 @@ To avoid reinventing the wheel, we use the dgl as our backend. So we build the n
 #### Running an existing baseline model on an existing benchmark [dataset](./openhgnn/dataset/#Dataset)
 
 ```python
-python main.py -m model_name -d dataset_name -t task_name -g 0
+python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 ```
 
 -g controls which gpu you will use. If you do not have gpu, set -g -1.
 
+--use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually.
+
+e.g.: 
+
+```python
+python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
+```
+
 It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.
 
-## Some models
+## Models
 
 ### Supported Models
 
 - [HetGNN](./openhgnn/output/HetGNN)[KDD 2019] for node classification and link prediction
-- [RSHE](./openhgnn/output/RSHN)[ICDM 2019] for entity classification
+- [RSHN](./openhgnn/output/RSHN)[ICDM 2019] for entity classification
 - [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
 - [HAN](./openhgnn/output/HAN)[WWW 2019] for node classification
 - [NSHE](./openhgnn/output/NSHE)[IJCAI 2020] for node classification
@@ -65,13 +73,14 @@ It is under development, and we release it in a nightly build version. For now, 
 
 - Heterogeneous Graph Attention Networks for Semi-supervised Short Text Classification[EMNLP 2019]
 - Heterogeneous Graph Structure Learning for Graph Neural Networks[AAAI 2021]
+- [Heterogeneous Graph Propagation Network[TKDE2021]](https://ieeexplore.ieee.org/abstract/document/9428609)
 - [Self-supervised Heterogeneous Graph Neural Network with Co-contrastive Learning[KDD 2021]](https://arxiv.org/abs/2105.09111)
 
 ## Contributors
 
-**GAMMA LAB [BUPT]**: [Tianyu Zhao](https://github.com/Theheavens), Cheng Yang, Xiao Wang, [Chuan Shi](http://shichuan.org/)
+**[GAMMA LAB](https://github.com/BUPT-GAMMA) [BUPT]**: [Tianyu Zhao](https://github.com/Theheavens), Cheng Yang, Xiao Wang, [Chuan Shi](http://shichuan.org/)
 
 **BUPT**: Jiahang Li
 
-**DGL Team**: Quan Gan, Jian Zhang
+**DGL Team**: Quan Gan, [Jian Zhang](https://github.com/zhjwy9343)
 

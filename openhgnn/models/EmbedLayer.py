@@ -19,7 +19,7 @@ class HeteroEmbedLayer(nn.Module):
         # create weight embeddings for each node for each relation
         self.embeds = nn.ParameterDict()
         for ntype, nodes in n_nodes.items():
-            embed = nn.Parameter(th.Tensor(nodes, self.embed_size))
+            embed = nn.Parameter(th.FloatTensor(nodes, self.embed_size))
            # initrange = 1.0 / self.embed_size
             #nn.init.uniform_(embed, -initrange, initrange)
             nn.init.xavier_uniform_(embed, gain=nn.init.calculate_gain('relu'))

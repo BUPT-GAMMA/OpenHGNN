@@ -117,8 +117,8 @@ class Config(object):
             pass
         elif model == 'HetGNN':
             self.lr = conf.getfloat("HetGNN", "learning_rate")
-
             self.weight_decay = conf.getfloat("HetGNN", "weight_decay")
+
             #self.dropout = conf.getfloat("CompGCN", "dropout")
             self.max_epoch = conf.getint("HetGNN", "max_epoch")
             self.dim = conf.getint("HetGNN", "dim")

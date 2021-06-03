@@ -79,7 +79,7 @@ class HetGNNTrainer(BaseFlow):
                 loss = self._mini_train_step()
             else:
                 loss = self._full_train_setp()
-            print('Epoch{}: Loss:{:.4f}'.format(epoch, loss))
+            epoch_iter.set_description('Epoch{}: Loss:{:.4f}'.format(epoch, loss))
             early_stop = stopper.loss_step(loss, self.model)
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))

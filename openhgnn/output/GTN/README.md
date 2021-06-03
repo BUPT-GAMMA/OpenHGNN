@@ -9,10 +9,14 @@ Code from author: https://github.com/seongjunyun/Graph_Transformer_Networks
 Clone the Openhgnn-DGL
 
 ```python
-python main.py -m GTN -t node_classification -d acm4GTN -g 0
+python main.py -m GTN -t node_classification -d acm4GTN -g 0 --use_best_config
 ```
 
 If you do not have gpu, set -gpu -1.
+
+##### Candidate dataset: 
+
+​	acm4GTN/imdb4GTN
 
 ### Performance
 
@@ -23,7 +27,9 @@ Node classification
 | paper               | 92.68   | 60.92    |
 | OpenHGNN            | 92.22   | 61.58    |
 
-### TrainerFlow: nodeclassification
+### TrainerFlow: node_classification
+
+The model is  trained in semi-supervisied node classification.
 
 #### model
 
@@ -54,29 +60,15 @@ wget https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/imdb4GTN.zip
 
 Or run the code mentioned above and it will download automaticlly.
 
-### Hyper-parameter
+### Hyper-parameter specific to the model
 
 ```python
-learning_rate = 0.005
-weight_decay = 0.001
-
-hidden_dim = 64
-out_dim = 16
-num_channels = 2
-num_layers = 3
-
-seed = 0
-max_epoch = 1000
-patience = 40
-
-identity = False
-norm_emd_flag = True
-adaptive_lr_flag = True
-sparse = True
-mini_batch_flag = False
+num_channels = 2 # number of channel
+num_layers = 3 # number of layer
+adaptive_lr_flag = True # use different learning rate for weight in GTLayer.
 ```
 
-Best config can be found in [best_config](../../utils/beest_config.py)
+Best config can be found in [best_config](../../utils/best_config.py)
 
 ### Related API in DGL
 
