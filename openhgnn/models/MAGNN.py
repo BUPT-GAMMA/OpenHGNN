@@ -85,6 +85,8 @@ class MAGNN(BaseModel):
             the list of edge types, e.g ['M-A', 'A-M', 'M-D', 'D-M'],
         dropout_rate: float
             the dropout rate of feat dropout and attention dropout
+        mp_instances : dict
+            the metapath instances indices dict. e.g mp_instances['MAM'] stores MAM instances indices.
         encoder_type: str
             the type of encoder, e.g ['RotateE', 'Average', 'Linear']
         activation: callable activation function
@@ -156,8 +158,6 @@ class MAGNN(BaseModel):
             the dgl heterogeneous graph
         feat_dict : dict
             the feature matrix dict of different node types, e.g {'M':feat_of_M, 'D':feat_of_D, ...}
-        metapath_idx_dict : dict
-            the metapath instances indices dict.
 
         Returns
         -------
