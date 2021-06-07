@@ -12,7 +12,7 @@ For now, we have two downstream tasks, which are node classification and link pr
 
 - ##### HIN_NodeCLassification
 
-  - ###### acm4GTN
+  - ###### ACM
 
     |             | author | paper | Subject | Paper-Author | Paper-Subject | Features                      | Train | Val  | Test  |
     | ----------- | ------ | ----- | ------- | ------------ | ------------- | ----------------------------- | ----- | ---- | ----- |

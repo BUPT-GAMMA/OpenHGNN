@@ -35,7 +35,7 @@ wget https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/acm4NSHE.zip
 
 Or run the code mentioned above and it will download automaticlly.
 
-##### Description: [acm4NSHE](../../dataset/#acm4NSHE)
+##### Description: [acm4NSHE](../../dataset/#acm)
 
 ## TrainerFlow: NSHETrainer
 
@@ -55,6 +55,8 @@ Note: [TODO] We will use the dataloader to combine the two sampler without stori
 num_e_neg = 2 # number of negative edges
 num_ns_neg = 3 # number of negative schemas
 ```
+
+Best config can be found in [best_config](../../utils/best_config.py)
 
 ## More
 

@@ -34,7 +34,7 @@ class coarsened_line_graph():
 
         row, col = cl_graph.edges()
         for i in range(cl_graph.num_nodes()):
-            mask = th.eq(col, i)
+            mask = th.eq(row, i)
             edge_attr[mask] = th.nn.functional.normalize(edge_attr[mask], p=2, dim=0)
 
         # add_self_loop, set 1 as edge feature

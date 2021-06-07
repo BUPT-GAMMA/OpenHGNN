@@ -32,29 +32,22 @@
   - We implement the API [coarsened_line_graph](../../sampler/RSHN_sampler.py)
 - *2) Heterogeneous Graph Neural Network (H-GNN):*
 
-## Hyper-Parameter
+## Hyper-parameter specific to the model
 
 You can modify the parameters in openhgnn/config.ini
 
 #### Description
 
-```
-[RSHN]
-learning_rate = 0.01
-weight_decay =  0.0005
-dropout = 0.6
-
-seed = 1233
-hidden_dim = 8
-max_epoch = 1000
+```python
+# The next two hyper-parameters are used in building the coarsened-line graph.
 rw_len = 5
 batch_size = 1000
+#	edga_layer means number of CL-GNN layers, node_layer means number of H-GNN layers
 num_node_layer = 2
 num_edge_layer = 1
-patience = 50
-validation = True
-mini_batch_flag = False
 ```
+
+Best config can be found in [best_config](../../utils/best_config.py)
 
 ## More
 

@@ -22,6 +22,20 @@ BEST_CONFIGS = {
                 'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,
             },
         },
+        'HAN': {
+            'general': {},
+            'acm_han_raw': {
+                'lr': 0.005, 'num_heads': [8], 'hidden_dim': 128, 'dropout': 0.6, 'weight_decay': 0.001,
+                'num_epochs': 200, 'patience': 100
+            },
+            'acm4GTN': {
+                'lr': 0.001, 'weight_decay': 0.00001, 'num_heads': [8, 8],
+            },
+            'imdb4GTN': {
+                'lr': 0.001, 'weight_decay': 0.00001, 'num_heads': [2, 2, 2]
+            }
+
+        },
         'HetGNN': {
             'general': {'max_epoch': 500, 'patience': 20, 'mini_batch_flag': True},
             'academic4HetGNN': {
@@ -42,11 +56,12 @@ BEST_CONFIGS = {
                          'max_epoch': 500, 'patience': 10,
                          }
         },
-        'RSHE':{
+        'RSHN':{
             'general': {},
-            'aifb': {'hidden_dim': 8, 'num_node_layer': 1, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
-                },
-            'mutag': {'hidden_dim': 8, 'num_node_layer': 1, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
+            'aifb': {'hidden_dim': 8, 'num_node_layer': 2, 'num_edge_layer': 1, 'rw_len': 4, 'batch_size': 5000,
+                     'dropout': 0.6
+                     },
+            'mutag': {'hidden_dim': 8, 'num_node_layer': 2, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
                 },
             'bgs': {'hidden_dim': 16, 'num_node_layer': 2, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
                       },

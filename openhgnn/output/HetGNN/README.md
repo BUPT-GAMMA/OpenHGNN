@@ -62,12 +62,6 @@ You can modify the parameters in openhgnn/config.ini
 #### Description
 
 ```python
-seed = 0
-learning_rate = 0.01
-weight_decay = 0.0001
-
-dim = 128 #hidden dimensions
-
 batch_size = 32 # the batch_size of nodes sampled in SkipGramBatchSampler
 window_size = 5 # window size for relation extration
 num_workers = 0 # how many subprocesses to use for data loading. ''0'' means that the data 										will be loaded in the main process.

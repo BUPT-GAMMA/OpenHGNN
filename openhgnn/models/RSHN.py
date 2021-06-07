@@ -71,6 +71,7 @@ class RSHN(BaseModel):
             n_feats = {}
             for n in hg.ntypes:
                 n_feats[n] = F.dropout(temp[n], p=self.dropout, training=False)
+                #n_feats[n] = temp[n]
 
         # Forward of n layers of CompGraphConv
         h = self.cl_graph.ndata['h']
@@ -88,12 +89,13 @@ class RSHN(BaseModel):
 
             # full graph training
             for layer in self.node_layers:
-                n_feats = layer(hg, n_feats, edge_weight)
+                n_feats = layer(hg, n_feats)
         else:
             # minibatch training
             pass
         for n in n_feats:
-            n_feats[n] = self.linear(n_feats[n])
+            n_feats[n] = F.dropout(self.linear(n_feats[n]), p=self.dropout, training=False)
+            #n_feats[n] = self.linear(n_feats[n])
         return n_feats
 
 
@@ -166,7 +168,7 @@ class GraphConv(nn.Module):
             if edge_weight is not None:
                 #assert edge_weight.shape[0] == graph.number_of_edges()
                 hg.edata['_edge_weight'] = edge_weight
-                aggregate_fn = fn.u_sub_e('h', '_edge_weight', 'm')
+                aggregate_fn = fn.u_mul_e('h', '_edge_weight', 'm')
             for e in hg.canonical_etypes:
                 if e[0] == e[1]:
                     hg = dgl.remove_self_loop(hg, etype=e)

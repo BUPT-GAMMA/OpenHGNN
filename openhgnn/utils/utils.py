@@ -12,14 +12,17 @@ import datetime
 def set_best_config(args):
     configs = BEST_CONFIGS[args.task]
     if args.model not in configs:
+        print('The model is not in the best config.')
         return args
     configs = configs[args.model]
     for key, value in configs["general"].items():
         args.__setattr__(key, value)
     if args.dataset not in configs:
+        print('The dataset is not in the best config.')
         return args
     for key, value in configs[args.dataset].items():
         args.__setattr__(key, value)
+    print('Use the best config.')
     return args
 
 
@@ -45,7 +48,7 @@ class EarlyStopping(object):
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
-            if (score >= self.best_score) or (loss <= self.best_loss):
+            if (score >= self.best_score) and (loss <= self.best_loss):
                 self.save_model(model)
 
             self.best_loss = np.min((loss, self.best_loss))

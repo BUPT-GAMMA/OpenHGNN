@@ -47,7 +47,7 @@ Supported dataset: acm4GTN, imdb4GTN
 
 Note: Every node in dataset should have the same features dimension.
 
-#### [acm4GTN](../../dataset/#acm4GTN)/[imdb4GTN](../../dataset/#IMDB)
+#### [acm4GTN](../../dataset/#ACM)/[imdb4GTN](../../dataset/#IMDB)
 
 We process the acm dataset given by [HAN](https://github.com/Jhy1993/HAN). It saved as dgl.heterograph and can be loaded by [dgl.load_graphs](https://docs.dgl.ai/en/latest/generated/dgl.load_graphs.html)
 
