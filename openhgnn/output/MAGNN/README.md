@@ -7,7 +7,7 @@
 
 - Clone the Openhgnn-DGL
 
-  ```python
+  ```bash
   python main.py -m MAGNN -t node_classification -d imdb4MAGNN -g 0
   ```
 
@@ -38,6 +38,8 @@
 | 40%                 | paper: 60.27%    OpenHGNN:  55.75% | paper: 60.50%    OpenHGNN:  55.81% |
 | 60%                 | paper: 60.66%    OpenHGNN:  56.83% | paper: 60.88%    OpenHGNN:  56.80% |
 | 80%                 | paper: 61.44%    OpenHGNN:  57.65% | paper: 61.53%    OpenHGNN:  57.68% |
+
+The perform of experiments are run in the setting of paper which use SVM classification, so there are a little bit different with semi-supervised node classification. And directly run the model is using semi-supervised node classification trainerflow.
 
 ## Dataset
 

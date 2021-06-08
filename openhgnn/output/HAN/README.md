@@ -12,7 +12,7 @@ We use the code from dgl Team and integrate the model into our package.
 
 Clone the Openhgnn-DGL
 
-```python
+```bash
 python main.py -m HAN -t node_classification -d acm_han_raw -g 0
 ```
 

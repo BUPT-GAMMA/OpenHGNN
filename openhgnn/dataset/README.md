@@ -64,3 +64,9 @@ We use [dgl.heterograph](https://docs.dgl.ai/en/latest/guide/graph-heterogeneous
 
 The API [dgl.save_graphs](https://docs.dgl.ai/en/latest/generated/dgl.save_graphs.html) and  [dgl.load_graphs](https://docs.dgl.ai/en/latest/generated/dgl.load_graphs.html#) can be used in storing graph into the local.
 
+##### The Flow
+
+1. Process your dataset as [dgl.heterograph](https://docs.dgl.ai/en/latest/guide/graph-heterogeneous.html#guide-graph-heterogeneous). 
+2. Store as *graph.bin*. Compress as *dataset_name4model_name.zip*
+3. Upload the zip file to s3.
+4. If the dataset is Heterogeneous Information Network, you can modify the [AcademicDataset](./academic_graph.py) directly. Or you can refer to it building a new *Class Dataset*.

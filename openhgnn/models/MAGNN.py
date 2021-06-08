@@ -1,24 +1,16 @@
 import numpy as np
 import pandas as pd
-import scipy
-import re
 import dgl
 from dgl import function as fn
 from dgl.nn.functional import edge_softmax
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 from dgl.utils import expand_as_pair
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 from sklearn.svm import LinearSVC
-import pickle
-import joblib
-import time
-import warnings
 from operator import itemgetter
-import argparse
 from . import BaseModel, register_model
 
 
@@ -156,8 +148,6 @@ class MAGNN(BaseModel):
             the dgl heterogeneous graph
         feat_dict : dict
             the feature matrix dict of different node types, e.g {'M':feat_of_M, 'D':feat_of_D, ...}
-        metapath_idx_dict : dict
-            the metapath instances indices dict.
 
         Returns
         -------

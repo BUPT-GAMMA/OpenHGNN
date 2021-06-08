@@ -8,7 +8,7 @@ Code from author: https://github.com/seongjunyun/Graph_Transformer_Networks
 
 Clone the Openhgnn-DGL
 
-```python
+```bash
 python main.py -m GTN -t node_classification -d acm4GTN -g 0 --use_best_config
 ```
 

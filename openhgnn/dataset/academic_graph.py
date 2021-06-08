@@ -1,9 +1,7 @@
-from dgl.data import DGLBuiltinDataset
 import os
 from dgl.data.utils import download, extract_archive
 from dgl.data import DGLDataset
-from dgl.data.utils import _get_dgl_url
-from dgl.data.utils import load_graphs, save_graphs
+from dgl.data.utils import load_graphs
 
 
 class AcademicDataset(DGLDataset):

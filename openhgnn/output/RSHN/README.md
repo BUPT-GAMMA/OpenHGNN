@@ -7,7 +7,7 @@
 
 - Clone the Openhgnn-DGL
 
-  ```python
+  ```bash
   python main.py -m RSHN -t node_classification -d aifb -g 0
   ```
 

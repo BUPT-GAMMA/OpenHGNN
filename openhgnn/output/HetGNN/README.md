@@ -8,7 +8,7 @@ Code from author: https://github.com/chuxuzhang/KDD2019_HetGNN
 
 Clone the Openhgnn-DGL
 
-```python
+```bash
 python main.py -m HetGNN -t node_classification -d academic4HetGNN -g 0
 ```
 
@@ -62,10 +62,10 @@ You can modify the parameters in openhgnn/config.ini
 #### Description
 
 ```python
-batch_size = 32 # the batch_size of nodes sampled in SkipGramBatchSampler
-window_size = 5 # window size for relation extration
-num_workers = 0 # how many subprocesses to use for data loading. ''0'' means that the data 										will be loaded in the main process.
-batches_per_epoch = 20 # the batches trained in a epoch
+batch_size # the batch_size of nodes sampled in SkipGramBatchSampler
+window_size # window size for relation extration
+num_workers	# how many subprocesses to use for data loading. ''0'' means that the data 										will be loaded in the main process.
+batches_per_epoch # the batches trained in a epoch
 
 # the three parameters decided in what nodes aggregated.[used in building hetgnn_graph]
 rw_length # length of each walk
@@ -73,8 +73,8 @@ rw_walks # window size for relation extration
 rwr_prob # the probability of restart
 
 #train epoch and early stop patience
-max_epoch = 100
-patience = 10
+max_epoch
+patience
 mini_batch_flag = True # we only support the mini-batch training.
 ```
 

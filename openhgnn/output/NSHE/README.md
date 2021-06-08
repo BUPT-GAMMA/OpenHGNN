@@ -8,7 +8,7 @@ Code from author: https://github.com/Andy-Border/NSHE
 
 Clone the Openhgnn-DGL
 
-```python
+```bash
 python main.py -m NSHE -t node_classification -d acm4NSHE -g 0 --use_best_config
 ```
 

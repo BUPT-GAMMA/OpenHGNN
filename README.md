@@ -20,7 +20,7 @@ OpenHGNN is a high-level package built on top of DGL; it will not cover efficien
 | Package  | Heterograph structure | Models                            | Efficiency  | Others                                     |
 | -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
 | OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
-| OpenHGNN | dgl.heterograph       | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
+| OpenHGNN | heterograph           | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
 
 To avoid reinventing the wheel, we use the DGL as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
 
@@ -36,7 +36,7 @@ To avoid reinventing the wheel, we use the DGL as our backend. So we build the n
 
 #### Running an existing baseline model on an existing benchmark [dataset](./openhgnn/dataset/#Dataset)
 
-```python
+```bash
 python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 ```
 
@@ -46,22 +46,22 @@ python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 
 e.g.: 
 
-```python
+```bash
 python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 ```
 
 It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.
 
-## Models
+## [Models](./openhgnn/models)
 
 ### Supported Models
 
-- [HetGNN](./openhgnn/output/HetGNN)[KDD 2019] for node classification and link prediction
-- [RSHN](./openhgnn/output/RSHN)[ICDM 2019] for entity classification
-- [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
 - [HAN](./openhgnn/output/HAN)[WWW 2019] for node classification
-- [NSHE](./openhgnn/output/NSHE)[IJCAI 2020] for node classification
+- [HetGNN](./openhgnn/output/HetGNN)[KDD 2019] for node classification and link prediction
+- [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
+- [RSHN](./openhgnn/output/RSHN)[ICDM 2019] for entity classification
 - [MAGNN](./openhgnn/output/MAGNN)[WWW 2020] for node classification
+- [NSHE](./openhgnn/output/NSHE)[IJCAI 2020] for node classification
 
 ### To be supported models
 
