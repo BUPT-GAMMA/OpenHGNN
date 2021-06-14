@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 import scipy
+import os
 import re
+import pickle
 import dgl
 from dgl import function as fn
 from dgl.nn.functional import edge_softmax
@@ -10,15 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from dgl.utils import expand_as_pair
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score
-from sklearn.svm import LinearSVC
-import pickle
-import joblib
-import time
-import warnings
 from operator import itemgetter
-import argparse
 from . import BaseModel, register_model
 
 
@@ -37,6 +31,7 @@ class MAGNN(BaseModel):
             edge_type_list = ['A-M', 'M-A', 'D-M', 'M-D']
             # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
             in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
+            mp_instances = mp_instance_sampler(hg, metapath_list, 'imdb4MAGNN')
 
         elif args.dataset == 'dblp4MAGNN':
             # build model
@@ -44,7 +39,8 @@ class MAGNN(BaseModel):
             edge_type_list = ['A-P', 'P-A', 'P-T', 'T-P', 'P-V', 'V-P']
             # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
             in_feats = {'A': 334, 'P': 14328, 'T': 7723, 'V': 20}
-        mp_instances = mp_instance_sampler(hg, metapath_list)
+            mp_instances = mp_instance_sampler(hg, metapath_list, 'dblp4MAGNN')
+
         return cls(in_feats=in_feats,
                    h_feats=args.hidden_dim,
                    inter_attn_feats=args.inter_attn_feats,
@@ -425,7 +421,7 @@ class MAGNN_attn_intra(nn.Module):
 '''
 methods
 '''
-def mp_instance_sampler(g, metapath_list):
+def mp_instance_sampler(g, metapath_list, dataset):
     """
     Sampling the indices of all metapath instances in g according to the metapath list
 
@@ -435,6 +431,8 @@ def mp_instance_sampler(g, metapath_list):
         the dgl heterogeneous graph
     metapath_list : list
         the list of metapaths in g
+    dataset : str
+        the name of dataset, e.g 'imdb4MAGNN'
 
     Returns
     -------
@@ -443,35 +441,50 @@ def mp_instance_sampler(g, metapath_list):
 
     Notes
     -----
-    Please make sure that the metapath in metapath_list are all symmetric
+    Please make sure that the metapath in metapath_list are all symmetric and bidirectional. If not bidirectional,
+    please make sure that the leftmost element in a metapath in the dst node type.
+
+    We'd store the metapath instances in the disk after one metapath instances sampling and next time the
+    metapath instances will be extracted directly from the disk if they exists.
 
     """
     # todo: is there a better tool than pandas Dataframe implementing MERGE?
 
-    etype_idx_dict = {}
-    for etype in g.etypes:
-        _etype = ''.join([etype[0], etype[-1]])
-        edges_idx_i = g.edges(etype=etype)[0].cpu().numpy()
-        edges_idx_j = g.edges(etype=etype)[1].cpu().numpy()
-        etype_idx_dict[_etype] = pd.DataFrame([edges_idx_i, edges_idx_j]).T
-        etype_idx_dict[_etype].columns = [etype[0], etype[-1]]
+    # file_dir = './openhgnn/output/MAGNN/'
+    file_dir = '../output/MAGNN/' # Todo: deprecated
+    file_addr = file_dir + '{}'.format(dataset) + '_mp_inst.pkl'
 
-    res = {}
-    for metapath in metapath_list:
-        res[metapath] = None
-        for i in range(1, len(metapath)-1):
-            if i == 1:
-                res[metapath] = etype_idx_dict[metapath[:i+1]]
-            feat_j = etype_idx_dict[metapath[i:i+2]]
-            col_i = res[metapath].columns[-1]
-            col_j = feat_j.columns[0]
-            res[metapath] = pd.merge(res[metapath], feat_j,
-                                     left_on=col_i,
-                                     right_on=col_j,
-                                     how='inner')
-            if col_i != col_j:
-                res[metapath].drop(columns=col_j, inplace=True)
-        res[metapath] = res[metapath].values
+    if os.path.exists(file_addr):
+        with open(file_addr, 'rb') as file:
+            res = pickle.load(file)
+    else:
+        etype_idx_dict = {}
+        for etype in g.etypes:
+            _etype = ''.join([etype[0], etype[-1]])
+            edges_idx_i = g.edges(etype=etype)[0].cpu().numpy()
+            edges_idx_j = g.edges(etype=etype)[1].cpu().numpy()
+            etype_idx_dict[_etype] = pd.DataFrame([edges_idx_i, edges_idx_j]).T
+            etype_idx_dict[_etype].columns = [etype[0], etype[-1]]
+
+        res = {}
+        for metapath in metapath_list:
+            res[metapath] = None
+            for i in range(1, len(metapath)-1):
+                if i == 1:
+                    res[metapath] = etype_idx_dict[metapath[:i+1]]
+                feat_j = etype_idx_dict[metapath[i:i+2]]
+                col_i = res[metapath].columns[-1]
+                col_j = feat_j.columns[0]
+                res[metapath] = pd.merge(res[metapath], feat_j,
+                                         left_on=col_i,
+                                         right_on=col_j,
+                                         how='inner')
+                if col_i != col_j:
+                    res[metapath].drop(columns=col_j, inplace=True)
+            res[metapath] = res[metapath].values
+
+        with open(file_addr, 'wb') as file:
+            pickle.dump(res, file)
 
     return res
 
