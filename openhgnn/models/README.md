@@ -13,7 +13,7 @@ We create a classmethod *build_model_from_args* for every model. with that, we c
 ```python
 def forward(self, hg=None, feat_dict=None, *args, **wkags):
 '''  		
-				Parameters
+        Parameters
         ----------
         g : dgl.heterograph
    					the dgl heterogeneous graph
@@ -53,8 +53,8 @@ Output: A dict of embedding.
 
 ### How to build a new model
 
-1. Create a class *your_model* that inherits the [*BaseModel*](./base_model.py) and register the model with *@register_model(str)*
+1. Create a class *your_model* that inherits the [*BaseModel*](./base_model.py) and register the model with *@register_model(str)*.
 2. Implement the classmethod build_model_from_args.
-3. Implement the forward()
+3. Implement the forward().
 4. Fill the dict *SUPPORTED_MODELS* in [models/__init__.py](./__init__.py)
 

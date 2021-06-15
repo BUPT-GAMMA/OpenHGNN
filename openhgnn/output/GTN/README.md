@@ -2,7 +2,11 @@
 
 Paper: [Graph Transformer Networks](https://arxiv.org/abs/1911.06455)
 
+Extension Paper: [Graph Transformer Networks: Learning Meta-path Graphs to Improve GNNs](https://arxiv.org/abs/2106.06218.pdf)
+
 Code from author: https://github.com/seongjunyun/Graph_Transformer_Networks
+
+Note: [TODO]The authors proposed the FastGTN recently and it will be supported in future.
 
 ### How to run
 

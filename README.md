@@ -52,7 +52,7 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.
 
-## [Models](./openhgnn/models)
+## [Models](./openhgnn/models/#Model)
 
 ### Supported Models
 

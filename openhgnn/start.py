@@ -19,6 +19,7 @@ def OpenHGNN(args):
 
     return result
 
+
 def get_trainerflow(model, task):
     if model in ['RGCN', 'CompGCN', 'RSHN']:
         if task in ['node_classification']:

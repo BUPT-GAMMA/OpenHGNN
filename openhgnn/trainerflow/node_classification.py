@@ -35,7 +35,6 @@ class NodeClassification(BaseFlow):
         self.num_classes = self.task.dataset.num_classes
         if hasattr(self.task.dataset, 'in_dim'):
             self.args.in_dim = self.task.dataset.in_dim
-        # Build the model. If the output dim is not equal the number of classes, a MLP will follow the gnn model.
         if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
             args.out_dim = self.num_classes
@@ -82,7 +81,7 @@ class NodeClassification(BaseFlow):
             if self.args.mini_batch_flag:
                 loss = self._mini_train_step()
             else:
-                loss = self._full_train_setp()
+                loss = self._full_train_step()
             #if (epoch + 1) % self.evaluate_interval == 0:
             f1, losses = self._test_step()
 
@@ -109,7 +108,7 @@ class NodeClassification(BaseFlow):
         print(f"Test_macro_f1 = {test_f1[0]:.4f}, Test_micro_f1: {test_f1[1]:.4f}")
         return dict(Acc=test_f1, ValAcc=val_f1)
 
-    def _full_train_setp(self):
+    def _full_train_step(self):
         self.model.train()
 
         logits = self.model(self.hg)[self.category]

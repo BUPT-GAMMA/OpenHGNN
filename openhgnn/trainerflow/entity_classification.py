@@ -1,6 +1,4 @@
-import copy
 import dgl
-import numpy as np
 import torch
 from tqdm import tqdm
 from openhgnn.models import build_model
@@ -8,6 +6,7 @@ from openhgnn.models import build_model
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import extract_embed, EarlyStopping
+
 
 @register_flow("entity_classification")
 class EntityClassification(BaseFlow):
@@ -68,7 +67,7 @@ class EntityClassification(BaseFlow):
             if self.args.mini_batch_flag:
                 loss = self._mini_train_step()
             else:
-                loss = self._full_train_setp()
+                loss = self._full_train_step()
 
             if (epoch + 1) % self.evaluate_interval == 0:
                 acc, losses = self._test_step()
@@ -94,7 +93,7 @@ class EntityClassification(BaseFlow):
         print(f"Test accuracy = {test_acc:.4f}")
         return dict(Acc=test_acc, ValAcc=val_acc)
 
-    def _full_train_setp(self):
+    def _full_train_step(self):
         logits = self.model(self.hg)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
         self.optimizer.zero_grad()
