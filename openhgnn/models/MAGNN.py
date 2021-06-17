@@ -18,6 +18,9 @@ from . import BaseModel, register_model
 '''
 model
 '''
+
+# TODO: uncouple g and its features
+# TODO: consider about srcdata and dstdata separately
 @register_model('MAGNN')
 class MAGNN(BaseModel):
     @classmethod
@@ -183,20 +186,20 @@ class MAGNN(BaseModel):
 
                 # output layer
                 h_output, embedding = self.layers[-1](g, self.metapath_idx_dict)
-            else: # blocks would be a list
-                # input projection
-                for ntype in self.input_projection.keys():
-                    g[0].srcnodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
-
-                # hidden layer
-                for i in range(self.num_layers - 1):
-                    h, _ = self.layers[i](g[i], self.metapath_idx_dict)
-                    for key in h.keys():
-                        h[key] = self.activation(h[key])
-                    g[i].dstdata['feat'] = h
-
-                # output layer
-                h_output, embedding = self.layers[-1](g[-1], self.metapath_idx_dict)
+            # else: # blocks would be a list
+            #     # input projection
+            #     for ntype in self.input_projection.keys():
+            #         g[0].srcnodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
+            #
+            #     # hidden layer
+            #     for i in range(self.num_layers - 1):
+            #         h, _ = self.layers[i](g[i], self.metapath_idx_dict)
+            #         for key in h.keys():
+            #             h[key] = self.activation(h[key])
+            #         g[i].dstdata['feat'] = h
+            #
+            #     # output layer
+            #     h_output, embedding = self.layers[-1](g[-1], self.metapath_idx_dict)
 
 
             return h_output

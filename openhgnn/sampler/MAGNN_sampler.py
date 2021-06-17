@@ -138,9 +138,9 @@ if __name__ == '__main__':
     g = g[0]
     nids = {'M': th.tensor([20, 2, 4, 1, 10, 6])}
 
-    sampler = MAGNN_Sampler(g, n_layers=1, metapath_list=metapath_list, dataset='imdb4MAGNN', return_eids=True)
+    sampler = MAGNN_Sampler(g, n_layers=2, metapath_list=metapath_list, dataset='imdb4MAGNN', return_eids=True)
     dataloader = dgl.dataloading.NodeDataLoader(
-        g=g, nids=nids, block_sampler=sampler, batch_size=2, shuffle=True, drop_last=False,
+        g=g, nids=nids, block_sampler=sampler, batch_size=1, shuffle=True, drop_last=False,
         num_workers=1
     )
     input_nodes, output_nodes, block = next(iter(dataloader))
