@@ -10,15 +10,11 @@ from operator import itemgetter
 from openhgnn.models.MAGNN import mp_instance_sampler
 
 class MAGNN_Sampler(dgl.dataloading.BlockSampler):
-    def __init__(self, n_layers, metapath_list, dataset='imdb4MAGNN', return_eids=False):
+    def __init__(self, g, n_layers, metapath_list, dataset='imdb4MAGNN', return_eids=False):
         super().__init__(n_layers, return_eids=return_eids)
         self.dataset = dataset
-        self.mp_file_addr = '../output/MAGNN/' + '{}'.format(dataset) + \
-            '_mp_inst.pkl' # Todo: deprecated
         self.metapath_list = metapath_list
         self.mp_inst = mp_instance_sampler(g, self.metapath_list, self.dataset)
-
-        print(1) # Todo: deprecated
 
     def sample_frontier(self, block_id, g, seed_nodes):
         '''
@@ -68,10 +64,14 @@ class MAGNN_Sampler(dgl.dataloading.BlockSampler):
             num_nodes_dict[ntype] = g.number_of_nodes(ntype)
 
         frontier = dgl.heterograph(graph_data, num_nodes_dict)
+        for ntype in frontier.ntypes:
+            frontier.nodes[ntype].data.update(g.nodes[ntype].data)
         for etype in frontier.etypes:
-            frontier.edges[etype].data[dgl.EID] = g.edge_ids(frontier.edges(etype=etype)[0],
-                                                             frontier.edges(etype=etype)[1],
-                                                             etype=etype)
+            edge_ids = g.edge_ids(frontier.edges(etype=etype)[0],
+                                  frontier.edges(etype=etype)[1],
+                                  etype=etype)
+            frontier.edges[etype].data[dgl.EID] = edge_ids
+
         return frontier
     def sample_blocks(self, g, seed_nodes, exclude_eids=None):
         '''
@@ -131,29 +131,18 @@ class MAGNN_Sampler(dgl.dataloading.BlockSampler):
 if __name__ == '__main__':
     warnings.filterwarnings('ignore')
     dataset = 'imdb4MAGNN'
-    mp_file_addr = '../output/MAGNN/' + '{}'.format(dataset) + '_mp_inst.pkl'
-    g_addr = '../dataset/' + '{}'.format(dataset) + '/graph.bin'
+    g_addr = 'openhgnn/dataset/' + '{}'.format(dataset) + '/graph.bin'
     metapath_list = ['MDM', 'MAM', 'DMD', 'DMAMD', 'AMA', 'AMDMA']
 
     g, _ = dgl.load_graphs(g_addr)
     g = g[0]
+    nids = {'M': th.tensor([20, 2, 4, 1, 10, 6])}
 
-    sampler = MAGNN_Sampler(n_layers=1, metapath_list=metapath_list, dataset='imdb4MAGNN', return_eids=True)
-    # Todo:Deprecated
-    # seed_nodes = {'M': [0, 1, 2]}
-    # frontier = sampler.sample_frontier(None, g, seed_nodes)
-    # Todo:Deprecated
-
-    # nids = {}
-    # for ntype in g.ntypes:
-    #     nids[ntype] = g.nodes(ntype)
-    nids = {'M':th.tensor([20, 2, 4, 1, 10, 6])}
-
+    sampler = MAGNN_Sampler(g, n_layers=1, metapath_list=metapath_list, dataset='imdb4MAGNN', return_eids=True)
     dataloader = dgl.dataloading.NodeDataLoader(
         g=g, nids=nids, block_sampler=sampler, batch_size=2, shuffle=True, drop_last=False,
         num_workers=1
     )
-
     input_nodes, output_nodes, block = next(iter(dataloader))
 
     # TODO: test if exclude_eids make sense

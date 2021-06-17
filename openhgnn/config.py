@@ -182,6 +182,9 @@ class Config(object):
             self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
             self.encoder_type = conf.get('MAGNN', 'encoder_type')
 
+            # TODO: Test for MAGNN sampler
+            self.batch_size = conf.getint("MAGNN", "batch_size")
+
         elif model == 'HGT':
             self.lr = conf.getfloat("HGT", "learning_rate")
             self.weight_decay = conf.getfloat("HGT", "weight_decay")

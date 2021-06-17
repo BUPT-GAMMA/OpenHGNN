@@ -9,7 +9,7 @@ from openhgnn.models import build_model
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import extract_embed, EarlyStopping
-
+from ..sampler.MAGNN_sampler import MAGNN_Sampler
 
 @register_flow("node_classification")
 class NodeClassification(BaseFlow):
@@ -55,8 +55,12 @@ class NodeClassification(BaseFlow):
         self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
         self.labels = self.task.get_labels().to(self.device)
         if self.args.mini_batch_flag:
-            # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
-            sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
+            if self.model_name == 'MAGNN':
+                sampler = MAGNN_Sampler(self.hg, n_layers=self.args.num_layers, metapath_list=self.model.metapath_list,
+                                        dataset=self.args.dataset)
+            else:
+                # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
+                sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
             self.loader = dgl.dataloading.NodeDataLoader(
                 self.hg.to('cpu'), {self.category: self.train_idx.to('cpu')}, sampler,
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
@@ -126,9 +130,13 @@ class NodeClassification(BaseFlow):
             blocks = [blk.to(self.device) for blk in blocks]
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
             # batch_tic = time.time()
-            emb = extract_embed(self.model.embed_layer(), input_nodes)
+            if self.model_name == 'MAGNN':
+                emb = blocks[0].srcnodes[self.category].data['feat']
+            else: # TODO: here may need to specify the model name to enter this branch
+                emb = extract_embed(self.model.embed_layer(), input_nodes)
             lbl = self.labels[seeds].to(self.device)
             logits = self.model(blocks, emb)[self.category]
+            # TODO: stange here. 1. need to consider blocks in model.forward() 2. block.ntypes have duplicate items?
             loss = self.loss_fn(logits, lbl)
             loss_all += loss.item()
             self.optimizer.zero_grad()

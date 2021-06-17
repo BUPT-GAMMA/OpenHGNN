@@ -15,9 +15,6 @@ from dgl.utils import expand_as_pair
 from operator import itemgetter
 from . import BaseModel, register_model
 
-
-
-# Todo: modify args
 '''
 model
 '''
@@ -166,22 +163,41 @@ class MAGNN(BaseModel):
             The embeddings before the output projection. e.g dict['M'] contains embeddings of every node of M type.
         """
         if feat_dict is None:
-            feat_dict = g.ndata['feat']
+            if isinstance(g, dgl.DGLHeteroGraph):
+                feat_dict = g.ndata['feat']
+            else:
+                feat_dict = g[0].srcdata['feat']
+
         with g.local_scope():
+            if isinstance(g, dgl.DGLHeteroGraph): # the dgl heterogeneous graph
+                # input projection
+                for ntype in self.input_projection.keys():
+                    g.nodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
 
-            # input projection
-            for ntype in self.input_projection.keys():
-                g.nodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
+                # hidden layer
+                for i in range(self.num_layers - 1):
+                    h, _ = self.layers[i](g, self.metapath_idx_dict)
+                    for key in h.keys():
+                        h[key] = self.activation(h[key])
+                    g.ndata['feat'] = h
 
-            # hidden layer
-            for i in range(self.num_layers - 1):
-                h, _ = self.layers[i](g, self.metapath_idx_dict)
-                for key in h.keys():
-                    h[key] = self.activation(h[key])
-                g.ndata['feat'] = h
+                # output layer
+                h_output, embedding = self.layers[-1](g, self.metapath_idx_dict)
+            else: # blocks would be a list
+                # input projection
+                for ntype in self.input_projection.keys():
+                    g[0].srcnodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
 
-            # output layer
-            h_output, embedding = self.layers[-1](g, self.metapath_idx_dict)
+                # hidden layer
+                for i in range(self.num_layers - 1):
+                    h, _ = self.layers[i](g[i], self.metapath_idx_dict)
+                    for key in h.keys():
+                        h[key] = self.activation(h[key])
+                    g[i].dstdata['feat'] = h
+
+                # output layer
+                h_output, embedding = self.layers[-1](g[-1], self.metapath_idx_dict)
+
 
             return h_output
 
@@ -450,8 +466,7 @@ def mp_instance_sampler(g, metapath_list, dataset):
     """
     # todo: is there a better tool than pandas Dataframe implementing MERGE?
 
-    # file_dir = './openhgnn/output/MAGNN/'
-    file_dir = '../output/MAGNN/' # Todo: deprecated
+    file_dir = 'openhgnn/output/MAGNN/'
     file_addr = file_dir + '{}'.format(dataset) + '_mp_inst.pkl'
 
     if os.path.exists(file_addr):
