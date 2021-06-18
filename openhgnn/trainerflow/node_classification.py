@@ -54,6 +54,7 @@ class NodeClassification(BaseFlow):
 
         self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
         self.labels = self.task.get_labels().to(self.device)
+
         if self.args.mini_batch_flag:
             if self.model_name == 'MAGNN':
                 sampler = MAGNN_Sampler(self.hg, n_layers=self.args.num_layers, metapath_list=self.model.metapath_list,
@@ -136,7 +137,6 @@ class NodeClassification(BaseFlow):
                 emb = extract_embed(self.model.embed_layer(), input_nodes)
             lbl = self.labels[seeds].to(self.device)
             logits = self.model(blocks, emb)[self.category]
-            # TODO: stange here. 1. need to consider blocks in model.forward() 2. block.ntypes have duplicate items?
             loss = self.loss_fn(logits, lbl)
             loss_all += loss.item()
             self.optimizer.zero_grad()

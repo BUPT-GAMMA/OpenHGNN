@@ -31,6 +31,7 @@ class MAGNN(BaseModel):
             edge_type_list = ['A-M', 'M-A', 'D-M', 'M-D']
             # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
             in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
+            # in_feats = {'M': 2, 'D': 2, 'A': 2} # TODO: This is a test need to be deprecated.
             mp_instances = mp_instance_sampler(hg, metapath_list, 'imdb4MAGNN')
 
         elif args.dataset == 'dblp4MAGNN':
@@ -171,38 +172,27 @@ class MAGNN(BaseModel):
             else:
                 feat_dict = g[0].srcdata['feat']
 
-        with g.local_scope():
-            if isinstance(g, dgl.DGLHeteroGraph): # the dgl heterogeneous graph
-                # input projection
-                for ntype in self.input_projection.keys():
-                    g.nodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
+        # with g.local_scope():
+        # input projection
+        h = {}
+        for ntype in self.input_projection.keys():
+            # g.nodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
+            h[ntype] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
 
-                # hidden layer
-                for i in range(self.num_layers - 1):
-                    h, _ = self.layers[i](g, self.metapath_idx_dict)
-                    for key in h.keys():
-                        h[key] = self.activation(h[key])
-                    g.ndata['feat'] = h
+        # hidden layer
+        for i in range(self.num_layers - 1):
+            # h, _ = self.layers[i](g, feat_dict, self.metapath_idx_dict)
+            h, _ = self.layers[i](h, self.metapath_idx_dict)
+            for key in h.keys():
+                h[key] = self.activation(h[key])
+            # g.ndata['feat'] = h
 
-                # output layer
-                h_output, embedding = self.layers[-1](g, self.metapath_idx_dict)
-            # else: # blocks would be a list
-            #     # input projection
-            #     for ntype in self.input_projection.keys():
-            #         g[0].srcnodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
-            #
-            #     # hidden layer
-            #     for i in range(self.num_layers - 1):
-            #         h, _ = self.layers[i](g[i], self.metapath_idx_dict)
-            #         for key in h.keys():
-            #             h[key] = self.activation(h[key])
-            #         g[i].dstdata['feat'] = h
-            #
-            #     # output layer
-            #     h_output, embedding = self.layers[-1](g[-1], self.metapath_idx_dict)
+        # output layer
+        # h_output, embedding = self.layers[-1](g, feat_dict, self.metapath_idx_dict)
+        h_output, embedding = self.layers[-1](h, self.metapath_idx_dict)
 
 
-            return h_output
+        return h_output
 
 
 class MAGNN_layer(nn.Module):
@@ -267,48 +257,64 @@ class MAGNN_layer(nn.Module):
             self._output_projection = nn.Linear(in_features=num_heads * in_feats, out_features=num_heads * out_feats)
         nn.init.xavier_normal_(self._output_projection.weight, gain=1.414)
 
-    def forward(self, g, metapath_idx_dict):
-        with g.local_scope():
+    # def forward(self, g, feat_dict, metapath_idx_dict):
+    def forward(self, feat_dict, metapath_idx_dict):
+        # with g.local_scope():
 
-            # Intra-metapath latent transformation
-            for _metapath in self.metapath_list:
-                self.intra_metapath_trans(g, metapath=_metapath, metapath_idx_dict=metapath_idx_dict)
+        feat_intra = {} # store the latent embeddings of every metapath
+        # Intra-metapath latent transformation
+        for _metapath in self.metapath_list:
+            # self.intra_metapath_trans(g, feat_dict=feat_dict, metapath=_metapath, metapath_idx_dict=metapath_idx_dict)
+            feat_intra[_metapath] = self.intra_metapath_trans(feat_dict=feat_dict, metapath=_metapath,
+                                                             metapath_idx_dict=metapath_idx_dict)
 
-            # Inter-metapath latent transformation
-            self.inter_metapath_trans(g, metapath_list=self.metapath_list)
+        # Inter-metapath latent transformation
+        # self.inter_metapath_trans(g, metapath_list=self.metapath_list)
+        feat_inter = \
+            self.inter_metapath_trans(feat_dict=feat_dict, feat_intra=feat_intra, metapath_list=self.metapath_list)
 
-            # output projection
-            self.output_projection(g)
+        # output projection
+        # self.output_projection(g)
+        feat_final = self.output_projection(feat_inter = feat_inter)
 
-            # return final features after output projection (without nonlinear activation) and embedding
-            # nonlinear activation will be added in MAGNN
-            return g.ndata['output'], g.ndata['feat_']
+        # return final features after output projection (without nonlinear activation) and embedding
+        # nonlinear activation will be added in MAGNN
+        # return g.ndata['output'], g.ndata['feat_']
+        return feat_final, feat_inter
 
-    def intra_metapath_trans(self, g, metapath, metapath_idx_dict):
+    # def intra_metapath_trans(self, g, feat_dict, metapath, metapath_idx_dict):
+    def intra_metapath_trans(self, feat_dict, metapath, metapath_idx_dict):
 
         metapath_idx = metapath_idx_dict[metapath]
 
         # encoder metapath instances
         # intra_metapath_feat: feature matrix of every metapath instance of param metapath
-        intra_metapath_feat = self.encoder(g, metapath, metapath_idx)
-
+        # intra_metapath_feat = self.encoder(g, feat_dict, metapath, metapath_idx)
+        intra_metapath_feat = self.encoder(feat_dict, metapath, metapath_idx)
         # aggregate metapath instances into metapath using ATTENTION
-        feat_attn = \
-            self.intra_attn_layers[metapath](g, [intra_metapath_feat, g.nodes[metapath[0]].data['feat']],
+        # feat_intra = \
+        #     self.intra_attn_layers[metapath](g, [intra_metapath_feat, g.nodes[metapath[0]].data['feat']],
+        #                                      metapath, metapath_idx)
+        feat_intra = \
+            self.intra_attn_layers[metapath]([intra_metapath_feat, feat_dict[metapath[0]]],
                                              metapath, metapath_idx)
 
-        g.nodes[metapath[0]].data['{}'.format(metapath) + '_feat_attn'] = feat_attn
+        # g.nodes[metapath[0]].data['{}'.format(metapath) + '_feat_attn'] = feat_intra
+        return feat_intra
 
-    def inter_metapath_trans(self, g, metapath_list):
+    # def inter_metapath_trans(self, g, metapath_list):
+    def inter_metapath_trans(self, feat_dict, feat_intra, metapath_list):
         meta_s = {}
+        feat_inter = {}
 
         # construct spi, where pi = ['MAM', 'MDM', ...]
         for metapath in metapath_list:
-            meta_feat = g.nodes[metapath[0]].data['{}_feat_attn'.format(metapath)]
+            # meta_feat = g.nodes[metapath[0]].data['{}_feat_attn'.format(metapath)]
+            meta_feat = feat_intra[metapath]
             meta_feat = th.tanh(self.inter_linear[metapath[0]](meta_feat)).mean(dim=0) # s_pi
             meta_s[metapath] = self.inter_attn_vec[metapath[0]](meta_feat) # e_pi
 
-        for ntype in g.ntypes:
+        for ntype in self.ntypes:
             if ntype in self.meta_ntypes:
                 # extract the metapath with the dst node type of ntype to construct a tensor
                 # in order to compute softmax
@@ -322,24 +328,33 @@ class MAGNN_layer(nn.Module):
                 meta_b = F.softmax(meta_b, dim=0)
                 # extract corresbonding features of metapath
                 # e.g ['MDM_feat_attn', 'MAM_feat_attn'] if ntype is M
-                meta_feat = itemgetter(*np.char.add(metapaths, '_feat_attn'))(g.nodes[ntype].data)
+                # meta_feat = itemgetter(*np.char.add(metapaths, '_feat_attn'))(g.nodes[ntype].data)
+                meta_feat = itemgetter(*metapaths)(feat_intra)
                 # compute the embedding feature of nodes
-                g.nodes[ntype].data['feat_'] = \
-                    th.stack([meta_b[i] * meta_feat[i] for i in range(len(meta_b))], dim=0).sum(dim=0)
+                # g.nodes[ntype].data['feat_'] = \
+                #     th.stack([meta_b[i] * meta_feat[i] for i in range(len(meta_b))], dim=0).sum(dim=0)
+                feat_inter[ntype] = th.stack([meta_b[i] * meta_feat[i] for i in range(len(meta_b))], dim=0).sum(dim=0)
             else:
-                g.nodes[ntype].data['feat_'] = g.nodes[ntype].data['feat']
+                # g.nodes[ntype].data['feat_'] = g.nodes[ntype].data['feat']
+                feat_inter[ntype] = feat_dict[ntype]
 
-    def encoder(self, g, metapath, metapath_idx):
+        return feat_inter
 
-        device = g.nodes[metapath[0]].data['feat'].device
-        feat = th.zeros((len(metapath), metapath_idx.shape[0], g.nodes[metapath[0]].data['feat'].shape[1]),
-                        device=device)
+    # def encoder(self, g, feat_dict, metapath, metapath_idx):
+    def encoder(self, feat_dict, metapath, metapath_idx):
+
+        # device = g.nodes[metapath[0]].data['feat'].device
+        device = feat_dict[metapath[0]].device
+        # feat = th.zeros((len(metapath), metapath_idx.shape[0], g.nodes[metapath[0]].data['feat'].shape[1]),
+        #                 device=device)
+        feat = th.zeros((len(metapath), metapath_idx.shape[0], feat_dict[metapath[0]].shape[1]),device=device)
         for i, ntype in zip(range(len(metapath)), metapath):
-            feat[i] = g.nodes[ntype].data['feat'][metapath_idx[:, i]]
+            # feat[i] = g.nodes[ntype].data['feat'][metapath_idx[:, i]]
+            feat[i] = feat_dict[ntype][metapath_idx[:, i]]
         feat = feat.reshape(feat.shape[0], feat.shape[1], feat.shape[2] // 2, 2)
 
         if self.encoder_type == 'RotateE':
-            temp_r_vec = th.zeros((len(metapath),  feat.shape[-2], 2), device=device)
+            temp_r_vec = th.zeros((len(metapath), feat.shape[-2], 2), device=device)
             temp_r_vec[0, :, 0] = 1
 
             for i in range(1, len(metapath), 1):
@@ -380,9 +395,13 @@ class MAGNN_layer(nn.Module):
             res[:, :, 1] = h_h * l_v + l_h * h_v
         return res
 
-    def output_projection(self, g):
-        for node in g.ntypes:
-            g.nodes[node].data['output'] = self._output_projection(g.nodes[node].data['feat_'])
+    # def output_projection(self, g):
+    def output_projection(self, feat_inter):
+        feat_final = {}
+        for ntype in self.ntypes:
+            # g.nodes[node].data['output'] = self._output_projection(g.nodes[node].data['feat_'])
+            feat_final[ntype] = self._output_projection(feat_inter[ntype])
+        return feat_final
 
 
 class MAGNN_attn_intra(nn.Module):
@@ -404,38 +423,40 @@ class MAGNN_attn_intra(nn.Module):
     def reset_parameters(self):
         nn.init.xavier_normal_(self.attn_r, gain=1.414)
 
-    def forward(self, g, feat, metapath, metapath_idx):
-        with g.local_scope():
-            device = g.device
-            h_meta = self.feat_drop(feat[0]).view(-1, self._num_heads, self._out_feats) # feature matrix of metapath instances
+    # def forward(self, g, feat, metapath, metapath_idx):
+    def forward(self, feat, metapath, metapath_idx):
+        # with g.local_scope():
+            # device = g.device
+        device = feat[0].device
+        h_meta = self.feat_drop(feat[0]).view(-1, self._num_heads, self._out_feats) # feature matrix of metapath instances
 
-            # metapath(right) part of attention
-            er = (h_meta * self.attn_r).sum(dim=-1).unsqueeze(-1)
+        # metapath(right) part of attention
+        er = (h_meta * self.attn_r).sum(dim=-1).unsqueeze(-1)
 
-            graph_data = {
-                ('meta_inst', 'meta2{}'.format(metapath[0]), metapath[0]): (th.arange(0, metapath_idx.shape[0]),
-                                                          th.tensor(metapath_idx[:, 0]))
-            }
+        graph_data = {
+            ('meta_inst', 'meta2{}'.format(metapath[0]), metapath[0]): (th.arange(0, metapath_idx.shape[0]),
+                                                      th.tensor(metapath_idx[:, 0]))
+        }
 
 
-            g_meta = dgl.heterograph(graph_data).to(device)
+        g_meta = dgl.heterograph(graph_data).to(device)
 
-            # feature vector of metapath instances
-            g_meta.nodes['meta_inst'].data.update({'feat_src':h_meta, 'er':er})
+        # feature vector of metapath instances
+        g_meta.nodes['meta_inst'].data.update({'feat_src':h_meta, 'er':er})
 
-            # compute attention without concat with hv
-            g_meta.apply_edges(func=fn.copy_u('er', 'e'), etype='meta2{}'.format(metapath[0]))
+        # compute attention without concat with hv
+        g_meta.apply_edges(func=fn.copy_u('er', 'e'), etype='meta2{}'.format(metapath[0]))
 
-            e = self.leaky_relu(g_meta.edata.pop('e'))
-            g_meta.edata['a'] = self.attn_drop(edge_softmax(g_meta, e))
+        e = self.leaky_relu(g_meta.edata.pop('e'))
+        g_meta.edata['a'] = self.attn_drop(edge_softmax(g_meta, e))
 
-            # message passing, there's only one edge type
-            g_meta.update_all(message_func=fn.u_mul_e('feat_src', 'a', 'm'), reduce_func=fn.sum('m', 'feat'))
+        # message passing, there's only one edge type
+        g_meta.update_all(message_func=fn.u_mul_e('feat_src', 'a', 'm'), reduce_func=fn.sum('m', 'feat'))
 
-            feat = self.activation(g_meta.dstdata['feat'])
+        feat = self.activation(g_meta.dstdata['feat'])
 
-            # return dst nodes' features after attention
-            return feat.flatten(1)
+        # return dst nodes' features after attention
+        return feat.flatten(1)
 
 '''
 methods
