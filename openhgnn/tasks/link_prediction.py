@@ -16,7 +16,7 @@ from ..utils import Evaluator
 class LinkPrediction(BaseTask):
     """Node classification tasks."""
     def __init__(self, args):
-        super(LinkPrediction, self).__init__(args)
+        super(LinkPrediction, self).__init__()
         self.n_dataset = args.dataset
         self.dataset = build_dataset(args.dataset, 'link_prediction')
         # self.evaluator = Evaluator()

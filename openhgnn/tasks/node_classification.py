@@ -9,7 +9,7 @@ from ..utils import Evaluator
 class NodeClassification(BaseTask):
     """Node classification tasks."""
     def __init__(self, args):
-        super(NodeClassification, self).__init__(args)
+        super(NodeClassification, self).__init__()
         self.dataset = build_dataset(args.dataset, 'node_classification')
         # self.evaluator = Evaluator()
         if hasattr(args, 'validation'):

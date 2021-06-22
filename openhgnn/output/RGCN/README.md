@@ -25,7 +25,7 @@
 | **RGCN**             |       |       |       |      |
 | **RGCN(dgl)**（best) | 97.22 |       | 93.10 |      |
 
-## TrainerFlow: [entity classification flow](../../trainerflow/#Entity classification flow)
+## TrainerFlow: [entity classification flow](../../trainerflow/#Entity_classification_flow)
 
 ### Model
 

@@ -26,6 +26,8 @@ To avoid reinventing the wheel, we use the DGL as our backend. So we build the n
 
 ![image](./docs/source/image-001.jpg)
 
+
+
 ## Get Started
 
 #### Requirements and Installation
@@ -51,6 +53,18 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 ```
 
 It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.
+
+## A Pipeline of OpenHGNN
+
+###### We define three components: [TrainerFlow](./openhgnn/trainerflow/#Trainerflow), [Model](./openhgnn/models/#Model), [Task](./openhgnn/tasks/#Task).
+
+- For a given paper,
+  - For unsupervised model, the model and the trainerflow are specific cause the loss calculation is fixed.So given a model name, we can identify the model and trainerflow, user need also specify the task name.
+  - For other model, the model is fixed and the trainerflow is changeable according to task.
+    User must specify the model and the task, and the trainerflow will be determined by the task.
+    For example, RGCN on the node classification task will use the entity classification flow and RGCN on the link prediction task will use the dist_mult flow.
+
+![image-20210622151239030](./docs/source/image-002.png)
 
 ## [Models](./openhgnn/models/#Model)
 
