@@ -1,13 +1,24 @@
 BEST_CONFIGS = {
     "node_classification": {
-        "han": {
-            'general': {},
-            'acm_han': {"lr": 0.005, "max_epoch": 1000},
-            'acm_han_raw': {}
-        },
-        'hgt': {
-            'general': {},
-            'acm1': {'hidden_dim': 128, 'num_heads': 4, 'n_layers': 2}
+        'CompGCN': {
+            'general': {
+                'seed': 0, 'patience': 50, 'validation': True
+            },
+            'aifb': {
+                'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100, 'in_dim': 32,
+                'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
+                'mini_batch_flag': True, 'validation': True
+                     },
+            'mutag': {
+                'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100, 'in_dim': 32,
+                'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub',
+                'mini_batch_flag': False, 'validation': True
+            },
+            'bgs': {
+
+            },
+            'am': {
+            },
         },
         'GTN': {
             'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 64, 'max_epoch': 50, 'patience': 10,
@@ -52,21 +63,55 @@ BEST_CONFIGS = {
         },
         'NSHE': {
             'general': {},
-            'acm4SNHE': {'lr': 0.005, 'weight_decay': 0.001, 'num_e_neg': 1, 'num_ns_neg': 4,
+            'acm4SNHE': {'weight_decay': 0.001, 'num_e_neg': 1, 'num_ns_neg': 4,
                          'max_epoch': 500, 'patience': 10,
                          }
         },
-        'RSHN':{
-            'general': {},
-            'aifb': {'hidden_dim': 8, 'num_node_layer': 2, 'num_edge_layer': 1, 'rw_len': 4, 'batch_size': 5000,
-                     'dropout': 0.6
+        'RGCN': {
+            'general': {
+                'seed': 0, 'patience': 50, 'validation': True
+            },
+            'aifb': {
+                'lr': 0.01, 'weight_decay': 0, 'max_epoch': 50, 'in_dim': 16,
+                'hidden_dim': 16, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'dropout': 0,
+                'mini_batch_flag': False, 'validation': False
                      },
-            'mutag': {'hidden_dim': 8, 'num_node_layer': 2, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
-                },
-            'bgs': {'hidden_dim': 16, 'num_node_layer': 2, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
-                      },
+            'mutag': {
+                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 50, 'in_dim': 16,
+                'hidden_dim': 16, 'n_bases': 30, 'n_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0,
+                'mini_batch_flag': False, 'validation': False
+            },
+            'bgs': {
+                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 50, 'in_dim': 16,
+                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'mini_batch_flag': False, 'validation': False
+            },
+            'am': {
+                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 50, 'in_dim': 16,
+                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'mini_batch_flag': False, 'validation': False
+            },
+            'ogbn-mag': {
+                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 10,
+                'hidden_dim': 16, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'mini_batch_flag': True, 'validation': True
+            },
+        },
+        'RSHN': {
+            'general': {},
+            'aifb': {
+                'in_dim': 16, 'hidden_dim': 16, 'num_node_layer': 2,
+                'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000,
+            },
+            'mutag': {
+                'hidden_dim': 16, 'num_node_layer': 2, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000,
+                'dropout': 0.2,
+            },
+            'bgs': {
+                'hidden_dim': 16, 'num_node_layer': 2, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
+            },
             'am': {'hidden_dim': 16, 'num_node_layer': 2, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
-                      },
+                   },
         }
 
     },
