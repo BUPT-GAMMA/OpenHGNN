@@ -67,7 +67,7 @@ It is under development, and we release it in a nightly build version. For now, 
 
 - Metapath2vec[KDD 2017]
 - [RGCN](./openhgnn/output/RGCN)[ESWC 2018] for node classification
-- CompGCN[ICLR 2020] for node classification
+- [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020] for node classification
 
 ### Candidate models
 

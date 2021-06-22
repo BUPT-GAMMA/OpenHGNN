@@ -7,7 +7,7 @@ from sklearn.metrics import f1_score, accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 import sklearn.metrics as Metric
-
+from ogb.nodeproppred import Evaluator
 
 class Evaluator():
     def __init__(self, seed):

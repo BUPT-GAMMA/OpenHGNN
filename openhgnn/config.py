@@ -104,7 +104,7 @@ class Config(object):
             self.weight_decay = conf.getfloat("CompGCN", "weight_decay")
             self.dropout = conf.getfloat("CompGCN", "dropout")
 
-            self.h_dim = conf.getint("CompGCN", "h_dim")
+            self.hidden_dim = conf.getint("CompGCN", "hidden_dim")
             self.out_dim = conf.getint("CompGCN", "out_dim")
             self.n_layers = conf.getint("CompGCN", "n_layers")
             self.max_epoch = conf.getint("CompGCN", "max_epoch")

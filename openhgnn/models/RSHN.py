@@ -24,8 +24,7 @@ class RSHN(BaseModel):
 
     @classmethod
     def build_model_from_args(cls, args, hg):
-        rshn = cls(n_nodes=get_nodes_dict(hg),
-                   dim=args.hidden_dim,
+        rshn = cls(dim=args.hidden_dim,
                    out_dim=args.out_dim,
                    num_node_layer=args.num_node_layer,
                    num_edge_layer=args.num_edge_layer,
@@ -42,10 +41,8 @@ class RSHN(BaseModel):
         rshn.linear_e1 = linear_e1
         return rshn
 
-    def __init__(self, n_nodes, dim, out_dim, num_node_layer, num_edge_layer, dropout):
+    def __init__(self, dim, out_dim, num_node_layer, num_edge_layer, dropout):
         super(RSHN, self).__init__()
-        # map the node feature
-        self.h_n_dict = HeteroEmbedLayer(n_nodes, dim)
         # map the edge feature
         self.num_node_layer = num_node_layer
         self.edge_layers = nn.ModuleList()
@@ -56,29 +53,21 @@ class RSHN(BaseModel):
         for i in range(num_node_layer):
             self.node_layers.append(GraphConv(in_feats=dim, out_feats=dim, dropout=dropout, activation=th.tanh))
         self.linear = nn.Linear(in_features=dim, out_features=out_dim, bias=False)
-        self.dropout = dropout
+        self.dropout = nn.Dropout(dropout)
         self.init_para()
 
     def init_para(self):
         return
 
-    def forward(self, hg, n_feats=None):
+    def forward(self, hg, n_feats, *args, **kwargs):
 
         # For full graph training, directly use the graph
-        if n_feats is None:
-            # full graph training
-            temp = self.h_n_dict()
-            n_feats = {}
-            for n in hg.ntypes:
-                n_feats[n] = F.dropout(temp[n], p=self.dropout, training=False)
-                #n_feats[n] = temp[n]
-
         # Forward of n layers of CompGraphConv
         h = self.cl_graph.ndata['h']
         h_e = self.cl_graph.edata['w']
         for layer in self.edge_layers:
             h = th.relu(layer(self.cl_graph, h, h_e))
-            h = F.dropout(h, p=self.dropout, training=False)
+            h = self.dropout(h)
 
         h = self.linear_e1(h)
         edge_weight = {}
@@ -89,13 +78,13 @@ class RSHN(BaseModel):
 
             # full graph training
             for layer in self.node_layers:
-                n_feats = layer(hg, n_feats)
+                n_feats = layer(hg, n_feats, edge_weight)
         else:
             # minibatch training
             pass
         for n in n_feats:
-            n_feats[n] = F.dropout(self.linear(n_feats[n]), p=self.dropout, training=False)
-            #n_feats[n] = self.linear(n_feats[n])
+            #n_feats[n] = self.dropout(self.linear(n_feats[n]))
+            n_feats[n] = self.linear(n_feats[n])
         return n_feats
 
 
@@ -152,7 +141,7 @@ class GraphConv(nn.Module):
         #self.weight2 = nn.Parameter(th.Tensor(in_feats, out_feats))
 
         self.reset_parameters()
-        self.dropout = dropout
+        self.dropout = nn.Dropout(dropout)
         self.activation = activation
 
     def reset_parameters(self):
@@ -201,7 +190,7 @@ class GraphConv(nn.Module):
 
                 if self.activation:
                     h = self.activation(h)
-                return F.dropout(h, p=self.dropout, training=False)
+                return self.dropout(h)
 
             return {ntype: _apply(ntype, h, norm) for ntype, h in outputs.items()}
 

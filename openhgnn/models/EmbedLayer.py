@@ -1,8 +1,10 @@
 import torch as th
 import torch.nn as nn
 
+
 class HeteroEmbedLayer(nn.Module):
     r"""Embedding layer for featureless heterograph."""
+
     def __init__(self,
                  n_nodes,
                  embed_size,
@@ -20,8 +22,8 @@ class HeteroEmbedLayer(nn.Module):
         self.embeds = nn.ParameterDict()
         for ntype, nodes in n_nodes.items():
             embed = nn.Parameter(th.FloatTensor(nodes, self.embed_size))
-           # initrange = 1.0 / self.embed_size
-            #nn.init.uniform_(embed, -initrange, initrange)
+            # initrange = 1.0 / self.embed_size
+            # nn.init.uniform_(embed, -initrange, initrange)
             nn.init.xavier_uniform_(embed, gain=nn.init.calculate_gain('relu'))
             self.embeds[ntype] = embed
 
@@ -38,4 +40,13 @@ class HeteroEmbedLayer(nn.Module):
         DGLHeteroGraph
             The block graph fed with embeddings.
         """
-        return self.embeds
+        out_feature = {}
+        for key, embed in self.embeds.items():
+            out_feature[key] = embed
+        return out_feature
+
+    def forward_nodes(self, nodes_dict):
+        out_feature = {}
+        for key, nid in nodes_dict.items():
+            out_feature[key] = self.embeds[key][nid]
+        return out_feature

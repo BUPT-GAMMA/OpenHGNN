@@ -9,27 +9,30 @@ from dgl.data.utils import load_graphs, save_graphs
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import AcademicDataset
 
+
 @register_dataset('node_classification')
 class NodeClassificationDataset(BaseDataset):
     """
     metric: Accuracy, multi-label f1 or multi-class f1. Default: `accuracy`
     """
 
-    def __init__(self, dataset_name):
+    def __init__(self):
         super(NodeClassificationDataset, self).__init__()
+        self.has_feature = False
 
     def get_labels(self):
         raise NotImplemented
 
-    def get_idx(self,):
+    def get_idx(self, ):
         raise NotImplemented
 
 
 @register_dataset('rdf_node_classification')
 class RDF_NodeCLassification(NodeClassificationDataset):
     def __init__(self, dataset_name):
-        super(NodeClassificationDataset, self).__init__()
+        super(RDF_NodeCLassification, self).__init__()
         self.g, self.category, self.num_classes = self.load_RDF_dgl(dataset_name)
+        self.has_feature = False
 
     def load_RDF_dgl(self, dataset):
         # load graph data
@@ -74,7 +77,7 @@ class RDF_NodeCLassification(NodeClassificationDataset):
 @register_dataset('hin_node_classification')
 class HIN_NodeCLassification(NodeClassificationDataset):
     def __init__(self, dataset_name):
-        super(NodeClassificationDataset, self).__init__()
+        super(HIN_NodeCLassification, self).__init__()
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
 
     def load_HIN(self, name_dataset):
@@ -84,7 +87,7 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             g = dataset[0].long()
             num_classes = 3
             self.in_dim = g.ndata['h'][category].shape[1]
-        elif name_dataset =='dblp':
+        elif name_dataset == 'dblp':
             data_path = './openhgnn/dataset/dblp_graph.bin'
             category = 'author'
             num_classes = 4
@@ -130,8 +133,8 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             else:
                 return NotImplementedError('Unsupported dataset {}'.format(name_dataset))
             return g, category, num_classes
-        #g, _ = load_graphs(data_path)
-        #g = g[0]
+        # g, _ = load_graphs(data_path)
+        # g = g[0]
         return g, category, num_classes
 
     def get_idx(self, validation=True):
@@ -177,10 +180,11 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             raise ValueError('label in not in the hg.nodes[category].data')
         return labels
 
+
 @register_dataset('ogbn_node_classification')
 class OGB_NodeCLassification(NodeClassificationDataset):
     def __init__(self, dataset_name):
-        super(NodeClassificationDataset, self).__init__()
+        super(OGB_NodeCLassification, self).__init__()
         if dataset_name == 'ogbn-mag':
             dataset = DglNodePropPredDataset(name='ogbn-mag')
             self.category = 'paper'  # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
@@ -189,12 +193,15 @@ class OGB_NodeCLassification(NodeClassificationDataset):
 
         split_idx = dataset.get_idx_split()
         self.num_classes = dataset.num_classes
-        self.train_idx, self.valid_idx, self.test_idx = split_idx["train"][self.category], split_idx["valid"][self.category], split_idx["test"][self.category]
+        self.train_idx, self.valid_idx, self.test_idx = split_idx["train"][self.category], split_idx["valid"][
+            self.category], split_idx["test"][self.category]
         self.g, self.label_dict = dataset[0]
         self.g = self.mag4HGT(self.g)
         self.label = self.label_dict[self.category]
-        #pass
-
+        # 2-dim label
+        self.in_dim = self.g.ndata['h'][self.category].shape[1]
+        self.has_feature = True
+        # pass
 
     def get_idx(self, validation=True):
         return self.train_idx, self.valid_idx, self.test_idx
@@ -232,6 +239,5 @@ class OGB_NodeCLassification(NodeClassificationDataset):
                 hg2.nodes[ntype].data['h'],
                 th.log10(hg2.nodes[ntype].data['deg'][:, None])], 1)
             del hg2.nodes[ntype].data['deg']
-
 
         return hg2

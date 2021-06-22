@@ -11,13 +11,25 @@ class BaseFlow(ABC):
         self.evaluate_interval = 1
         self.load_from_checkpoint = True
         if self.load_from_checkpoint:
-            self._checkpoint = os.path.join("./openhgnn/output/{}".format(args.model), f"{args.model}_{args.dataset}.pt")
+            self._checkpoint = os.path.join("./openhgnn/output/{}".format(args.model),
+                                            f"{args.model}_{args.dataset}.pt")
         else:
             self._checkpoint = None
 
     @abstractmethod
     def train(self):
         pass
+
+    def _full_train_step(self):
+        # train with a full_batch graph
+        raise NotImplementedError
+
+    def _mini_train_step(self):
+        # train with a mini_batch seed nodes graph
+        raise NotImplementedError
+
+    def _test_step(self):
+        raise NotImplementedError
 
     def load_from_pretrained(self):
         if self.load_from_checkpoint:

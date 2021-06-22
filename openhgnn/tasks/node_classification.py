@@ -1,11 +1,4 @@
-import argparse
-import copy
-import dgl
-import numpy as np
-import torch
-from tqdm import tqdm
 import torch.nn.functional as F
-from openhgnn.models import build_model
 
 from . import BaseTask, register_task
 from ..dataset import build_dataset
@@ -43,6 +36,13 @@ class NodeClassification(BaseTask):
     def evaluate(self, logits, name, mask=None):
         if name == 'acc':
             return self.evaluator.cal_acc(logits, self.labels[mask])
+        elif name == 'acc-ogbn-mag':
+            from ogb.nodeproppred import Evaluator
+            evaluator = Evaluator(name='ogbn-mag')
+            logits = logits.unsqueeze(dim=1)
+            input_dict = {"y_true": logits, "y_pred": self.labels[self.test_idx]}
+            result_dict = evaluator.eval(input_dict)
+            return result_dict
         elif name == 'f1_lr':
             return self.evaluator.nc_with_LR(logits, self.labels, self.train_idx, self.test_idx)
         elif name == 'f1':

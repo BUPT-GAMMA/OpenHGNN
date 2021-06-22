@@ -1,6 +1,8 @@
 # Dataset
 
-A dataset is related to a task. So dataset should load not only a heterograph, but also some index involving training, validation and testing.
+A dataset is related to a task, so it is a part of task.
+
+So dataset should load not only a heterograph[DGLGraph], but also some index involving training, validation and testing. The node/edge feature is not necessary, but most models need node feature. So we will build node feature with [*HeteroEmbedLayer*](../models/EmbedLayer.py) in general, and we build it in the trainerflow when dataset has no feature.
 
 For now, we have two downstream tasks, which are node classification and link prediction.
 
@@ -46,7 +48,11 @@ For now, we have two downstream tasks, which are node classification and link pr
 
 - ##### OGB_NodeCLassification
 
-  - [ogbn-mag](https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)
+  - ###### [ogbn-mag](https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)
+  
+    - Train 629,571 predict venue labels of all papers published before 2018
+    - Validation: 64879 papers published in 2018
+    - Test: 41939 papers published since 2019
 
 #### LinkPredictionDataset
 

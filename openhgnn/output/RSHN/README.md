@@ -13,7 +13,7 @@
 
   If you do not have gpu, set -gpu -1.
 
-  the rdf_dataset is supported.
+  Supported Dataset: [RDFDataset](../../dataset/#RDF_NodeCLassification)
 
 ## Performance: Node classification
 
@@ -22,9 +22,7 @@
 | **RSHN**             | **97.22** | **82.35** | **93.10** | **90.40** |
 | **RSHN(dgl)**（best) | **97.22** | **85.29** | **93.10** | **89.39** |
 
-### Dataset: [RDFDataset](../../dataset/#RDF_NodeCLassification)
-
-## TrainerFlow: entity classification trainer
+## TrainerFlow: [entity classification flow](../../trainerflow/#Entity classification flow)
 
 ### Model
 
