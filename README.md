@@ -87,8 +87,9 @@ It is under development, and we release it in a nightly build version. For now, 
 
 - Heterogeneous Graph Attention Networks for Semi-supervised Short Text Classification[EMNLP 2019]
 - Heterogeneous Graph Structure Learning for Graph Neural Networks[AAAI 2021]
-- [Heterogeneous Graph Propagation Network[TKDE2021]](https://ieeexplore.ieee.org/abstract/document/9428609)
+- [Heterogeneous Graph Propagation Network[TKDE 2021]](https://ieeexplore.ieee.org/abstract/document/9428609)
 - [Self-supervised Heterogeneous Graph Neural Network with Co-contrastive Learning[KDD 2021]](https://arxiv.org/abs/2105.09111)
+- Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]
 
 ## Contributors
 
