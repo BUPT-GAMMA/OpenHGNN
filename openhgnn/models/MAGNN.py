@@ -30,8 +30,8 @@ class MAGNN(BaseModel):
             metapath_list = ['MDM', 'MAM', 'DMD', 'DMAMD', 'AMA', 'AMDMA']
             edge_type_list = ['A-M', 'M-A', 'D-M', 'M-D']
             # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
-            in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
-            # in_feats = {'M': 2, 'D': 2, 'A': 2} # TODO: This is a test need to be deprecated.
+            # in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
+            in_feats = {'M': 2, 'D': 2, 'A': 2} # TODO: This is a test need to be deprecated.
             mp_instances = mp_instance_sampler(hg, metapath_list, 'imdb4MAGNN')
 
         elif args.dataset == 'dblp4MAGNN':
@@ -172,27 +172,53 @@ class MAGNN(BaseModel):
             else:
                 feat_dict = g[0].srcdata['feat']
 
-        # with g.local_scope():
-        # input projection
         h = {}
         for ntype in self.input_projection.keys():
-            # g.nodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
             h[ntype] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
 
         # hidden layer
         for i in range(self.num_layers - 1):
-            # h, _ = self.layers[i](g, feat_dict, self.metapath_idx_dict)
             h, _ = self.layers[i](h, self.metapath_idx_dict)
-            for key in h.keys():
-                h[key] = self.activation(h[key])
-            # g.ndata['feat'] = h
+            for ntype in h.keys():
+                h[ntype] = self._get_dstfeat(g, h, i, ntype)
+                h[ntype] = self.activation(h[ntype])
 
         # output layer
-        # h_output, embedding = self.layers[-1](g, feat_dict, self.metapath_idx_dict)
         h_output, embedding = self.layers[-1](h, self.metapath_idx_dict)
 
+        return self._get_dstfeat(g, h_output, -1, self.ntypes)
 
-        return h_output
+    def _get_dstfeat(self, g, h,  idx, ntypes):
+        '''
+        Description
+        ------------
+        If g is a list of blocks, get the features of dstnodes considered in the idx block(layer) according to ntypes.
+        Otherwise(dgl graph) return h without change.
+
+        Parameters
+        ----------
+        g :
+            the dgl heterogeneous graph or blocks
+        h :
+            the dict of feat, e.g {'M':..., 'A':..., 'D':...}
+        ntypes :
+            If g is a list of blocks, get the features of ntypes. Otherwise it's of no use.
+        idx :
+            If g is a list of blocks, idx will be the index of current block in the list. Otherwise it's of no use.
+
+        Returns
+        -------
+        h_dst : dict
+            The features of dstnodes according to ntypes
+        '''
+
+        h_dst = {}
+        if not isinstance(g, dgl.DGLHeteroGraph): # blocks
+            for ntype in ntypes:
+                h_dst[ntype] = h[:g[idx].number_of_dst_nodes[ntype]]
+        else:
+            h_dst = h
+        return h_dst
 
 
 class MAGNN_layer(nn.Module):

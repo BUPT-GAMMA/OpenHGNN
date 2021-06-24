@@ -44,7 +44,8 @@ BEST_CONFIGS = {
             }
         },
         'MAGNN': {
-            'general': {'mini_batch_flag': False, 'max_epoch': 100, 'patience': 30},
+            # 'general': {'mini_batch_flag': False, 'max_epoch': 100, 'patience': 30},
+            'general': {'mini_batch_flag': True, 'max_epoch': 100, 'patience': 30}, # TODO: Test to be deprecated
             'imdb': {
                 'lr': 0.005, 'weight_decay': 0.001, 'dropout': 0.5, 'hidden_dim': 64, 'encoder_type': 'RotateE',
                 'inter_attn_feats': 128, 'num_heads': 8, 'num_layers': 2,
