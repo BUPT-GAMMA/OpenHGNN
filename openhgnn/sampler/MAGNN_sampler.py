@@ -7,14 +7,15 @@ import os
 import torch as th
 import warnings
 from operator import itemgetter
-from openhgnn.models.MAGNN import mp_instance_sampler
+from openhgnn.models.MAGNN import mp_instance_sampler, mini_mp_instance_sampler
 
-class MAGNN_Sampler(dgl.dataloading.BlockSampler):
+class MAGNN_sampler(dgl.dataloading.BlockSampler):
     def __init__(self, g, n_layers, metapath_list, dataset='imdb4MAGNN', return_eids=False):
         super().__init__(n_layers, return_eids=return_eids)
         self.dataset = dataset
         self.metapath_list = metapath_list
         self.mp_inst = mp_instance_sampler(g, self.metapath_list, self.dataset)
+        # self.mini_mp_inst = False Todo: deprecated
 
     def sample_frontier(self, block_id, g, seed_nodes):
         '''
@@ -41,23 +42,28 @@ class MAGNN_Sampler(dgl.dataloading.BlockSampler):
         # TODO: Too many loops in sample_frontier(), may need some optimization
 
         graph_data = {}
-        # obtain the target ntype
-        ntypes = list(seed_nodes.keys())
         # obtain the metapath types with ntype as dst node type
-        for ntype in ntypes:
-            target_mp_types = np.array(self.metapath_list)[[metapath[0] == ntype for metapath in self.metapath_list]]
-
-            for metapath in target_mp_types:  # the metapath instances of the certain metapath
-                _mp_inst = np.isin(self.mp_inst[metapath][:, 0], seed_nodes[ntype])
-                _mp_inst = th.tensor(self.mp_inst[metapath][_mp_inst])
-
-                for i in range(len(metapath) - 1):  # traverse the metapath instances to build graph
-                    edges_idx = th.unique(_mp_inst[:, [i, i+1]], dim=0)
-                    graph_data[(metapath[i+1], metapath[i+1] + '-' + metapath[i], metapath[i])] = \
-                        (edges_idx[:, 1], edges_idx[:, 0])
-                    del edges_idx
-
-                del _mp_inst
+        # for ntype in seed_nodes.keys():
+        #     target_mp_types = np.array(self.metapath_list)[[metapath[0] == ntype for metapath in self.metapath_list]]
+        #     for metapath in target_mp_types:  # the metapath instances of the certain metapath
+        #         _mp_inst = np.isin(self.mp_inst[metapath][:, 0], seed_nodes[ntype])
+        #         _mp_inst = th.tensor(self.mp_inst[metapath][_mp_inst])
+        #
+        #         for i in range(len(metapath) - 1):  # traverse the metapath instances to build graph
+        #             edges_idx = th.unique(_mp_inst[:, [i, i+1]], dim=0)
+        #             graph_data[(metapath[i+1], metapath[i+1] + '-' + metapath[i], metapath[i])] = \
+        #                 (edges_idx[:, 1], edges_idx[:, 0])
+        #             del edges_idx
+        #         del _mp_inst
+        mini_mp_inst = mini_mp_instance_sampler(seed_nodes=seed_nodes, mp_instances=self.mp_inst)
+        for metapath in mini_mp_inst.keys():
+            _mini_mp_inst = th.tensor(mini_mp_inst[metapath])
+            for i in range(len(metapath) - 1): # TODO: THREE NEST LOOPS!!! CAN IT BE OPTIMIZED?
+                edges_idx = th.unique(_mini_mp_inst[:, [i, i + 1]], dim=0)
+                graph_data[(metapath[i + 1], metapath[i + 1] + '-' + metapath[i], metapath[i])] = \
+                           (edges_idx[:, 1], edges_idx[:, 0])
+                del edges_idx
+            del _mini_mp_inst
 
         num_nodes_dict = {}
         for ntype in g.ntypes:
@@ -71,8 +77,8 @@ class MAGNN_Sampler(dgl.dataloading.BlockSampler):
                                   frontier.edges(etype=etype)[1],
                                   etype=etype)
             frontier.edges[etype].data[dgl.EID] = edge_ids
-
         return frontier
+
     def sample_blocks(self, g, seed_nodes, exclude_eids=None):
         '''
 
@@ -123,7 +129,7 @@ class MAGNN_Sampler(dgl.dataloading.BlockSampler):
 
             # seed_nodes = block.srcdata[NID]
             # Here because dgl makes dst nodes forcibly appear in src nodes, actually block.srcdata[EID] = block.data[EID]
-            seed_nodes = {ntype: block.srcnodes[ntype].data[NID] for ntype in block.srctypes}
+            seed_nodes = {ntype: block.srcnodes[ntype].data[dgl.NID] for ntype in block.srctypes}
 
             blocks.insert(0, block)
         return blocks
@@ -138,13 +144,13 @@ if __name__ == '__main__':
     g = g[0]
     nids = {'M': th.tensor([20, 2, 4, 1, 10, 6])}
 
-    sampler = MAGNN_Sampler(g, n_layers=2, metapath_list=metapath_list, dataset='imdb4MAGNN', return_eids=True)
+    sampler = MAGNN_sampler(g, n_layers=2, metapath_list=metapath_list, dataset='imdb4MAGNN', return_eids=True)
     dataloader = dgl.dataloading.NodeDataLoader(
         g=g, nids=nids, block_sampler=sampler, batch_size=4, shuffle=True, drop_last=False,
         num_workers=1
     )
     input_nodes, output_nodes, block = next(iter(dataloader))
-
+    print(1)
     # TODO: test if exclude_eids make sense
 
 

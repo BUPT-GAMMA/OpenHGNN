@@ -19,8 +19,6 @@ from . import BaseModel, register_model
 model
 '''
 
-# TODO: uncouple g and its features
-# TODO: consider about srcdata and dstdata separately
 @register_model('MAGNN')
 class MAGNN(BaseModel):
     @classmethod
@@ -30,8 +28,8 @@ class MAGNN(BaseModel):
             metapath_list = ['MDM', 'MAM', 'DMD', 'DMAMD', 'AMA', 'AMDMA']
             edge_type_list = ['A-M', 'M-A', 'D-M', 'M-D']
             # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
-            # in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
-            in_feats = {'M': 2, 'D': 2, 'A': 2} # TODO: This is a test need to be deprecated.
+            in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
+            # in_feats = {'M': 2, 'D': 2, 'A': 2} # TODO: This is a test need to be deprecated.
             mp_instances = mp_instance_sampler(hg, metapath_list, 'imdb4MAGNN')
 
         elif args.dataset == 'dblp4MAGNN':
@@ -53,6 +51,8 @@ class MAGNN(BaseModel):
                    dropout_rate=args.dropout,
                    encoder_type=args.encoder_type,
                    mp_instances=mp_instances)
+
+
 
     def __init__(self, in_feats, h_feats, inter_attn_feats, num_heads, num_classes, num_layers,
                  metapath_list, edge_type_list, dropout_rate, mp_instances, encoder_type='RotateE', activation=F.elu):
@@ -552,6 +552,77 @@ def mp_instance_sampler(g, metapath_list, dataset):
             pickle.dump(res, file)
 
     return res
+
+def mini_mp_instance_sampler(seed_nodes, mp_instances, block=None):
+    # FIXME: How to convert the original node idx in mp_instances to new node idx in blocks?
+    '''
+    Description
+    -----------
+    Sampling metapath instances for mini batch training based on seed_nodes and metapath instances.
+
+    Parameters
+    ----------
+    seed_nodes : dict
+        We sample the metapath instances with the seed_nodes as dstnodes of metapath instances. As for a block,
+        Generally the seed_nodes are the dstnodes of first block in sampled blocks.
+
+    mp_instances : dict
+        the metapath instances of the original graph sampled by mp_instance_sampler on the whole graph.
+        We sample the mini batch metapath instances based on this.
+
+    block : object
+        if block is not None, then this method is used for generating metapath instances for block and mini batch train.
+        Otherwise, it may be used for generating blocks in MAGNN_sampler.
+
+    Returns
+    -------
+    mini_mp_inst : dict
+        the mini batch metapath instances of seed_nodes.
+    '''
+
+    def convert_nids(x, ntype):
+        # convert the old_nids in metapath instances to the new_nids in block
+        return np.argwhere(old_nids[ntype] == x)[0][0]
+
+    mini_mp_inst = {}
+    if block is not None:
+        old_nids = block.srcdata[dgl.NID]
+        old_nids = dict(zip(old_nids.keys(), [old_nids[ntype].cpu().detach().numpy() for ntype in old_nids.keys()]))
+    metapath_list = list(mp_instances.keys())
+
+    for ntype in seed_nodes.keys():
+        # mini_mp_inst[ntype] = {}
+        target_mp_types = np.array(metapath_list)[[metapath[0] == ntype for metapath in metapath_list]]
+        for metapath in target_mp_types:  # the metapath instances of the certain metapath
+            _mp_inst = np.isin(mp_instances[metapath][:, 0], seed_nodes[ntype])
+            # _mp_inst = th.tensor(mp_instances[metapath][_mp_inst])
+            _mp_inst = mp_instances[metapath][_mp_inst]
+            if block is not None:
+                for i, meta_ntype in enumerate(metapath): # TODO: TOO MANY NETSED LOOPS!
+                    Map = list(map(lambda x: convert_nids(x, meta_ntype), _mp_inst[:, i]))
+                    _mp_inst[:, i] = np.array(Map)
+
+            mini_mp_inst[metapath] = _mp_inst
+
+            # for i in range(len(metapath) - 1):  # traverse the metapath instances to build graph
+            #     edges_idx = th.unique(_mp_inst[:, [i, i + 1]], dim=0)
+            #     graph_data[(metapath[i + 1], metapath[i + 1] + '-' + metapath[i], metapath[i])] = \
+            #         (edges_idx[:, 1], edges_idx[:, 0])
+            #     del edges_idx
+            # del _mp_inst
+
+    # If this method is for generating block metapath instances utilized in mini batch training, we must convert
+    # the old nid to the new nid in block
+    # if block is not None:
+    #     old_nids = block.srcdata[dgl.NID]
+    #     for ntype in mini_mp_inst.keys():
+    #         old_nids[ntype] = old_nids[ntype].cpu().detach().numpy()
+    #         for metapath in mini_mp_inst[ntype].keys():
+    #             Map = map(lambda x: np.argwhere(old_nids[ntype] == x)[0][0],
+    #                       mini_mp_inst[ntype][metapath].cpu().detach().numpy())
+    #             print(1)
+
+    return mini_mp_inst
 
 def svm_test(X, y, test_sizes=(0.2, 0.4, 0.6, 0.8), repeat=10):
     # This method is implemented by author
