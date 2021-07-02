@@ -22,7 +22,7 @@ model
 @register_model('MAGNN')
 class MAGNN(BaseModel):
     @classmethod
-    def build_model_from_args(cls, args, hg):
+    def build_model_from_args(cls, args, hg): # TODO: These args should be shift to config
         if args.dataset == 'imdb4MAGNN':
             # build model
             metapath_list = ['MDM', 'MAM', 'DMD', 'DMAMD', 'AMA', 'AMDMA']
@@ -127,7 +127,7 @@ class MAGNN(BaseModel):
 
         # extract ntypes that have corresponding metapath
         # If there're only metapaths like ['MAM', 'MDM'], 'A' and 'D' have no metapath.
-        self.meta_ntypes = set([metapath[0] for metapath in metapath_list])
+        self.dst_ntypes = set([metapath[0] for metapath in metapath_list])
 
         # hidden layers
         self.layers = nn.ModuleList()
@@ -135,13 +135,13 @@ class MAGNN(BaseModel):
             self.layers.append(
                 MAGNN_layer(in_feats=h_feats, inter_attn_feats=inter_attn_feats, out_feats=h_feats, num_heads=num_heads,
                             metapath_list=metapath_list, ntypes=self.ntypes, edge_type_list=edge_type_list,
-                            meta_ntypes=self.meta_ntypes, encoder_type=encoder_type, last_layer=False))
+                            dst_ntypes=self.dst_ntypes, encoder_type=encoder_type, last_layer=False))
 
         # output layer
         self.layers.append(
             MAGNN_layer(in_feats=h_feats, inter_attn_feats=inter_attn_feats, out_feats=num_classes, num_heads=num_heads,
                         metapath_list=metapath_list, ntypes=self.ntypes, edge_type_list=edge_type_list,
-                        meta_ntypes=self.meta_ntypes, encoder_type=encoder_type, last_layer=True))
+                        dst_ntypes=self.dst_ntypes, encoder_type=encoder_type, last_layer=True))
 
         self.metapath_idx_dict = mp_instances
 
@@ -215,7 +215,7 @@ class MAGNN(BaseModel):
         h_dst = {}
         if not isinstance(g, dgl.DGLHeteroGraph): # blocks
             for ntype in ntypes:
-                h_dst[ntype] = h[:g[idx].number_of_dst_nodes[ntype]]
+                h_dst[ntype] = h[ntype][:g[idx].number_of_dst_nodes(ntype)] # FIXME: check again
         else:
             h_dst = h
         return h_dst
@@ -223,7 +223,7 @@ class MAGNN(BaseModel):
 
 class MAGNN_layer(nn.Module):
     def __init__(self, in_feats, inter_attn_feats, out_feats, num_heads, metapath_list,
-                 ntypes, edge_type_list, meta_ntypes, encoder_type='RotateE', last_layer=False):
+                 ntypes, edge_type_list, dst_ntypes, encoder_type='RotateE', last_layer=False):
         super(MAGNN_layer, self).__init__()
         self.in_feats = in_feats
         self.inter_attn_feats = inter_attn_feats
@@ -232,7 +232,7 @@ class MAGNN_layer(nn.Module):
         self.metapath_list = metapath_list # ['MDM', 'MAM', ...]
         self.ntypes = ntypes # ['M', 'D', 'A']
         self.edge_type_list = edge_type_list # ['M-A', 'A-M', ...]
-        self.meta_ntypes = meta_ntypes
+        self.dst_ntypes = dst_ntypes
         self.encoder_type = encoder_type
         self.last_layer = last_layer
 
@@ -249,7 +249,7 @@ class MAGNN_layer(nn.Module):
         # The attention mechanism in inter metapath aggregation
         self.inter_linear = nn.ModuleDict()
         self.inter_attn_vec = nn.ModuleDict()
-        for ntype in meta_ntypes:
+        for ntype in dst_ntypes:
             self.inter_linear[ntype] = \
                 nn.Linear(in_features=in_feats * num_heads, out_features=inter_attn_feats, bias=True)
             self.inter_attn_vec[ntype] = nn.Linear(in_features=inter_attn_feats, out_features=1, bias=False)
@@ -341,7 +341,7 @@ class MAGNN_layer(nn.Module):
             meta_s[metapath] = self.inter_attn_vec[metapath[0]](meta_feat) # e_pi
 
         for ntype in self.ntypes:
-            if ntype in self.meta_ntypes:
+            if ntype in self.dst_ntypes:
                 # extract the metapath with the dst node type of ntype to construct a tensor
                 # in order to compute softmax
                 # metapaths: e.g if ntype is M, then ['MAM', 'MDM']

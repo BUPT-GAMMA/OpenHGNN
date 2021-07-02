@@ -36,8 +36,13 @@ def mini_train(model, hg, args):
                                                      block=blocks[0])
         # TODO: Preprocess
         model.metapath_idx_dict = mini_mp_instances
-        model.metapath_list = mini_mp_instances.keys()
-        # TODO: Preprocess
+        model.metapath_list = list(mini_mp_instances.keys())
+        model.dst_ntypes = [meta[0] for meta in model.metapath_list]
+        for layer in model.layers:
+            layer.metapath_list = model.metapath_list
+            layer.dst_ntypes = model.dst_ntypes
+
+        # TODO: Preprocess IS IT RIGHT???
         logits = model(blocks, feat)[category]
         loss = F.cross_entropy(logits, lbl)
         loss_all += loss.item()
