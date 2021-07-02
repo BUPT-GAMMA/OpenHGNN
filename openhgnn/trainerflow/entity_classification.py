@@ -14,8 +14,6 @@ class EntityClassification(BaseFlow):
     Supported Dataset：AIFB/MUTAG/BGS/AM
         Dataset description can be found in https://github.com/dmlc/dgl/tree/master/examples/pytorch/rgcn-hetero
     The task is to classify the entity.
-
-    Note: If the output dim is not equal the number of classes, a MLP will follow the gnn model.
     """
 
     def __init__(self, args):
@@ -31,6 +29,8 @@ class EntityClassification(BaseFlow):
 
         if hasattr(self.task.dataset, 'in_dim'):
             self.args.in_dim = self.task.dataset.in_dim
+        elif not hasattr(self.args, 'in_dim'):
+            raise ValueError('Set input dimension parameter!')
         # Build the model. If the output dim is not equal the number of classes, modify the dim.
         if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
@@ -55,8 +55,8 @@ class EntityClassification(BaseFlow):
         self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
         self.labels = self.task.get_labels().to(self.device)
         if self.args.mini_batch_flag:
-            # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
-            self.sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
+            self.sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
+            #self.sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
             self.train_loader = dgl.dataloading.NodeDataLoader(
                 self.hg.to('cpu'), {self.category: self.train_idx.to('cpu')}, self.sampler,
                 batch_size=self.args.batch_size, shuffle=True, num_workers=4
@@ -86,7 +86,7 @@ class EntityClassification(BaseFlow):
                 epoch_iter.set_description(
                     f"Epoch: {epoch:03d}, Loss:{loss: .4f}, Train_acc: {train_acc:.4f}, Val_acc: {val_acc:.4f}, Val_loss: {val_loss:.4f}"
                 )
-                print(f'Test_acc:{acc["test"]:.4f}')
+                #print(f'Test_acc:{acc["test"]:.4f}')
                 # print(
                 #     f"Epoch: {epoch:03d}, Loss:{loss: .4f}, Train_acc: {train_acc:.4f}, Val_acc: {val_acc:.4f}, Val_loss: {val_loss:.4f}"
                 # )

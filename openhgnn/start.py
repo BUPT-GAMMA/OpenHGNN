@@ -1,12 +1,11 @@
 from .utils import set_random_seed, set_best_config
 from .trainerflow import build_flow
-
+from .auto import hpo_experiment
 
 
 def OpenHGNN(args):
     set_random_seed(args.seed)
 
-    # TODO find the best parameter
     if getattr(args, "use_best_config", False):
         args = set_best_config(args)
     if hasattr(args, 'trainerflow'):
@@ -14,10 +13,14 @@ def OpenHGNN(args):
     else:
         trainerflow = get_trainerflow(args.model, args.task)
     print(args)
-    flow = build_flow(args, trainerflow)
-    result = flow.train()
+    if getattr(args, "use_hpo", False):
+        # hyper-parameter search
+        hpo_experiment(args, trainerflow)
+    else:
+        flow = build_flow(args, trainerflow)
+        result = flow.train()
 
-    return result
+        return result
 
 
 def get_trainerflow(model, task):

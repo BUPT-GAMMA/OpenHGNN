@@ -20,10 +20,9 @@
 
 ## Performance: Node classification
 
-| Method               | AIFB  | MUTAG | BGS   | AM   |
-| -------------------- | ----- | ----- | ----- | ---- |
-| **RGCN**             |       |       |       |      |
-| **RGCN(dgl)**（best) | 97.22 |       | 93.10 |      |
+| Method               | AIFB  | MUTAG | BGS   | AM    |
+| -------------------- | ----- | ----- | ----- | ----- |
+| **RGCN(dgl)**（best) | 97.22 | 72.05 | 93.10 | 89.90 |
 
 ## TrainerFlow: [entity classification flow](../../trainerflow/#Entity_classification_flow)
 

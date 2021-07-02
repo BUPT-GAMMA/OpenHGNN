@@ -83,6 +83,7 @@ class Config(object):
             self.lr = conf.getfloat("RGCN", "learning_rate")
             self.dropout = conf.getfloat("RGCN", "dropout")
 
+            self.in_dim = conf.getint("RGCN", "in_dim")
             self.hidden_dim = conf.getint("RGCN", "hidden_dim")
             self.out_dim = conf.getint("RGCN", "out_dim")
 
@@ -104,6 +105,7 @@ class Config(object):
             self.weight_decay = conf.getfloat("CompGCN", "weight_decay")
             self.dropout = conf.getfloat("CompGCN", "dropout")
 
+            self.in_dim = conf.getint("CompGCN", "in_dim")
             self.hidden_dim = conf.getint("CompGCN", "hidden_dim")
             self.out_dim = conf.getint("CompGCN", "out_dim")
             self.n_layers = conf.getint("CompGCN", "n_layers")

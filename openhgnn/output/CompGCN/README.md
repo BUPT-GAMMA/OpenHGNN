@@ -14,21 +14,17 @@ Paper: [**Composition- based Multi-Relational Graph Convolutional Networks**](ht
 
   Supported Dataset: [RDFDataset](../../dataset/#RDF_NodeCLassification)
 
-
-
 ## Performance: Node classification
 
-| Method                  | AIFB | MUTAG | BGS  | AM   |
-| ----------------------- | ---- | ----- | ---- | ---- |
-| **CompGCN**             |      |       |      |      |
-| **CompGCN(dgl)**（best) |      |       |      |      |
+| Method           | AIFB  | MUTAG | BGS  | AM   |
+| ---------------- | ----- | ----- | ---- | ---- |
+| **CompGCN(dgl)** | 91.66 |       |      |      |
 
 ### TrainerFlow: [entity classification flow](../../trainerflow/#Entity classification flow)
 
 ### Model
 
 - [dglnn.HeteroGraphConv](https://docs.dgl.ai/en/latest/api/python/nn.pytorch.html#heterographconv) 
-- dglnn.WeightBasis [The basis function decomposition]
 
 ## Hyper-parameter specific to the model
 
