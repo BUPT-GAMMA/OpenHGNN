@@ -49,5 +49,6 @@ def try_import_task(task):
 
 SUPPORTED_TASKS = {
     'node_classification': 'openhgnn.tasks.node_classification',
-    'link_prediction': 'openhgnn.tasks.link_prediction'
+    'link_prediction': 'openhgnn.tasks.link_prediction',
+    'recommendation': 'openhgnn.tasks.recommendation'
 }

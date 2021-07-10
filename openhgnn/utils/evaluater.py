@@ -3,7 +3,7 @@ import numpy as np
 import torch as th
 from sklearn.cluster import KMeans
 from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score
-from sklearn.metrics import f1_score, accuracy_score, roc_auc_score
+from sklearn.metrics import f1_score, accuracy_score, ndcg_score
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 import sklearn.metrics as Metric
@@ -46,6 +46,8 @@ class Evaluator():
             mrr = calc_raw_mrr(embedding, w, test_triplets, hits, eval_bz)
         return mrr
 
+    def ndcg(self, y_score, y_true):
+        return ndcg_score(y_true, y_score, 10)
 
     ''''''
     # Used in HetGNN

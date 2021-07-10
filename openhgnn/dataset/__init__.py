@@ -55,6 +55,8 @@ def build_dataset(dataset, task):
     elif dataset in ['wn18', 'FB15k', 'FB15k-237']:
         assert task == 'link_prediction'
         _dataset = 'kg_link_prediction'
+    elif dataset == 'test':
+        _dataset = 'test_' + task
     return DATASET_REGISTRY[_dataset](dataset)
 
 

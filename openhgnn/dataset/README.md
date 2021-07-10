@@ -64,6 +64,29 @@ For now, we have two downstream tasks, which are node classification and link pr
 
   - 'wn18', 'FB15k', 'FB15k-237'
 
+
+
+#### RecommendationDataset
+
+- **Amzon**
+
+  (Containing rating and timestamp information)
+
+  (Source : http://jmcauley.ucsd.edu/data/amazon/)
+
+  Edata['rate'] in user-item edge is the rating.
+
+  It addresses the two most common scenarios in collaborative filtering:
+
+  - rating prediction (e.g. on a scale of 1 to 5 stars), and
+  - item prediction from positive-only feedback.
+
+- |        | User  | Item  | View  | Category | Brand | User-Item | Item-View | Item-Category | Item-Brand | Test(20%)<br />User-Item |
+  | ------ | ----- | ----- | ----- | -------- | ----- | --------- | --------- | ------------- | ---------- | ------------------------ |
+  | Amazon | 6,170 | 2,753 | 3,857 | 22       | 334   | 195,791   | 5,694     | 5,508         | 2,753      | 39,159                   |
+
+  
+
 ### How to build a new dataset
 
 We use [dgl.heterograph](https://docs.dgl.ai/en/latest/guide/graph-heterogeneous.html#guide-graph-heterogeneous) as our graph data structure.

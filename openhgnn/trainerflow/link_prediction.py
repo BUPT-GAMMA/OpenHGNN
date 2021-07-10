@@ -4,12 +4,14 @@ import numpy as np
 import torch as th
 from tqdm import tqdm
 import torch.nn as nn
+import torch
 from openhgnn.models import build_model
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
 from ..tasks import build_task
-from ..utils import extract_embed
+from ..utils import extract_embed, get_nodes_dict
 from collections.abc import Mapping
+from ..models import build_model, HeteroEmbedLayer
 
 
 class NegativeSampler(object):
@@ -17,7 +19,7 @@ class NegativeSampler(object):
         # caches the probability distribution
         self.weights = {
             etype: g.in_degrees(etype=etype).float() ** 0.75
-            for etype in g.canonical_etypes
+            for etype in g.etypes
         }
         self.k = k
 
@@ -30,12 +32,13 @@ class NegativeSampler(object):
             result_dict[etype] = (src, dst)
         return result_dict
 
-@register_flow("distmult")
-class DistMult(BaseFlow):
+
+@register_flow("link_prediction")
+class LinkPrediction(BaseFlow):
     """Node classification flows."""
 
     def __init__(self, args):
-        super(DistMult, self).__init__(args)
+        super(LinkPrediction, self).__init__(args)
 
         self.args = args
         self.model_name = args.model
@@ -43,20 +46,27 @@ class DistMult(BaseFlow):
 
         self.task = build_task(args)
         self.hg = self.task.get_graph().to(self.device)
+        self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
-        self.evaluator = self.task.get_evaluator('mrr')
-        self.num_rels = self.task.dataset.num_rels
-        if hasattr(self.model, 'r_embedding'):
-            para = self.model.parameters()
-            self.r_embedding = self.model.r_embedding[:self.num_rels]
+        if hasattr(self.task.dataset, 'in_dim'):
+            self.args.in_dim = self.task.dataset.in_dim
+        elif not hasattr(self.args, 'in_dim'):
+            raise ValueError('Set input dimension parameter!')
+        if self.task.dataset.has_feature:
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+            self.has_feature = True
         else:
-            self.r_embedding = nn.Parameter(th.Tensor(self.num_rels, self.args.out_dim).to(self.device))
-            nn.init.uniform_(self.r_embedding,a=-1,b=1)
-            para = [{'params': self.model.parameters()}, {'params': self.r_embedding}]
+            self.has_feature = False
+            self.input_feature = HeteroEmbedLayer(get_nodes_dict(self.hg), args.in_dim).to(self.device)
+            self.optimizer = torch.optim.Adam([{'params': self.model.parameters()},
+                                               {'params': self.input_feature.parameters()}],
+                                              lr=args.lr, weight_decay=args.weight_decay)
+        self.evaluator = self.task.get_evaluator('mrr')
+
         self.optimizer = (
-            th.optim.Adam(para, lr=args.lr, weight_decay=args.weight_decay)
+            th.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         )
         self.patience = args.patience
         self.max_epoch = args.max_epoch
@@ -74,21 +84,24 @@ class DistMult(BaseFlow):
             )
         else:
             self.train_eid_dict = {
-                etype: self.hg.edges(etype=etype, form='eid')
-                for etype in self.hg.canonical_etypes}
+                self.target_link: self.hg.edges(etype=self.target_link, form='eid')}
+            # self.train_eid_dict = {
+            #     etype: self.hg.edges(etype=etype, form='eid')
+            #     for etype in self.hg.canonical_etypes}
+            self.positive_graph = self.hg[self.target_link]
             self.negative_sampler = NegativeSampler(self.hg, 10)
+            self.pos_test_graph = self.task.dataset.pos_test_graph.to(self.device)
+            self.neg_test_graph = self.task.dataset.neg_test_graph.to(self.device)
 
     def preprocess(self):
-        self.test_dataset = self.task.dataset.get_triples('test_mask').to(self.device)
-        self.val_dataset = self.task.dataset.get_triples('val_mask').to(self.device)
-        self.train_dataset = self.task.dataset.get_triples('train_mask').to(self.device)
+
         return
 
     def train(self):
         self.preprocess()
         epoch_iter = tqdm(range(self.max_epoch))
         patience = 0
-        best_score = 0
+        best_score = 100
         best_model = copy.deepcopy(self.model)
 
         for epoch in tqdm(range(self.max_epoch), ncols=80):
@@ -97,11 +110,11 @@ class DistMult(BaseFlow):
             else:
                 loss = self._full_train_setp()
             if epoch % 2 == 0:
-                metric= self._test_step(split='train')
+                metric = self._test_step()
                 epoch_iter.set_description(
-                    f"Epoch: {epoch:03d}, Val-mrr: {metric:.4f}, Loss:{loss:.4f}"
+                    f"Epoch: {epoch:03d}, NDCG: {metric:.4f}, Loss:{loss:.4f}"
                 )
-                if metric >= best_score:
+                if metric <= best_score:
                     best_score = metric
                     best_model = copy.deepcopy(self.model)
                     patience = 0
@@ -135,56 +148,27 @@ class DistMult(BaseFlow):
             self.optimizer.step()
         return all_loss
 
-    def loss_calculation(self, positive_graph, negative_graph, logits):
-        p_score = self.ScorePredictor(positive_graph, logits)
-        p_label = th.ones(len(p_score), device=self.device)
-        n_score = self.ScorePredictor(negative_graph, logits)
-        n_label = th.zeros(len(n_score), device=self.device)
-        loss = F.binary_cross_entropy_with_logits(th.cat((p_score, n_score)), th.cat((p_label, n_label)))
+    def loss_calculation(self, positive_graph, negative_graph, embedding):
+        p_score = self.ScorePredictor(positive_graph, embedding).repeat_interleave(10)
+        n_score = self.ScorePredictor(negative_graph, embedding)
+        label = th.ones(len(n_score), device=self.device)
+        loss = F.binary_cross_entropy_with_logits(p_score - n_score, label)
         return loss
 
     def ScorePredictor(self, edge_subgraph, x):
-        score_list = []
         with edge_subgraph.local_scope():
-            edge_subgraph.ndata['x'] = x
-            for etype in edge_subgraph.canonical_etypes:
-                e = self.r_embedding[int(etype[1])]
-                n = edge_subgraph.num_edges(etype)
-                edge_subgraph.edata['e'] = {etype: e.expand(n, -1)}
-                edge_subgraph.apply_edges(
-                    dgl.function.u_mul_e('x', 'e', 's'), etype=etype)
-                edge_subgraph.apply_edges(
-                    dgl.function.e_mul_v('s', 'x', 'score'), etype=etype)
-                score = th.sum(edge_subgraph.edata['score'].pop(etype), dim=1)
-                #score = th.sum(th.mul(edge_subgraph.edata['score'].pop(etype), e), dim=1)
-                score_list.append(score)
-            return th.cat(score_list)
-
-    def ScorePredictor_(self, edge_subgraph, x):
-        score_list = []
-        with edge_subgraph.local_scope():
-            edge_subgraph.ndata['x'] = x
-            for etype in edge_subgraph.canonical_etypes:
-                e = self.r_embedding[int(etype[1])]
-                n = edge_subgraph.num_edges(etype)
-                edge_subgraph.edata['e'] = {etype: e.expand(n, -1)}
-                edge_subgraph.apply_edges(
-                    dgl.function.u_add_e('x', 'e', 's'), etype=etype)
-                edge_subgraph.apply_edges(
-                    dgl.function.e_sub_v('s', 'x', 'score'), etype=etype)
-
-
-                score = -th.norm(edge_subgraph.edata['score'].pop(etype), p=1, dim=1)
-                #score = th.sum(th.mul(edge_subgraph.edata['score'].pop(etype), e), dim=1)
-                score_list.append(score)
-            return th.cat(score_list)
+            for ntype in edge_subgraph.ntypes:
+                edge_subgraph.nodes[ntype].data['x'] = x[ntype]
+            edge_subgraph.apply_edges(
+                dgl.function.u_dot_v('x', 'x', 'score'))
+            score = edge_subgraph.edata['score']
+            return score.squeeze()
 
     def regularization_loss(self, embedding):
         return th.mean(embedding.pow(2)) + th.mean(self.r_embedding.pow(2))
 
     def construct_negative_graph(self,):
-
-        neg_srcdst = self.negative_sampler(self.hg, self.train_eid_dict)
+        neg_srcdst = self.negative_sampler(self.positive_graph, self.train_eid_dict)
         if not isinstance(neg_srcdst, Mapping):
             assert len(self.hg.etypes) == 1, \
                 'graph has multiple or no edge types; '\
@@ -193,36 +177,46 @@ class DistMult(BaseFlow):
         # Get dtype from a tuple of tensors
         #dtype = F.dtype(list(neg_srcdst.values())[0][0])
         neg_edges = {
-            etype: neg_srcdst.get(etype, (th.tensor([]), th.tensor([])))
-            for etype in self.hg.canonical_etypes}
+            etype: neg_srcdst.get(etype[1], (th.IntTensor([]), th.IntTensor([])))
+            for etype in self.positive_graph.canonical_etypes}
         neg_pair_graph = dgl.heterograph(
-            neg_edges, {ntype: self.hg.number_of_nodes(ntype) for ntype in self.hg.ntypes})
+            neg_edges, {ntype: self.positive_graph.number_of_nodes(ntype) for ntype in self.positive_graph.ntypes})
         return neg_pair_graph
 
     def _full_train_setp(self):
         self.model.train()
+        if self.has_feature == True:
+            h = self.hg.ndata['h']
+        else:
+            h = self.input_feature()
+        embedding = self.model(self.hg, h)
+
         negative_graph = self.construct_negative_graph()
-        #for _ in range(2000):
-        logits = self.model(self.hg)[self.category]
-        #reg_loss = self.regularization_loss(logits)
-        loss = self.loss_calculation(self.hg, negative_graph, logits)
+        loss = self.loss_calculation(self.positive_graph, negative_graph, embedding)
         self.optimizer.zero_grad()
         loss.backward()
-        #th.nn.utils.clip_grad_norm_(list(self.model.parameters()) + [self.r_embedding], 1.0)
-        th.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
         self.optimizer.step()
-        print(loss.item())
+        #print(loss.item())
         return loss.item()
 
     def _test_step(self, split=None, logits=None):
         self.model.eval()
         with th.no_grad():
-            logits = logits if logits else self.model(self.hg)[self.category]
-            metric = self.evaluator(logits, self.r_embedding, self.train_dataset, self.val_dataset, self.train_dataset, hits=[1], eval_p='raw')
-        # if split == 'val':
-        #     metric = self.evaluator(logits, self.r_embedding, self.val_dataset, hits=[1, 3, 10], eval_p='raw')
-        # elif split == 'test':
-        #     metric = self.evaluator(logits, self.r_embedding, self.test_dataset, hits=[1, 3, 10], eval_p='raw')
-        # elif split == 'train':
-        #     metric = self.evaluator(logits, self.r_embedding, self.train_dataset, hits=[1], eval_p='raw')
+            if self.has_feature == True:
+                h = self.hg.ndata['h']
+            else:
+                h = self.input_feature()
+            embedding = self.model(self.hg, h)
+            p_score = self.ScorePredictor(self.pos_test_graph, embedding).unsqueeze(0)
+            n_score = self.ScorePredictor(self.neg_test_graph, embedding)
+            n_score = th.reshape(n_score, (99, -1))
+            matrix = th.cat((p_score, n_score), 0).t().cpu().numpy()
+
+            y_true = np.zeros_like(matrix)
+            y_true[:, 0] = 1
+            # _, indices = torch.sort(matrix, dim=0, descending=True)
+            # rank = th.nonzero(indices == 0, as_tuple=True)[0]
+            from sklearn.metrics import ndcg_score
+            metric = ndcg_score(y_true, matrix, k=10)
+
         return metric

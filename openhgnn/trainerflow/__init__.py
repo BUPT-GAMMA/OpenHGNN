@@ -51,6 +51,7 @@ SUPPORTED_FLOWS = {
     'node_classification': 'openhgnn.trainerflow.node_classification',
     'semi_supervised_node_classification': 'openhgnn.trainerflow.semi_node_classification',
     'distmult': 'openhgnn.trainerflow.dist_mult',
+    'link_prediction': 'openhgnn.trainerflow.link_prediction',
     'hetgnntrainer': 'openhgnn.trainerflow.hetgnn_trainer',
     'hgttrainer': 'openhgnn.trainerflow.hgt_trainer',
     'nshetrainer': 'openhgnn.trainerflow.nshe_trainer'

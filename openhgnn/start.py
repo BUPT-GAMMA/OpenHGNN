@@ -19,7 +19,6 @@ def OpenHGNN(args):
     else:
         flow = build_flow(args, trainerflow)
         result = flow.train()
-
         return result
 
 
@@ -28,12 +27,14 @@ def get_trainerflow(model, task):
         if task in ['node_classification']:
             return 'entity_classification'
         if task in ['link_prediction']:
-            return 'distmult'
+            return 'link_prediction'
     elif model in ['HetGNN']:
         return 'hetgnntrainer'
     elif model in ['HAN', 'MAGNN', 'GTN']:
         if task in ['node_classification']:
             return 'node_classification'
+        if task in ['link_prediction']:
+            return 'link_prediction'
     elif model in ['HGT', 'HGT_hetero']:
         return 'hgttrainer'
     elif model in ['NSHE']:

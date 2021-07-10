@@ -103,6 +103,7 @@ class EntityClassification(BaseFlow):
         return dict(Acc=test_acc, ValAcc=val_acc)
 
     def _full_train_step(self):
+        self.model.train()
         if self.has_feature == True:
             h = self.hg.ndata['h']
         else:
@@ -115,6 +116,7 @@ class EntityClassification(BaseFlow):
         return loss.item()
 
     def _mini_train_step(self):
+        self.model.train()
         loss_all = 0
         for i, (input_nodes, seeds, blocks) in enumerate(self.train_loader):
             n = i + 1
