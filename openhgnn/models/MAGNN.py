@@ -167,10 +167,7 @@ class MAGNN(BaseModel):
             The embeddings before the output projection. e.g dict['M'] contains embeddings of every node of M type.
         """
         if feat_dict is None:
-            if isinstance(g, dgl.DGLHeteroGraph):
-                feat_dict = g.ndata['feat']
-            else:
-                feat_dict = g[0].srcdata['feat']
+            feat_dict = g.ndata['feat']
 
         h = {}
         for ntype in self.input_projection.keys():
@@ -180,45 +177,12 @@ class MAGNN(BaseModel):
         for i in range(self.num_layers - 1):
             h, _ = self.layers[i](h, self.metapath_idx_dict)
             for ntype in h.keys():
-                h[ntype] = self._get_dstfeat(g, h, i, ntype)
                 h[ntype] = self.activation(h[ntype])
 
         # output layer
         h_output, embedding = self.layers[-1](h, self.metapath_idx_dict)
 
-        return self._get_dstfeat(g, h_output, -1, self.ntypes)
-
-    def _get_dstfeat(self, g, h,  idx, ntypes):
-        '''
-        Description
-        ------------
-        If g is a list of blocks, get the features of dstnodes considered in the idx block(layer) according to ntypes.
-        Otherwise(dgl graph) return h without change.
-
-        Parameters
-        ----------
-        g :
-            the dgl heterogeneous graph or blocks
-        h :
-            the dict of feat, e.g {'M':..., 'A':..., 'D':...}
-        ntypes :
-            If g is a list of blocks, get the features of ntypes. Otherwise it's of no use.
-        idx :
-            If g is a list of blocks, idx will be the index of current block in the list. Otherwise it's of no use.
-
-        Returns
-        -------
-        h_dst : dict
-            The features of dstnodes according to ntypes
-        '''
-
-        h_dst = {}
-        if not isinstance(g, dgl.DGLHeteroGraph): # blocks
-            for ntype in ntypes:
-                h_dst[ntype] = h[ntype][:g[idx].number_of_dst_nodes(ntype)] # FIXME: check again
-        else:
-            h_dst = h
-        return h_dst
+        return h_output
 
 
 class MAGNN_layer(nn.Module):
@@ -554,40 +518,7 @@ def mp_instance_sampler(g, metapath_list, dataset):
     return res
 
 def mini_mp_instance_sampler(seed_nodes, mp_instances, block=None):
-    # FIXME: How to convert the original node idx in mp_instances to new node idx in blocks?
-    '''
-    Description
-    -----------
-    Sampling metapath instances for mini batch training based on seed_nodes and metapath instances.
-
-    Parameters
-    ----------
-    seed_nodes : dict
-        We sample the metapath instances with the seed_nodes as dstnodes of metapath instances. As for a block,
-        Generally the seed_nodes are the dstnodes of first block in sampled blocks.
-
-    mp_instances : dict
-        the metapath instances of the original graph sampled by mp_instance_sampler on the whole graph.
-        We sample the mini batch metapath instances based on this.
-
-    block : object
-        if block is not None, then this method is used for generating metapath instances for block and mini batch train.
-        Otherwise, it may be used for generating blocks in MAGNN_sampler.
-
-    Returns
-    -------
-    mini_mp_inst : dict
-        the mini batch metapath instances of seed_nodes.
-    '''
-
-    def convert_nids(x, ntype):
-        # convert the old_nids in metapath instances to the new_nids in block
-        return np.argwhere(old_nids[ntype] == x)[0][0]
-
     mini_mp_inst = {}
-    if block is not None:
-        old_nids = block.srcdata[dgl.NID]
-        old_nids = dict(zip(old_nids.keys(), [old_nids[ntype].cpu().detach().numpy() for ntype in old_nids.keys()]))
     metapath_list = list(mp_instances.keys())
 
     for ntype in seed_nodes.keys():
@@ -595,7 +526,6 @@ def mini_mp_instance_sampler(seed_nodes, mp_instances, block=None):
         target_mp_types = np.array(metapath_list)[[metapath[0] == ntype for metapath in metapath_list]]
         for metapath in target_mp_types:  # the metapath instances of the certain metapath
             _mp_inst = np.isin(mp_instances[metapath][:, 0], seed_nodes[ntype])
-            # _mp_inst = th.tensor(mp_instances[metapath][_mp_inst])
             _mp_inst = mp_instances[metapath][_mp_inst]
             if block is not None:
                 for i, meta_ntype in enumerate(metapath): # TODO: TOO MANY NETSED LOOPS!
