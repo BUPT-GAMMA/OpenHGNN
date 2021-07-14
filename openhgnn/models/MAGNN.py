@@ -247,29 +247,23 @@ class MAGNN_layer(nn.Module):
             self._output_projection = nn.Linear(in_features=num_heads * in_feats, out_features=num_heads * out_feats)
         nn.init.xavier_normal_(self._output_projection.weight, gain=1.414)
 
-    # def forward(self, g, feat_dict, metapath_idx_dict):
     def forward(self, feat_dict, metapath_idx_dict):
-        # with g.local_scope():
 
         feat_intra = {} # store the latent embeddings of every metapath
         # Intra-metapath latent transformation
         for _metapath in self.metapath_list:
-            # self.intra_metapath_trans(g, feat_dict=feat_dict, metapath=_metapath, metapath_idx_dict=metapath_idx_dict)
             feat_intra[_metapath] = self.intra_metapath_trans(feat_dict=feat_dict, metapath=_metapath,
                                                              metapath_idx_dict=metapath_idx_dict)
 
         # Inter-metapath latent transformation
-        # self.inter_metapath_trans(g, metapath_list=self.metapath_list)
         feat_inter = \
             self.inter_metapath_trans(feat_dict=feat_dict, feat_intra=feat_intra, metapath_list=self.metapath_list)
 
         # output projection
-        # self.output_projection(g)
         feat_final = self.output_projection(feat_inter = feat_inter)
 
         # return final features after output projection (without nonlinear activation) and embedding
         # nonlinear activation will be added in MAGNN
-        # return g.ndata['output'], g.ndata['feat_']
         return feat_final, feat_inter
 
     # def intra_metapath_trans(self, g, feat_dict, metapath, metapath_idx_dict):
@@ -279,17 +273,12 @@ class MAGNN_layer(nn.Module):
 
         # encoder metapath instances
         # intra_metapath_feat: feature matrix of every metapath instance of param metapath
-        # intra_metapath_feat = self.encoder(g, feat_dict, metapath, metapath_idx)
         intra_metapath_feat = self.encoder(feat_dict, metapath, metapath_idx)
+
         # aggregate metapath instances into metapath using ATTENTION
-        # feat_intra = \
-        #     self.intra_attn_layers[metapath](g, [intra_metapath_feat, g.nodes[metapath[0]].data['feat']],
-        #                                      metapath, metapath_idx)
         feat_intra = \
             self.intra_attn_layers[metapath]([intra_metapath_feat, feat_dict[metapath[0]]],
                                              metapath, metapath_idx)
-
-        # g.nodes[metapath[0]].data['{}'.format(metapath) + '_feat_attn'] = feat_intra
         return feat_intra
 
     # def inter_metapath_trans(self, g, metapath_list):
@@ -299,7 +288,6 @@ class MAGNN_layer(nn.Module):
 
         # construct spi, where pi = ['MAM', 'MDM', ...]
         for metapath in metapath_list:
-            # meta_feat = g.nodes[metapath[0]].data['{}_feat_attn'.format(metapath)]
             meta_feat = feat_intra[metapath]
             meta_feat = th.tanh(self.inter_linear[metapath[0]](meta_feat)).mean(dim=0) # s_pi
             meta_s[metapath] = self.inter_attn_vec[metapath[0]](meta_feat) # e_pi
@@ -318,28 +306,18 @@ class MAGNN_layer(nn.Module):
                 meta_b = F.softmax(meta_b, dim=0)
                 # extract corresbonding features of metapath
                 # e.g ['MDM_feat_attn', 'MAM_feat_attn'] if ntype is M
-                # meta_feat = itemgetter(*np.char.add(metapaths, '_feat_attn'))(g.nodes[ntype].data)
                 meta_feat = itemgetter(*metapaths)(feat_intra)
                 # compute the embedding feature of nodes
-                # g.nodes[ntype].data['feat_'] = \
-                #     th.stack([meta_b[i] * meta_feat[i] for i in range(len(meta_b))], dim=0).sum(dim=0)
                 feat_inter[ntype] = th.stack([meta_b[i] * meta_feat[i] for i in range(len(meta_b))], dim=0).sum(dim=0)
             else:
-                # g.nodes[ntype].data['feat_'] = g.nodes[ntype].data['feat']
                 feat_inter[ntype] = feat_dict[ntype]
 
         return feat_inter
 
-    # def encoder(self, g, feat_dict, metapath, metapath_idx):
     def encoder(self, feat_dict, metapath, metapath_idx):
-
-        # device = g.nodes[metapath[0]].data['feat'].device
         device = feat_dict[metapath[0]].device
-        # feat = th.zeros((len(metapath), metapath_idx.shape[0], g.nodes[metapath[0]].data['feat'].shape[1]),
-        #                 device=device)
-        feat = th.zeros((len(metapath), metapath_idx.shape[0], feat_dict[metapath[0]].shape[1]),device=device)
+        feat = th.zeros((len(metapath), metapath_idx.shape[0], feat_dict[metapath[0]].shape[1]), device=device)
         for i, ntype in zip(range(len(metapath)), metapath):
-            # feat[i] = g.nodes[ntype].data['feat'][metapath_idx[:, i]]
             feat[i] = feat_dict[ntype][metapath_idx[:, i]]
         feat = feat.reshape(feat.shape[0], feat.shape[1], feat.shape[2] // 2, 2)
 
@@ -350,7 +328,7 @@ class MAGNN_layer(nn.Module):
             for i in range(1, len(metapath), 1):
                 edge_type = '{}-{}'.format(metapath[i-1], metapath[i])
                 temp_r_vec[i] = self.complex_hada(temp_r_vec[i-1], self.r_vec_dict[edge_type])
-                feat[i] = self.complex_hada(feat[i], temp_r_vec[i], opt = 'feat')
+                feat[i] = self.complex_hada(feat[i], temp_r_vec[i], opt='feat')
 
             feat = feat.reshape(feat.shape[0], feat.shape[1], -1)
             return th.mean(feat, dim=0)
@@ -389,7 +367,6 @@ class MAGNN_layer(nn.Module):
     def output_projection(self, feat_inter):
         feat_final = {}
         for ntype in self.ntypes:
-            # g.nodes[node].data['output'] = self._output_projection(g.nodes[node].data['feat_'])
             feat_final[ntype] = self._output_projection(feat_inter[ntype])
         return feat_final
 
@@ -413,10 +390,7 @@ class MAGNN_attn_intra(nn.Module):
     def reset_parameters(self):
         nn.init.xavier_normal_(self.attn_r, gain=1.414)
 
-    # def forward(self, g, feat, metapath, metapath_idx):
     def forward(self, feat, metapath, metapath_idx):
-        # with g.local_scope():
-            # device = g.device
         device = feat[0].device
         h_meta = self.feat_drop(feat[0]).view(-1, self._num_heads, self._out_feats) # feature matrix of metapath instances
 
@@ -517,61 +491,37 @@ def mp_instance_sampler(g, metapath_list, dataset):
 
     return res
 
-def mini_mp_instance_sampler(seed_nodes, mp_instances, block=None):
+def mini_mp_instance_sampler(seed_nodes, mp_instances):
     mini_mp_inst = {}
     metapath_list = list(mp_instances.keys())
 
     for ntype in seed_nodes.keys():
-        # mini_mp_inst[ntype] = {}
         target_mp_types = np.array(metapath_list)[[metapath[0] == ntype for metapath in metapath_list]]
         for metapath in target_mp_types:  # the metapath instances of the certain metapath
             _mp_inst = np.isin(mp_instances[metapath][:, 0], seed_nodes[ntype])
             _mp_inst = mp_instances[metapath][_mp_inst]
-            if block is not None:
-                for i, meta_ntype in enumerate(metapath): # TODO: TOO MANY NETSED LOOPS!
-                    Map = list(map(lambda x: convert_nids(x, meta_ntype), _mp_inst[:, i]))
-                    _mp_inst[:, i] = np.array(Map)
-
             mini_mp_inst[metapath] = _mp_inst
-
-            # for i in range(len(metapath) - 1):  # traverse the metapath instances to build graph
-            #     edges_idx = th.unique(_mp_inst[:, [i, i + 1]], dim=0)
-            #     graph_data[(metapath[i + 1], metapath[i + 1] + '-' + metapath[i], metapath[i])] = \
-            #         (edges_idx[:, 1], edges_idx[:, 0])
-            #     del edges_idx
-            # del _mp_inst
-
-    # If this method is for generating block metapath instances utilized in mini batch training, we must convert
-    # the old nid to the new nid in block
-    # if block is not None:
-    #     old_nids = block.srcdata[dgl.NID]
-    #     for ntype in mini_mp_inst.keys():
-    #         old_nids[ntype] = old_nids[ntype].cpu().detach().numpy()
-    #         for metapath in mini_mp_inst[ntype].keys():
-    #             Map = map(lambda x: np.argwhere(old_nids[ntype] == x)[0][0],
-    #                       mini_mp_inst[ntype][metapath].cpu().detach().numpy())
-    #             print(1)
 
     return mini_mp_inst
 
-def svm_test(X, y, test_sizes=(0.2, 0.4, 0.6, 0.8), repeat=10):
-    # This method is implemented by author
-    random_states = [182318 + i for i in range(repeat)]
-    result_macro_f1_list = []
-    result_micro_f1_list = []
-    for test_size in test_sizes:
-        macro_f1_list = []
-        micro_f1_list = []
-        for i in range(repeat):
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=test_size, shuffle=True, random_state=random_states[i])
-            svm = LinearSVC(dual=False)
-            svm.fit(X_train, y_train)
-            y_pred = svm.predict(X_test)
-            macro_f1 = f1_score(y_test, y_pred, average='macro')
-            micro_f1 = f1_score(y_test, y_pred, average='micro')
-            macro_f1_list.append(macro_f1)
-            micro_f1_list.append(micro_f1)
-        result_macro_f1_list.append((np.mean(macro_f1_list), np.std(macro_f1_list)))
-        result_micro_f1_list.append((np.mean(micro_f1_list), np.std(micro_f1_list)))
-    return result_macro_f1_list, result_micro_f1_list
+# def svm_test(X, y, test_sizes=(0.2, 0.4, 0.6, 0.8), repeat=10):
+#     # This method is implemented by author
+#     random_states = [182318 + i for i in range(repeat)]
+#     result_macro_f1_list = []
+#     result_micro_f1_list = []
+#     for test_size in test_sizes:
+#         macro_f1_list = []
+#         micro_f1_list = []
+#         for i in range(repeat):
+#             X_train, X_test, y_train, y_test = train_test_split(
+#                 X, y, test_size=test_size, shuffle=True, random_state=random_states[i])
+#             svm = LinearSVC(dual=False)
+#             svm.fit(X_train, y_train)
+#             y_pred = svm.predict(X_test)
+#             macro_f1 = f1_score(y_test, y_pred, average='macro')
+#             micro_f1 = f1_score(y_test, y_pred, average='micro')
+#             macro_f1_list.append(macro_f1)
+#             micro_f1_list.append(micro_f1)
+#         result_macro_f1_list.append((np.mean(macro_f1_list), np.std(macro_f1_list)))
+#         result_micro_f1_list.append((np.mean(micro_f1_list), np.std(micro_f1_list)))
+#     return result_macro_f1_list, result_micro_f1_list

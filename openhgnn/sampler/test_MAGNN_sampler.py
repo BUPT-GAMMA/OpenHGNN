@@ -1,6 +1,6 @@
 # TODO: This file should be deprecated, it's just for testing.
 from openhgnn.models.MAGNN import MAGNN, mp_instance_sampler, mini_mp_instance_sampler
-from openhgnn.sampler.MAGNN_sampler import MAGNN_sampler
+from openhgnn.sampler.MAGNN_sampler import MAGNN_sampler, collate_fn
 from openhgnn.sampler.test_config import CONFIG
 from operator import itemgetter
 import argparse
@@ -8,6 +8,7 @@ import warnings
 import dgl
 import torch
 import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
 
 # def mini_train(model, hg, args):
 #     sampler = MAGNN_sampler(hg, args.num_layers, model.metapath_list, args.dataset)
@@ -53,7 +54,6 @@ import torch.nn.functional as F
 
 # def mini_train(model, hg, args):
 
-
 def load_hg(args):
     hg_dir = 'openhgnn/dataset/'
     hg,_ = dgl.load_graphs(hg_dir+'{}/graph.bin'.format(args.dataset), [0])
@@ -64,10 +64,13 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore')
     args = argparse.Namespace(**CONFIG)
     hg = load_hg(args)
-    sampler = MAGNN_sampler
-
     model = MAGNN.build_model_from_args(args, hg)
-    mini_train(model, hg, args)
+    sampler = MAGNN_sampler(g=hg, n_layers=2, category='M', metapath_list=model.metapath_list)
+    dataloader = DataLoader(dataset=sampler, batch_size=5, shuffle=True, num_workers=0,
+                            collate_fn=collate_fn, drop_last=False)
+    next(iter(dataloader)) # TODO: Add necessary comments in MAGNN_sampler
+    print(1)
+
 
 
 
