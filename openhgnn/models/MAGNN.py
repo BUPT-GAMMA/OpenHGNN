@@ -18,7 +18,7 @@ from . import BaseModel, register_model
 '''
 model
 '''
-
+# FIXME: !!!mini batch need to update self.metapath_idx_dict = mp_instances!!!
 @register_model('MAGNN')
 class MAGNN(BaseModel):
     @classmethod

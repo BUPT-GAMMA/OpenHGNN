@@ -6,7 +6,7 @@ from operator import itemgetter
 import argparse
 import warnings
 import dgl
-import torch
+import torch as th
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
@@ -65,10 +65,30 @@ if __name__ == '__main__':
     args = argparse.Namespace(**CONFIG)
     hg = load_hg(args)
     model = MAGNN.build_model_from_args(args, hg)
-    sampler = MAGNN_sampler(g=hg, n_layers=2, category='M', metapath_list=model.metapath_list)
-    dataloader = DataLoader(dataset=sampler, batch_size=5, shuffle=True, num_workers=0,
+    sampler = MAGNN_sampler(g=hg, n_layers=args.num_layers, category=args.category, metapath_list=model.metapath_list)
+    dataloader = DataLoader(dataset=sampler, batch_size=args.batch_size, shuffle=True, num_workers=0,
                             collate_fn=collate_fn, drop_last=False)
-    next(iter(dataloader)) # TODO: Add necessary comments in MAGNN_sampler
+
+    optimizer = th.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+
+    # TODO: Add valuate and test step
+    # TODO: just test if the whole pipeline can work without testing the effectiveness
+    batch_idx = 0
+    for epoch in range(args.max_epoch):
+        for sub_g, mini_mp_inst in dataloader:
+            model.mp_instances = mini_mp_inst
+            pred = model(sub_g)[args.category]
+            loss = F.cross_entropy(pred, sub_g.nodes[args.category].data['labels'])
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            print("batch_idx:{}, the batch_size is {}, the loss of this batch is {}".format(
+                batch_idx, args.batch_size, loss.item()
+            ))
+            batch_idx += 1
+
+    # next(iter(dataloader))
     print(1)
 
 
