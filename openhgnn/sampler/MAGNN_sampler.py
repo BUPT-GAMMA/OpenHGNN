@@ -29,21 +29,23 @@ class MAGNN_sampler(Dataset):
             The metapath instances corresponding to the sampled graph. The nids in mp instances are of original version.
         DGLGraph
             The original heterogeneous subgraph.
+
+        Notes
+        -----
+        Sampling neighbors based on seed_nodes and metapath instances mp_inst[i],
+        we only need to sample mp_inst from all metapath instances with seed_nodes as mp_inst[i][0] and
+        sample neighbors as mp_inst[i][1, 2, ...]. Here we consider mp_inst[i][0] as dst_nodes.
+
+        But the sampled mp_inst above does not contain all the mp_inst of the sampled subgraph.
+        For example, if seed_nodes contain M1 and we sample neighbors as A1, M2 based on metapath instance M1-A1-M2,
+        we'd lose metapath instance like M2-A1-M1 because M2 is not one of the seed_nodes while M2-A1-M1 absolutely
+        one of the metapath instances of the sampled subgraph.
+
         '''
         # TODO: Too many loops in sample_frontier(), may need some optimization
 
-        # def convert_mp_nids(old_metapath_dict, old_nids):
-        #     # convert the old_nids in metapath instances to the new_nids in the subgraph
-        #     for meta in old_metapath_dict.keys():
-        #         for i, ntype in enumerate(meta):
-        #             old_metapath_dict[meta][:, i] = \
-        #                 np.array(
-        #                     list(map(lambda x: np.argwhere(old_nids[ntype] == x)[0][0], old_metapath_dict[meta][:, i]))
-        #                 )
-        #
-        #     return old_metapath_dict
-
         seed_nodes = {self.category: idx}
+        _seed_nodes = seed_nodes
         if self.n_layers < 1:
             raise ValueError("Wrong value of number of layers.")
         for _ in range(self.n_layers):
@@ -60,11 +62,11 @@ class MAGNN_sampler(Dataset):
             for ntype in seed_nodes.keys():
                 seed_nodes[ntype] = np.unique(seed_nodes[ntype])
 
-        # mini_mp_inst = convert_mp_nids(mini_mp_inst, seed_nodes)
-
+        for meta, idx in mini_mp_inst.items():
+            mini_mp_inst[meta] = np.unique(np.concatenate((idx, np.flip(idx, axis=1))), axis=0)
         # Here seed_nodes are the nodes sampled from original graph with {self.category: idx} as seed_nodes
         # while mini_mp_inst is corresponding mini metapath instances
-        return seed_nodes, mini_mp_inst, self.g
+        return seed_nodes, mini_mp_inst, _seed_nodes, self.g
 
     def __len__(self):
         return len(self.mp_inst)
@@ -99,15 +101,18 @@ def collate_fn(batch):
 
     nids = {}
     mini_mp_inst = {}
+    seed_nodes = {}
 
     ntypes = []
     meta_types = []
+    seed_ntypes = []
+
     [ntypes.extend(list(_batch[0].keys())) for _batch in batch]
     [meta_types.extend(list(_batch[1].keys())) for _batch in batch]
-    ntypes, meta_types = set(ntypes), set(meta_types)
+    [seed_ntypes.extend(list(_batch[2].keys())) for _batch in batch]
+    ntypes, meta_types, seed_ntypes = set(ntypes), set(meta_types), set(seed_ntypes)
 
     for _batch in batch:
-        # mini_mp_inst = convert_mp_nids(_batch[1], _batch[0])
         for ntype in ntypes:
             if ntype not in _batch[0].keys():
                 continue
@@ -125,17 +130,25 @@ def collate_fn(batch):
             else:
                 mini_mp_inst[meta_type] = _batch[1][meta_type]
             mini_mp_inst[meta_type] = np.unique(mini_mp_inst[meta_type], axis=0)
+        for seed_ntype in seed_ntypes:
+            if seed_ntype not in _batch[2].keys():
+                continue
+            _batch[2][seed_ntype] = np.array([_batch[2][seed_ntype]])
+            if seed_ntype in seed_nodes.keys():
+                seed_nodes[seed_ntype] = np.concatenate((seed_nodes[seed_ntype], _batch[2][seed_ntype]),
+                                                         axis=0)
+            else:
+                seed_nodes[seed_ntype] = _batch[2][seed_ntype]
+            seed_nodes[seed_ntype] = np.unique(seed_nodes[seed_ntype], axis=0)
+
 
     for ntype in nids.keys():
         nids[ntype] = np.sort(np.unique(nids[ntype], axis=0), axis=0)
     for meta_type in mini_mp_inst.keys():
         mini_mp_inst[meta_type] = np.unique(mini_mp_inst[meta_type], axis=0)
+    for seed_ntype in seed_ntypes:
+        seed_nodes[seed_ntype] = np.unique(seed_nodes[seed_ntype], axis=0)
 
     mini_mp_inst = convert_mp_nids(mini_mp_inst, nids)
-    _subgraph = dgl.node_subgraph(batch[0][2], nids)
-    # feat_dict = {}
-    # for ntype in nids.keys():
-    #     feat_dict[ntype] = batch[0][2].nodes[ntype].data['feat'][nids[ntype]]
-
-    # return tuple((feat_dict, mini_mp_inst))
-    return _subgraph, mini_mp_inst
+    _subgraph = dgl.node_subgraph(batch[0][3], nids)
+    return _subgraph, mini_mp_inst, seed_nodes

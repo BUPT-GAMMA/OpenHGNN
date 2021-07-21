@@ -53,7 +53,7 @@ from torch.utils.data import Dataset, DataLoader
 #     return loss_all
 
 # def mini_train(model, hg, args):
-
+# TODO: obtain seed_nodes layer-by-layer so as to deal with the problems of 'zero in-degrees'
 def load_hg(args):
     hg_dir = 'openhgnn/dataset/'
     hg,_ = dgl.load_graphs(hg_dir+'{}/graph.bin'.format(args.dataset), [0])
@@ -70,13 +70,14 @@ if __name__ == '__main__':
                             collate_fn=collate_fn, drop_last=False)
 
     optimizer = th.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-
+    model = model.to(args.device)
     # TODO: Add valuate and test step
     # TODO: just test if the whole pipeline can work without testing the effectiveness
     batch_idx = 0
     for epoch in range(args.max_epoch):
-        for sub_g, mini_mp_inst in dataloader:
-            model.mp_instances = mini_mp_inst
+        for sub_g, mini_mp_inst, seed_nodes in dataloader:
+            model.mini_reset_params(mini_mp_inst)
+            sub_g = sub_g.to(args.device)
             pred = model(sub_g)[args.category]
             loss = F.cross_entropy(pred, sub_g.nodes[args.category].data['labels'])
             optimizer.zero_grad()

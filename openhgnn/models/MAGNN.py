@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
-import scipy
 import os
-import re
 import pickle
 import dgl
 from dgl import function as fn
@@ -10,15 +8,34 @@ from dgl.nn.functional import edge_softmax
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 from dgl.utils import expand_as_pair
 from operator import itemgetter
 from . import BaseModel, register_model
 
+''' NOTE some ideas about mini-batch by Jiahang Li
+
+We encounter problems about zero in-degrees in mini-batch version of MAGNN, which is, given seed_nodes, we sample 
+neighbors of seed_nodes based on metapath instances. If we refer to 'neighbors' as neighbors based on metapath instances
+here, there must be some of neighbors of seed_nodes losing their own neighbors in the sampled subgraph leading to
+'zero in-degrees' problem. To obtain 'neighbors of neighbors', we need to sample one more layer, which is unnecessary. 
+Nodes without incoming edges cannot be updated and by default our MAGNN may lose these nodes.
+
+There're some methods to solve this problem. Firstly the classic method 'adding self loops' is of no help because 
+neighborhood aggregation is based on metapath instances. Secondly we can keep features of nodes without in-degrees and
+this method can be employed in full-batch training as well as mini-batch training. Lastly the author drop unnecessary 
+nodes (edges) in mini-batch training. However, the dataset is so perfect that we have not encountered this circumstance
+in full-batch training so that the author didn't consider about this problem. 
+
+We can see that the second method actually performs the same as the last method, because if we drop unnecessary nodes,
+it'd be unimportant whether the dropped nodes keeping features or not. However, the second method can be utilized in 
+full batch training.
+
+Here we only utilize the method of author in mini-batch without considering the same problems in full-batch.
+'''
+
 '''
 model
 '''
-# FIXME: !!!mini batch need to update self.metapath_idx_dict = mp_instances!!!
 @register_model('MAGNN')
 class MAGNN(BaseModel):
     @classmethod
@@ -30,7 +47,7 @@ class MAGNN(BaseModel):
             # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
             in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
             # in_feats = {'M': 2, 'D': 2, 'A': 2} # TODO: This is a test need to be deprecated.
-            mp_instances = mp_instance_sampler(hg, metapath_list, 'imdb4MAGNN')
+            metapath_idx_dict = mp_instance_sampler(hg, metapath_list, 'imdb4MAGNN')
 
         elif args.dataset == 'dblp4MAGNN':
             # build model
@@ -38,7 +55,7 @@ class MAGNN(BaseModel):
             edge_type_list = ['A-P', 'P-A', 'P-T', 'T-P', 'P-V', 'V-P']
             # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
             in_feats = {'A': 334, 'P': 14328, 'T': 7723, 'V': 20}
-            mp_instances = mp_instance_sampler(hg, metapath_list, 'dblp4MAGNN')
+            metapath_idx_dict = mp_instance_sampler(hg, metapath_list, 'dblp4MAGNN')
 
         return cls(in_feats=in_feats,
                    h_feats=args.hidden_dim,
@@ -50,12 +67,12 @@ class MAGNN(BaseModel):
                    edge_type_list=edge_type_list,
                    dropout_rate=args.dropout,
                    encoder_type=args.encoder_type,
-                   mp_instances=mp_instances)
+                   metapath_idx_dict=metapath_idx_dict)
 
 
 
     def __init__(self, in_feats, h_feats, inter_attn_feats, num_heads, num_classes, num_layers,
-                 metapath_list, edge_type_list, dropout_rate, mp_instances, encoder_type='RotateE', activation=F.elu):
+                 metapath_list, edge_type_list, dropout_rate, metapath_idx_dict, encoder_type='RotateE', activation=F.elu):
         r"""
 
         Description
@@ -126,7 +143,8 @@ class MAGNN(BaseModel):
         self.feat_drop = nn.Dropout(p=dropout_rate)
 
         # extract ntypes that have corresponding metapath
-        # If there're only metapaths like ['MAM', 'MDM'], 'A' and 'D' have no metapath.
+        # If there're only metapaths like ['MAM', 'MDM'], 'A' and 'D' have no metapath, so that 'A' and 'D' shouldn't
+        # be considered as nodes that need to aggregate information from metapath.
         self.dst_ntypes = set([metapath[0] for metapath in metapath_list])
 
         # hidden layers
@@ -143,7 +161,25 @@ class MAGNN(BaseModel):
                         metapath_list=metapath_list, ntypes=self.ntypes, edge_type_list=edge_type_list,
                         dst_ntypes=self.dst_ntypes, encoder_type=encoder_type, last_layer=True))
 
-        self.metapath_idx_dict = mp_instances
+        self.metapath_idx_dict = metapath_idx_dict
+
+    def mini_reset_params(self, new_metapth_idx_dict):
+        '''
+
+        Description
+        -----------
+        This method is utilized for reset some parameters including metapath_idx_dict, metapath_list, dst_ntypes...
+        Other Parameters like weight matrix don't need to be updated.
+
+        '''
+        self.metapath_idx_dict = new_metapth_idx_dict
+        self.metapath_list = list(new_metapth_idx_dict.keys())
+        self.dst_ntypes = set([meta[0] for meta in self.metapath_list])
+
+        for layer in self.layers:
+            layer.metapath_list = self.metapath_list
+            layer.dst_ntypes = self.dst_ntypes
+
 
     def forward(self, g, feat_dict=None):
         r"""
@@ -285,7 +321,6 @@ class MAGNN_layer(nn.Module):
     def inter_metapath_trans(self, feat_dict, feat_intra, metapath_list):
         meta_s = {}
         feat_inter = {}
-
         # construct spi, where pi = ['MAM', 'MDM', ...]
         for metapath in metapath_list:
             meta_feat = feat_intra[metapath]
@@ -452,8 +487,6 @@ def mp_instance_sampler(g, metapath_list, dataset):
     metapath instances will be extracted directly from the disk if they exists.
 
     """
-    # todo: is there a better tool than pandas Dataframe implementing MERGE?
-
     file_dir = 'openhgnn/output/MAGNN/'
     file_addr = file_dir + '{}'.format(dataset) + '_mp_inst.pkl'
 
