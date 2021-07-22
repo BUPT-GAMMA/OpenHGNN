@@ -150,14 +150,26 @@ class MAGNN(BaseModel):
         Other Parameters like weight matrix don't need to be updated.
 
         '''
+        self.backup = {}
+        self.backup['metapath_idx_dict'] = self.metapath_idx_dict
         self.metapath_idx_dict = new_metapth_idx_dict
+        self.backup['metapath_list'] = self.metapath_list
         self.metapath_list = list(new_metapth_idx_dict.keys())
+        self.backup['dst_ntypes'] = self.dst_ntypes
         self.dst_ntypes = set([meta[0] for meta in self.metapath_list])
 
         for layer in self.layers:
             layer.metapath_list = self.metapath_list
             layer.dst_ntypes = self.dst_ntypes
 
+    def restore_params(self):
+        self.metapath_idx_dict = self.backup['metapath_idx_dict']
+        self.metapath_list = self.backup['metapath_list']
+        self.dst_ntypes = self.backup['dst_ntypes']
+
+        for layer in self.layers:
+            layer.metapath_list = self.metapath_list
+            layer.dst_ntypes = self.dst_ntypes
 
     def forward(self, g, feat_dict=None):
         r"""

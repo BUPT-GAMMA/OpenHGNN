@@ -4,7 +4,6 @@ import torch as th
 from torch.utils.data import Dataset
 from openhgnn.models.MAGNN import mp_instance_sampler, mini_mp_instance_sampler
 
-
 class MAGNN_sampler(Dataset):
     def __init__(self, g, n_layers, category, metapath_list, dataset_name='imdb4MAGNN'):
         self.g = g
@@ -42,7 +41,6 @@ class MAGNN_sampler(Dataset):
         one of the metapath instances of the sampled subgraph.
 
         '''
-        # TODO: Too many loops in sample_frontier(), may need some optimization
 
         seed_nodes = {self.category: idx}
         _seed_nodes = seed_nodes
@@ -69,7 +67,7 @@ class MAGNN_sampler(Dataset):
         return seed_nodes, mini_mp_inst, _seed_nodes, self.g
 
     def __len__(self):
-        return len(self.mp_inst)
+        return self.g.number_of_nodes(self.category)
 
 def collate_fn(batch):
     '''
@@ -136,19 +134,24 @@ def collate_fn(batch):
             _batch[2][seed_ntype] = np.array([_batch[2][seed_ntype]])
             if seed_ntype in seed_nodes.keys():
                 seed_nodes[seed_ntype] = np.concatenate((seed_nodes[seed_ntype], _batch[2][seed_ntype]),
-                                                         axis=0)
+                                                        axis=0)
             else:
                 seed_nodes[seed_ntype] = _batch[2][seed_ntype]
             seed_nodes[seed_ntype] = np.unique(seed_nodes[seed_ntype], axis=0)
-
 
     for ntype in nids.keys():
         nids[ntype] = np.sort(np.unique(nids[ntype], axis=0), axis=0)
     for meta_type in mini_mp_inst.keys():
         mini_mp_inst[meta_type] = np.unique(mini_mp_inst[meta_type], axis=0)
-    for seed_ntype in seed_ntypes:
-        seed_nodes[seed_ntype] = np.unique(seed_nodes[seed_ntype], axis=0)
 
     mini_mp_inst = convert_mp_nids(mini_mp_inst, nids)
-    _subgraph = dgl.node_subgraph(batch[0][3], nids)
+    _subgraph = dgl.node_subgraph(batch[0][3], nids, store_ids=True)
+
+    for seed_ntype in seed_ntypes:
+        seed_nodes[seed_ntype] = np.unique(seed_nodes[seed_ntype], axis=0)
+        _nids = _subgraph.nodes[seed_ntype].data[dgl.NID].cpu().numpy()
+        seed_nodes[seed_ntype] = np.array(
+            list(map(lambda x: np.argwhere(_nids == x)[0][0], seed_nodes[seed_ntype]))
+        )
+
     return _subgraph, mini_mp_inst, seed_nodes
