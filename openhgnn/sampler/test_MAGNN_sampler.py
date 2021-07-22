@@ -1,59 +1,14 @@
 # TODO: This file should be deprecated, it's just for testing.
-from openhgnn.models.MAGNN import MAGNN, mp_instance_sampler, mini_mp_instance_sampler
+from openhgnn.models.MAGNN import MAGNN
 from openhgnn.sampler.MAGNN_sampler import MAGNN_sampler, collate_fn
 from openhgnn.sampler.test_config import CONFIG
-from operator import itemgetter
 import argparse
 import warnings
 import dgl
 import torch as th
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
-# def mini_train(model, hg, args):
-#     sampler = MAGNN_sampler(hg, args.num_layers, model.metapath_list, args.dataset)
-#     mp_instances = model.metapath_idx_dict
-#
-#     category = list(hg.ndata['labels'].keys())[0]
-#     train_mask = hg.nodes[category].data['train_mask']
-#     test_mask = hg.nodes[category].data['test_mask']
-#     valid_mask = hg.nodes[category].data['val_mask']
-#     train_nids = {category: hg.nodes(category)[train_mask]}
-#     loader = dgl.dataloading.NodeDataLoader(
-#         g=hg.to('cpu'), nids=train_nids, block_sampler=sampler, batch_size=args.batch_size, shuffle=True, drop_last=False,
-#         num_workers=0, device=args.device)
-#
-#     model.train()
-#     loss_all = 0
-#     for i, (input_nodes, seeds, blocks) in enumerate(loader):
-#         blocks = [blk.to(args.device) for blk in blocks]
-#         lbl = blocks[-1].dstnodes[category].data['labels']
-#         feat = blocks[0].srcdata['feat']
-#         if args.num_layers == 1:
-#             seed_nodes = {category: seeds[category]}
-#         else:
-#             seed_nodes = blocks[1].srcdata[dgl.NID]
-#         mini_mp_instances = mini_mp_instance_sampler(seed_nodes=seed_nodes, mp_instances=mp_instances,
-#                                                      block=blocks[0])
-#         # TODO: Preprocess
-#         model.metapath_idx_dict = mini_mp_instances
-#         model.metapath_list = list(mini_mp_instances.keys())
-#         model.dst_ntypes = [meta[0] for meta in model.metapath_list]
-#         for layer in model.layers:
-#             layer.metapath_list = model.metapath_list
-#             layer.dst_ntypes = model.dst_ntypes
-#
-#         # TODO: Preprocess IS IT RIGHT???
-#         logits = model(blocks, feat)[category]
-#         loss = F.cross_entropy(logits, lbl)
-#         loss_all += loss.item()
-#         optimizer.zero_grad()
-#         loss.backward()
-#         optimizer.step()
-#     return loss_all
-
-# def mini_train(model, hg, args):
-# TODO: obtain seed_nodes layer-by-layer so as to deal with the problems of 'zero in-degrees'
 def load_hg(args):
     hg_dir = 'openhgnn/dataset/'
     hg,_ = dgl.load_graphs(hg_dir+'{}/graph.bin'.format(args.dataset), [0])
@@ -71,15 +26,15 @@ if __name__ == '__main__':
 
     optimizer = th.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     model = model.to(args.device)
-    # TODO: Add valuate and test step
-    # TODO: just test if the whole pipeline can work without testing the effectiveness
     batch_idx = 0
+
     for epoch in range(args.max_epoch):
         for sub_g, mini_mp_inst, seed_nodes in dataloader:
             model.mini_reset_params(mini_mp_inst)
             sub_g = sub_g.to(args.device)
-            pred = model(sub_g)[args.category]
-            loss = F.cross_entropy(pred, sub_g.nodes[args.category].data['labels'])
+            pred = model(sub_g)[args.category][seed_nodes[args.category]]
+            lbl = sub_g.nodes[args.category].data['labels'][seed_nodes[args.category]]
+            loss = F.cross_entropy(pred, lbl)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -89,7 +44,6 @@ if __name__ == '__main__':
             ))
             batch_idx += 1
 
-    # next(iter(dataloader))
     print(1)
 
 

@@ -12,27 +12,6 @@ from dgl.utils import expand_as_pair
 from operator import itemgetter
 from . import BaseModel, register_model
 
-''' NOTE some ideas about mini-batch by Jiahang Li
-
-We encounter problems about zero in-degrees in mini-batch version of MAGNN, which is, given seed_nodes, we sample 
-neighbors of seed_nodes based on metapath instances. If we refer to 'neighbors' as neighbors based on metapath instances
-here, there must be some of neighbors of seed_nodes losing their own neighbors in the sampled subgraph leading to
-'zero in-degrees' problem. To obtain 'neighbors of neighbors', we need to sample one more layer, which is unnecessary. 
-Nodes without incoming edges cannot be updated and by default our MAGNN may lose these nodes.
-
-There're some methods to solve this problem. Firstly the classic method 'adding self loops' is of no help because 
-neighborhood aggregation is based on metapath instances. Secondly we can keep features of nodes without in-degrees and
-this method can be employed in full-batch training as well as mini-batch training. Lastly the author drop unnecessary 
-nodes (edges) in mini-batch training. However, the dataset is so perfect that we have not encountered this circumstance
-in full-batch training so that the author didn't consider about this problem. 
-
-We can see that the second method actually performs the same as the last method, because if we drop unnecessary nodes,
-it'd be unimportant whether the dropped nodes keeping features or not. However, the second method can be utilized in 
-full batch training.
-
-Here we only utilize the method of author in mini-batch without considering the same problems in full-batch.
-'''
-
 '''
 model
 '''
@@ -46,7 +25,6 @@ class MAGNN(BaseModel):
             edge_type_list = ['A-M', 'M-A', 'D-M', 'M-D']
             # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
             in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
-            # in_feats = {'M': 2, 'D': 2, 'A': 2} # TODO: This is a test need to be deprecated.
             metapath_idx_dict = mp_instance_sampler(hg, metapath_list, 'imdb4MAGNN')
 
         elif args.dataset == 'dblp4MAGNN':
@@ -302,7 +280,6 @@ class MAGNN_layer(nn.Module):
         # nonlinear activation will be added in MAGNN
         return feat_final, feat_inter
 
-    # def intra_metapath_trans(self, g, feat_dict, metapath, metapath_idx_dict):
     def intra_metapath_trans(self, feat_dict, metapath, metapath_idx_dict):
 
         metapath_idx = metapath_idx_dict[metapath]
@@ -317,7 +294,6 @@ class MAGNN_layer(nn.Module):
                                              metapath, metapath_idx)
         return feat_intra
 
-    # def inter_metapath_trans(self, g, metapath_list):
     def inter_metapath_trans(self, feat_dict, feat_intra, metapath_list):
         meta_s = {}
         feat_inter = {}
@@ -434,14 +410,15 @@ class MAGNN_attn_intra(nn.Module):
 
         graph_data = {
             ('meta_inst', 'meta2{}'.format(metapath[0]), metapath[0]): (th.arange(0, metapath_idx.shape[0]),
-                                                      th.tensor(metapath_idx[:, 0]))
+                                                      th.tensor(metapath_idx[:, 0]), )
         }
+        num_nodes_dict = {'meta_inst': metapath_idx.shape[0], metapath[0]: feat[1].shape[0]}
 
+        g_meta = dgl.heterograph(graph_data, num_nodes_dict=num_nodes_dict).to(device)
 
-        g_meta = dgl.heterograph(graph_data).to(device)
-
-        # feature vector of metapath instances
+        # feature vector of metapath instances and nodes
         g_meta.nodes['meta_inst'].data.update({'feat_src':h_meta, 'er':er})
+        # g_meta.nodes[metapath[0]].data.update({'feat':feat[1]})
 
         # compute attention without concat with hv
         g_meta.apply_edges(func=fn.copy_u('er', 'e'), etype='meta2{}'.format(metapath[0]))
@@ -450,6 +427,7 @@ class MAGNN_attn_intra(nn.Module):
         g_meta.edata['a'] = self.attn_drop(edge_softmax(g_meta, e))
 
         # message passing, there's only one edge type
+        # by default DGL would fill nodes without in-degree with zero
         g_meta.update_all(message_func=fn.u_mul_e('feat_src', 'a', 'm'), reduce_func=fn.sum('m', 'feat'))
 
         feat = self.activation(g_meta.dstdata['feat'])
