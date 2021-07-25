@@ -21,8 +21,9 @@ if __name__ == '__main__':
     args = argparse.Namespace(**CONFIG)
     hg = load_hg(args)
     model = MAGNN.build_model_from_args(args, hg)
-    sampler = MAGNN_sampler(g=hg, n_layers=args.num_layers, category=args.category, metapath_list=model.metapath_list)
-    dataloader = DataLoader(dataset=sampler, batch_size=args.batch_size, shuffle=True, num_workers=4,
+    sampler = MAGNN_sampler(g=hg, n_layers=args.num_layers, category=args.category,
+                            metapath_list=model.metapath_list, dataset_name='dblp4MAGNN')
+    dataloader = DataLoader(dataset=sampler, batch_size=args.batch_size, shuffle=True, num_workers=3,
                             collate_fn=collate_fn, drop_last=False)
 
     optimizer = th.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -33,8 +34,11 @@ if __name__ == '__main__':
         t = time.perf_counter()
         loss_all = 0
         model.train()
+        print("...Start the mini batch training...")
         for sub_g, mini_mp_inst, seed_nodes in dataloader:
             print("Sampling {} seed_nodes with duration(s): {}".format(args.batch_size, time.perf_counter() - t))
+            print("The details: {}".format(sub_g))
+            print()
             model.mini_reset_params(mini_mp_inst)
             sub_g = sub_g.to(args.device)
             pred = model(sub_g)[args.category][seed_nodes[args.category]]
@@ -48,6 +52,7 @@ if __name__ == '__main__':
             print("batch_idx:{}, the batch_size is {}, the loss of this batch is {}".format(
                 batch_idx, args.batch_size, loss.item()
             ))
+            print()
             batch_idx += 1
             t = time.perf_counter()
         print()
@@ -59,6 +64,7 @@ if __name__ == '__main__':
             lbl_eval = hg.nodes[args.category].data['labels']
             loss_eval = F.cross_entropy(pred_eval, lbl_eval)
         print("Epoch: {}, train_loss: {}, eval_loss: {}".format(epoch, loss_all / batch_idx, loss_eval))
+        batch_idx = 0
 
 
 
