@@ -1,13 +1,12 @@
 import torch as th
 import torch.nn as nn
 import dgl.nn as dglnn
-import dgl.function as fn
 import torch.nn.functional as F
-from dgl.utils import expand_as_pair
-from openhgnn.utils.utils import ccorr
 from . import BaseModel, register_model
+from .micro_layer import CompConv
 from openhgnn.utils.dgl_graph import edata_in_out_mask
 from ..utils import get_nodes_dict
+
 '''
 Here, we present the implementation details for each task used for evaluation in the paper. 
 For all the tasks, we used COMPGCN build on PyTorch geometric framework (Fey & Lenssen, 2019).
@@ -28,13 +27,14 @@ class CompGCN(BaseModel):
     """
     The models of the simplified CompGCN, without using basis vector, for a heterogeneous graph.
     """
+
     @classmethod
     def build_model_from_args(cls, args, hg):
         return cls(args.in_dim, args.hidden_dim, args.out_dim,
                    hg.etypes,
                    get_nodes_dict(hg), len(hg.etypes),
-            args.n_layers, comp_fn=args.comp_fn, dropout=args.dropout
-        )
+                   args.n_layers, comp_fn=args.comp_fn, dropout=args.dropout
+                   )
 
     def __init__(self, in_dim, hid_dim, out_dim, etypes, n_nodes, n_rels, num_layers=2, comp_fn='sub', dropout=0.0,
                  activation=F.relu, batchnorm=True):
@@ -56,29 +56,29 @@ class CompGCN(BaseModel):
 
         self.r_embedding = nn.Parameter(th.FloatTensor(self.n_rels + 1, self.in_dim))
 
-        self.layers.append(CompGraphConv(self.in_dim,
-                                         self.hid_dim,
-                                         self.rel_names,
-                                         comp_fn=self.comp_fn,
-                                         activation=self.activation,
-                                         batchnorm=self.batchnorm,
-                                         dropout=self.dropout))
+        self.layers.append(CompGraphConvLayer(self.in_dim,
+                                              self.hid_dim,
+                                              self.rel_names,
+                                              comp_fn=self.comp_fn,
+                                              activation=self.activation,
+                                              batchnorm=self.batchnorm,
+                                              dropout=self.dropout))
 
         # Hidden layers with n - 1 CompGraphConv layers
         for i in range(self.num_layer - 2):
-            self.layers.append(CompGraphConv(self.hid_dim,
-                                             self.hid_dim,
-                                             self.rel_names,
-                                             comp_fn=self.comp_fn,
-                                             activation=self.activation,
-                                             batchnorm=self.batchnorm,
-                                             dropout=self.dropout))
+            self.layers.append(CompGraphConvLayer(self.hid_dim,
+                                                  self.hid_dim,
+                                                  self.rel_names,
+                                                  comp_fn=self.comp_fn,
+                                                  activation=self.activation,
+                                                  batchnorm=self.batchnorm,
+                                                  dropout=self.dropout))
 
         # Output layer with the output class
-        self.layers.append(CompGraphConv(self.hid_dim,
-                                         self.out_dim,
-                                         self.rel_names,
-                                         comp_fn=self.comp_fn))
+        self.layers.append(CompGraphConvLayer(self.hid_dim,
+                                              self.out_dim,
+                                              self.rel_names,
+                                              comp_fn=self.comp_fn))
         nn.init.xavier_uniform_(self.r_embedding)
 
     def forward(self, hg, n_feats):
@@ -101,11 +101,18 @@ class CompGCN(BaseModel):
         edata_in_out_mask(hg)
 
 
-class CompGraphConv(nn.Module):
+class CompGraphConvLayer(nn.Module):
     """One layer of simplified CompGCN."""
 
-    def __init__(self, in_dim, out_dim, rel_names, comp_fn='sub', activation=None, batchnorm=False, dropout=0):
-        super(CompGraphConv, self).__init__()
+    def __init__(self,
+                 in_dim,
+                 out_dim,
+                 rel_names,
+                 comp_fn='sub',
+                 activation=None,
+                 batchnorm=False,
+                 dropout=0):
+        super(CompGraphConvLayer, self).__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.comp_fn = comp_fn
@@ -126,12 +133,15 @@ class CompGraphConv(nn.Module):
         # define weights of the 1 relation matrix
         self.W_R = nn.Linear(self.in_dim, self.out_dim)
         self.conv = dglnn.HeteroGraphConv({
-            rel: Micro_CompConv(comp_fn=comp_fn)
+            rel: CompConv(comp_fn=comp_fn,
+                          norm='right',
+                          _allow_zero_in_degree=True)
             for rel in rel_names
         })
 
     def forward(self, hg, n_in_feats, r_feats):
-        """Compute one layer of composition transfer for one relation only in a
+        """
+        Compute one layer of composition transfer for one relation only in a
         homogeneous graph with bidirectional edges.
         """
         with hg.local_scope():
@@ -146,7 +156,7 @@ class CompGraphConv(nn.Module):
                     W = self.W_I
                 else:
                     W = self.W_O
-                wdict[etype] = {'weight': W, 'h_e': r_feats[i+1]}
+                wdict[etype] = {'Linear': W, 'h_e': r_feats[i + 1]}
 
             if hg.is_block:
                 inputs_src = n_in_feats
@@ -185,46 +195,3 @@ class CompGraphConv(nn.Module):
         if self.actvation is not None:
             r_out_feats = self.actvation(r_out_feats)
         return outputs, r_out_feats
-
-
-class Micro_CompConv(nn.Module):
-    def __init__(self, comp_fn):
-        super(Micro_CompConv, self).__init__()
-        self._norm = 'right'
-        self.comp_fn = comp_fn
-        if self.comp_fn == 'sub':
-            self.aggregate = fn.u_sub_e('h', 'h', out='comp_h')
-        elif self.comp_fn == 'mul':
-            self.aggregate = fn.u_mul_e('h', 'h', out='comp_h')
-        elif self.comp_fn == 'ccorr':
-            self.aggregate = lambda edges: {'comp_h': ccorr(edges.src['h'], edges.data['h'])}
-        else:
-            raise Exception('Only supports sub, mul, and ccorr')
-
-    def forward(self, graph, feat, h_e, weight):
-        with graph.local_scope():
-            graph.edata['h'] = h_e.expand(graph.num_edges(), -1)
-            import dgl
-            feat_src, feat_dst = expand_as_pair(feat, graph)
-            graph.srcdata['h'] = feat_src
-            # Compute composition function in 4 steps
-            # Step 1: compute composition by edge in the edge direction, and store results in edges.
-            graph.apply_edges(self.aggregate)
-
-            # Step 2: use extracted edge direction to compute in and out edges
-            graph.edata['new_comp_h'] = weight(graph.edata['comp_h'])
-            # Step 3: sum comp results to both src and dst nodes
-            graph.update_all(fn.copy_e('new_comp_h', 'm'), fn.sum('m', 'h'))
-            rst = graph.dstdata['h']
-
-            if self._norm != 'none':
-                degs = graph.in_degrees().float().clamp(min=1)
-                if self._norm == 'both':
-                    norm = th.pow(degs, -0.5)
-                else:
-                    norm = 1.0 / degs
-                shp = norm.shape + (1,) * (feat_dst.dim() - 1)
-                norm = th.reshape(norm, shp)
-                rst = rst * norm
-
-            return rst

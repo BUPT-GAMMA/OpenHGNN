@@ -21,6 +21,7 @@ class Config(object):
         except:
             print("failed!")
         # training dataset path
+        self.seed = 0
         self.task = task
         self.model = model
         self.dataset = dataset

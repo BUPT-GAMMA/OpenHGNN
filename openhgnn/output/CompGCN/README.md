@@ -2,6 +2,8 @@
 
 Paper: [**Composition- based Multi-Relational Graph Convolutional Networks**](https://arxiv.org/abs/1911.03082)
 
+Code: https://github.com/malllabiisc/CompGCN
+
 #### How to run
 
 - Clone the Openhgnn-DGL

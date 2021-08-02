@@ -1,12 +1,4 @@
-import argparse
-import copy
-import dgl
-import numpy as np
-import torch
-from tqdm import tqdm
 import torch.nn.functional as F
-from openhgnn.models import build_model
-
 from . import BaseTask, register_task
 from ..dataset import build_dataset
 from ..utils import Evaluator

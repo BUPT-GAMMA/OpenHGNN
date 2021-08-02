@@ -54,6 +54,7 @@ SUPPORTED_FLOWS = {
     'link_prediction': 'openhgnn.trainerflow.link_prediction',
     'hetgnntrainer': 'openhgnn.trainerflow.hetgnn_trainer',
     'hgttrainer': 'openhgnn.trainerflow.hgt_trainer',
-    'nshetrainer': 'openhgnn.trainerflow.nshe_trainer'
+    'nshetrainer': 'openhgnn.trainerflow.nshe_trainer',
+    'demo': 'openhgnn.trainerflow.demo'
 
 }

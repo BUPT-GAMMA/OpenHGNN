@@ -1,14 +1,10 @@
-import os
 import dgl
 import numpy as np
 from dgl.data.knowledge_graph import load_data
 import torch as th
-from dgl.data.utils import download
 from openhgnn.dataset import BaseDataset, register_dataset
 from . import AcademicDataset
-from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
-from dgl.data.utils import load_graphs, save_graphs
-from ogb.nodeproppred import DglNodePropPredDataset
+from dgl.data.utils import load_graphs
 
 
 @register_dataset('link_prediction')
@@ -21,7 +17,7 @@ class LinkPredictionDataset(BaseDataset):
         super(LinkPredictionDataset, self).__init__()
 
 
-@register_dataset('test_link_prediction')
+@register_dataset('demo_link_prediction')
 class Test_LinkPrediction(LinkPredictionDataset):
     def __init__(self, dataset_name):
         super(Test_LinkPrediction, self).__init__()

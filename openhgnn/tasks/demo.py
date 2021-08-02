@@ -1,24 +1,17 @@
-import argparse
-import copy
-import dgl
-import numpy as np
-import torch
-from tqdm import tqdm
 import torch.nn.functional as F
-from openhgnn.models import build_model
 
 from . import BaseTask, register_task
 from ..dataset import build_dataset
 from ..utils import Evaluator
 
 
-@register_task("recommendation")
-class Recommendation(BaseTask):
-    """Recommendation tasks."""
+@register_task("demo")
+class Demo(BaseTask):
+    """Demo task."""
     def __init__(self, args):
-        super(Recommendation, self).__init__()
+        super(Demo, self).__init__()
         self.n_dataset = args.dataset
-        self.dataset = build_dataset(args.dataset, 'recommendation')
+        self.dataset = build_dataset(args.dataset, 'demo')
         # self.evaluator = Evaluator()
         self.evaluator = Evaluator(args.seed)
 
@@ -39,13 +32,3 @@ class Recommendation(BaseTask):
     def evaluate(self, y_true, y_score, name):
         if name == 'ndcg':
             return self.evaluator.ndcg(y_true, y_score)
-
-    def get_batch(self):
-        return self.dataset.train_batch, self.dataset.test_batch
-
-    def get_idx(self):
-        return self.train_idx, self.val_idx, self.test_idx
-
-    def get_labels(self):
-        return self.dataset.get_labels()
-

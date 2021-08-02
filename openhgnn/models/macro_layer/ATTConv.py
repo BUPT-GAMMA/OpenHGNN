@@ -88,7 +88,11 @@ class MacroConv(nn.Module):
         Dropout rate, defaults: ``0``.
     """
 
-    def __init__(self, in_feats: int, out_feats: int, num_heads: int, dropout: float = 0.0, negative_slope: float = 0.2):
+    def __init__(self, in_feats: int,
+                 out_feats: int,
+                 num_heads: int,
+                 dropout: float = 0.0,
+                 negative_slope: float = 0.2):
         super(MacroConv, self).__init__()
         self._in_feats = in_feats
         self._out_feats = out_feats
@@ -97,8 +101,13 @@ class MacroConv(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.leaky_relu = nn.LeakyReLU(negative_slope)
 
-    def forward(self, graph, input_dst: dict, relation_features: dict, edge_type_transformation_weight: nn.ParameterDict,
-                central_node_transformation_weight: nn.ParameterDict, edge_types_attention_weight: nn.Parameter):
+    def forward(self,
+                graph,
+                input_dst: dict,
+                relation_features: dict,
+                edge_type_transformation_weight: nn.ParameterDict,
+                central_node_transformation_weight: nn.ParameterDict,
+                edge_types_attention_weight: nn.Parameter):
         """
         :param graph: dgl.DGLHeteroGraph
         :param input_dst: dict: {ntype: features}

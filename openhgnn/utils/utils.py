@@ -10,7 +10,10 @@ import datetime
 
 
 def set_best_config(args):
-    configs = BEST_CONFIGS[args.task]
+    configs = BEST_CONFIGS.get(args.task)
+    if configs is None:
+        print('The task do not have a best_config!')
+        return args
     if args.model not in configs:
         print('The model is not in the best config.')
         return args
