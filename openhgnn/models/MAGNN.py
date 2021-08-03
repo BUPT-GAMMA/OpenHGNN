@@ -514,7 +514,7 @@ def mp_instance_sampler(g, metapath_list, dataset):
 
     return res
 
-def mini_mp_instance_sampler(seed_nodes, mp_instances):
+def mini_mp_instance_sampler(seed_nodes, mp_instances, num_samples):
     mini_mp_inst = {}
     metapath_list = list(mp_instances.keys())
 
@@ -523,7 +523,18 @@ def mini_mp_instance_sampler(seed_nodes, mp_instances):
         for metapath in target_mp_types:  # the metapath instances of the certain metapath
             _mp_inst = np.isin(mp_instances[metapath][:, 0], seed_nodes[ntype])
             _mp_inst = mp_instances[metapath][_mp_inst]
-            mini_mp_inst[metapath] = _mp_inst
+            dst_nodes, dst_counts = np.unique(_mp_inst[:, -1], return_counts=True)
+
+            # the method of computing sampling probabilities originates from author's codes
+            p = []
+            for count in dst_counts:
+                p += [(count ** (3 / 4)) / count] * count
+            p = np.array(p)
+            p = p / p.sum()
+
+            _num_samples = min(num_samples, len(p)) # TODO: This part is a bit different from author
+            mp_choice = np.random.choice(len(p), _num_samples, replace=False, p=p)
+            mini_mp_inst[metapath] = _mp_inst[mp_choice]
 
     return mini_mp_inst
 

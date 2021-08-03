@@ -5,12 +5,13 @@ from torch.utils.data import Dataset
 from openhgnn.models.MAGNN import mp_instance_sampler, mini_mp_instance_sampler
 
 class MAGNN_sampler(Dataset):
-    def __init__(self, g, n_layers, category, metapath_list, dataset_name='imdb4MAGNN'):
+    def __init__(self, g, n_layers, category, metapath_list, num_samples, dataset_name='imdb4MAGNN'):
         self.g = g
         self.dataset_name = dataset_name
         self.metapath_list = metapath_list
         self.n_layers = n_layers
         self.category = category
+        self.num_samples = num_samples
         self.mp_inst = mp_instance_sampler(g, self.metapath_list, self.dataset_name)
 
     def __getitem__(self, idx):
@@ -47,7 +48,8 @@ class MAGNN_sampler(Dataset):
         if self.n_layers < 1:
             raise ValueError("Wrong value of number of layers.")
         for _ in range(self.n_layers):
-            mini_mp_inst = mini_mp_instance_sampler(seed_nodes=seed_nodes, mp_instances=self.mp_inst)
+            mini_mp_inst = mini_mp_instance_sampler(seed_nodes=seed_nodes, mp_instances=self.mp_inst,
+                                                    num_samples=self.num_samples)
             seed_nodes = {}
             for metapath in mini_mp_inst.keys():
                 _mini_mp_inst = mini_mp_inst[metapath]
