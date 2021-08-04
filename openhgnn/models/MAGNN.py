@@ -521,20 +521,26 @@ def mini_mp_instance_sampler(seed_nodes, mp_instances, num_samples):
     for ntype in seed_nodes.keys():
         target_mp_types = np.array(metapath_list)[[metapath[0] == ntype for metapath in metapath_list]]
         for metapath in target_mp_types:  # the metapath instances of the certain metapath
-            _mp_inst = np.isin(mp_instances[metapath][:, 0], seed_nodes[ntype])
-            _mp_inst = mp_instances[metapath][_mp_inst]
-            dst_nodes, dst_counts = np.unique(_mp_inst[:, -1], return_counts=True)
+            for node in seed_nodes[ntype]:
+                # _mp_inst = np.isin(mp_instances[metapath][:, 0], seed_nodes[ntype])
+                _mp_inst = mp_instances[metapath][mp_instances[metapath][:, 0] == node]
+                # _mp_inst = mp_instances[metapath][_mp_inst]
+                dst_nodes, dst_counts = np.unique(_mp_inst[:, -1], return_counts=True)
 
-            # the method of computing sampling probabilities originates from author's codes
-            p = []
-            for count in dst_counts:
-                p += [(count ** (3 / 4)) / count] * count
-            p = np.array(p)
-            p = p / p.sum()
+                # the method of computing sampling probabilities originates from author's codes
+                p = []
+                for count in dst_counts:
+                    p += [(count ** (3 / 4)) / count] * count
+                p = np.array(p)
+                p = p / p.sum()
 
-            _num_samples = min(num_samples, len(p)) # TODO: This part is a bit different from author
-            mp_choice = np.random.choice(len(p), _num_samples, replace=False, p=p)
-            mini_mp_inst[metapath] = _mp_inst[mp_choice]
+                _num_samples = min(num_samples, len(p)) # TODO: This part is a bit different from author
+                mp_choice = np.random.choice(len(p), _num_samples, replace=False, p=p)
+                if metapath not in mini_mp_inst.keys():
+                    mini_mp_inst[metapath] = _mp_inst[mp_choice]
+                else:
+                    mini_mp_inst[metapath] = np.concatenate((mini_mp_inst[metapath], _mp_inst[mp_choice]),
+                                                            axis=0)
 
     return mini_mp_inst
 

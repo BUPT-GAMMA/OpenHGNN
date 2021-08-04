@@ -15,6 +15,7 @@ import dgl
 import torch as th
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from sklearn.metrics import f1_score
 
 def load_hg(args):
     hg_dir = 'openhgnn/dataset/'
@@ -26,52 +27,53 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore')
     args = argparse.Namespace(**CONFIG)
     hg = load_hg(args)
+    train_mask = hg.nodes[args.category].data['train_mask']
+    val_mask = hg.nodes[args.category].data['val_mask']
+    test_mask = hg.nodes[args.category].data['test_mask']
     model = MAGNN.build_model_from_args(args, hg)
     print(args)
-    sampler = MAGNN_sampler(g=hg, n_layers=args.num_layers, category=args.category,
-                            metapath_list=model.metapath_list, num_samples=args.num_samples,
-                            dataset_name=args.dataset)
+    sampler = MAGNN_sampler(g=hg, mask=train_mask.cpu().numpy(), n_layers=args.num_layers, category=args.category,
+                            metapath_list=model.metapath_list, num_samples=args.num_samples, dataset_name=args.dataset)
 
     dataloader = DataLoader(dataset=sampler, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers,
                             collate_fn=collate_fn, drop_last=False)
-    # TODO: how to set batch_size and num_workers here? Is it reasonable when both of them are greater than 1?
+
     optimizer = th.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     model = model.to(args.device)
-    batch_idx = 0
 
     for epoch in range(args.max_epoch):
         t = time.perf_counter()
-        loss_all = 0
         model.train()
         print("...Start the mini batch training...")
-        for sub_g, mini_mp_inst, seed_nodes in dataloader:
-            print("Sampling {} seed_nodes with duration(s): {}".format(args.batch_size, time.perf_counter() - t))
-            # print("The details: {}".format(sub_g))
+        for num_iter, (sub_g, mini_mp_inst, seed_nodes) in enumerate(dataloader):
+            print("Sampling {} seed_nodes with duration(s): {}".format(len(seed_nodes[args.category]), time.perf_counter() - t))
             model.mini_reset_params(mini_mp_inst)
             sub_g = sub_g.to(args.device)
             pred = model(sub_g)[args.category][seed_nodes[args.category]]
             lbl = sub_g.nodes[args.category].data['labels'][seed_nodes[args.category]]
             loss = F.cross_entropy(pred, lbl)
-            loss_all += loss.item()
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            print("batch_idx:{}, the batch_size is {}, the loss of this batch is {}".format(
-                batch_idx, args.batch_size, loss.item()
+            print("Iter:{}, the batch_size is {}, the loss of this batch is {}\n".format(
+                num_iter, args.batch_size, loss.item()
             ))
-            batch_idx += 1
             t = time.perf_counter()
         print()
         model.eval() # Evaluation on full graph
         with th.no_grad():
             model.restore_params()
             hg = hg.to(args.device)
-            pred_eval = model(hg)[args.category]
-            lbl_eval = hg.nodes[args.category].data['labels']
+            pred_eval = model(hg)[args.category][val_mask]
+            lbl_eval = hg.nodes[args.category].data['labels'][val_mask]
             loss_eval = F.cross_entropy(pred_eval, lbl_eval)
-        print("Epoch: {}, train_loss: {}, eval_loss: {}".format(epoch, loss_all / batch_idx, loss_eval))
-        batch_idx = 0
+
+            lbl_eval, pred_eval = lbl_eval.cpu().numpy(), pred_eval.cpu().numpy().argmax(axis=1)
+            eval_f1_macro = f1_score(lbl_eval, pred_eval, average='macro')
+            eval_f1_micro = f1_score(lbl_eval, pred_eval, average='micro')
+        print("Epoch: {}, eval_loss: {}, eval_f1_mac: {}, eval_f1_mic: {}"
+              .format(epoch, loss_eval, eval_f1_macro, eval_f1_micro))
 
 
 

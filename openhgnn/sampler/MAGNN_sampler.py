@@ -5,8 +5,10 @@ from torch.utils.data import Dataset
 from openhgnn.models.MAGNN import mp_instance_sampler, mini_mp_instance_sampler
 
 class MAGNN_sampler(Dataset):
-    def __init__(self, g, n_layers, category, metapath_list, num_samples, dataset_name='imdb4MAGNN'):
+    def __init__(self, g, mask, n_layers, category, metapath_list,
+                 num_samples, dataset_name='imdb4MAGNN'):
         self.g = g
+        self.mask = mask
         self.dataset_name = dataset_name
         self.metapath_list = metapath_list
         self.n_layers = n_layers
@@ -43,14 +45,15 @@ class MAGNN_sampler(Dataset):
 
         '''
 
-        seed_nodes = {self.category: idx}
-        _seed_nodes = seed_nodes
+        idx = np.where(self.mask)[0][idx]
+        _seed_nodes = {self.category: idx}
+        seed_nodes = {self.category: np.array([idx])}
         if self.n_layers < 1:
             raise ValueError("Wrong value of number of layers.")
         for _ in range(self.n_layers):
             mini_mp_inst = mini_mp_instance_sampler(seed_nodes=seed_nodes, mp_instances=self.mp_inst,
                                                     num_samples=self.num_samples)
-            seed_nodes = {}
+            # seed_nodes = {}
             for metapath in mini_mp_inst.keys():
                 _mini_mp_inst = mini_mp_inst[metapath]
                 for i in range(0, len(metapath)):
@@ -69,9 +72,10 @@ class MAGNN_sampler(Dataset):
         return seed_nodes, mini_mp_inst, _seed_nodes, self.g
 
     def __len__(self):
-        return self.g.number_of_nodes(self.category)
+        # return self.g.number_of_nodes(self.category)
+        return len(self.mask[self.mask == 1])
 
-def collate_fn(batch):
+def collate_fn(batch): # TODO: may be the most time-consumed part?
     '''
 
     Parameters
@@ -112,6 +116,7 @@ def collate_fn(batch):
     [seed_ntypes.extend(list(_batch[2].keys())) for _batch in batch]
     ntypes, meta_types, seed_ntypes = set(ntypes), set(meta_types), set(seed_ntypes)
 
+    # TODO: maybe why the consumed time is so large
     for _batch in batch:
         for ntype in ntypes:
             if ntype not in _batch[0].keys():
