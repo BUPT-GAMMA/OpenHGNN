@@ -107,6 +107,7 @@ class MAGNN(BaseModel):
         self.metapath_list = metapath_list
         self.edge_type_list = edge_type_list
         self.activation = activation
+        self.backup = {}
 
         # input projection
         self.ntypes = in_feats.keys()
@@ -150,7 +151,6 @@ class MAGNN(BaseModel):
         Other Parameters like weight matrix don't need to be updated.
 
         '''
-        self.backup = {}
         self.backup['metapath_idx_dict'] = self.metapath_idx_dict
         self.metapath_idx_dict = new_metapth_idx_dict
         self.backup['metapath_list'] = self.metapath_list
@@ -163,6 +163,7 @@ class MAGNN(BaseModel):
             layer.dst_ntypes = self.dst_ntypes
 
     def restore_params(self):
+        assert self.backup, 'The model.backup is empty'
         self.metapath_idx_dict = self.backup['metapath_idx_dict']
         self.metapath_list = self.backup['metapath_list']
         self.dst_ntypes = self.backup['dst_ntypes']
@@ -208,7 +209,8 @@ class MAGNN(BaseModel):
         # output layer
         h_output, embedding = self.layers[-1](h, self.metapath_idx_dict)
 
-        return h_output
+        # TODO: TEST!!!NEED TO DEPRECATE THE RETURN EMBEDDING!
+        return h_output, embedding
 
 
 class MAGNN_layer(nn.Module):

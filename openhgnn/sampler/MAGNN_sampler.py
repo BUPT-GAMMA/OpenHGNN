@@ -3,6 +3,7 @@ import numpy as np
 import torch as th
 from torch.utils.data import Dataset
 from openhgnn.models.MAGNN import mp_instance_sampler, mini_mp_instance_sampler
+from line_profiler import LineProfiler
 
 class MAGNN_sampler(Dataset):
     def __init__(self, g, mask, n_layers, category, metapath_list,
@@ -75,6 +76,7 @@ class MAGNN_sampler(Dataset):
         # return self.g.number_of_nodes(self.category)
         return len(self.mask[self.mask == 1])
 
+@profile
 def collate_fn(batch): # TODO: may be the most time-consumed part?
     '''
 
