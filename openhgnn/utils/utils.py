@@ -53,10 +53,6 @@ class EarlyStopping(object):
         else:
             if (score >= self.best_score) and (loss <= self.best_loss):
                 self.save_model(model)
-            if (th.is_tensor(loss)):
-                loss = loss.cpu()
-            if (th.is_tensor(self.best_loss)):
-                self.best_loss = self.best_loss.cpu()
             self.best_loss = np.min((loss, self.best_loss))
             self.best_score = np.max((score, self.best_score))
             self.counter = 0
