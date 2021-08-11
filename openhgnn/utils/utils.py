@@ -53,6 +53,7 @@ class EarlyStopping(object):
         else:
             if (score >= self.best_score) and (loss <= self.best_loss):
                 self.save_model(model)
+                
             self.best_loss = np.min((loss, self.best_loss))
             self.best_score = np.max((score, self.best_score))
             self.counter = 0
