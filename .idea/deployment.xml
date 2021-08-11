@@ -5,7 +5,7 @@
       <paths name="llb@10.112.189.205:90">
         <serverdata>
           <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/llb/workspace/hgnnGit" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

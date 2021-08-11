@@ -11,9 +11,10 @@ class AcademicDataset(DGLDataset):
         'academic4HetGNN': 'dataset/academic4HetGNN.zip',
         'acm4GTN': 'dataset/acm4GTN.zip',
         'acm4NSHE': 'dataset/acm4NSHE.zip',
+        'acm4NARS': 'dataset/acm4NARS.zip',
         'imdb4MAGNN': 'dataset/imdb4MAGNN.zip',
         'imdb4GTN': 'dataset/imdb4GTN.zip',
-        'dblp4MAGNN': 'dataset/dblp4MAGNN.zip'
+        'dblp4MAGNN': 'dataset/dblp4MAGNN.zip',
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):

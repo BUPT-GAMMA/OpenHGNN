@@ -34,7 +34,7 @@ class NARS(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
         num_hops = args.R + 1
-        rel_subsets =  [['pa'], ['pf']]   # TODO : more general
+        rel_subsets =  [['paper-author'], ['paper-field']]
 
         with th.no_grad():
             feats = preprocess_features(hg, rel_subsets, args, args.device)
@@ -44,7 +44,7 @@ class NARS(BaseModel):
 
         return cls(num_hops=num_hops,
                    num_feats=num_feats,
-                   num_classes=args.num_classes,
+                   num_classes=args.out_dim,
                    category=args.category,
                    in_size=in_feats,
                    hidden_size=args.hidden_dim,
@@ -82,6 +82,17 @@ def preprocess_features(g, rel_subsets, args, device):
     pre-process heterogeneous graph g to generate neighbor-averaged features
     for each relation subsets
     """
+    paper_dim = g.nodes["paper"].data["feat"].shape[1]
+    author_dim = g.nodes["author"].data["feat"].shape[1]
+
+    assert (paper_dim >= author_dim)
+    if paper_dim > author_dim:
+        print(f"Randomly embedding features from dimension {author_dim} to {paper_dim}")
+        author_feat = g.nodes["author"].data.pop("feat")
+        field_feat = g.nodes["field"].data.pop("feat")
+        rand_weight = th.Tensor(author_dim, paper_dim).uniform_(-0.5, 0.5).to(device)
+        g.nodes["author"].data["feat"] = th.matmul(author_feat, rand_weight)
+        g.nodes["field"].data["feat"] = th.matmul(field_feat, rand_weight)
 
     num_paper, feat_size = g.nodes["paper"].data["feat"].shape   # TODO
     new_feats = [th.zeros(num_paper, len(rel_subsets), feat_size) for _ in range(args.R + 1)]

@@ -121,7 +121,10 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset == 'acm4NARS':
             # TODO : to be continue
-            g, labels, num_classes, train_nid, val_nid, test_nid = load_acm_nars()
+            dataset = AcademicDataset(name='acm4NARS', raw_dir='')
+            g = dataset[0].long()
+            num_classes = 3
+            # g, labels, num_classes, train_nid, val_nid, test_nid = load_acm_nars()
             category = 'paper'
         elif name_dataset == 'academic4HetGNN':
             # which is used in HetGNN
