@@ -1,10 +1,6 @@
 import dgl
-import math
 import torch as th
 import torch.nn as nn
-import torch.nn.functional as F
-from dgl.nn.pytorch import GraphConv, EdgeWeightNorm
-from ..utils import transform_relation_graph_list
 from . import BaseModel, register_model
 import dgl.function as fn
 
