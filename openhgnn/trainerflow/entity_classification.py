@@ -194,12 +194,12 @@ class EntityClassification(BaseFlow):
             mask = None
 
         if mask is not None:
-            loss = self.loss_fn(logits[mask], self.labels[mask])
+            loss = self.loss_fn(logits[mask], self.labels[mask]).item()
             metric = self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), 'acc', mask)
             return metric, loss
         else:
             masks = {'train': self.train_idx, 'val': self.val_idx, 'test': self.test_idx}
             metrics = {key: self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), 'acc', mask) for key, mask in
                        masks.items()}
-            losses = {key: self.loss_fn(logits[mask], self.labels[mask]) for key, mask in masks.items()}
+            losses = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}
             return metrics, losses

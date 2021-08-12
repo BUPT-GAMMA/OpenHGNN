@@ -197,13 +197,13 @@ class HGTTrainer(BaseFlow):
                 mask = None
 
             if mask is not None:
-                loss = self.loss_fn(logits[mask], self.labels[mask])
+                loss = self.loss_fn(logits[mask], self.labels[mask]).item()
                 metric = self.evaluator(self.labels[mask].to('cpu'), logits[mask].argmax(dim=1).to('cpu'))
                 return metric, loss
             else:
                 masks = {'train': self.train_idx, 'val': self.val_idx, 'test': self.test_idx}
                 metrics = {key: self.evaluator(self.labels[mask].to('cpu'), logits[mask].argmax(dim=1).to('cpu')) for key, mask in masks.items()}
-                losses = {key: self.loss_fn(logits[mask], self.labels[mask]) for key, mask in masks.items()}
+                losses = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}
                 return metrics, losses
 
 
