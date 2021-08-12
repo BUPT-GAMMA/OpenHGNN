@@ -47,6 +47,15 @@ BEST_CONFIGS = {
             }
 
         },
+        'NARS': {
+            'general': {},
+            'acm4NARS': {
+                'lr': 0.003, 'num_heads': [8], 'hidden_dim': 64, 'dropout': 0.7, 'weight_decay': 0.001,
+                'num_epochs': 200, 'patience': 100
+            },
+
+
+        },
         'HetGNN': {
             'general': {'max_epoch': 500, 'patience': 20, 'mini_batch_flag': True},
             'academic4HetGNN': {
