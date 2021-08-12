@@ -6,6 +6,16 @@ Code from author:[https://github.com/facebookresearch/NARS](https://github.com/f
 
 ## How to run
 
+Clone the Openhgnn-DGL
+
+```python
+python main.py -m NARS -t node_classification -d acm4NARS -g 0 --use_best_config
+```
+
+Candidate dataset: acm4NARS
+
+If you do not have gpu, set -gpu -1.
+
 ## candidate dataset
 
 acm4NARS
