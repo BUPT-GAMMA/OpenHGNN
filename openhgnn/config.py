@@ -168,6 +168,26 @@ class Config(object):
             self.max_epoch = conf.getint('HAN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")
 
+        elif model == 'NARS':
+            self.lr = conf.getfloat("NARS", "learning_rate")
+            self.weight_decay = conf.getfloat("NARS", "weight_decay")
+            self.seed = conf.getint("NARS", "seed")
+            self.dropout = conf.getfloat("NARS", "dropout")
+            self.patience = conf.getint('HAN', 'patience')
+            self.hidden_dim = conf.getint('NARS', 'hidden_dim')
+            self.out_dim = conf.getint('NARS', 'out_dim')
+            num_heads = conf.get('NARS', 'num_heads').split('-')
+            self.num_heads = [int(i) for i in num_heads]
+
+            self.max_epoch = conf.getint('NARS', 'max_epoch')
+            self.mini_batch_flag = conf.getboolean("NARS", "mini_batch_flag")
+            self.R = conf.getint('NARS', 'R')
+            self.cpu_preprocess = conf.getboolean("NARS", "cpu_preprocess")
+            self.input_dropout = conf.getboolean("NARS", "input_dropout")
+
+            self.ff_layer = conf.getint('NARS', 'ff_layer')
+
+
         elif model == 'MAGNN':
             self.lr = conf.getfloat("MAGNN", "learning_rate")
             self.weight_decay = conf.getfloat("MAGNN", "weight_decay")
