@@ -20,11 +20,19 @@ If you do not have gpu, set -gpu -1.
 
 acm4NARS
 
-mag4NARS
+NOTE: NARS can handle mag oag dataset, we will add these two datasets in our further work.
 
 ## performance
 
 Node classification
+
+| |Macro-F1|Micro-F1|
+|----|----|----|
+|acm4NARS|||
+
+| |accuracy|
+|----|----|
+|acm4NARS|0.9302|
 
 ## TrainerFlow: node_classification
 
