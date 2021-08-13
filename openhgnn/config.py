@@ -64,6 +64,25 @@ class Config(object):
             self.norm_emd_flag = conf.getboolean("GTN", "norm_emd_flag")
             self.adaptive_lr_flag = conf.getboolean("GTN", "adaptive_lr_flag")
             self.mini_batch_flag = conf.getboolean("GTN", "mini_batch_flag")
+
+        elif model == "MHNF":
+            self.lr = conf.getfloat("MHNF", "learning_rate")
+            self.weight_decay = conf.getfloat("MHNF", "weight_decay")
+            self.seed = conf.getint("MHNF", "seed")
+            # np.random.seed(self.seed)
+
+            self.hidden_dim = conf.getint("MHNF", "hidden_dim")
+            self.out_dim = conf.getint("MHNF", "out_dim")
+            self.num_channels = conf.getint("MHNF", "num_channels")
+            self.num_layers = conf.getint("MHNF", "num_layers")
+            self.max_epoch = conf.getint("MHNF", "max_epoch")
+            self.patience = conf.getint("MHNF", "patience")
+
+            self.identity = conf.getboolean("MHNF", "identity")
+            self.norm_emd_flag = conf.getboolean("MHNF", "norm_emd_flag")
+            self.adaptive_lr_flag = conf.getboolean("MHNF", "adaptive_lr_flag")
+            self.mini_batch_flag = conf.getboolean("MHNF", "mini_batch_flag")
+
         elif model == "RSHN":
             self.lr = conf.getfloat("RSHN", "learning_rate")
             self.weight_decay = conf.getfloat("RSHN", "weight_decay")
