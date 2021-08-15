@@ -23,7 +23,7 @@ Node classification
 | Node classification | acm4GTN | imdb4GTN |
 | ------------------- | ------- | -------- |
 | paper               | 93.15   | 59.52    |
-| OpenHGNN            |         |          |
+| OpenHGNN            | 93.18   | 60.89    |
 
 ### TrainerFlow: node_classification
 
@@ -72,10 +72,19 @@ Or run the code mentioned above and it will download automatically.
 num_channels = 2 # number of channel
 num_layers = 3 # number of layer
 adaptive_lr_flag = True # use different learning rate for weight in HMAELayer.
-identity = False # don't need identity because layer aggregation
+identity = False # don't need identity because of layers aggregation
 ```
 
 Best config can be found in [best_config](../../utils/best_config.py)
+
+### Relation to [GTN](../GTN/README.md)
+
+MHNF model is similar to GTN. 
+
+- The method [HMAEConv](../../models/MHNF.py) to product hybrid relationship matrix is same to [GTConv](../../models/GTN_sparse.py) .
+- MHNF use layer attention to  aggregate different hop layer representation thus don't need to add identity to relation matrix set like GTN.
+
+- MHNF use channel attention to replace channel aggregation operation in GTN and channel attention can be known as one of channel aggregation operation.
 
 ### Related API in DGL
 
@@ -89,9 +98,9 @@ Best config can be found in [best_config](../../utils/best_config.py)
 
 #### Contirbutor
 
-Tianyu Zhao[GAMMA LAB]
+Fengqi Liang[GAMMA LAB]
 
 #### If you have any questions,
 
-Submit an issue or email to [tyzhao@bupt.edu.cn](mailto:tyzhao@bupt.edu.cn).
+Submit an issue or email to  lfq@bupt.edu.cn](mailto:lfq@bupt.edu.cn).
 
