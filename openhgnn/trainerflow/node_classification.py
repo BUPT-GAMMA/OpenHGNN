@@ -100,20 +100,19 @@ class NodeClassification(BaseFlow):
                 print('Early Stop!\tEpoch:' + str(epoch))
                 break
 
-        print(f"Valid_micro_f1 = {stopper.best_score: .4f}, Min_loss = {stopper.best_loss: .4f}")
+        print(f"Valid_micro_{self.metric} = {stopper.best_score: .4f}, Min_loss = {stopper.best_loss: .4f}")
         stopper.load_model(self.model)
-        test_f1, _ = self._test_step(split="test")
-        val_f1, _ = self._test_step(split="val")
-        print(f"Test_macro_f1 = {test_f1:.4f}, Test_micro_f1: {test_f1:.4f}")
-        return dict(Acc=test_f1, ValAcc=val_f1)
+        test_score, _ = self._test_step(split="test")
+        val_score, _ = self._test_step(split="val")
+        if isinstance(test_score, tuple):
+            print(f"Test_macro_{self.metric} = {test_score[0]:.4f}, Test_micro_{self.metric}: {test_score[1]:.4f}")
+        else:
+            print(f"Test_{self.metric} = {test_score:.4f}")
+        return dict(Acc=test_score, ValAcc=val_score)
 
     def printInfo(self, epoch, loss, train_score, val_score, test_score, val_loss):
-        if self.metric == 'f1':
-            print((
-                f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train_macro_f1: {train_score[0]:.4f}, Train_micro_f1: {train_score[1]:.4f}, "
-                f"Val_macro_f1: {val_score[0]:.4f}, Test_macro_f1: {test_score[0]:.4f}, ValLoss:{val_loss: .4f}"
-            ))
-        elif self.metric == 'f1_lr':
+
+        if self.metric == 'f1_lr':
             print((
                 f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train_macro_f1: {train_score[0]:.4f}, Train_micro_f1: {train_score[1]:.4f}, "
                 f"Val_macro_f1: {val_score[0]:.4f}, Test_macro_f1: {test_score[0]:.4f}, ValLoss:{val_loss: .4f}"
@@ -128,6 +127,11 @@ class NodeClassification(BaseFlow):
             print((
                 f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train_acc: {train_score:.4f},  "
                 f"Val_acc: {val_score:.4f}, Test_acc: {test_score:.4f}, ValLoss:{val_loss: .4f}"
+            ))
+        else :
+            print((
+                f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train_macro_f1: {train_score[0]:.4f}, Train_micro_f1: {train_score[1]:.4f}, "
+                f"Val_macro_f1: {val_score[0]:.4f}, Test_macro_f1: {test_score[0]:.4f}, ValLoss:{val_loss: .4f}"
             ))
 
 
@@ -173,7 +177,7 @@ class NodeClassification(BaseFlow):
 
             if mask is not None:
                 loss = self.loss_fn(logits[mask], self.labels[mask])
-                metric = self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), name='acc', mask=mask)
+                metric = self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), name=self.metric, mask=mask)
                 return metric, loss
             else:
                 masks = {'train': self.train_idx, 'val': self.val_idx, 'test': self.test_idx}
