@@ -6,8 +6,16 @@ import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv, EdgeWeightNorm
 from ..utils import transform_relation_graph_list
 from . import BaseModel, register_model
-
-
+"""
+MHNF: Multi-hop Heterogeneous Neighborhood information Fusion graph representation learning
+Paper:https://arxiv.org/pdf/2106.09289.pdf
+The author of the paper don't gives source code, so we implement the model according to the 
+description in the paper and the dataset using GTN dataset which is similar to the description
+in MHNF paper.
+In fact, MHNF model is similar to GTN using attention mechanism to aggregate different channel and
+different hop GTN layer representation to product a final representation. Then passing a MLP layer to
+do node classification task.
+"""
 @register_model('MHNF')
 class MHNF(BaseModel):
     @classmethod
