@@ -51,7 +51,7 @@ BEST_CONFIGS = {
             'general': {},
             'acm4NARS': {
                 'lr': 0.001, 'num_heads': [8], 'hidden_dim': 64, 'dropout': 0.5, 'weight_decay': 0.001,
-                'num_epochs': 200, 'patience': 100, 'metric': 'f1'
+                'num_epochs': 200, 'patience': 100, 'metric': 'acc'
             },
 
 
