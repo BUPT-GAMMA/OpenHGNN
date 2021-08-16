@@ -17,7 +17,9 @@ class NodeClassification(BaseFlow):
     """Node classification flows.
     Supported Model: HAN/MAGNN/GTN
     Supported Dataset：ACM
+
     The task is to classify the nodes of HIN(Heterogeneous Information Network).
+    
     Note: If the output dim is not equal the number of classes, a MLP will follow the gnn model.
     """
 
