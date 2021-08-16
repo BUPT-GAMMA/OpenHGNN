@@ -30,7 +30,7 @@ class NodeClassification(BaseFlow):
         self.model_name = args.model
         self.device = args.device
         self.task = build_task(args)
-        self.metric = args.metric
+        self.metric = args.metric if hasattr(args, 'metric') else None
 
         self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
