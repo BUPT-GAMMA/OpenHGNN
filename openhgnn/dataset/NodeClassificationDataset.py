@@ -120,7 +120,6 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             num_classes = 3
             self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset == 'acm4NARS':
-            # TODO : to be continue
             dataset = AcademicDataset(name='acm4NARS', raw_dir='')
             g = dataset[0].long()
             num_classes = 3

@@ -45,7 +45,7 @@ class NodeClassification(BaseTask):
             return result_dict
         elif name == 'f1_lr':
             return self.evaluator.nc_with_LR(logits, self.labels, self.train_idx, self.test_idx)
-        elif name == 'f1':
+        else :
             return self.evaluator.f1_node_classification(self.labels[mask], logits)
 
     def get_idx(self):
