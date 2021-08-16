@@ -137,6 +137,7 @@ def set_random_seed(seed):
     np.random.seed(seed)
     th.manual_seed(seed)
     th.cuda.manual_seed(seed)
+    dgl.seed(seed)
 
 def com_mult(a, b):
     r1, i1 = a[..., 0], a[..., 1]

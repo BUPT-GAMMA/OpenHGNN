@@ -3,6 +3,8 @@ This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) 
 
 [Test Version]For now, we just release some models for some researchers to run the experiments.
 
+[Release Plan]We want to release version0.1 in September.
+
 ## Keys
 
 - Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and datasets using [optuna](https://optuna.org/) which is a hyperparameter optimization framework.
@@ -21,6 +23,8 @@ OpenHGNN is a high-level package built on top of DGL; it will not cover efficien
 | -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
 | OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
 | OpenHGNN | heterograph           | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
+
+We aim to build more embedding methods(implemented in OpenHINE) in OpenHGNN.
 
 To avoid reinventing the wheel, we use the DGL as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
 
@@ -80,6 +84,8 @@ It is under development, and we release it in a nightly build version. For now, 
 - [MAGNN](./openhgnn/output/MAGNN)[WWW 2020] for node classification
 - [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020] for entity classification
 - [NSHE](./openhgnn/output/NSHE)[IJCAI 2020] for node classification
+- [NARS](./openhgnn/output/NARS) for node classification
+- [MHNF](./openhgnn/output/MHNF) for node classification
 
 ### To be supported models
 

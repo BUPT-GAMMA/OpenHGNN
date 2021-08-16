@@ -61,5 +61,6 @@ SUPPORTED_MODELS = {
     'GTN': 'openhgnn.models.GTN_sparse',
     'MAGNN': 'openhgnn.models.MAGNN',
     'NSHE': 'openhgnn.models.NSHE',
-    'NARS':'openhgnn.models.NARS'
+    'NARS': 'openhgnn.models.NARS',
+    'GCN': 'space4hgnn.homo_models.GCN'
 }

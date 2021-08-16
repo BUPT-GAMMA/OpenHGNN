@@ -188,6 +188,66 @@ class HIN_NodeCLassification(NodeClassificationDataset):
         return labels
 
 
+@register_dataset('HGBn_node_classification')
+class HGB_NodeCLassification(NodeClassificationDataset):
+    def __init__(self, dataset_name):
+        super(HGB_NodeCLassification, self).__init__()
+        if dataset_name == 'HGBn-acm':
+            data_path = './openhgnn/dataset/HGBn-acm.bin'
+            category = 'paper'
+            num_classes = 4
+            g, _ = load_graphs(data_path)
+            g = g[0].long()
+            self.in_dim = g.ndata['feature'][category].shape[1]
+            # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+        else:
+            raise ValueError
+        self.g, self.category, self.num_classes = g, category, num_classes
+
+    def get_idx(self, validation=True):
+        if 'train_mask' not in self.g.nodes[self.category].data:
+            num_nodes = self.g.number_of_nodes(self.category)
+
+            n_test = int(num_nodes * 0.2)
+            n_train = num_nodes - n_test
+
+            train, test = th.utils.data.random_split(range(num_nodes), [n_train, n_test])
+            train_idx = th.tensor(train.indices)
+            test_idx = th.tensor(test.indices)
+            if validation:
+                val_idx = train_idx[:len(train_idx) // 10]
+                train_idx = train_idx[len(train_idx) // 10:]
+            else:
+                val_idx = train_idx
+                train_idx = train_idx
+        else:
+            train_mask = self.g.nodes[self.category].data.pop('train_mask')
+            test_mask = self.g.nodes[self.category].data.pop('test_mask')
+            train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
+            test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
+            if validation:
+                if 'val_mask' in self.g.nodes[self.category].data:
+                    val_mask = self.g.nodes[self.category].data.pop('val_mask')
+                    val_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
+                    pass
+                else:
+                    val_idx = train_idx[:len(train_idx) // 10]
+                    train_idx = train_idx[len(train_idx) // 10:]
+            else:
+                val_idx = train_idx
+                train_idx = train_idx
+        return train_idx, val_idx, test_idx
+
+    def get_labels(self):
+        if 'labels' in self.g.nodes[self.category].data:
+            labels = self.g.nodes[self.category].data.pop('labels')
+        elif 'label' in self.g.nodes[self.category].data:
+            labels = self.g.nodes[self.category].data.pop('label')
+        else:
+            raise ValueError('label in not in the hg.nodes[category].data')
+        return labels
+
+
 @register_dataset('ogbn_node_classification')
 class OGB_NodeCLassification(NodeClassificationDataset):
     def __init__(self, dataset_name):
