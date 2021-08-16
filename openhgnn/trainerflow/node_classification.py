@@ -196,3 +196,4 @@ class NodeClassification(BaseFlow):
                 losses = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}
 
                 return metrics, losses
+            
