@@ -20,6 +20,7 @@ def read_config(args):
             print("cuda is not available, please set 'gpu' -1")
 
     args.__setattr__('device', device)
+    args.__setattr__('_checkpoint', './space4hgnn/homo_models/')
     for key, value in config_dict.items():
         args.__setattr__(key, value)
     return args

@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv
 import dgl
-from . import BaseModel, register_model
+from . import BaseModel, register_model, hetero_linear, multi_2Linear
 
 '''
 In paper repo performance		
@@ -100,45 +100,4 @@ class NSHE(BaseModel):
         return hdict
 
 
-class multi_Linear(nn.Module):
-    def __init__(self, linear_list, bias=False):
-        super(multi_Linear, self).__init__()
-        self.encoder = nn.ModuleDict({})
-        for linear in linear_list:
-            self.encoder[linear[0]] = nn.Linear(in_features=linear[1], out_features=linear[2], bias=bias)
 
-    def forward(self, name_linear, h):
-        h = self.encoder[name_linear](h)
-        return h
-
-class multi_2Linear(nn.Module):
-    def __init__(self, linear_list, bias=False):
-        super(multi_2Linear, self).__init__()
-        hidden_dim = 16
-        self.hidden_layer = nn.ModuleDict({})
-        self.output_layer = nn.ModuleDict({})
-        for linear in linear_list:
-            self.hidden_layer[linear[0]] = nn.Linear(in_features=linear[1], out_features=hidden_dim, bias=bias)
-            self.output_layer[linear[0]] = nn.Linear(in_features=hidden_dim, out_features=linear[2], bias=bias)
-    def forward(self, name_linear, h):
-        h = F.relu(self.hidden_layer[name_linear](h))
-        h = self.output_layer[name_linear](h)
-        return h
-
-
-class hetero_linear(nn.Module):
-    def __init__(self, linear_list, bias=False):
-        super(hetero_linear, self).__init__()
-        # In one graph, the node with different node type may have different dimension size as the input.
-        # The feature_mapping NN feature the input dimension project to another same dimension size.
-        # So the out_dim is just a scalar.
-
-        # n_feats are graph dgl.ndata name.
-        self.encoder = multi_Linear(linear_list, bias)
-
-    def forward(self, h_dict):
-        h_out = {}
-        for ntype, h in h_dict.items():
-            h = self.encoder(ntype, h)
-            h_out[ntype] = h
-        return h_out

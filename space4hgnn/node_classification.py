@@ -25,7 +25,7 @@ def OpenHGNN(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', '-m', default='GCN', type=str, help='name of models')
+    parser.add_argument('--model', '-m', default='GAT', type=str, help='name of models')
     parser.add_argument('--task', '-t', default='node_classification', type=str, help='name of task')
     # link_prediction / node_classification
     parser.add_argument('--dataset', '-d', default='HGBn-acm', type=str, help='name of datasets')

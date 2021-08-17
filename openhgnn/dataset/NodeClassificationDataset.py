@@ -179,9 +179,9 @@ class HIN_NodeCLassification(NodeClassificationDataset):
 
     def get_labels(self):
         if 'labels' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('labels')
+            labels = self.g.nodes[self.category].data.pop('labels').long()
         elif 'label' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('label')
+            labels = self.g.nodes[self.category].data.pop('label').long()
         else:
             raise ValueError('label in not in the hg.nodes[category].data')
         return labels
@@ -197,7 +197,8 @@ class HGB_NodeCLassification(NodeClassificationDataset):
             num_classes = 4
             g, _ = load_graphs(data_path)
             g = g[0].long()
-            self.in_dim = g.ndata['feature'][category].shape[1]
+            g.nodes['term'].data['h'] = th.eye(g.number_of_nodes('term'))
+            self.in_dim = g.ndata['h'][category].shape[1]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         else:
             raise ValueError
@@ -230,18 +231,19 @@ class HGB_NodeCLassification(NodeClassificationDataset):
                     val_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
                     pass
                 else:
-                    val_idx = train_idx[:len(train_idx) // 10]
-                    train_idx = train_idx[len(train_idx) // 10:]
+                    val_idx = train_idx[:len(train_idx) // 5]
+                    train_idx = train_idx[len(train_idx) // 5:]
             else:
                 val_idx = train_idx
                 train_idx = train_idx
         return train_idx, val_idx, test_idx
 
     def get_labels(self):
+        # RuntimeError: Expected object of scalar type Long but got scalar type Float for argument #2 'target' in call to _thnn_nll_loss_forward
         if 'labels' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('labels')
+            labels = self.g.nodes[self.category].data.pop('labels').long()
         elif 'label' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('label')
+            labels = self.g.nodes[self.category].data.pop('label').long()
         else:
             raise ValueError('label in not in the hg.nodes[category].data')
         return labels

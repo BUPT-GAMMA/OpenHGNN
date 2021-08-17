@@ -4,17 +4,38 @@ node_classification:
       hidden_dim:
         64
       num_layers:
-        3
+        2
       dropout:
-        0.2
+        0.5
       lr:
-        0.005
-      weight_decay:
         0.0005
+      weight_decay:
+        0.0001
       patience:
-        50
+        30
       max_epoch:
-        100
+        300
+      mini_batch_flag:
+        False
+    GAT:
+      hidden_dim:
+        64
+      num_layers:
+        2
+      dropout:
+        0.5
+      slope:
+        0.05
+      num_heads:
+        8
+      lr:
+        0.0005
+      weight_decay:
+        0.0001
+      patience:
+        30
+      max_epoch:
+        300
       mini_batch_flag:
         False
 link_prediction:

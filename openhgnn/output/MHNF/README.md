@@ -2,6 +2,8 @@
 
 Paper: [MHNF: Multi-hop Heterogeneous Neighborhood information Fusion graph representation learning](https://arxiv.org/pdf/2106.09289.pdf)
 
+The author did not provide codes. So, we complete it according to the implementation of  [GTN](../GTN/README.md).
+
 ### How to run
 
 Clone the Openhgnn-DGL
@@ -102,5 +104,5 @@ Fengqi Liang[GAMMA LAB]
 
 #### If you have any questions,
 
-Submit an issue or email to  lfq@bupt.edu.cn](mailto:lfq@bupt.edu.cn).
+Submit an issue or email to  [lfq@bupt.edu.cn](mailto:lfq@bupt.edu.cn).
 
