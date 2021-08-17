@@ -1,0 +1,20 @@
+node_classification:
+  HGBn-acm:
+    GCN:
+      hidden_dim:
+        64
+      num_layers:
+        3
+      dropout:
+        0.2
+      lr:
+        0.005
+      weight_decay:
+        0.0005
+      patience:
+        50
+      max_epoch:
+        100
+      mini_batch_flag:
+        False
+link_prediction:
