@@ -45,8 +45,10 @@ class NodeClassification(BaseTask):
             return result_dict
         elif name == 'f1_lr':
             return self.evaluator.nc_with_LR(logits, self.labels, self.train_idx, self.test_idx)
-        else :
+        elif name == 'f1':
             return self.evaluator.f1_node_classification(self.labels[mask], logits)
+        else:
+            raise ValueError('The metric is not supported!')
 
     def get_idx(self):
         return self.train_idx, self.val_idx, self.test_idx
