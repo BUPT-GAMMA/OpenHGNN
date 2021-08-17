@@ -42,10 +42,7 @@ class MHNF(BaseModel):
         self.is_norm = norm
         self.category = category
         self.identity = identity
-        # gcn_list will be used in HLHIA_layer
-        gcn_list = nn.ModuleList()
-        for i in range(num_channels):
-            gcn_list.append(GraphConv(in_feats=self.in_dim, out_feats=hidden_dim, norm='none', activation=F.relu))
+
         self.HSAF = HSAF(num_edge_type, self.num_channels, self.num_layers, self.in_dim, self.hidden_dim)
         self.linear = nn.Linear(self.hidden_dim, self.num_class)
         self.category_idx = None
