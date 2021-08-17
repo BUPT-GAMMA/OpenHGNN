@@ -74,11 +74,11 @@ class NodeClassification(BaseFlow):
                 pass
         elif self.args.model == 'MHNF':
             if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == True:
-                self.optimizer = torch.optim.Adam([{'params': self.model.gcn_list.parameters()},
-                                                   {'params': self.model.channel_attention.parameters()},
-                                                   {'params': self.model.layers_attention.parameters()},
+                self.optimizer = torch.optim.Adam([{'params': self.model.HSAF.HLHIA_layer.gcn_list.parameters()},
+                                                   {'params': self.model.HSAF.channel_attention.parameters()},
+                                                   {'params': self.model.HSAF.layers_attention.parameters()},
                                                    {'params': self.model.linear.parameters()},
-                                                   {"params": self.model.HLHIA_layer.layers.parameters(), "lr": 0.5}
+                                                   {"params": self.model.HSAF.HLHIA_layer.layers.parameters(), "lr": 0.5}
                                                    ], lr=0.005, weight_decay=0.001)
 
             else:
