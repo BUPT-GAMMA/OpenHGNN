@@ -25,7 +25,7 @@ Node classification
 | Node classification | acm4GTN | imdb4GTN |
 | ------------------- | ------- | -------- |
 | paper               | 93.15   | 59.52    |
-| OpenHGNN            | 93.18   | 60.89    |
+| OpenHGNN            | 92.64   | 62.52    |
 
 ### TrainerFlow: node_classification
 
