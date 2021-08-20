@@ -108,6 +108,7 @@ class MAGNN(BaseModel):
         self.edge_type_list = edge_type_list
         self.activation = activation
         self.backup = {}
+        self.is_backup = False
 
         # input projection
         self.ntypes = in_feats.keys()
@@ -151,11 +152,14 @@ class MAGNN(BaseModel):
         Other Parameters like weight matrix don't need to be updated.
 
         '''
-        self.backup['metapath_idx_dict'] = self.metapath_idx_dict
+        if not self.is_backup: # the params of the original graph has not been stored
+            self.backup['metapath_idx_dict'] = self.metapath_idx_dict
+            self.backup['metapath_list'] = self.metapath_list
+            self.backup['dst_ntypes'] = self.dst_ntypes
+            self.is_backup = True
+
         self.metapath_idx_dict = new_metapth_idx_dict
-        self.backup['metapath_list'] = self.metapath_list
         self.metapath_list = list(new_metapth_idx_dict.keys())
-        self.backup['dst_ntypes'] = self.dst_ntypes
         self.dst_ntypes = set([meta[0] for meta in self.metapath_list])
 
         for layer in self.layers:
@@ -536,7 +540,7 @@ def mini_mp_instance_sampler(seed_nodes, mp_instances, num_samples):
                 p = np.array(p)
                 p = p / p.sum()
 
-                _num_samples = min(num_samples, len(p)) # TODO: This part is a bit different from author
+                _num_samples = min(num_samples, len(p))
                 mp_choice = np.random.choice(len(p), _num_samples, replace=False, p=p)
                 if metapath not in mini_mp_inst.keys():
                     mini_mp_inst[metapath] = _mp_inst[mp_choice]

@@ -1,11 +1,8 @@
 import dgl
 import numpy as np
-import torch as th
-from torch.utils.data import Dataset
 from openhgnn.models.MAGNN import mp_instance_sampler, mini_mp_instance_sampler
-from line_profiler import LineProfiler
 
-class MAGNN_sampler(Dataset):
+class MAGNN_sampler():
     def __init__(self, g, mask, n_layers, category, metapath_list,
                  num_samples, dataset_name='imdb4MAGNN'):
         self.g = g
@@ -68,7 +65,7 @@ class MAGNN_sampler(Dataset):
 
         for meta, idx in mini_mp_inst.items():
             mini_mp_inst[meta] = np.unique(np.concatenate((idx, np.flip(idx, axis=1))), axis=0)
-        # Here seed_nodes are the nodes sampled from original graph with {self.category: idx} as seed_nodes
+        # Here seed_nodes are the nodes sampled from original graph with {self.category: idx} as _seed_nodes
         # while mini_mp_inst is corresponding mini metapath instances
         return seed_nodes, mini_mp_inst, _seed_nodes, self.g
 
@@ -76,8 +73,7 @@ class MAGNN_sampler(Dataset):
         # return self.g.number_of_nodes(self.category)
         return len(self.mask[self.mask == 1])
 
-@profile
-def collate_fn(batch): # TODO: may be the most time-consumed part?
+def collate_fn(batch):
     '''
 
     Parameters
@@ -118,7 +114,6 @@ def collate_fn(batch): # TODO: may be the most time-consumed part?
     [seed_ntypes.extend(list(_batch[2].keys())) for _batch in batch]
     ntypes, meta_types, seed_ntypes = set(ntypes), set(meta_types), set(seed_ntypes)
 
-    # TODO: maybe why the consumed time is so large
     for _batch in batch:
         for ntype in ntypes:
             if ntype not in _batch[0].keys():
@@ -127,7 +122,7 @@ def collate_fn(batch): # TODO: may be the most time-consumed part?
                 nids[ntype] = np.concatenate((nids[ntype], _batch[0][ntype]), axis=0)
             else:
                 nids[ntype] = _batch[0][ntype]
-            nids[ntype] = np.unique(nids[ntype], axis=0)
+            # nids[ntype] = np.unique(nids[ntype], axis=0)
         for meta_type in meta_types:
             if meta_type not in _batch[1].keys():
                 continue
@@ -136,7 +131,6 @@ def collate_fn(batch): # TODO: may be the most time-consumed part?
                                                          axis=0)
             else:
                 mini_mp_inst[meta_type] = _batch[1][meta_type]
-            mini_mp_inst[meta_type] = np.unique(mini_mp_inst[meta_type], axis=0)
         for seed_ntype in seed_ntypes:
             if seed_ntype not in _batch[2].keys():
                 continue
@@ -146,7 +140,6 @@ def collate_fn(batch): # TODO: may be the most time-consumed part?
                                                         axis=0)
             else:
                 seed_nodes[seed_ntype] = _batch[2][seed_ntype]
-            seed_nodes[seed_ntype] = np.unique(seed_nodes[seed_ntype], axis=0)
 
     for ntype in nids.keys():
         nids[ntype] = np.sort(np.unique(nids[ntype], axis=0), axis=0)
@@ -162,5 +155,6 @@ def collate_fn(batch): # TODO: may be the most time-consumed part?
         seed_nodes[seed_ntype] = np.array(
             list(map(lambda x: np.argwhere(_nids == x)[0][0], seed_nodes[seed_ntype]))
         )
-
+    # if seed_nodes = {'A':[0, 2]}, the 0th and 2th nodes of type 'A' are seed_nodes in
+    # _subgraph
     return _subgraph, mini_mp_inst, seed_nodes
