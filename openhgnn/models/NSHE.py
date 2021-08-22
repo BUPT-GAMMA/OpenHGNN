@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv
 import dgl
-from . import BaseModel, register_model, hetero_linear, multi_2Linear
+from . import BaseModel, register_model, HeteroMLPLayer, HeteroLinearLayer
 
 '''
 In paper repo performance		
@@ -58,7 +58,7 @@ class NSHE(BaseModel):
             linear_list2.append((ntype, self.emd_dim, self.context_dim))
             linear_list3.append((ntype, cla_dim, 1))
         # * ================== Project feature Layer==================
-        self.feature_proj = hetero_linear(linear_list1)
+        self.feature_proj = HeteroLinearLayer(linear_list1, has_l2norm=False, has_bn=False)
         # * ================== Neighborhood Agg(gnn_model)==================
         if self.gnn_model == "GCN":
             self.gnn1 = GraphConv(self.project_dim, self.emd_dim, norm="none", activation=F.relu)
@@ -68,9 +68,9 @@ class NSHE(BaseModel):
             self.gnn2 = GraphConv(self.emd_dim, self.emd_dim, activation=None)
 
         # * ================== Context encoder(called CE in the paper)=================
-        self.context_encoder = hetero_linear(linear_list2)
+        self.context_encoder = HeteroLinearLayer(linear_list2, has_l2norm=False, has_bn=False)
         # * ================== NSI Classification================
-        self.linear_classifier = multi_2Linear(linear_list3)
+        self.linear_classifier = HeteroMLPLayer(linear_list3, has_l2norm=False, has_bn=False)
 
     def forward(self, hg, h):
         with hg.local_scope():

@@ -115,7 +115,7 @@ class NSHETrainer(BaseFlow):
                     h_con_type = h_context[type]
                     h_con = h_con_type[index_h]
                     h_tar = th.cat((h_tar, h_con), dim=1)
-            p = self.model.linear_classifier(target, h_tar)
+            p = self.model.linear_classifier({target: h_tar})[target]
             p_list.append(p)
         return p_list
 
