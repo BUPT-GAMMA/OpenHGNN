@@ -200,6 +200,24 @@ class HGB_NodeCLassification(NodeClassificationDataset):
             g.nodes['term'].data['h'] = th.eye(g.number_of_nodes('term'))
             self.in_dim = g.ndata['h'][category].shape[1]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+        elif dataset_name == 'HGBn-dblp':
+            data_path = './openhgnn/dataset/HGBn-dblp.bin'
+            category = 'author'
+            num_classes = 4
+            g, _ = load_graphs(data_path)
+            g = g[0].long()
+            g.nodes['venue'].data['h'] = th.eye(g.number_of_nodes('venue'))
+            self.in_dim = g.ndata['h'][category].shape[1]
+            # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+        elif dataset_name == 'HGBn-freebase':
+            data_path = './openhgnn/dataset/HGBn-freebase.bin'
+            category = 'BOOK'
+            num_classes = 4
+            g, _ = load_graphs(data_path)
+            g = g[0].long()
+            g.nodes['venue'].data['h'] = th.eye(g.number_of_nodes('venue'))
+            self.in_dim = g.ndata['h'][category].shape[1]
+            # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         else:
             raise ValueError
         self.g, self.category, self.num_classes = g, category, num_classes
@@ -265,7 +283,7 @@ class OGB_NodeCLassification(NodeClassificationDataset):
             self.category], split_idx["test"][self.category]
         self.g, self.label_dict = dataset[0]
         self.g = self.mag4HGT(self.g)
-        self.label = self.label_dict[self.category]
+        self.label = self.label_dict[self.category].squeeze(dim=-1)
         # 2-dim label
         self.in_dim = self.g.ndata['h'][self.category].shape[1]
         self.has_feature = True

@@ -52,7 +52,7 @@ def build_dataset(dataset, task):
         _dataset = 'hin_' + task
     elif dataset in ['ogbn-mag']:
         _dataset = 'ogbn_' + task
-    elif dataset in ['HGBn-acm']:
+    elif dataset in ['HGBn-acm', 'HGBn-dblp','HGBn-freebase']:
         _dataset = 'HGBn_' + task
     elif dataset in ['wn18', 'FB15k', 'FB15k-237']:
         assert task == 'link_prediction'

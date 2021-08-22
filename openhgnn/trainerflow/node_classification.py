@@ -1,13 +1,11 @@
-import argparse
-import copy
 import dgl
-import numpy as np
 import torch
 from tqdm import tqdm
-import torch.nn.functional as F
-from openhgnn.models import build_model
+from ..utils.sampler import get_node_data_loader
+from ..models import build_model
 from . import BaseFlow, register_flow
 from ..tasks import build_task
+from ..utils.logger import printInfo
 from ..utils import extract_embed, EarlyStopping
 
 
@@ -55,12 +53,12 @@ class NodeClassification(BaseFlow):
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
-        self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
+        self.train_idx, self.valid_idx, self.test_idx = self.task.get_idx()
         self.labels = self.task.get_labels().to(self.device)
         if self.args.mini_batch_flag:
             # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
             sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
-            self.loader = dgl.dataloading.NodeDataLoader(
+            self.train_loader = dgl.dataloading.NodeDataLoader(
                 self.hg.to('cpu'), {self.category: self.train_idx.to('cpu')}, sampler,
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
@@ -87,6 +85,15 @@ class NodeClassification(BaseFlow):
             else:
                 # self.model = MLP_follow_model(self.model, args.out_dim, self.num_classes)
                 pass
+        elif self.args.model == 'RHGNN':
+            print(f'get node data loader...')
+            self.train_loader, self.val_loader, self.test_loader = get_node_data_loader(self.args.node_neighbors_min_num,
+                                                                         self.args.n_layers,
+                                                                         self.hg.to('cpu'),
+                                                                         batch_size=self.args.batch_size,
+                                                                         sampled_node_type=self.category,
+                                                                         train_idx=self.train_idx, valid_idx=self.valid_idx,
+                                                                         test_idx=self.test_idx)
         return
 
     def train(self):
@@ -95,60 +102,42 @@ class NodeClassification(BaseFlow):
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
             if self.args.mini_batch_flag:
-                loss = self._mini_train_step()
+                train_loss = self._mini_train_step()
             else:
-                loss = self._full_train_step()
-            #if (epoch + 1) % self.evaluate_interval == 0:
-            score, losses = self._test_step()
+                train_loss = self._full_train_step()
+            if epoch % self.evaluate_interval == 0:
+                if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
+                    train_score, train_loss = self._mini_test_step(mode='train')
+                    val_score, val_loss = self._mini_test_step(mode='validation')
+                else:
+                    score, losses = self._full_test_step()
+                    train_score = score["train"]
+                    val_score = score["val"]
+                    val_loss = losses["val"]
 
-            train_score = score["train"]
-            val_score = score["val"]
-            test_score = score['test']
-            val_loss = losses["val"]
-            # epoch_iter.set_description(
-            #     f"Epoch: {epoch:03d}, Train_macro_f1: {train_f1[0]:.4f}, Train_micro_f1: {train_f1[1]:.4f}, Val_macro_f1: {val_f1[0]:.4f}, Val_micro_f1: {val_f1[1]:.4f}, ValLoss:{val_loss: .4f}"
-            # )
-            self.printInfo(epoch, loss, train_score, val_score, test_score, val_loss)
+                printInfo(self.metric, epoch, train_score, train_loss, val_score, val_loss)
 
-            early_stop = stopper.step(val_loss, val_score, self.model)
-            if early_stop:
-                print('Early Stop!\tEpoch:' + str(epoch))
-                break
+                early_stop = stopper.step(val_loss, val_score, self.model)
+                if early_stop:
+                    print('Early Stop!\tEpoch:' + str(epoch))
+                    break
 
-        print(f"Valid_micro_{self.metric} = {stopper.best_score: .4f}, Min_loss = {stopper.best_loss: .4f}")
+        ############ TEST SCORE #########
+        print(f"Valid_score_{self.metric} = {stopper.best_score: .4f}, Min_loss = {stopper.best_loss: .4f}")
         stopper.load_model(self.model)
-        test_score, _ = self._test_step(split="test")
-        val_score, _ = self._test_step(split="val")
+
+        if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
+            test_score, _ = self._mini_test_step(mode='test')
+            val_score, val_loss = self._mini_test_step(mode='validation')
+        else:
+            test_score, _ = self._full_test_step(mode='test')
+            val_score, val_loss = self._full_test_step(mode='validation')
+
         if isinstance(test_score, tuple):
             print(f"Test_macro_{self.metric} = {test_score[0]:.4f}, Test_micro_{self.metric}: {test_score[1]:.4f}")
         else:
             print(f"Test_{self.metric} = {test_score:.4f}")
         return dict(Acc=test_score, ValAcc=val_score)
-
-    def printInfo(self, epoch, loss, train_score, val_score, test_score, val_loss):
-
-        if self.metric == 'f1_lr':
-            print((
-                f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train_macro_f1: {train_score[0]:.4f}, Train_micro_f1: {train_score[1]:.4f}, "
-                f"Val_macro_f1: {val_score[0]:.4f}, Test_macro_f1: {test_score[0]:.4f}, ValLoss:{val_loss: .4f}"
-            ))
-        # use acc
-        elif self.metric == 'acc':
-            print((
-                f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train_acc: {train_score:.4f},  "
-                f"Val_acc: {val_score:.4f}, Test_acc: {test_score:.4f}, ValLoss:{val_loss: .4f}"
-            ))
-        elif self.metric == 'acc-ogbn-mag':
-            print((
-                f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train_acc: {train_score:.4f},  "
-                f"Val_acc: {val_score:.4f}, Test_acc: {test_score:.4f}, ValLoss:{val_loss: .4f}"
-            ))
-        else :
-            print((
-                f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train_macro_f1: {train_score[0]:.4f}, Train_micro_f1: {train_score[1]:.4f}, "
-                f"Val_macro_f1: {val_score[0]:.4f}, Test_macro_f1: {test_score[0]:.4f}, ValLoss:{val_loss: .4f}"
-            ))
-
 
     def _full_train_step(self):
         self.model.train()
@@ -162,12 +151,16 @@ class NodeClassification(BaseFlow):
 
     def _mini_train_step(self,):
         self.model.train()
-        loss_all = 0
-        for i, (input_nodes, seeds, blocks) in enumerate(self.loader):
+        loss_all = 0.0
+        #loader_tqdm = tqdm(self.train_loader, ncols=120)
+        for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
             blocks = [blk.to(self.device) for blk in blocks]
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
             # batch_tic = time.time()
-            emb = extract_embed(self.model.embed_layer(), input_nodes)
+            if hasattr(self.model, 'embed_layer'):
+                emb = extract_embed(self.model.embed_layer(), input_nodes)
+            else:
+                emb = blocks[0].srcdata['h']
             lbl = self.labels[seeds].to(self.device)
             logits = self.model(blocks, emb)[self.category]
             loss = self.loss_fn(logits, lbl)
@@ -175,17 +168,17 @@ class NodeClassification(BaseFlow):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-        return loss_all
+        return loss_all / (i + 1)
 
-    def _test_step(self, split=None, logits=None):
+    def _full_test_step(self, mode=None, logits=None):
         self.model.eval()
         with torch.no_grad():
             logits = logits if logits else self.model(self.hg)[self.category]
-            if split == "train":
+            if mode == "train":
                 mask = self.train_idx
-            elif split == "val":
+            elif mode == "validation":
                 mask = self.val_idx
-            elif split == "test":
+            elif mode == "test":
                 mask = self.test_idx
             else:
                 mask = None
@@ -193,13 +186,44 @@ class NodeClassification(BaseFlow):
             if mask is not None:
                 loss = self.loss_fn(logits[mask], self.labels[mask]).item()
                 metric = self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), name=self.metric, mask=mask)
+                if self.args.dataset[:4] == 'HGBn':
+                    if mode == 'test':
+                        from space4hgnn.utils import gen_file_for_evaluate
+                        gen_file_for_evaluate(self.test_idx, logits[mask].argmax(dim=1).to('cpu'), f"{self.args.dataset}_1")
                 return metric, loss
             else:
                 masks = {'train': self.train_idx, 'val': self.val_idx, 'test': self.test_idx}
                 metrics = {key: self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), name=self.metric, mask=mask) for
                            key, mask in masks.items()}
                 losses = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}
-
-
                 return metrics, losses
+
+    def _mini_test_step(self, mode):
+        self.model.eval()
+        with torch.no_grad():
+            y_trues = []
+            y_predicts = []
+            loss_all = 0.0
+            if mode == 'train':
+                loader_tqdm = tqdm(self.train_loader, ncols=120)
+            elif mode == 'validation':
+                loader_tqdm = tqdm(self.val_loader, ncols=120)
+            elif mode == 'test':
+                loader_tqdm = tqdm(self.test_loader, ncols=120)
+            for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
+                blocks = [blk.to(self.device) for blk in blocks]
+                seeds = seeds[self.category]
+                lbl = self.labels[seeds].to(self.device)
+                logits = self.model(blocks)[self.category]
+                loss = self.loss_fn(logits, lbl)
+
+                loss_all += loss.item()
+                y_trues.append(lbl.detach().cpu())
+                y_predicts.append(logits.detach().cpu())
+            loss_all /= (i + 1)
+            y_trues = torch.cat(y_trues, dim=0)
+            y_predicts = torch.cat(y_predicts, dim=0)
+        evaluator = self.task.get_evaluator(name='f1')
+        metric = evaluator(y_trues,y_predicts.argmax(dim=1).to('cpu'))
+        return metric, loss
             

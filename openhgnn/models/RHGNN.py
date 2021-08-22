@@ -3,16 +3,13 @@ import torch as th
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-from openhgnn.utils.utils import extract_mtx_with_id_edge
 from . import BaseModel, register_model
 import tqdm
 import torch
-from torch import nn
 
-import dgl
 from dgl.ops import edge_softmax
 import dgl.function as fn
+
 
 @register_model('RHGNN')
 class RHGNN(BaseModel):
@@ -123,7 +120,7 @@ class RHGNN(BaseModel):
         for etype in self.relation_transformation_weight:
             nn.init.xavier_normal_(self.relation_transformation_weight[etype], gain=gain)
 
-    def forward(self, blocks: list,relation_target_node_features=None, relation_embedding: dict = None):
+    def forward(self, blocks: list, relation_target_node_features=None, relation_embedding: dict = None):
         """
 
         :param blocks: list of sampled dgl.DGLHeteroGraph
@@ -177,7 +174,7 @@ class RHGNN(BaseModel):
         # relation_target_node_features, {(srctype, etype, dsttype): (dst_nodes, n_heads * hidden_dim)}
         classifier_result = self.classifier(relation_fusion_embedding_dict[self.category])
         # return relation_fusion_embedding_dict, relation_target_node_features
-        return classifier_result
+        return {self.category: classifier_result}
 
     def inference(self, graph: dgl.DGLHeteroGraph, relation_target_node_features: dict, relation_embedding: dict = None,
                   device: str = 'cuda:0'):
@@ -674,7 +671,7 @@ class R_HGNN_Layer(nn.Module):
         # residual connection for the target node
         if self.residual:
             for srctype, etype, dsttype in output_features:
-                alpha = F.sigmoid(self.residual_weight[dsttype])
+                alpha = torch.sigmoid(self.residual_weight[dsttype])
                 output_features[(srctype, etype, dsttype)] = output_features[(srctype, etype, dsttype)] * alpha + \
                                                              self.res_fc[dsttype](
                                                                  input_dst[(srctype, etype, dsttype)]) * (1 - alpha)
