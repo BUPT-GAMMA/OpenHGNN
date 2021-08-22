@@ -64,5 +64,6 @@ SUPPORTED_MODELS = {
     'NSHE': 'openhgnn.models.NSHE',
     'NARS': 'openhgnn.models.NARS',
     'GCN': 'space4hgnn.homo_models.GCN',
-    'GAT': 'space4hgnn.homo_models.GAT'
+    'GAT': 'space4hgnn.homo_models.GAT',
+    'RHGNN': 'openhgnn.models.RHGNN'
 }
