@@ -221,8 +221,11 @@ class Config(object):
 
             self.patience = conf.getint('MAGNN', 'patience')
             self.max_epoch = conf.getint('MAGNN', 'max_epoch')
-            self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
             self.encoder_type = conf.get('MAGNN', 'encoder_type')
+            self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
+            if self.mini_batch_flag:
+                self.batch_size = conf.getint("MAGNN", "batch_size")
+                self.num_samples = conf.getint("MAGNN", "num_samples")
         
         elif model == 'RHGNN':
             self.lr = conf.getfloat("RHGNN", "learning_rate")
@@ -245,8 +248,7 @@ class Config(object):
             self.n_heads = conf.getint("RHGNN", "n_heads")
             self.category = conf.get("RHGNN", "category")
             self.out_dim = conf.getint("RHGNN", "out_dim")
-        
-        
+
         elif model == 'HGT':
             self.lr = conf.getfloat("HGT", "learning_rate")
             self.weight_decay = conf.getfloat("HGT", "weight_decay")
