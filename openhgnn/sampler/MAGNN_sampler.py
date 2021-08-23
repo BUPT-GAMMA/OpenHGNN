@@ -12,6 +12,9 @@ class MAGNN_sampler():
     The MAGNN sampler samples n-layer subgraphs based on seed_node of a certain class, metapath instances of seed_nodes
     which contain all neighbors that might be sampled.
 
+    Users can make use of the MAGNN sampler as a dataset of torch.DataLoader so that we can assign num_workers to
+    concurrently speed up sampling subgraphs.
+
     Parameters
     ----------
     g : dgl.DGLGraph
