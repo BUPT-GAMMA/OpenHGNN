@@ -177,7 +177,7 @@ class NodeClassification(BaseFlow):
             if mode == "train":
                 mask = self.train_idx
             elif mode == "validation":
-                mask = self.val_idx
+                mask = self.valid_idx
             elif mode == "test":
                 mask = self.test_idx
             else:
@@ -192,7 +192,7 @@ class NodeClassification(BaseFlow):
                         gen_file_for_evaluate(self.test_idx, logits[mask].argmax(dim=1).to('cpu'), f"{self.args.dataset}_1")
                 return metric, loss
             else:
-                masks = {'train': self.train_idx, 'val': self.val_idx, 'test': self.test_idx}
+                masks = {'train': self.train_idx, 'val': self.valid_idx, 'test': self.test_idx}
                 metrics = {key: self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), name=self.metric, mask=mask) for
                            key, mask in masks.items()}
                 losses = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}

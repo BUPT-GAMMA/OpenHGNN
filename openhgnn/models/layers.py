@@ -33,12 +33,12 @@ class GeneralLinear(nn.Module):
 
 
 class HeteroLinearLayer(nn.Module):
-    def __init__(self, linear_list, act=None, dropout=0.0, has_l2norm=True, has_bn=True):
+    def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True):
         super(HeteroLinearLayer, self).__init__()
 
         self.layer = nn.ModuleDict({})
-        for linear in linear_list:
-            self.layer[linear[0]] = GeneralLinear(in_features=linear[1], out_features=linear[2], act=act,
+        for name, linear_dim in linear_dict.items():
+            self.layer[name] = GeneralLinear(in_features=linear_dim[0], out_features=linear_dim[1], act=act,
                                                   dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
 
     def forward(self, dict_h):
@@ -51,19 +51,15 @@ class HeteroLinearLayer(nn.Module):
 
 
 class HeteroMLPLayer(nn.Module):
-    def __init__(self, linear_list, num_layers=1, act=None, dropout=0.0, has_l2norm=True, has_bn=True, **kwargs):
+    def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, **kwargs):
         super(HeteroMLPLayer, self).__init__()
         self.layers = nn.ModuleDict({})
-        for linear in linear_list:
-            name = linear[0]
-            in_dim = linear[1]
-            out_dim = linear[2]
-            inner_dim = out_dim
+        for name, linear_dim in linear_dict.items():
             nn_list = []
-            for i in range(num_layers):
-                in_d = in_dim if i == 0 else inner_dim
-                out_d = out_dim if i == num_layers - 1 else inner_dim
-                layer = GeneralLinear(in_features=in_d, out_features=out_d, act=act,
+            for i in range(len(linear_dim)-1):
+                in_dim = linear_dim[i]
+                out_dim = linear_dim[i+1]
+                layer = GeneralLinear(in_features=in_dim, out_features=out_dim, act=act,
                                       dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
 
                 nn_list.append(layer)
