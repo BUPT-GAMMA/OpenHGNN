@@ -179,11 +179,11 @@ class Config(object):
 
             self.patience = conf.getint('MAGNN', 'patience')
             self.max_epoch = conf.getint('MAGNN', 'max_epoch')
-            self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
             self.encoder_type = conf.get('MAGNN', 'encoder_type')
-
-            # TODO: Test for MAGNN sampler
-            self.batch_size = conf.getint("MAGNN", "batch_size")
+            self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
+            if self.mini_batch_flag:
+                self.batch_size = conf.getint("MAGNN", "batch_size")
+                self.num_samples = conf.getint("MAGNN", "num_samples")
 
         elif model == 'HGT':
             self.lr = conf.getfloat("HGT", "learning_rate")

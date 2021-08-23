@@ -3,8 +3,41 @@ import numpy as np
 from openhgnn.models.MAGNN import mp_instance_sampler, mini_mp_instance_sampler
 
 class MAGNN_sampler():
+    '''
+    Description
+    -----------
+    MAGNN sampler based on the implementation of author. The author only implements one sampling 1-layer subgraphs. Here
+    we implement the MAGNN sampler which can sample n-layer subgraphs based on DGL and Pytorch.
+
+    The MAGNN sampler samples n-layer subgraphs based on seed_node of a certain class, metapath instances of seed_nodes
+    which contain all neighbors that might be sampled.
+
+    Parameters
+    ----------
+    g : dgl.DGLGraph
+        the dgl graph from which we sample subgraphs.
+    mask : list or numpy.ndarray
+        the train/test/test nodes mask, which should be like train mask = [0, 1, 0, 0, 1] indicating that the
+        1th, 4th nodes are training nodes of g. Note that the mask indicates which part of nodes in g will be sampled
+        by MAGNN sampler. e.g. if it's the test mask, the sample will be employed on testing nodes of g to sample
+        subgraphs for testing phase. This param is useful when the graph is too large to be directly validate on.
+    n_layers : int
+        the number of layers of each subgraph.
+    category : any
+        the class of seed_nodes.
+    metapath_list : list
+        the type of all metapaths in graph g. e.g. ['MAM', 'MDM', ...]
+    num_samples : int
+        the maximal number of metapath instances we'd like to sample for each node. i.e. for each node,
+        if the number of metapath instances is more than num_samples, we sample num_samples instances randomly based on
+        a specific calculated probability. Otherwise, we sample all instances.
+    dataset_name : str
+        the name of the dataset.
+        Default : 'dblp4MAGNN'
+
+    '''
     def __init__(self, g, mask, n_layers, category, metapath_list,
-                 num_samples, dataset_name='imdb4MAGNN'):
+                 num_samples, dataset_name='dblp4MAGNN'):
         self.g = g
         self.mask = mask
         self.dataset_name = dataset_name
@@ -122,7 +155,6 @@ def collate_fn(batch):
                 nids[ntype] = np.concatenate((nids[ntype], _batch[0][ntype]), axis=0)
             else:
                 nids[ntype] = _batch[0][ntype]
-            # nids[ntype] = np.unique(nids[ntype], axis=0)
         for meta_type in meta_types:
             if meta_type not in _batch[1].keys():
                 continue

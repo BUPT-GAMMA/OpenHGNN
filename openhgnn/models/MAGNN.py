@@ -18,7 +18,7 @@ model
 @register_model('MAGNN')
 class MAGNN(BaseModel):
     @classmethod
-    def build_model_from_args(cls, args, hg): # TODO: These args should be shift to config
+    def build_model_from_args(cls, args, hg):
         if args.dataset == 'imdb4MAGNN':
             # build model
             metapath_list = ['MDM', 'MAM', 'DMD', 'DMAMD', 'AMA', 'AMDMA']
