@@ -5,32 +5,11 @@ This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) 
 
 [Release Plan]We want to release version0.1 in September.
 
-## Keys
+## Key Features
 
 - Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and datasets using [optuna](https://optuna.org/) which is a hyperparameter optimization framework.
 - Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
 - Efficiency: The backend dgl provides efficient APIs.
-
-## Why OpenHGNN
-
-### Relation with [DGL](https://github.com/dmlc/dgl)
-
-OpenHGNN is a high-level package built on top of DGL; it will not cover efficient implementation of low-level components in C++.
-
-### Relation with [OpenHINE](https://github.com/BUPT-GAMMA/OpenHINE)
-
-| Package  | Heterograph structure | Models                            | Efficiency  | Others                                     |
-| -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
-| OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
-| OpenHGNN | heterograph           | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
-
-We aim to build more embedding methods(implemented in OpenHINE) in OpenHGNN.
-
-To avoid reinventing the wheel, we use the DGL as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
-
-![image](./docs/source/image-001.jpg)
-
-
 
 ## Get Started
 
@@ -60,17 +39,26 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.
 
-## A Pipeline of OpenHGNN
+## Why OpenHGNN
 
-###### We define three components: [TrainerFlow](./openhgnn/trainerflow/#Trainerflow), [Model](./openhgnn/models/#Model), [Task](./openhgnn/tasks/#Task).
+### Relation with [DGL](https://github.com/dmlc/dgl)
 
-- For a given paper,
-  - For unsupervised model, the model and the trainerflow are specific cause the loss calculation is fixed.So given a model name, we can identify the model and trainerflow, user need also specify the task name.
-  - For other model, the model is fixed and the trainerflow is changeable according to task.
-    User must specify the model and the task, and the trainerflow will be determined by the task.
-    For example, RGCN on the node classification task will use the entity classification flow and RGCN on the link prediction task will use the dist_mult flow.
+OpenHGNN is a high-level package built on top of DGL; it will not cover efficient implementation of low-level components in C++.
 
-![image-20210622151239030](./docs/source/image-002.png)
+### Relation with [OpenHINE](https://github.com/BUPT-GAMMA/OpenHINE)
+
+| Package  | Heterograph structure | Models                            | Efficiency  | Others                                     |
+| -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
+| OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
+| OpenHGNN | heterograph           | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
+
+We aim to build more embedding methods(implemented in OpenHINE) in OpenHGNN.
+
+To avoid reinventing the wheel, we use the DGL as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
+
+![image](./docs/source/image-001.jpg)
+
+
 
 ## [Models](./openhgnn/models/#Model)
 
@@ -99,6 +87,18 @@ It is under development, and we release it in a nightly build version. For now, 
 - [Heterogeneous Graph Propagation Network[TKDE 2021]](https://ieeexplore.ieee.org/abstract/document/9428609)
 - [Self-supervised Heterogeneous Graph Neural Network with Co-contrastive Learning[KDD 2021]](https://arxiv.org/abs/2105.09111)
 - Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]
+
+## A Pipeline of OpenHGNN
+
+###### We define three components: [TrainerFlow](./openhgnn/trainerflow/#Trainerflow), [Model](./openhgnn/models/#Model), [Task](./openhgnn/tasks/#Task).
+
+- For a given paper,
+  - For unsupervised model, the model and the trainerflow are specific cause the loss calculation is fixed.So given a model name, we can identify the model and trainerflow, user need also specify the task name.
+  - For other model, the model is fixed and the trainerflow is changeable according to task.
+    User must specify the model and the task, and the trainerflow will be determined by the task.
+    For example, RGCN on the node classification task will use the entity classification flow and RGCN on the link prediction task will use the dist_mult flow.
+
+![image-20210622151239030](./docs/source/image-002.png)
 
 ## Contributors
 

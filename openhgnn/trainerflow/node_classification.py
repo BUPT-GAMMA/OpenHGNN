@@ -40,7 +40,7 @@ class NodeClassification(BaseFlow):
         if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
             args.out_dim = self.num_classes
-
+        self.args.has_feature = self.task.dataset.has_feature
         self.args.category = self.task.dataset.category
         self.category = self.args.category
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
@@ -122,10 +122,17 @@ class NodeClassification(BaseFlow):
                     print('Early Stop!\tEpoch:' + str(epoch))
                     break
 
-        ############ TEST SCORE #########
+
         print(f"Valid_score_{self.metric} = {stopper.best_score: .4f}, Min_loss = {stopper.best_loss: .4f}")
         stopper.load_model(self.model)
 
+        ############ TEST SCORE #########
+        if self.args.dataset[:4] == 'HGBn':
+            self.model.eval()
+            with torch.no_grad():
+                logits = self.model(self.hg)[self.category]
+                self.task.dataset.save_results(logits=logits, file_path=self.args.HGB_results_path)
+            return
         if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
             test_score, _ = self._mini_test_step(mode='test')
             val_score, val_loss = self._mini_test_step(mode='validation')
@@ -152,7 +159,7 @@ class NodeClassification(BaseFlow):
     def _mini_train_step(self,):
         self.model.train()
         loss_all = 0.0
-        #loader_tqdm = tqdm(self.train_loader, ncols=120)
+        loader_tqdm = tqdm(self.train_loader, ncols=120)
         for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
             blocks = [blk.to(self.device) for blk in blocks]
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
@@ -185,15 +192,18 @@ class NodeClassification(BaseFlow):
 
             if mask is not None:
                 loss = self.loss_fn(logits[mask], self.labels[mask]).item()
-                metric = self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), name=self.metric, mask=mask)
-                if self.args.dataset[:4] == 'HGBn':
-                    if mode == 'test':
-                        from space4hgnn.utils import gen_file_for_evaluate
-                        gen_file_for_evaluate(self.test_idx, logits[mask].argmax(dim=1).to('cpu'), f"{self.args.dataset}_1")
+                if self.args.task.multi_label:
+                    pred = (logits[mask].cpu().numpy()>0).astype(int)
+                else:
+                    pred = logits[mask].argmax(dim=1).to('cpu')
+                metric = self.task.evaluate(pred, name=self.metric, mask=mask)
+
                 return metric, loss
             else:
                 masks = {'train': self.train_idx, 'val': self.valid_idx, 'test': self.test_idx}
-                metrics = {key: self.task.evaluate(logits[mask].argmax(dim=1).to('cpu'), name=self.metric, mask=mask) for
+                metrics = {key: self.task.evaluate((logits[mask].cpu().numpy()>0).astype(int) if self.task.multi_label
+                                                   else logits[mask].argmax(dim=1).to('cpu'),
+                                                   name=self.metric, mask=mask) for
                            key, mask in masks.items()}
                 losses = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}
                 return metrics, losses

@@ -2,6 +2,7 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class HeteroEmbedLayer(nn.Module):
     r"""Embedding layer for featureless heterograph."""
 
