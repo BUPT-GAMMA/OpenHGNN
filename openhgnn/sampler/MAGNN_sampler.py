@@ -20,10 +20,10 @@ class MAGNN_sampler():
     g : dgl.DGLGraph
         the dgl graph from which we sample subgraphs.
     mask : list or numpy.ndarray
-        the train/test/test nodes mask, which should be like train mask = [0, 1, 0, 0, 1] indicating that the
-        1th, 4th nodes are training nodes of g. Note that the mask indicates which part of nodes in g will be sampled
-        by MAGNN sampler. e.g. if it's the test mask, the sample will be employed on testing nodes of g to sample
-        subgraphs for testing phase. This param is useful when the graph is too large to be directly validate on.
+        the train/test/test nodes mask, which should be like train mask = [False, True, False, True, False] indicating
+        that the 1th, 4th nodes are training nodes of g. Note that the mask indicates which part of nodes in g will be
+        sampled by MAGNN sampler. e.g. if it's the test mask, the sample will be employed on testing nodes of g to
+        sample subgraphs for testing phase. This param is useful when the graph is too large to be directly validate on.
     n_layers : int
         the number of layers of each subgraph.
     category : any

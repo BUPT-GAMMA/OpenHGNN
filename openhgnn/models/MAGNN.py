@@ -213,7 +213,6 @@ class MAGNN(BaseModel):
         # output layer
         h_output, embedding = self.layers[-1](h, self.metapath_idx_dict)
 
-        # TODO: TEST!!!NEED TO DEPRECATE THE RETURN EMBEDDING!
         return h_output, embedding
 
 
@@ -476,8 +475,7 @@ def mp_instance_sampler(g, metapath_list, dataset):
 
     Notes
     -----
-    Please make sure that the metapath in metapath_list are all symmetric and bidirectional. If not bidirectional,
-    please make sure that the leftmost element in a metapath in the dst node type.
+    Please make sure that the metapath in metapath_list are all symmetric
 
     We'd store the metapath instances in the disk after one metapath instances sampling and next time the
     metapath instances will be extracted directly from the disk if they exists.
