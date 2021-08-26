@@ -3,33 +3,33 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from space4hgnn.models.layers import GeneralLayer
+from . import HeteroGeneralLayer
 from openhgnn.models import BaseModel, register_model, HeteroMLPLayer
 from openhgnn.models import HeteroEmbedLayer
 from openhgnn.utils import get_nodes_dict
 ########### Layer ############
-def GNNLayer(gnn_type, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
-    return GeneralLayer(gnn_type, dim_in, dim_out, dropout, act, has_bn, has_l2norm)
+def HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
+    return HeteroGeneralLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm)
 
 
 ########### Block: multiple layers ############
 
-class GNNSkipBlock(nn.Module):
+class HGNNSkipBlock(nn.Module):
     '''Skip block for HGNN'''
 
-    def __init__(self, gnn_type, dim_in, dim_out, num_layers, stage_type, dropout, act, has_bn, has_l2norm):
-        super(GNNSkipBlock, self).__init__()
+    def __init__(self, gnn_type, rel_names, dim_in, dim_out, num_layers, stage_type, dropout, act, has_bn, has_l2norm):
+        super(HGNNSkipBlock, self).__init__()
         self.stage_type = stage_type
         self.f = nn.ModuleList()
         if num_layers == 1:
-            self.f.append(GNNLayer(gnn_type, dim_in, dim_out, dropout, act, has_bn, has_l2norm))
+            self.f.append(HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm))
         else:
             self.f = []
             for i in range(num_layers - 1):
                 d_in = dim_in if i == 0 else dim_out
-                self.f.append(GNNLayer(gnn_type, d_in, dim_out, dropout, act, has_bn, has_l2norm))
+                self.f.append(HGNNLayer(gnn_type, rel_names, d_in, dim_out, dropout, act, has_bn, has_l2norm))
             d_in = dim_in if num_layers == 1 else dim_out
-            self.f.append(GNNLayer(gnn_type, d_in, dim_out, dropout, act, has_bn, has_l2norm))
+            self.f.append(HGNNLayer(gnn_type, rel_names, d_in, dim_out, dropout, act, has_bn, has_l2norm))
         self.act = act
         if stage_type == 'skipsum':
             assert dim_in == dim_out, 'Sum skip must have same dim_in, dim_out'
@@ -50,32 +50,33 @@ class GNNSkipBlock(nn.Module):
 
 ########### Stage: NN except start and head ############
 
-class GNNStackStage(nn.Module):
+class HGNNStackStage(nn.Module):
     '''Simple Stage that stack GNN layers'''
 
-    def __init__(self, gnn_type, stage_type, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
-        super(GNNStackStage, self).__init__()
+    def __init__(self, gnn_type, rel_names, stage_type, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
+        super(HGNNStackStage, self).__init__()
 
         for i in range(num_layers):
             d_in = dim_in if i == 0 else dim_out
-            layer = GNNLayer(gnn_type, d_in, dim_out, dropout, act, has_bn, has_l2norm)
+            layer = HGNNLayer(gnn_type, rel_names, d_in, dim_out, dropout, act, has_bn, has_l2norm)
             self.add_module('layer{}'.format(i), layer)
         self.dim_out = dim_out
         self.has_l2norm = has_l2norm
 
-    def forward(self, g, h):
+    def forward(self, g, h_dict):
         for layer in self.children():
-            h = layer(g, h)
+            h_dict = layer(g, h_dict)
         if self.has_l2norm:
-            h = F.normalize(h, p=2, dim=-1)
-        return h
+            for name, batch_h in h_dict.items():
+                h_dict[name] = F.normalize(batch_h, p=2, dim=-1)
+        return h_dict
 
 
-class GNNSkipStage(nn.Module):
+class HGNNSkipStage(nn.Module):
     ''' Stage with skip connections'''
 
-    def __init__(self, gnn_type, stage_type, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
-        super(GNNSkipStage, self).__init__()
+    def __init__(self, gnn_type, rel_names, stage_type, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
+        super(HGNNSkipStage, self).__init__()
         assert num_layers % skip_every == 0, \
             'cfg.gnn.skip_every must be multiples of cfg.gnn.layer_mp' \
             '(excluding head layer)'
@@ -84,7 +85,7 @@ class GNNSkipStage(nn.Module):
                 d_in = dim_in if i == 0 else dim_out
             elif stage_type == 'skipconcat':
                 d_in = dim_in if i == 0 else dim_in + i * dim_out
-            block = GNNSkipBlock(gnn_type, d_in, dim_out, skip_every, stage_type, dropout, act, has_bn, has_l2norm)
+            block = HGNNSkipBlock(gnn_type, rel_names, d_in, dim_out, skip_every, stage_type, dropout, act, has_bn, has_l2norm)
             self.add_module('block{}'.format(i), block)
         if stage_type == 'skipconcat':
             self.dim_out = d_in + dim_out
@@ -92,18 +93,19 @@ class GNNSkipStage(nn.Module):
             self.dim_out = dim_out
         self.has_l2norm = has_l2norm
 
-    def forward(self, g, h):
+    def forward(self, g, h_dict):
         for layer in self.children():
-            h = layer(g, h)
+            h_dict = layer(g, h_dict)
         if self.has_l2norm:
-            h = F.normalize(h, p=2, dim=-1)
-        return h
+            for name, batch_h in h_dict.items():
+                h_dict[name] = F.normalize(batch_h, p=2, dim=-1)
+        return h_dict
 
 
 stage_dict = {
-    'stack': GNNStackStage,
-    'skipsum': GNNSkipStage,
-    'skipconcat': GNNSkipStage,
+    'stack': HGNNStackStage,
+    'skipsum': HGNNSkipStage,
+    'skipconcat': HGNNSkipStage,
 }
 
 #stage_dict = {**register.stage_dict, **stage_dict}
@@ -133,8 +135,8 @@ def HGNNPostMP(args, hg):
                           has_l2norm=args.has_l2norm, has_bn=args.has_bn)
 ########### Model: start + stage + head ############
 
-@register_model('homo_GNN')
-class homo_GNN(BaseModel):
+@register_model('relation_HGNN')
+class relation_HGNN(BaseModel):
     '''General homogeneous GNN model'''
     @classmethod
     def build_model_from_args(cls, args, hg):
@@ -142,13 +144,8 @@ class homo_GNN(BaseModel):
 
     def __init__(self, args, hg, **kwargs):
         """
-            Parameters:
-            node_encoding_classes - For integer features, gives the number
-            of possible integer features to map.
         """
-        super(homo_GNN, self).__init__()
-
-
+        super(relation_HGNN, self).__init__()
         if args.has_feature == False:
             self.embedding_layer = HeteroEmbedLayer(get_nodes_dict(hg), args.hidden_dim).to(args.device)
             hg.ndata['h'] = self.embedding_layer()
@@ -157,8 +154,9 @@ class homo_GNN(BaseModel):
             self.pre_mp = HGNNPreMP(args, hg)
 
         if args.layers_gnn > 0:
-            GNNStage = stage_dict[args.stage_type]
-            self.gnn = GNNStage(gnn_type=args.gnn_type,
+            HGNNStage = stage_dict[args.stage_type]
+            self.hgnn = HGNNStage(gnn_type=args.gnn_type,
+                                  rel_names=hg.etypes,
                                 stage_type=args.stage_type,
                                 dim_in=args.hidden_dim,
                                 dim_out=args.hidden_dim,
@@ -182,16 +180,10 @@ class homo_GNN(BaseModel):
                 h_dict = hg.ndata['h']
             if hasattr(self, 'pre_mp'):
                 h_dict = self.pre_mp(h_dict)
-            if hasattr(self, 'gnn'):
-                hg.ndata['h'] = h_dict
-                homo_g = dgl.to_homogeneous(hg, ndata=['h'])
-                homo_g = dgl.remove_self_loop(homo_g)
-                homo_g = dgl.add_self_loop(homo_g)
-                h = homo_g.ndata.pop('h')
-                h = self.gnn(homo_g, h)
-                out_h = self.h2dict(h, h_dict)
+            if hasattr(self, 'hgnn'):
+                h_dict = self.hgnn(hg, h_dict)
             if hasattr(self, 'post_mp'):
-                out_h = self.post_mp(out_h)
+                out_h = self.post_mp(h_dict)
         return out_h
 
     def h2dict(self, h, hdict):

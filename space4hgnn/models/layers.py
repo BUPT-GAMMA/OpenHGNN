@@ -3,8 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import dgl
-from dgl.nn.pytorch import GraphConv
-
+from ..relation_models import RGCNConv
 
 ## General classes
 class GeneralLayer(nn.Module):
@@ -63,7 +62,7 @@ class BatchNorm1dNode(nn.Module):
 class GCNConv(nn.Module):
     def __init__(self, dim_in, dim_out, bias=False, **kwargs):
         super(GCNConv, self).__init__()
-        self.model = GraphConv(dim_in, dim_out, bias=bias)
+        self.model = dgl.nn.pytorch.GraphConv(dim_in, dim_out, bias=bias)
 
     def forward(self, g, h):
         h = self.model(g, h)

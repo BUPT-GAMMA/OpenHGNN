@@ -25,16 +25,49 @@ node_classification:
       has_l2norm:
         False
       lr:
-        0.0005
+        0.001
       weight_decay:
-        0.0001
+        0.000001
       patience:
         30
       max_epoch:
         300
       mini_batch_flag:
         False
+    relation_HGNN:
+      hidden_dim:
+        64
 
+      layers_pre_mp:
+        1
+      layers_post_mp:
+        1
+      layers_gnn:
+        3
+      stage_type:
+        stack
+
+      activation:
+        relu
+      dropout:
+        0.5
+      has_bn:
+        False
+      gnn_type:
+        rgcnconv
+
+      has_l2norm:
+        False
+      lr:
+        0.001
+      weight_decay:
+        0.000001
+      patience:
+        30
+      max_epoch:
+        300
+      mini_batch_flag:
+        False
     GCN:
       hidden_dim:
         64
@@ -92,15 +125,15 @@ node_classification:
       has_l2norm:
         False
       has_bn:
-        False
+        True
       stage_type:
         skipsum
       gnn_type:
         gcnconv
       lr:
-        0.0005
+        0.001
       weight_decay:
-        0.0001
+        0.000001
       patience:
         30
       max_epoch:
@@ -135,21 +168,21 @@ node_classification:
       layers_post_mp:
         1
       layers_gnn:
-        3
+        2
       activation:
         relu
       dropout:
         0.5
       has_l2norm:
-        True
+        False
       has_bn:
-        True
+        False
       stage_type:
-        skipsum
+        stack
       gnn_type:
         gcnconv
       lr:
-        0.0005
+        0.001
       weight_decay:
         0.0001
       patience:
@@ -167,21 +200,21 @@ node_classification:
       layers_post_mp:
         1
       layers_gnn:
-        4
+        2
       activation:
         relu
       dropout:
         0.5
       has_l2norm:
-        True
+        False
       has_bn:
-        True
+        False
       stage_type:
-        skipsum
+        stack
       gnn_type:
         gcnconv
       lr:
-        0.0005
+        0.001
       weight_decay:
         0.0001
       patience:
