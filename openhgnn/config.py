@@ -246,6 +246,28 @@ class Config(object):
             self.category = conf.get("RHGNN", "category")
             self.out_dim = conf.getint("RHGNN", "out_dim")
         
+        elif model == 'MAGNN_AC':
+            self.lr = conf.getfloat("MAGNN_AC", "learning_rate")
+            self.weight_decay = conf.getfloat("MAGNN_AC", "weight_decay")
+            self.seed = conf.getint("MAGNN_AC", "seed")
+            self.dropout = conf.getfloat("MAGNN_AC", "dropout")
+            
+            self.feats_drop_rate = conf.getfloat("MAGNN_AC", "feats_drop_rate")
+            self.attn_vec_dim = conf.getint("MAGNN_AC", "attn_vec_dim")
+            self.feats_opt = conf.get("MAGNN_AC", "feats_opt")
+            self.loss_lambda = conf.getfloat("MAGNN_AC", "loss_lambda")
+            self.src_node_type = conf.getint("MAGNN_AC", "src_node_type")
+
+            self.inter_attn_feats = conf.getint("MAGNN_AC", "inter_attn_feats")
+            self.hidden_dim = conf.getint('MAGNN_AC', 'hidden_dim')
+            self.out_dim = conf.getint('MAGNN_AC', 'out_dim')
+            self.num_heads = conf.getint('MAGNN_AC', 'num_heads')
+            self.num_layers = conf.getint("MAGNN_AC", "num_layers")
+
+            self.patience = conf.getint('MAGNN_AC', 'patience')
+            self.max_epoch = conf.getint('MAGNN_AC', 'max_epoch')
+            self.mini_batch_flag = conf.getboolean("MAGNN_AC", "mini_batch_flag")
+            self.encoder_type = conf.get('MAGNN_AC', 'encoder_type')
         
         elif model == 'HGT':
             self.lr = conf.getfloat("HGT", "learning_rate")

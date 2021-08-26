@@ -44,6 +44,8 @@ def get_trainerflow(model, task):
             return 'node_classification'
         if task in ['link_prediction']:
             return 'link_prediction'
+    elif model in ['MAGNN_AC']:
+        return 'node_classification_ac'
     elif model in ['HGT', 'HGT_hetero']:
         return 'hgttrainer'
     elif model in ['NSHE']:
