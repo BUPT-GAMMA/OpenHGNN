@@ -6,14 +6,13 @@
 Welcome to OpenHGNN's documentation!
 ====================================
 
-
 .. toctree::
    :maxdepth: 1
    :caption: Get Started
    :hidden:
    :glob:
 
-
+   install/index
 
 .. toctree::
    :maxdepth: 2

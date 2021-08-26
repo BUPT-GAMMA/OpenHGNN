@@ -56,7 +56,7 @@ We aim to build more embedding methods(implemented in OpenHINE) in OpenHGNN.
 
 To avoid reinventing the wheel, we use the DGL as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
 
-![image](./docs/source/image-001.jpg)
+![image](./docs/source/_static/image-001.jpg)
 
 
 
@@ -98,7 +98,7 @@ To avoid reinventing the wheel, we use the DGL as our backend. So we build the n
     User must specify the model and the task, and the trainerflow will be determined by the task.
     For example, RGCN on the node classification task will use the entity classification flow and RGCN on the link prediction task will use the dist_mult flow.
 
-![image-20210622151239030](./docs/source/image-002.png)
+![image-20210622151239030](./docs/source/_static/image-002.png)
 
 ## Contributors
 
