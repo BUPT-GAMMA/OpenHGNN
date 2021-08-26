@@ -21,6 +21,7 @@ class Config(object):
         except:
             print("failed!")
         # training dataset path
+        self.seed = 0
         self.task = task
         self.model = model
         self.dataset = dataset
@@ -63,6 +64,25 @@ class Config(object):
             self.norm_emd_flag = conf.getboolean("GTN", "norm_emd_flag")
             self.adaptive_lr_flag = conf.getboolean("GTN", "adaptive_lr_flag")
             self.mini_batch_flag = conf.getboolean("GTN", "mini_batch_flag")
+
+        elif model == "MHNF":
+            self.lr = conf.getfloat("MHNF", "learning_rate")
+            self.weight_decay = conf.getfloat("MHNF", "weight_decay")
+            self.seed = conf.getint("MHNF", "seed")
+            # np.random.seed(self.seed)
+
+            self.hidden_dim = conf.getint("MHNF", "hidden_dim")
+            self.out_dim = conf.getint("MHNF", "out_dim")
+            self.num_channels = conf.getint("MHNF", "num_channels")
+            self.num_layers = conf.getint("MHNF", "num_layers")
+            self.max_epoch = conf.getint("MHNF", "max_epoch")
+            self.patience = conf.getint("MHNF", "patience")
+
+            self.identity = conf.getboolean("MHNF", "identity")
+            self.norm_emd_flag = conf.getboolean("MHNF", "norm_emd_flag")
+            self.adaptive_lr_flag = conf.getboolean("MHNF", "adaptive_lr_flag")
+            self.mini_batch_flag = conf.getboolean("MHNF", "mini_batch_flag")
+
         elif model == "RSHN":
             self.lr = conf.getfloat("RSHN", "learning_rate")
             self.weight_decay = conf.getfloat("RSHN", "weight_decay")
@@ -83,6 +103,7 @@ class Config(object):
             self.lr = conf.getfloat("RGCN", "learning_rate")
             self.dropout = conf.getfloat("RGCN", "dropout")
 
+            self.in_dim = conf.getint("RGCN", "in_dim")
             self.hidden_dim = conf.getint("RGCN", "hidden_dim")
             self.out_dim = conf.getint("RGCN", "out_dim")
 
@@ -104,7 +125,8 @@ class Config(object):
             self.weight_decay = conf.getfloat("CompGCN", "weight_decay")
             self.dropout = conf.getfloat("CompGCN", "dropout")
 
-            self.h_dim = conf.getint("CompGCN", "h_dim")
+            self.in_dim = conf.getint("CompGCN", "in_dim")
+            self.hidden_dim = conf.getint("CompGCN", "hidden_dim")
             self.out_dim = conf.getint("CompGCN", "out_dim")
             self.n_layers = conf.getint("CompGCN", "n_layers")
             self.max_epoch = conf.getint("CompGCN", "max_epoch")
@@ -165,6 +187,26 @@ class Config(object):
             self.max_epoch = conf.getint('HAN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")
 
+        elif model == 'NARS':
+            self.lr = conf.getfloat("NARS", "learning_rate")
+            self.weight_decay = conf.getfloat("NARS", "weight_decay")
+            self.seed = conf.getint("NARS", "seed")
+            self.dropout = conf.getfloat("NARS", "dropout")
+            self.patience = conf.getint('HAN', 'patience')
+            self.hidden_dim = conf.getint('NARS', 'hidden_dim')
+            self.out_dim = conf.getint('NARS', 'out_dim')
+            num_heads = conf.get('NARS', 'num_heads').split('-')
+            self.num_heads = [int(i) for i in num_heads]
+
+            self.max_epoch = conf.getint('NARS', 'max_epoch')
+            self.mini_batch_flag = conf.getboolean("NARS", "mini_batch_flag")
+            self.R = conf.getint('NARS', 'R')
+            self.cpu_preprocess = conf.getboolean("NARS", "cpu_preprocess")
+            self.input_dropout = conf.getboolean("NARS", "input_dropout")
+
+            self.ff_layer = conf.getint('NARS', 'ff_layer')
+
+
         elif model == 'MAGNN':
             self.lr = conf.getfloat("MAGNN", "learning_rate")
             self.weight_decay = conf.getfloat("MAGNN", "weight_decay")
@@ -181,6 +223,29 @@ class Config(object):
             self.max_epoch = conf.getint('MAGNN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
             self.encoder_type = conf.get('MAGNN', 'encoder_type')
+        
+        elif model == 'RHGNN':
+            self.lr = conf.getfloat("RHGNN", "learning_rate")
+            self.num_heads = conf.getint("RHGNN", "num_heads")
+            self.hidden_dim = conf.getint("RHGNN", "hidden_dim")
+            self.relation_hidden_units = conf.getint("RHGNN", "relation_hidden_units")
+            self.drop_out = conf.getfloat("RHGNN", "drop_out")
+            self.n_layers = conf.getint("RHGNN", "n_layers")
+            self.residual = conf.getboolean("RHGNN", "residual")
+            self.batch_size = conf.getint("RHGNN", "batch_size")
+            self.node_neighbors_min_num = conf.getint("RHGNN", "node_neighbors_min_num")
+            #self.optimizer = conf.get
+            self.weight_decay = conf.getfloat("RHGNN", "weight_decay")
+            self.max_epoch = conf.getint("RHGNN", "max_epoch")
+            self.patience = conf.getint("RHGNN", "patience")
+            self.mini_batch_flag = conf.getboolean("RHGNN", "mini_batch_flag")
+            self.negative_slope = conf.getfloat("RHGNN", "negative_slope")
+            self.norm = conf.getboolean("RHGNN", "norm")
+            self.dropout = conf.getfloat("RHGNN", "dropout")
+            self.n_heads = conf.getint("RHGNN", "n_heads")
+            self.category = conf.get("RHGNN", "category")
+            self.out_dim = conf.getint("RHGNN", "out_dim")
+        
         elif model == 'MAGNN_AC':
             self.lr = conf.getfloat("MAGNN_AC", "learning_rate")
             self.weight_decay = conf.getfloat("MAGNN_AC", "weight_decay")
@@ -203,6 +268,7 @@ class Config(object):
             self.max_epoch = conf.getint('MAGNN_AC', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("MAGNN_AC", "mini_batch_flag")
             self.encoder_type = conf.get('MAGNN_AC', 'encoder_type')
+        
         elif model == 'HGT':
             self.lr = conf.getfloat("HGT", "learning_rate")
             self.weight_decay = conf.getfloat("HGT", "weight_decay")

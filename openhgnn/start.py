@@ -1,12 +1,13 @@
 from .utils import set_random_seed, set_best_config
 from .trainerflow import build_flow
-
+from .auto import hpo_experiment
 
 
 def OpenHGNN(args):
+    if not getattr(args, 'seed', False):
+        args.seed = 0
     set_random_seed(args.seed)
 
-    # TODO find the best parameter
     if getattr(args, "use_best_config", False):
         args = set_best_config(args)
     if hasattr(args, 'trainerflow'):
@@ -14,23 +15,35 @@ def OpenHGNN(args):
     else:
         trainerflow = get_trainerflow(args.model, args.task)
     print(args)
-    flow = build_flow(args, trainerflow)
-    result = flow.train()
-
-    return result
+    if getattr(args, "use_hpo", False):
+        # hyper-parameter search
+        hpo_experiment(args, trainerflow)
+    else:
+        flow = build_flow(args, trainerflow)
+        result = flow.train()
+        return result
 
 
 def get_trainerflow(model, task):
-    if model in ['RGCN', 'CompGCN', 'RSHN']:
+    if model == 'demo':
+        if task in ['node_classification']:
+            return 'entity_classification'
+        elif task in ['link_prediction']:
+            return 'link_prediction'
+        elif task == 'demo':
+            return 'demo'
+    elif model in ['RGCN', 'CompGCN', 'RSHN']:
         if task in ['node_classification']:
             return 'entity_classification'
         if task in ['link_prediction']:
-            return 'distmult'
+            return 'link_prediction'
     elif model in ['HetGNN']:
         return 'hetgnntrainer'
-    elif model in ['HAN', 'MAGNN', 'GTN']:
+    elif model in ['HAN', 'MAGNN', 'GTN', 'NARS', 'MHNF', 'RHGNN']:
         if task in ['node_classification']:
             return 'node_classification'
+        if task in ['link_prediction']:
+            return 'link_prediction'
     elif model in ['MAGNN_AC']:
         return 'node_classification_ac'
     elif model in ['HGT', 'HGT_hetero']:
