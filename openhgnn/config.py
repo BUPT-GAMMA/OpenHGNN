@@ -222,5 +222,22 @@ class Config(object):
             self.n_layers = conf.getint("HGT", "n_layers")
             self.num_heads = conf.getint("HGT", "num_heads")
 
+        elif model == 'DMGI':
+            self.lr = conf.getfloat("DMGI", "learning_rate")
+            self.l2_coef = conf.getfloat("DMGI", "l2_coef")
+            self.sc = conf.getint("DMGI", "sc")
+            self.seed = conf.getint("DMGI", "seed")
+            self.sup_coef = conf.getfloat("DMGI",'sup_coef')
+            self.reg_coef = conf.getfloat("DMGI", "reg_coef")
+            self.dropout = conf.getfloat("DMGI", "dropout")
+            self.hid_unit = conf.getint('DMGI', 'hid_unit')
+            self.num_heads = conf.getint('DMGI', 'num_heads')
+            self.patience = conf.getint('DMGI', 'patience')
+            self.max_epoch = conf.getint('DMGI', 'max_epoch')
+
+            self.isSemi = conf.getboolean("DMGI", "isSemi")
+            self.isBias = conf.getboolean("DMGI", "isBias")
+            self.isAttn = conf.getboolean("DMGI", "isAttn")
+
     def __repr__(self):
         return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset
