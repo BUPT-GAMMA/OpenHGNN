@@ -2,12 +2,13 @@ import dgl
 import dgl.function as fn
 from dgl.data import DGLDataset
 import torch as th
+import numpy as np
 from . import load_acm, load_acm_raw
 from openhgnn.dataset import BaseDataset, register_dataset
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
 from ogb.nodeproppred import DglNodePropPredDataset
-from . import AcademicDataset
+from . import AcademicDataset, HGBDataset
 
 
 @register_dataset('node_classification')
@@ -120,7 +121,6 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             num_classes = 3
             self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset == 'acm4NARS':
-            # TODO : to be continue
             dataset = AcademicDataset(name='acm4NARS', raw_dir='')
             g = dataset[0].long()
             num_classes = 3
@@ -134,7 +134,7 @@ class HIN_NodeCLassification(NodeClassificationDataset):
             num_classes = 4
         elif name_dataset in ['acm_han', 'acm_han_raw']:
             if name_dataset == 'acm_han':
-                g, category, num_classes = load_acm(True)
+                pass
             elif name_dataset == 'acm_han_raw':
                 g, category, num_classes, self.in_dim = load_acm_raw(False)
             else:
@@ -180,12 +180,120 @@ class HIN_NodeCLassification(NodeClassificationDataset):
 
     def get_labels(self):
         if 'labels' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('labels')
+            labels = self.g.nodes[self.category].data.pop('labels').long()
         elif 'label' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('label')
+            labels = self.g.nodes[self.category].data.pop('label').long()
         else:
             raise ValueError('label in not in the hg.nodes[category].data')
         return labels
+
+
+@register_dataset('HGBn_node_classification')
+class HGB_NodeCLassification(NodeClassificationDataset):
+    def __init__(self, dataset_name):
+        super(HGB_NodeCLassification, self).__init__()
+        self.dataset_name = dataset_name
+        self.has_feature = True
+        if dataset_name == 'HGBn-acm':
+            dataset = HGBDataset(name='HGBn-acm', raw_dir='')
+            g = dataset[0].long()
+            category = 'paper'
+            num_classes = 4
+            g.nodes['term'].data['h'] = th.eye(g.number_of_nodes('term'))
+            self.in_dim = g.ndata['h'][category].shape[1]
+            # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+        elif dataset_name == 'HGBn-dblp':
+            dataset = HGBDataset(name='HGBn-dblp', raw_dir='')
+            g = dataset[0].long()
+            category = 'author'
+            num_classes = 4
+            g.nodes['venue'].data['h'] = th.eye(g.number_of_nodes('venue'))
+            self.in_dim = g.ndata['h'][category].shape[1]
+            # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+        elif dataset_name == 'HGBn-freebase':
+            dataset = HGBDataset(name='HGBn-freebase', raw_dir='')
+            g = dataset[0].long()
+            category = 'BOOK'
+            num_classes = 8
+            self.has_feature = False
+            #self.in_dim = g.ndata['h'][category].shape[1]
+            # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+        elif dataset_name == 'HGBn-imdb':
+            dataset = HGBDataset(name='HGBn-imdb', raw_dir='')
+            g = dataset[0].long()
+            category = 'movie'
+            num_classes = 5
+            g.nodes['keyword'].data['h'] = th.eye(g.number_of_nodes('keyword'))
+            self.in_dim = g.ndata['h'][category].shape[1]
+        else:
+            raise ValueError
+        self.g, self.category, self.num_classes = g, category, num_classes
+
+    def get_idx(self, validation=True):
+        if 'train_mask' not in self.g.nodes[self.category].data:
+            num_nodes = self.g.number_of_nodes(self.category)
+
+            n_test = int(num_nodes * 0.2)
+            n_train = num_nodes - n_test
+
+            train, test = th.utils.data.random_split(range(num_nodes), [n_train, n_test])
+            train_idx = th.tensor(train.indices)
+            test_idx = th.tensor(test.indices)
+            if validation:
+                valid_idx = train_idx[:len(train_idx) // 10]
+                train_idx = train_idx[len(train_idx) // 10:]
+            else:
+                valid_idx = train_idx
+                train_idx = train_idx
+        else:
+            train_mask = self.g.nodes[self.category].data.pop('train_mask')
+            test_mask = self.g.nodes[self.category].data.pop('test_mask')
+            train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
+            test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
+            if validation:
+                if 'val_mask' in self.g.nodes[self.category].data:
+                    val_mask = self.g.nodes[self.category].data.pop('val_mask')
+                    valid_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
+                    pass
+                else:
+                    valid_idx = train_idx[:len(train_idx) // 5]
+                    train_idx = train_idx[len(train_idx) // 5:]
+            else:
+                valid_idx = train_idx
+                train_idx = train_idx
+        self.train_idx = train_idx
+        self.valid_idx = valid_idx
+        self.test_idx = test_idx
+        return self.train_idx, self.valid_idx, self.test_idx
+
+    def get_labels(self):
+        # RuntimeError: Expected object of scalar type Long but got scalar type Float for argument #2 'target' in call to _thnn_nll_loss_forward
+        if 'labels' in self.g.nodes[self.category].data:
+            labels = self.g.nodes[self.category].data.pop('labels').long()
+        elif 'label' in self.g.nodes[self.category].data:
+            labels = self.g.nodes[self.category].data.pop('label').long()
+        else:
+            raise ValueError('label in not in the hg.nodes[category].data')
+        self.labels = labels.float() if self.dataset_name == 'HGBn-imdb' else labels
+        return self.labels
+
+    def save_results(self, logits, file_path):
+        test_logits = logits[self.test_idx]
+        if self.dataset_name == 'HGBn-imdb':
+            pred = (test_logits.cpu().numpy() > 0).astype(int)
+            multi_label = []
+            for i in range(pred.shape[0]):
+                label_list = [str(j) for j in range(pred[i].shape[0]) if pred[i][j] == 1]
+                multi_label.append(','.join(label_list))
+            pred = multi_label
+        elif self.dataset_name in ['HGBn-acm', 'HGBn-dblp', 'HGBn-freebase']:
+            pred = test_logits.cpu().numpy().argmax(axis=1)
+            pred = np.array(pred)
+        else:
+            return
+        with open(file_path, "w") as f:
+            for nid, l in zip(self.test_idx, pred):
+                f.write(f"{nid}\t\t{0}\t{l}\n")
 
 
 @register_dataset('ogbn_node_classification')
@@ -204,7 +312,7 @@ class OGB_NodeCLassification(NodeClassificationDataset):
             self.category], split_idx["test"][self.category]
         self.g, self.label_dict = dataset[0]
         self.g = self.mag4HGT(self.g)
-        self.label = self.label_dict[self.category]
+        self.label = self.label_dict[self.category].squeeze(dim=-1)
         # 2-dim label
         self.in_dim = self.g.ndata['h'][self.category].shape[1]
         self.has_feature = True

@@ -33,6 +33,19 @@ BEST_CONFIGS = {
                 'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,
             },
         },
+        'MHNF': {
+            'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 64, 'max_epoch': 50, 'patience': 10,
+                        'norm_emd_flag': True, 'mini_batch_flag': False},
+            'acm4GTN': {
+                'num_layers': 2, 'num_channels': 2, 'adaptive_lr_flag': True,
+            },
+            'imdb4GTN': {
+                'num_layers': 2, 'num_channels': 2, 'adaptive_lr_flag': True,
+            },
+            'dblp4GTN': {
+                'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,
+            },
+        },
         'HAN': {
             'general': {},
             'acm_han_raw': {
@@ -45,6 +58,15 @@ BEST_CONFIGS = {
             'imdb4GTN': {
                 'lr': 0.001, 'weight_decay': 0.00001, 'num_heads': [2, 2, 2]
             }
+
+        },
+        'NARS': {
+            'general': {},
+            'acm4NARS': {
+                'lr': 0.001, 'num_heads': [8], 'hidden_dim': 64, 'dropout': 0.5, 'weight_decay': 0.001,
+                'num_epochs': 200, 'patience': 100, 'metric': 'acc'
+            },
+
 
         },
         'HetGNN': {

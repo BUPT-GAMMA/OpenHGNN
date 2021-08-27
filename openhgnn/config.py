@@ -64,6 +64,25 @@ class Config(object):
             self.norm_emd_flag = conf.getboolean("GTN", "norm_emd_flag")
             self.adaptive_lr_flag = conf.getboolean("GTN", "adaptive_lr_flag")
             self.mini_batch_flag = conf.getboolean("GTN", "mini_batch_flag")
+
+        elif model == "MHNF":
+            self.lr = conf.getfloat("MHNF", "learning_rate")
+            self.weight_decay = conf.getfloat("MHNF", "weight_decay")
+            self.seed = conf.getint("MHNF", "seed")
+            # np.random.seed(self.seed)
+
+            self.hidden_dim = conf.getint("MHNF", "hidden_dim")
+            self.out_dim = conf.getint("MHNF", "out_dim")
+            self.num_channels = conf.getint("MHNF", "num_channels")
+            self.num_layers = conf.getint("MHNF", "num_layers")
+            self.max_epoch = conf.getint("MHNF", "max_epoch")
+            self.patience = conf.getint("MHNF", "patience")
+
+            self.identity = conf.getboolean("MHNF", "identity")
+            self.norm_emd_flag = conf.getboolean("MHNF", "norm_emd_flag")
+            self.adaptive_lr_flag = conf.getboolean("MHNF", "adaptive_lr_flag")
+            self.mini_batch_flag = conf.getboolean("MHNF", "mini_batch_flag")
+
         elif model == "RSHN":
             self.lr = conf.getfloat("RSHN", "learning_rate")
             self.weight_decay = conf.getfloat("RSHN", "weight_decay")
@@ -204,7 +223,30 @@ class Config(object):
             self.max_epoch = conf.getint('MAGNN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
             self.encoder_type = conf.get('MAGNN', 'encoder_type')
-
+        
+        elif model == 'RHGNN':
+            self.lr = conf.getfloat("RHGNN", "learning_rate")
+            self.num_heads = conf.getint("RHGNN", "num_heads")
+            self.hidden_dim = conf.getint("RHGNN", "hidden_dim")
+            self.relation_hidden_units = conf.getint("RHGNN", "relation_hidden_units")
+            self.drop_out = conf.getfloat("RHGNN", "drop_out")
+            self.n_layers = conf.getint("RHGNN", "n_layers")
+            self.residual = conf.getboolean("RHGNN", "residual")
+            self.batch_size = conf.getint("RHGNN", "batch_size")
+            self.node_neighbors_min_num = conf.getint("RHGNN", "node_neighbors_min_num")
+            #self.optimizer = conf.get
+            self.weight_decay = conf.getfloat("RHGNN", "weight_decay")
+            self.max_epoch = conf.getint("RHGNN", "max_epoch")
+            self.patience = conf.getint("RHGNN", "patience")
+            self.mini_batch_flag = conf.getboolean("RHGNN", "mini_batch_flag")
+            self.negative_slope = conf.getfloat("RHGNN", "negative_slope")
+            self.norm = conf.getboolean("RHGNN", "norm")
+            self.dropout = conf.getfloat("RHGNN", "dropout")
+            self.n_heads = conf.getint("RHGNN", "n_heads")
+            self.category = conf.get("RHGNN", "category")
+            self.out_dim = conf.getint("RHGNN", "out_dim")
+        
+        
         elif model == 'HGT':
             self.lr = conf.getfloat("HGT", "learning_rate")
             self.weight_decay = conf.getfloat("HGT", "weight_decay")

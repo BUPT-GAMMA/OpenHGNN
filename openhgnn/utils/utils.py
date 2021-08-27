@@ -41,6 +41,8 @@ class EarlyStopping(object):
         self.save_path = save_path
 
     def step(self, loss, score, model):
+        if isinstance(score ,tuple):
+            score = score[0]
         if self.best_loss is None:
             self.best_score = score
             self.best_loss = loss
@@ -71,6 +73,7 @@ class EarlyStopping(object):
         else:
             if score >= self.best_score:
                 self.save_model(model)
+                
             self.best_score = np.max((score, self.best_score))
             self.counter = 0
         return self.early_stop
@@ -137,6 +140,7 @@ def set_random_seed(seed):
     np.random.seed(seed)
     th.manual_seed(seed)
     th.cuda.manual_seed(seed)
+    dgl.seed(seed)
 
 def com_mult(a, b):
     r1, i1 = a[..., 0], a[..., 1]

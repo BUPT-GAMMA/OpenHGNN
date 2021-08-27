@@ -7,7 +7,7 @@ import dgl.function as fn
 @register_model('NARS')
 class NARS(BaseModel):
     """
-    NARS model
+    The NARS model.
     Arguments
     ----------
     seq: sequential model
@@ -77,6 +77,18 @@ def preprocess_features(g, rel_subsets, args, device):
     """
     pre-process heterogeneous graph g to generate neighbor-averaged features
     for each relation subsets
+
+    Input
+    ------
+    g: heterogeneous graph
+    rel_subsets: relations of subsets
+    args: arguments
+    device: device
+
+    Output
+    ------
+    new features of each relation subsets
+
     """
     paper_dim = g.nodes["paper"].data["feat"].shape[1]
     author_dim = g.nodes["author"].data["feat"].shape[1]
@@ -106,6 +118,17 @@ def gen_rel_subset_feature(g, rel_subset, args, device):
     """
     Build relation subgraph given relation subset and generate multi-hop
     neighbor-averaged feature on this subgraph
+
+    Input
+    ------
+    g: Heterogeneous graph
+    rel_subset: relation of subsets
+    args: arguments
+    device: device
+
+    Output
+    ------
+    new features of a relation subsets
     """
     if args.cpu_preprocess:
         device = "cpu"
@@ -166,6 +189,16 @@ def gen_rel_subset_feature(g, rel_subset, args, device):
 
 
 class FeedForwardNet(nn.Module):
+    """
+    A feedforward net.
+
+    Input:
+    in_feats: input feature dimention
+    hidden: hidden layer dimention
+    out_feats: output feature dimention
+    n_layers: number of layers
+    dropout: dropout rate
+    """
     def __init__(self, in_feats, hidden, out_feats, n_layers, dropout):
         super(FeedForwardNet, self).__init__()
         self.layers = nn.ModuleList()
@@ -197,6 +230,20 @@ class FeedForwardNet(nn.Module):
 
 
 class SIGN(nn.Module):
+    """
+    The SIGN model.
+
+    Input
+    ------
+    in_feats: input feature dimention
+    hidden: hidden layer dimention
+    out_feats: output feature dimention
+    num_hops: number of hops
+    n_layers: number of layers
+    dropout: dropout rate
+    input_drop: whether or not to dropout when inputting features
+
+    """
     def __init__(
         self, in_feats, hidden, out_feats, num_hops, n_layers, dropout, input_drop
     ):
@@ -224,6 +271,16 @@ class SIGN(nn.Module):
 
 
 class WeightedAggregator(nn.Module):
+    """
+    Get new features by multiplying the old features by the weight matrix.
+
+    Input
+    -------
+    num_feats: number of subsets
+    in_feats: input feature dimention
+    num_hops: number of hops
+
+    """
     def __init__(self, num_feats, in_feats, num_hops):
         super(WeightedAggregator, self).__init__()
         self.agg_feats = nn.ParameterList()
