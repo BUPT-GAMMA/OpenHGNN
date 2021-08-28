@@ -3,35 +3,36 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from space4hgnn.models.layers import GeneralLayer, MultiLinearLayer
+from space4hgnn.metapath_models.layers import GeneralLayer
+from space4hgnn.models.layers import MultiLinearLayer
 from openhgnn.models import BaseModel, register_model, HeteroMLPLayer
 from openhgnn.models import HeteroEmbedLayer
 from openhgnn.utils import get_nodes_dict
-########### Layer ############
-def GNNLayer(gnn_type, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
-    return GeneralLayer(gnn_type, dim_in, dim_out, dropout, act, has_bn, has_l2norm)
 
-def GNNPreMP(dim_in, dim_out):
-    return MultiLinearLayer('linear', cfg.gnn.layers_pre_mp,
-                             dim_in, dim_out, dim_inner=dim_out, final_act=True)
+
+########### Layer ############
+def GNNLayer(gnn_type, meta_paths, macro_func, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
+    return GeneralLayer(gnn_type, meta_paths, macro_func, dim_in, dim_out, dropout, act, has_bn, has_l2norm)
+
+
 ########### Block: multiple layers ############
 
 class GNNSkipBlock(nn.Module):
     '''Skip block for HGNN'''
 
-    def __init__(self, gnn_type, dim_in, dim_out, num_layers, stage_type, dropout, act, has_bn, has_l2norm):
+    def __init__(self, gnn_type, meta_paths, macro_func, dim_in, dim_out, num_layers, stage_type, dropout, act, has_bn, has_l2norm):
         super(GNNSkipBlock, self).__init__()
         self.stage_type = stage_type
         self.f = nn.ModuleList()
         if num_layers == 1:
-            self.f.append(GNNLayer(gnn_type, dim_in, dim_out, dropout, act, has_bn, has_l2norm))
+            self.f.append(GNNLayer(gnn_type, meta_paths, macro_func, dim_in, dim_out, dropout, act, has_bn, has_l2norm))
         else:
             self.f = []
             for i in range(num_layers - 1):
                 d_in = dim_in if i == 0 else dim_out
-                self.f.append(GNNLayer(gnn_type, d_in, dim_out, dropout, act, has_bn, has_l2norm))
+                self.f.append(GNNLayer(gnn_type, meta_paths, macro_func, d_in, dim_out, dropout, act, has_bn, has_l2norm))
             d_in = dim_in if num_layers == 1 else dim_out
-            self.f.append(GNNLayer(gnn_type, d_in, dim_out, dropout, act, has_bn, has_l2norm))
+            self.f.append(GNNLayer(gnn_type, meta_paths, macro_func, d_in, dim_out, dropout, act, has_bn, has_l2norm))
         self.act = act
         if stage_type == 'skipsum':
             assert dim_in == dim_out, 'Sum skip must have same dim_in, dim_out'
@@ -55,12 +56,12 @@ class GNNSkipBlock(nn.Module):
 class GNNStackStage(nn.Module):
     '''Simple Stage that stack GNN layers'''
 
-    def __init__(self, gnn_type, stage_type, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
+    def __init__(self, gnn_type, stage_type, meta_paths, macro_func, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
         super(GNNStackStage, self).__init__()
 
         for i in range(num_layers):
             d_in = dim_in if i == 0 else dim_out
-            layer = GNNLayer(gnn_type, d_in, dim_out, dropout, act, has_bn, has_l2norm)
+            layer = GNNLayer(gnn_type, meta_paths, macro_func, d_in, dim_out, dropout, act, has_bn, has_l2norm)
             self.add_module('layer{}'.format(i), layer)
         self.dim_out = dim_out
         self.has_l2norm = has_l2norm
@@ -76,7 +77,7 @@ class GNNStackStage(nn.Module):
 class GNNSkipStage(nn.Module):
     ''' Stage with skip connections'''
 
-    def __init__(self, gnn_type, stage_type, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
+    def __init__(self, gnn_type, stage_type, meta_paths, macro_func, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
         super(GNNSkipStage, self).__init__()
         assert num_layers % skip_every == 0, \
             'cfg.gnn.skip_every must be multiples of cfg.gnn.layer_mp' \
@@ -86,7 +87,7 @@ class GNNSkipStage(nn.Module):
                 d_in = dim_in if i == 0 else dim_out
             elif stage_type == 'skipconcat':
                 d_in = dim_in if i == 0 else dim_in + i * dim_out
-            block = GNNSkipBlock(gnn_type, d_in, dim_out, skip_every, stage_type, dropout, act, has_bn, has_l2norm)
+            block = GNNSkipBlock(gnn_type, meta_paths, macro_func, d_in, dim_out, skip_every, stage_type, dropout, act, has_bn, has_l2norm)
             self.add_module('block{}'.format(i), block)
         if stage_type == 'skipconcat':
             self.dim_out = d_in + dim_out
@@ -108,36 +109,27 @@ stage_dict = {
     'skipconcat': GNNSkipStage,
 }
 
-#stage_dict = {**register.stage_dict, **stage_dict}
 
-def GNNPreMP(args, hg):
-    num_pre_mp = args.layers_pre_mp
-    if num_pre_mp > 0:
-        linear_dict = {}
-        for ntype in hg.ntypes:
-            in_dim = hg.nodes[ntype].data['h'].shape[1]
-            linear_dict[ntype] = [in_dim]
-            for _ in range(num_pre_mp):
-                linear_dict[ntype].append(args.hidden_dim)
-    return HeteroMLPLayer(linear_dict, act=args.activation, dropout=args.dropout,
-                          has_l2norm=args.has_l2norm, has_bn=args.has_bn)
+# stage_dict = {**register.stage_dict, **stage_dict}
 
-def HGNNPostMP(args, hg):
-    num_post_mp = args.layers_post_mp
-    if num_post_mp > 0:
-        linear_dict = {}
-        for ntype in hg.ntypes:
-            linear_dict[ntype] = [args.hidden_dim]
-            for _ in range(num_post_mp-1):
-                linear_dict[ntype].append(args.hidden_dim)
-            linear_dict[ntype].append(args.out_dim)
-    return HeteroMLPLayer(linear_dict, act=args.activation, dropout=args.dropout,
-                          has_l2norm=args.has_l2norm, has_bn=args.has_bn)
+def GNNPreMP(args):
+    linear_list = [args.in_dim] + args.layers_pre_mp * [args.hidden_dim]
+    return MultiLinearLayer(linear_list, dropout=args.dropout, act=args.activation, has_bn=args.has_bn,
+                            has_l2norm=args.has_l2norm)
+
+
+def GNNPostMP(args):
+    linear_list = args.layers_pre_mp * [args.hidden_dim] + [args.out_dim]
+    return MultiLinearLayer(linear_list, dropout=args.dropout, act=args.activation, has_bn=args.has_bn,
+                            has_l2norm=args.has_l2norm)
+
+
 ########### Model: start + stage + head ############
 
 @register_model('mp_GNN')
 class mp_GNN(BaseModel):
     '''General homogeneous GNN model'''
+
     @classmethod
     def build_model_from_args(cls, args, hg):
         return cls(args, hg)
@@ -149,18 +141,27 @@ class mp_GNN(BaseModel):
             of possible integer features to map.
         """
         super(mp_GNN, self).__init__()
-
+        self.category = args.category
+        self.meta_paths = []
+        for etype in hg.canonical_etypes:
+            if etype[0] == args.category:
+                for dst_e in hg.canonical_etypes:
+                    if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
+                        if etype[0] != etype[2]:
+                            self.meta_paths.append((etype, dst_e))
         if args.has_feature == False:
-            self.embedding_layer = HeteroEmbedLayer(get_nodes_dict(hg), args.hidden_dim).to(args.device)
-            hg.ndata['h'] = self.embedding_layer()
+            self.embedding_layer = nn.Embedding(hg.num_nodes(self.category), args.hidden_dim)
+            args.in_dim = args.hidden_dim
 
         if args.layers_pre_mp > 0:
-            self.pre_mp = GNNPreMP(args, hg)
+            self.pre_mp = GNNPreMP(args)
 
         if args.layers_gnn > 0:
             GNNStage = stage_dict[args.stage_type]
             self.gnn = GNNStage(gnn_type=args.gnn_type,
                                 stage_type=args.stage_type,
+                                meta_paths=self.meta_paths,
+                                macro_func=args.macro_func,
                                 dim_in=args.hidden_dim,
                                 dim_out=args.hidden_dim,
                                 num_layers=args.layers_gnn,
@@ -171,33 +172,32 @@ class mp_GNN(BaseModel):
                                 has_l2norm=args.has_l2norm)
         #     d_in = self.mp.dim_out
 
-        self.post_mp = HGNNPostMP(args, hg)
+        self.post_mp = GNNPostMP(args)
+        self._cached_graph = None
+        self._cached_coalesced_graph = {}
         #
         # self.apply(init_weights)
 
     def forward(self, hg):
         with hg.local_scope():
+
+            if self._cached_graph is None or self._cached_graph is not hg:
+                self._cached_graph = hg
+                self._cached_coalesced_graph.clear()
+                for meta_path in self.meta_paths:
+                    mp_g = dgl.metapath_reachable_graph(hg, meta_path)
+                    mp_g = dgl.remove_self_loop(mp_g)
+                    mp_g = dgl.add_self_loop(mp_g)
+                    self._cached_coalesced_graph[meta_path] = mp_g
+
             if hasattr(self, 'embedding_layer'):
-                h_dict = self.embedding_layer()
+                h = self.embedding_layer(torch.arange(hg.num_nodes()))
             else:
-                h_dict = hg.ndata['h']
+                h = hg.nodes[self.category].data['h']
             if hasattr(self, 'pre_mp'):
-                h_dict = self.pre_mp(h_dict)
+                h = self.pre_mp(h)
             if hasattr(self, 'gnn'):
-                hg.ndata['h'] = h_dict
-                homo_g = dgl.to_homogeneous(hg, ndata=['h'])
-                homo_g = dgl.remove_self_loop(homo_g)
-                homo_g = dgl.add_self_loop(homo_g)
-                h = homo_g.ndata.pop('h')
-                h = self.gnn(homo_g, h)
-                out_h = self.h2dict(h, h_dict)
+                out_h = self.gnn(self._cached_coalesced_graph, h)
             if hasattr(self, 'post_mp'):
                 out_h = self.post_mp(out_h)
-        return out_h
-
-    def h2dict(self, h, hdict):
-        pre = 0
-        for i, value in hdict.items():
-            hdict[i] = h[pre:value.shape[0]+pre]
-            pre += value.shape[0]
-        return hdict
+        return {self.category: out_h}

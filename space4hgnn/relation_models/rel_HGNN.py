@@ -8,7 +8,7 @@ from openhgnn.models import BaseModel, register_model, HeteroMLPLayer
 from openhgnn.models import HeteroEmbedLayer
 from openhgnn.utils import get_nodes_dict
 ########### Layer ############
-def HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
+def GNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
     return HeteroGeneralLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm)
 
 
