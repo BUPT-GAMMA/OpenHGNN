@@ -11,6 +11,9 @@ from openhgnn.utils import get_nodes_dict
 def GNNLayer(gnn_type, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
     return GeneralLayer(gnn_type, dim_in, dim_out, dropout, act, has_bn, has_l2norm)
 
+def GNNPreMP(dim_in, dim_out):
+    return MultiLinearLayer('linear', cfg.gnn.layers_pre_mp,
+                             dim_in, dim_out, dim_inner=dim_out, final_act=True)
 ########### Block: multiple layers ############
 
 class GNNSkipBlock(nn.Module):
@@ -107,18 +110,7 @@ stage_dict = {
 
 #stage_dict = {**register.stage_dict, **stage_dict}
 
-
-def GNNPreMP(args):
-    linear_list = [args.in_dim] + args.layers_pre_mp * [args.hidden_dim]
-    return MultiLinearLayer(linear_list, dropout=args.dropout, act=args.activation, has_bn=args.has_bn,
-                 has_l2norm=args.has_l2norm)
-
-def GNNPostMP(args):
-    linear_list = args.layers_pre_mp * [args.hidden_dim] + [args.out_dim]
-    return MultiLinearLayer(linear_list, dropout=args.dropout, act=args.activation, has_bn=args.has_bn,
-                 has_l2norm=args.has_l2norm)
-
-def HGNNPreMP(args, hg):
+def GNNPreMP(args, hg):
     num_pre_mp = args.layers_pre_mp
     if num_pre_mp > 0:
         linear_dict = {}
@@ -129,7 +121,6 @@ def HGNNPreMP(args, hg):
                 linear_dict[ntype].append(args.hidden_dim)
     return HeteroMLPLayer(linear_dict, act=args.activation, dropout=args.dropout,
                           has_l2norm=args.has_l2norm, has_bn=args.has_bn)
-
 
 def HGNNPostMP(args, hg):
     num_post_mp = args.layers_post_mp
@@ -144,8 +135,8 @@ def HGNNPostMP(args, hg):
                           has_l2norm=args.has_l2norm, has_bn=args.has_bn)
 ########### Model: start + stage + head ############
 
-@register_model('homo_GNN')
-class homo_GNN(BaseModel):
+@register_model('mp_GNN')
+class mp_GNN(BaseModel):
     '''General homogeneous GNN model'''
     @classmethod
     def build_model_from_args(cls, args, hg):
@@ -157,28 +148,14 @@ class homo_GNN(BaseModel):
             node_encoding_classes - For integer features, gives the number
             of possible integer features to map.
         """
-        super(homo_GNN, self).__init__()
+        super(mp_GNN, self).__init__()
 
-        if len(hg.ntypes) == 1:
-            self.one_node_type = True
+        if args.has_feature == False:
+            self.embedding_layer = HeteroEmbedLayer(get_nodes_dict(hg), args.hidden_dim).to(args.device)
+            hg.ndata['h'] = self.embedding_layer()
 
-        # Just For HGBl-amazon dataset, cause it has one node type and two edge types
-        if self.one_node_type:
-            if args.has_feature == False:
-                self.embedding_layer = nn.Embedding(hg.num_nodes(), args.hidden_dim)
-                args.in_dim = args.hidden_dim
-            else:
-                args.in_dim = hg.ndata['h'].shape[1]
-            if args.layers_pre_mp > 0:
-                self.pre_mp = GNNPreMP(args)
-            self.post_mp = GNNPostMP(args)
-        else:
-            if args.has_feature == False:
-                self.embedding_layer = HeteroEmbedLayer(get_nodes_dict(hg), args.hidden_dim)
-                hg.ndata['h'] = self.embedding_layer()
-            if args.layers_pre_mp > 0:
-                self.pre_mp = HGNNPreMP(args, hg)
-            self.post_mp = HGNNPostMP(args, hg)
+        if args.layers_pre_mp > 0:
+            self.pre_mp = GNNPreMP(args, hg)
 
         if args.layers_gnn > 0:
             GNNStage = stage_dict[args.stage_type]
@@ -192,42 +169,30 @@ class homo_GNN(BaseModel):
                                 act=args.activation,
                                 has_bn=args.has_bn,
                                 has_l2norm=args.has_l2norm)
+        #     d_in = self.mp.dim_out
+
+        self.post_mp = HGNNPostMP(args, hg)
+        #
         # self.apply(init_weights)
 
     def forward(self, hg):
         with hg.local_scope():
-            if self.one_node_type:
-                if hasattr(self, 'embedding_layer'):
-                    h = self.embedding_layer(torch.arange(hg.num_nodes()))
-                else:
-                    h = hg.ndata['h']
-                if hasattr(self, 'pre_mp'):
-                    h = self.pre_mp(h)
-                homo_g = dgl.to_homogeneous(hg)
-                homo_g = dgl.remove_self_loop(homo_g)
-                homo_g = dgl.add_self_loop(homo_g)
-                if hasattr(self, 'gnn'):
-                    out_h = self.gnn(homo_g, h)
-                if hasattr(self, 'post_mp'):
-                    out_h = self.post_mp(out_h)
+            if hasattr(self, 'embedding_layer'):
+                h_dict = self.embedding_layer()
             else:
-                if hasattr(self, 'embedding_layer'):
-                    h_dict = self.embedding_layer()
-                else:
-                    h_dict = hg.ndata['h']
-                if hasattr(self, 'pre_mp'):
-                    h_dict = self.pre_mp(h_dict)
-
+                h_dict = hg.ndata['h']
+            if hasattr(self, 'pre_mp'):
+                h_dict = self.pre_mp(h_dict)
+            if hasattr(self, 'gnn'):
                 hg.ndata['h'] = h_dict
                 homo_g = dgl.to_homogeneous(hg, ndata=['h'])
                 homo_g = dgl.remove_self_loop(homo_g)
                 homo_g = dgl.add_self_loop(homo_g)
                 h = homo_g.ndata.pop('h')
-                if hasattr(self, 'gnn'):
-                    h = self.gnn(homo_g, h)
-                    out_h = self.h2dict(h, h_dict)
-                if hasattr(self, 'post_mp'):
-                    out_h = self.post_mp(out_h)
+                h = self.gnn(homo_g, h)
+                out_h = self.h2dict(h, h_dict)
+            if hasattr(self, 'post_mp'):
+                out_h = self.post_mp(out_h)
         return out_h
 
     def h2dict(self, h, hdict):

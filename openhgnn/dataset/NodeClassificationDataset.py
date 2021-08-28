@@ -194,32 +194,32 @@ class HGB_NodeCLassification(NodeClassificationDataset):
         super(HGB_NodeCLassification, self).__init__()
         self.dataset_name = dataset_name
         self.has_feature = True
-        if dataset_name == 'HGBn-acm':
-            dataset = HGBDataset(name='HGBn-acm', raw_dir='')
+        if dataset_name == 'HGBn-ACM':
+            dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'paper'
             num_classes = 4
             g.nodes['term'].data['h'] = th.eye(g.number_of_nodes('term'))
             self.in_dim = g.ndata['h'][category].shape[1]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
-        elif dataset_name == 'HGBn-dblp':
-            dataset = HGBDataset(name='HGBn-dblp', raw_dir='')
+        elif dataset_name == 'HGBn-DBLP':
+            dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'author'
             num_classes = 4
             g.nodes['venue'].data['h'] = th.eye(g.number_of_nodes('venue'))
             self.in_dim = g.ndata['h'][category].shape[1]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
-        elif dataset_name == 'HGBn-freebase':
-            dataset = HGBDataset(name='HGBn-freebase', raw_dir='')
+        elif dataset_name == 'HGBn-Freebase':
+            dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'BOOK'
             num_classes = 8
             self.has_feature = False
             #self.in_dim = g.ndata['h'][category].shape[1]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
-        elif dataset_name == 'HGBn-imdb':
-            dataset = HGBDataset(name='HGBn-imdb', raw_dir='')
+        elif dataset_name == 'HGBn-IMDB':
+            dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'movie'
             num_classes = 5

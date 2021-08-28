@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import dgl
 from ..relation_models import RGCNConv
 
+
 ## General classes
 class GeneralLayer(nn.Module):
     '''General wrapper for layers'''
@@ -13,7 +14,6 @@ class GeneralLayer(nn.Module):
                  has_l2norm=False, **kwargs):
         super(GeneralLayer, self).__init__()
         self.has_l2norm = has_l2norm
-        has_bn = has_bn
         self.layer = layer_dict[name](dim_in, dim_out,
                                       bias=not has_bn, **kwargs)
         layer_wrapper = []
@@ -33,6 +33,43 @@ class GeneralLayer(nn.Module):
         return h
 
 
+class MultiLinearLayer(nn.Module):
+    def __init__(self, linear_list, dropout, act=None, has_bn=True,
+                 has_l2norm=False, **kwargs):
+        super(MultiLinearLayer, self).__init__()
+        for i in range(len(linear_list) - 1):
+            d_in = linear_list[i]
+            d_out = linear_list[i+1]
+            layer = Linear(d_in, d_out, dropout, act, has_bn, has_l2norm)
+            self.add_module('Layer_{}'.format(i), layer)
+
+    def forward(self, h):
+        for layer in self.children():
+            h = layer(h)
+        return h
+
+
+class Linear(nn.Module):
+    def __init__(self, dim_in, dim_out, dropout, act=None, has_bn=True,
+                 has_l2norm=False, **kwargs):
+        super(Linear, self).__init__()
+        self.has_l2norm = has_l2norm
+        self.layer = nn.Linear(dim_in, dim_out, bias=not has_bn, **kwargs)
+        layer_wrapper = []
+        if has_bn:
+            layer_wrapper.append(nn.BatchNorm1d(dim_out))
+        if dropout > 0:
+            layer_wrapper.append(nn.Dropout(p=dropout))
+        if act is not None:
+            layer_wrapper.append(act)
+        self.post_layer = nn.Sequential(*layer_wrapper)
+
+    def forward(self, h):
+        h = self.layer(h)
+        h = self.post_layer(h)
+        if self.has_l2norm:
+            h = F.normalize(h, p=2, dim=1)
+        return h
 
 
 class BatchNorm1dNode(nn.Module):

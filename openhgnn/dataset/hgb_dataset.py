@@ -12,11 +12,14 @@ class HGBDataset(DGLDataset):
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
-        assert name in ['HGBn-acm', 'HGBn-dblp', 'HGBn-freebase', 'HGBn-imdb']
-        self.data_path = './openhgnn/dataset/HGBn.zip'
-        self.g_path = './openhgnn/dataset/HGBn/{}.bin'.format(name)
+        assert name in ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB', 'HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']
+        self.prefix_task = name[:4]
+        # HGBn means node classification
+        # HGBl means link prediction
+        self.data_path = './openhgnn/dataset/{}.zip'.format(self.prefix_task)
+        self.g_path = './openhgnn/dataset/{}/{}.bin'.format(self.prefix_task, name)
         raw_dir = './openhgnn/dataset'
-        url = self._prefix + 'HGBn.zip'
+        url = self._prefix + '{}.zip'.format(self.prefix_task)
         super(HGBDataset, self).__init__(name=name,
                                         url=url,
                                         raw_dir=raw_dir,
@@ -32,7 +35,7 @@ class HGBDataset(DGLDataset):
             file_path = os.path.join(self.raw_dir)
             # download file
             download(self.url, path=file_path)
-        extract_archive(self.data_path, os.path.join(self.raw_dir, 'HGBn'))
+        extract_archive(self.data_path, os.path.join(self.raw_dir, self.prefix_task))
 
     def process(self):
         # process raw data to graphs, labels, splitting masks

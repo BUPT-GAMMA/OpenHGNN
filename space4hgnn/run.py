@@ -10,19 +10,18 @@ def OpenHGNN(args):
     for i in range(args.repeat):
         args.seed = i
         set_random_seed(args.seed)
-        args.HGB_results_path = './prediction/{}_{}.txt'.format(args.dataset[5:].upper(), str(i+1))
+        args.HGB_results_path = './prediction/{}_{}.txt'.format(args.dataset[5:], str(i+1))
         print(args)
-        flow = build_flow(args, 'node_classification')
+        flow = build_flow(args, args.task)
         flow.train()
-
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', default='homo_GNN', type=str, help='name of models')
-    parser.add_argument('--task', '-t', default='node_classification', type=str, help='name of task')
+    parser.add_argument('--task', '-t', default='link_prediction', type=str, help='name of task')
     # link_prediction / node_classification
-    parser.add_argument('--dataset', '-d', default='HGBn-freebase', type=str, help='name of datasets')
+    parser.add_argument('--dataset', '-d', default='HGBl-amazon', type=str, help='name of datasets')
     parser.add_argument('--gpu', '-g', default='0', type=int, help='-1 means cpu')
     parser.add_argument('--repeat', '-r', default='5', type=int, help='-1 means cpu')
     args = parser.parse_args()
