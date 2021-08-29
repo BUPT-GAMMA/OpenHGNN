@@ -3,7 +3,7 @@ import numpy as np
 from dgl.data.knowledge_graph import load_data
 import torch as th
 from openhgnn.dataset import BaseDataset, register_dataset
-from . import AcademicDataset
+from . import AcademicDataset, HGBDataset
 from dgl.data.utils import load_graphs
 
 
@@ -61,6 +61,7 @@ class Test_LinkPrediction(LinkPredictionDataset):
         neg_graph = dgl.heterograph({('user', 'user-item', 'item'): neg_edge}, {ntype: self.g.number_of_nodes(ntype) for ntype in ['user', 'item']})
         dgl.save_graphs('./openhgnn/debug/neg.bin', neg_graph)
 
+
 @register_dataset('hin_link_prediction')
 class HIN_LinkPrediction(LinkPredictionDataset):
     def __init__(self, dataset_name):
@@ -91,6 +92,21 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         return g
 
 
+@register_dataset('HGBl_link_prediction')
+class HGB_LinkPrediction(LinkPredictionDataset):
+    def __init__(self, dataset_name):
+        super(HGB_LinkPrediction, self).__init__()
+        self.dataset_name = dataset_name
+        self.has_feature = True
+        if dataset_name == 'HGBl-amazon':
+            dataset = HGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = True
+        self.g = g
+
+    def load_link_pred(self, path):
+        return
+
 
 def build_graph_from_triplets(num_nodes, num_rels, triplets):
     """ Create a DGL graph. The graph is bidirectional because RGCN authors
@@ -117,6 +133,7 @@ def comp_deg_norm(g):
     norm = 1.0 / in_deg
     norm[np.isinf(norm)] = 0
     return norm
+
 
 @register_dataset('kg_link_prediction')
 class KG_LinkPrediction(LinkPredictionDataset):

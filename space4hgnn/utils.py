@@ -1,6 +1,25 @@
-import torch as th
-import yaml
 import os
+import yaml
+import torch as th
+import torch.nn as nn
+import numpy as np
+
+act_dict = {
+    'relu': nn.ReLU(),
+    'selu': nn.SELU(),
+    'prelu': nn.PReLU(),
+    'elu': nn.ELU(),
+    'lrelu_01': nn.LeakyReLU(negative_slope=0.1),
+    'lrelu_025': nn.LeakyReLU(negative_slope=0.25),
+    'lrelu_05': nn.LeakyReLU(negative_slope=0.5),
+}
+
+
+def load_act(act):
+    act = act_dict.get(act, None)
+    if act is None:
+        raise ValueError('No corresponding activation')
+    return act
 
 
 def read_config(args):
@@ -18,8 +37,11 @@ def read_config(args):
             device = th.device('cuda', int(args.gpu))
         else:
             print("cuda is not available, please set 'gpu' -1")
-
     args.__setattr__('device', device)
+    args.__setattr__('_checkpoint', './space4hgnn/homo_models/')
+    args.__setattr__('HGB_results_path', None)
     for key, value in config_dict.items():
         args.__setattr__(key, value)
+    args.activation = load_act(args.activation)
     return args
+

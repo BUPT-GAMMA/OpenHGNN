@@ -1,5 +1,4 @@
 import argparse
-from openhgnn.config import Config
 from openhgnn.utils import set_random_seed, set_best_config
 from openhgnn.trainerflow import build_flow
 from openhgnn.auto import hpo_experiment
@@ -28,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', '-m', default='GCN', type=str, help='name of models')
     parser.add_argument('--task', '-t', default='node_classification', type=str, help='name of task')
     # link_prediction / node_classification
-    parser.add_argument('--dataset', '-d', default='HGBn-acm', type=str, help='name of datasets')
+    parser.add_argument('--dataset', '-d', default='HGBn-dblp', type=str, help='name of datasets')
     parser.add_argument('--gpu', '-g', default='0', type=int, help='-1 means cpu')
     parser.add_argument('--use_best_config', action='store_true', help='use best config')
     parser.add_argument('--use_hpo', action='store_true', help='use hpo')

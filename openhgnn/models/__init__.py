@@ -1,7 +1,8 @@
 import importlib
 from.NEW_model import MLP_follow_model
 from .base_model import BaseModel
-from .EmbedLayer import HeteroEmbedLayer
+from .EmbedLayer import HeteroEmbedLayer, hetero_linear, multi_2Linear
+from .layers import HeteroLinearLayer, HeteroMLPLayer
 
 MODEL_REGISTRY = {}
 
@@ -63,5 +64,9 @@ SUPPORTED_MODELS = {
     'MAGNN': 'openhgnn.models.MAGNN',
     'NSHE': 'openhgnn.models.NSHE',
     'NARS': 'openhgnn.models.NARS',
-    'GCN': 'space4hgnn.homo_models.GCN'
+    'RHGNN': 'openhgnn.models.RHGNN',
+    'GCN': 'space4hgnn.homo_models.GCN',
+    'GAT': 'space4hgnn.homo_models.GAT',
+    'homo_GNN': 'space4hgnn.homo_models.homo_GNN',
+    'relation_HGNN': 'space4hgnn.relation_models.rel_HGNN'
 }
