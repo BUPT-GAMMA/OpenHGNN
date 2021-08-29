@@ -225,6 +225,8 @@ class HGB_NodeCLassification(NodeClassificationDataset):
             num_classes = 5
             g.nodes['keyword'].data['h'] = th.eye(g.number_of_nodes('keyword'))
             self.in_dim = g.ndata['h'][category].shape[1]
+            # RuntimeError: result type Float can't be cast to the desired output type Long
+            self.multi_label = True
         else:
             raise ValueError
         self.g, self.category, self.num_classes = g, category, num_classes
@@ -274,7 +276,7 @@ class HGB_NodeCLassification(NodeClassificationDataset):
             labels = self.g.nodes[self.category].data.pop('label').long()
         else:
             raise ValueError('label in not in the hg.nodes[category].data')
-        self.labels = labels.float() if self.dataset_name == 'HGBn-imdb' else labels
+        self.labels = labels.float() if self.dataset_name == 'HGBn-IMDB' else labels
         return self.labels
 
     def save_results(self, logits, file_path):
