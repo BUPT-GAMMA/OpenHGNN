@@ -161,6 +161,8 @@ class homo_GNN(BaseModel):
 
         if len(hg.ntypes) == 1:
             self.one_node_type = True
+        else:
+            self.one_node_type = False
 
         # Just For HGBl-amazon dataset, cause it has one node type and two edge types
         if self.one_node_type:

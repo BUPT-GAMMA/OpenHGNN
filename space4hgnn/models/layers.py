@@ -3,8 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import dgl
-from ..relation_models import RGCNConv
-
 
 ## General classes
 class GeneralLayer(nn.Module):
