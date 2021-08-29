@@ -27,7 +27,7 @@ class HAN(BaseModel):
                 for dst_e in etypes:
                     if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
                         mps.append([etype, dst_e])
-                        
+
         return cls(meta_paths=mps, category=args.category,
                     in_size=args.in_dim, hidden_size=args.hidden_dim,
                     out_size=args.out_dim,
@@ -52,6 +52,7 @@ class HAN(BaseModel):
 
         return {self.category: self.linear(h)}
 
+
 class SemanticAttention(nn.Module):
     def __init__(self, in_size, hidden_size=128):
         super(SemanticAttention, self).__init__()
@@ -68,6 +69,7 @@ class SemanticAttention(nn.Module):
         beta = beta.expand((z.shape[0],) + beta.shape) # (N, M, 1)
 
         return (beta * z).sum(1)                       # (N, D * K)
+
 
 class HANLayer(nn.Module):
     """
