@@ -56,7 +56,7 @@ class EarlyStopping(object):
             if (score >= self.best_score) and (loss <= self.best_loss):
                 self.save_model(model)
 
-            self.best_loss = np.min((loss,self.best_score))
+            self.best_loss = np.min((loss, self.best_loss))
             self.best_score = np.max((score, self.best_score))
             self.counter = 0
         return self.early_stop
@@ -73,6 +73,7 @@ class EarlyStopping(object):
         else:
             if score >= self.best_score:
                 self.save_model(model)
+                
             self.best_score = np.max((score, self.best_score))
             self.counter = 0
         return self.early_stop
@@ -140,6 +141,7 @@ def set_random_seed(seed):
     np.random.seed(seed)
     th.manual_seed(seed)
     th.cuda.manual_seed(seed)
+    dgl.seed(seed)
 
 def com_mult(a, b):
     r1, i1 = a[..., 0], a[..., 1]

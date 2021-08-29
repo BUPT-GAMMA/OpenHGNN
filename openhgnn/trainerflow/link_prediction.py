@@ -35,7 +35,7 @@ class NegativeSampler(object):
 
 @register_flow("link_prediction")
 class LinkPrediction(BaseFlow):
-    """Node classification flows."""
+    """Link Prediction flows."""
 
     def __init__(self, args):
         super(LinkPrediction, self).__init__(args)
@@ -46,23 +46,13 @@ class LinkPrediction(BaseFlow):
 
         self.task = build_task(args)
         self.hg = self.task.get_graph().to(self.device)
-        self.target_link = self.task.dataset.target_link
+        #self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
+        self.args.has_feature = self.task.dataset.has_feature
+
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
-        if hasattr(self.task.dataset, 'in_dim'):
-            self.args.in_dim = self.task.dataset.in_dim
-        elif not hasattr(self.args, 'in_dim'):
-            raise ValueError('Set input dimension parameter!')
-        if self.task.dataset.has_feature:
-            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-            self.has_feature = True
-        else:
-            self.has_feature = False
-            self.input_feature = HeteroEmbedLayer(get_nodes_dict(self.hg), args.in_dim).to(self.device)
-            self.optimizer = torch.optim.Adam([{'params': self.model.parameters()},
-                                               {'params': self.input_feature.parameters()}],
-                                              lr=args.lr, weight_decay=args.weight_decay)
+
         self.evaluator = self.task.get_evaluator('mrr')
 
         self.optimizer = (
@@ -83,15 +73,16 @@ class LinkPrediction(BaseFlow):
                 shuffle=True, drop_last=False, num_workers=0
             )
         else:
-            self.train_eid_dict = {
-                self.target_link: self.hg.edges(etype=self.target_link, form='eid')}
+
             # self.train_eid_dict = {
-            #     etype: self.hg.edges(etype=etype, form='eid')
-            #     for etype in self.hg.canonical_etypes}
-            self.positive_graph = self.hg[self.target_link]
+            #     self.target_link: self.hg.edges(etype=self.target_link, form='eid')}
+            self.train_eid_dict = {
+                etype: self.hg.edges(etype=etype, form='eid')
+                for etype in self.hg.canonical_etypes}
+            self.positive_graph = self.hg
             self.negative_sampler = NegativeSampler(self.hg, 10)
-            self.pos_test_graph = self.task.dataset.pos_test_graph.to(self.device)
-            self.neg_test_graph = self.task.dataset.neg_test_graph.to(self.device)
+            # self.pos_test_graph = self.task.dataset.pos_test_graph.to(self.device)
+            # self.neg_test_graph = self.task.dataset.neg_test_graph.to(self.device)
 
     def preprocess(self):
 
@@ -185,14 +176,15 @@ class LinkPrediction(BaseFlow):
 
     def _full_train_setp(self):
         self.model.train()
-        if self.has_feature == True:
-            h = self.hg.ndata['h']
-        else:
-            h = self.input_feature()
-        embedding = self.model(self.hg, h)
+        # if self.has_feature == True:
+        #     h = self.hg.ndata['h']
+        # else:
+        #     h = self.input_feature()
+        embedding = self.model(self.hg)
 
         negative_graph = self.construct_negative_graph()
         loss = self.loss_calculation(self.positive_graph, negative_graph, embedding)
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

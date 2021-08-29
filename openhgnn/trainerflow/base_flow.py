@@ -10,11 +10,15 @@ class BaseFlow(ABC):
         self.evaluator = None
         self.evaluate_interval = 1
         self.load_from_checkpoint = True
-        if self.load_from_checkpoint:
-            self._checkpoint = os.path.join("./openhgnn/output/{}".format(args.model),
+        if hasattr(args, '_checkpoint'):
+            self._checkpoint = os.path.join(args._checkpoint,
                                             f"{args.model}_{args.dataset}.pt")
         else:
-            self._checkpoint = None
+            if self.load_from_checkpoint:
+                self._checkpoint = os.path.join("./openhgnn/output/{}".format(args.model),
+                                                f"{args.model}_{args.dataset}.pt")
+            else:
+                self._checkpoint = None
 
     @abstractmethod
     def train(self):

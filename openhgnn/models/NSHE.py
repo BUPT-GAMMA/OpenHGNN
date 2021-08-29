@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv
 import dgl
-from . import BaseModel, register_model
+from . import BaseModel, register_model, HeteroMLPLayer, HeteroLinearLayer
 
 '''
 In paper repo performance		
@@ -48,17 +48,17 @@ class NSHE(BaseModel):
         self.emd_dim = emd_dim
         self.context_dim = context_dim
         # * ================== encoder config==================
-        linear_list1 = []
-        linear_list2 = []
-        linear_list3 = []
+        linear_dict1 = {}
+        linear_dict2 = {}
+        linear_dict3 = {}
         cla_dim = self.emd_dim + self.context_dim * (len(g.ntypes) - 1)
         for ntype in g.ntypes:
             in_dim = g.nodes[ntype].data['h'].shape[1]
-            linear_list1.append((ntype, in_dim, self.project_dim))
-            linear_list2.append((ntype, self.emd_dim, self.context_dim))
-            linear_list3.append((ntype, cla_dim, 1))
+            linear_dict1[ntype] = (in_dim, self.project_dim)
+            linear_dict2[ntype] = (self.emd_dim, self.context_dim)
+            linear_dict3[ntype] = (cla_dim, 1)
         # * ================== Project feature Layer==================
-        self.feature_proj = hetero_linear(linear_list1)
+        self.feature_proj = HeteroLinearLayer(linear_dict1, has_l2norm=False, has_bn=False)
         # * ================== Neighborhood Agg(gnn_model)==================
         if self.gnn_model == "GCN":
             self.gnn1 = GraphConv(self.project_dim, self.emd_dim, norm="none", activation=F.relu)
@@ -68,9 +68,9 @@ class NSHE(BaseModel):
             self.gnn2 = GraphConv(self.emd_dim, self.emd_dim, activation=None)
 
         # * ================== Context encoder(called CE in the paper)=================
-        self.context_encoder = hetero_linear(linear_list2)
+        self.context_encoder = HeteroLinearLayer(linear_dict2, has_l2norm=False, has_bn=False)
         # * ================== NSI Classification================
-        self.linear_classifier = multi_2Linear(linear_list3)
+        self.linear_classifier = HeteroMLPLayer(linear_dict3, has_l2norm=False, has_bn=False)
 
     def forward(self, hg, h):
         with hg.local_scope():
@@ -100,45 +100,4 @@ class NSHE(BaseModel):
         return hdict
 
 
-class multi_Linear(nn.Module):
-    def __init__(self, linear_list, bias=False):
-        super(multi_Linear, self).__init__()
-        self.encoder = nn.ModuleDict({})
-        for linear in linear_list:
-            self.encoder[linear[0]] = nn.Linear(in_features=linear[1], out_features=linear[2], bias=bias)
 
-    def forward(self, name_linear, h):
-        h = self.encoder[name_linear](h)
-        return h
-
-class multi_2Linear(nn.Module):
-    def __init__(self, linear_list, bias=False):
-        super(multi_2Linear, self).__init__()
-        hidden_dim = 16
-        self.hidden_layer = nn.ModuleDict({})
-        self.output_layer = nn.ModuleDict({})
-        for linear in linear_list:
-            self.hidden_layer[linear[0]] = nn.Linear(in_features=linear[1], out_features=hidden_dim, bias=bias)
-            self.output_layer[linear[0]] = nn.Linear(in_features=hidden_dim, out_features=linear[2], bias=bias)
-    def forward(self, name_linear, h):
-        h = F.relu(self.hidden_layer[name_linear](h))
-        h = self.output_layer[name_linear](h)
-        return h
-
-
-class hetero_linear(nn.Module):
-    def __init__(self, linear_list, bias=False):
-        super(hetero_linear, self).__init__()
-        # In one graph, the node with different node type may have different dimension size as the input.
-        # The feature_mapping NN feature the input dimension project to another same dimension size.
-        # So the out_dim is just a scalar.
-
-        # n_feats are graph dgl.ndata name.
-        self.encoder = multi_Linear(linear_list, bias)
-
-    def forward(self, h_dict):
-        h_out = {}
-        for ntype, h in h_dict.items():
-            h = self.encoder(ntype, h)
-            h_out[ntype] = h
-        return h_out

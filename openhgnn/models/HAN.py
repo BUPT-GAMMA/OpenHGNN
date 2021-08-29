@@ -52,6 +52,7 @@ class HAN(BaseModel):
 
         return {self.category: self.linear(h)}
 
+
 class SemanticAttention(nn.Module):
     def __init__(self, in_size, hidden_size=128):
         super(SemanticAttention, self).__init__()
@@ -68,6 +69,7 @@ class SemanticAttention(nn.Module):
         beta = beta.expand((z.shape[0],) + beta.shape) # (N, M, 1)
 
         return (beta * z).sum(1)                       # (N, D * K)
+
 
 class HANLayer(nn.Module):
     """

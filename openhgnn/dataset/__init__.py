@@ -2,6 +2,7 @@ import importlib
 from .base_dataset import BaseDataset
 from .utils import load_acm, load_acm_raw
 from .academic_graph import AcademicDataset
+from .hgb_dataset import HGBDataset
 
 DATASET_REGISTRY = {}
 
@@ -52,6 +53,10 @@ def build_dataset(dataset, task):
         _dataset = 'hin_' + task
     elif dataset in ['ogbn-mag']:
         _dataset = 'ogbn_' + task
+    elif dataset in ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']:
+        _dataset = 'HGBn_node_classification'
+    elif dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
+        _dataset = 'HGBl_link_prediction'
     elif dataset in ['wn18', 'FB15k', 'FB15k-237']:
         assert task == 'link_prediction'
         _dataset = 'kg_link_prediction'
