@@ -1,0 +1,214 @@
+import torch
+from sklearn.metrics import f1_score
+from tqdm import tqdm
+import numpy as np
+import torch.nn as nn
+from openhgnn.models import build_model
+from openhgnn.models.DMGI import LogReg
+from openhgnn.tasks import build_task
+from openhgnn.trainerflow import register_flow, BaseFlow
+from openhgnn.utils import EarlyStopping
+
+
+@register_flow("DMGI_trainer")
+class DMGI_trainer(BaseFlow):
+
+    def __init__(self, args):
+        super(DMGI_trainer, self).__init__(args)
+
+        self.args = args
+        self.model_name = args.model
+        self.device = args.device
+        self.task = build_task(args)
+        self.num_classes = self.task.dataset.num_classes
+        self.hg = self.task.get_graph().to(self.device)
+
+        self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
+
+        # get label
+        self.labels = self.task.get_labels().to(self.device)
+        # get category
+        self.args.category = self.task.dataset.category
+        self.category = self.args.category
+
+        # get feat.shape[0]
+        if hasattr(self.task.dataset, 'in_dim'):
+            self.args.in_dim = self.task.dataset.in_dim
+        # get category num_classes
+        args.num_classes = self.num_classes
+
+        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+        self.model = self.model.to(self.device)
+
+
+        self.optimizer = (torch.optim.Adam(self.model.parameters(),
+                                           lr=args.lr,
+                                           weight_decay=self.args.l2_coef))
+        self.patience = args.patience
+        self.max_epoch = args.max_epoch
+        # get category's numbers
+        self.num_nodes = self.hg.num_nodes(self.category)
+        self.isSemi = args.isSemi
+        # a coefficient to Calculate semi
+        self.sup_coef = args.sup_coef
+
+    def preprocess(self):
+        pass
+
+    def train(self):
+
+        stopper = EarlyStopping(self.patience)
+        model = self.model
+        epoch_iter = tqdm(range(self.max_epoch))
+        for epoch in epoch_iter:
+            '''use earlyStopping'''
+            loss = self._full_train_setp()
+            early_stop = stopper.loss_step(loss, model)
+            print((f"Epoch: {epoch:03d}, Loss: {loss:.4f}"))
+
+            if early_stop:
+                print('Early Stop!\tEpoch:' + str(epoch))
+                break
+
+        # Evaluation
+        model.eval()
+        evaluate(model.H.data.detach(),
+                 self.train_idx, self.val_idx, self.test_idx,
+                 self.labels, self.num_classes, self.args.device)
+
+
+    def _full_train_setp(self):
+
+        self.model.train()
+        optm = self.optimizer
+        optm.zero_grad()
+        lbl_1 = torch.ones(1, self.num_nodes)
+        lbl_2 = torch.zeros(1, self.num_nodes)
+        lbl = torch.cat((lbl_1, lbl_2), 1).to(self.args.device)
+
+        result = self.model(self.hg)
+        logits = result['logits']
+
+        xent = nn.CrossEntropyLoss()
+        b_xent = nn.BCEWithLogitsLoss()
+        xent_loss = None
+
+        for idx, logit in enumerate(logits):
+            logit = logit.unsqueeze(0)
+            if xent_loss is None:
+                xent_loss = b_xent(logit, lbl)
+            else:
+                xent_loss += b_xent(logit, lbl)
+
+        loss = xent_loss
+        reg_loss = result['reg_loss']
+        loss += self.args.reg_coef * reg_loss
+
+        if self.isSemi:
+            sup = result['semi']
+            semi_loss = xent(sup[self.train_idx], self.labels[self.train_idx])
+            loss += self.sup_coef * semi_loss
+
+        loss.backward()
+        optm.step()
+        loss = loss.cpu()
+        loss = loss.detach().numpy()
+        return loss
+
+
+    def _test_step(self, split=None, logits=None):
+        pass
+
+
+    def _mini_train_step(self, ):
+        pass
+
+    def loss_calculation(self, positive_graph, negative_graph, embedding):
+        pass
+
+
+def evaluate(embeds, idx_train, idx_val, idx_test, labels, num_classes, device):
+    hid_units = embeds.shape[2]
+
+    xent = nn.CrossEntropyLoss()
+
+    train_embs = embeds[0, idx_train]
+    val_embs = embeds[0, idx_val]
+    test_embs = embeds[0, idx_test]
+
+    train_lbls = labels[idx_train]
+    val_lbls = labels[idx_val]
+    test_lbls = labels[idx_test]
+
+    accs = [];micro_f1s = [];macro_f1s = [];macro_f1s_val = []
+    for _ in range(50):
+        # hid_unit , category's num_classes
+        log = LogReg(hid_units, num_classes)  # 64 3
+        opt = torch.optim.Adam(log.parameters(), lr=0.01, weight_decay=0.0)
+        log.to(device)
+
+        val_accs = []; test_accs = []
+        val_micro_f1s = []; test_micro_f1s = []
+        val_macro_f1s = []; test_macro_f1s = []
+
+
+        for iter_ in range(50):
+            # train
+            log.train()
+            opt.zero_grad()
+
+            logits = log(train_embs)
+            loss = xent(logits, train_lbls)
+
+            loss.backward()
+            opt.step()
+
+            # val
+            logits = log(val_embs)
+            # predict val's label
+            preds = torch.argmax(logits, dim=1)
+
+            val_acc = torch.sum(preds == val_lbls).float() / val_lbls.shape[0]
+
+            val_f1_macro = f1_score(val_lbls.cpu(), preds.cpu(), average='macro')
+            val_f1_micro = f1_score(val_lbls.cpu(), preds.cpu(), average='micro')
+
+            val_accs.append(val_acc.item())
+            val_macro_f1s.append(val_f1_macro)
+            val_micro_f1s.append(val_f1_micro)
+
+            # test
+            logits = log(test_embs)
+            preds = torch.argmax(logits, dim=1)
+
+            test_acc = torch.sum(preds == test_lbls).float() / test_lbls.shape[0]
+            test_f1_macro = f1_score(test_lbls.cpu(), preds.cpu(), average='macro')
+            test_f1_micro = f1_score(test_lbls.cpu(), preds.cpu(), average='micro')
+
+            test_accs.append(test_acc.item())
+            test_macro_f1s.append(test_f1_macro)
+            test_micro_f1s.append(test_f1_micro)
+
+
+        max_iter = val_accs.index(max(val_accs))
+        accs.append(test_accs[max_iter])
+
+        max_iter = val_macro_f1s.index(max(val_macro_f1s))
+        macro_f1s.append(test_macro_f1s[max_iter])
+        macro_f1s_val.append(val_macro_f1s[max_iter])
+
+        max_iter = val_micro_f1s.index(max(val_micro_f1s))
+        micro_f1s.append(test_micro_f1s[max_iter])
+
+
+    print("\t[Classification] Macro-F1: {:.4f} ({:.4f}) | Micro-F1: {:.4f} ({:.4f})".format(np.mean(macro_f1s),
+                                                                                                np.std(macro_f1s),
+                                                                                                np.mean(micro_f1s),
+                                                                                                np.std(micro_f1s)))
+
+
+
+
+
+
+
