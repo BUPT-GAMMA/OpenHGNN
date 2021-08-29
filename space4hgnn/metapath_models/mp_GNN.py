@@ -17,6 +17,7 @@ def GNNLayer(gnn_type, meta_paths, macro_func, dim_in, dim_out, dropout, act, ha
 
 ########### Block: multiple layers ############
 
+
 class GNNSkipBlock(nn.Module):
     '''Skip block for HGNN'''
 
@@ -191,7 +192,7 @@ class mp_GNN(BaseModel):
                     self._cached_coalesced_graph[meta_path] = mp_g
 
             if hasattr(self, 'embedding_layer'):
-                h = self.embedding_layer(torch.arange(hg.num_nodes()))
+                h = self.embedding_layer(torch.arange(hg.num_nodes(self.category)).to(hg.device))
             else:
                 h = hg.nodes[self.category].data['h']
             if hasattr(self, 'pre_mp'):
