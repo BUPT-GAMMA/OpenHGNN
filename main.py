@@ -10,14 +10,10 @@ from openhgnn.start import OpenHGNN
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    # python main.py -m DMGI -d 'acm_han_raw' -t node_classification -g 0
-    parser.add_argument('--model', '-m', default='DMGI', type=str, help='name of models')
+    parser.add_argument('--model', '-m', default='HAN', type=str, help='name of models')
     parser.add_argument('--task', '-t', default='node_classification', type=str, help='name of task')
-    ''''''
-    # parser.add_argument('--model', '-m', default='GTN', type=str, help='name of models')
-    # parser.add_argument('--task', '-t', default='node_classification', type=str, help='name of task')
     # link_prediction / node_classification
-    parser.add_argument('--dataset', '-d', default='acm_han_raw', type=str, help='name of datasets')
+    parser.add_argument('--dataset', '-d', default='HGBn-acm', type=str, help='name of datasets')
     parser.add_argument('--gpu', '-g', default='0', type=int, help='-1 means cpu')
     parser.add_argument('--use_best_config', action='store_true', help='-1 means cpu')
     args = parser.parse_args()
