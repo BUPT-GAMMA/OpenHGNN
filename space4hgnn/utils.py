@@ -37,11 +37,11 @@ def read_config(args):
             device = th.device('cuda', int(args.gpu))
         else:
             print("cuda is not available, please set 'gpu' -1")
+    args.__setattr__('device', device)
+    args.__setattr__('_checkpoint', './space4hgnn/homo_models/')
+    args.__setattr__('HGB_results_path', None)
     for key, value in config_dict.items():
         args.__setattr__(key, value)
-    args.__setattr__('device', device)
-    args.__setattr__('_checkpoint', './space4hgnn/')
-    args.__setattr__('HGB_results_path', None)
     args.activation = load_act(args.activation)
     return args
 

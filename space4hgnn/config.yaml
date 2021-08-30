@@ -68,44 +68,6 @@ node_classification:
         300
       mini_batch_flag:
         False
-
-    mp_GNN:
-      hidden_dim:
-        64
-
-      layers_pre_mp:
-        1
-      layers_post_mp:
-        1
-      layers_gnn:
-        3
-      stage_type:
-        stack
-
-      activation:
-        relu
-      dropout:
-        0.5
-      has_bn:
-        False
-      gnn_type:
-        hanconv
-      macro_func:
-        attention
-
-      has_l2norm:
-        False
-      lr:
-        0.001
-      weight_decay:
-        0.000001
-      patience:
-        30
-      max_epoch:
-        300
-      mini_batch_flag:
-        False
-
     GCN:
       hidden_dim:
         64
@@ -178,45 +140,6 @@ node_classification:
         300
       mini_batch_flag:
         False
-
-
-    mp_GNN:
-      hidden_dim:
-        64
-
-      layers_pre_mp:
-        1
-      layers_post_mp:
-        1
-      layers_gnn:
-        3
-      stage_type:
-        stack
-
-      activation:
-        relu
-      dropout:
-        0.5
-      has_bn:
-        False
-      gnn_type:
-        hanconv
-      macro_func:
-        attention
-
-      has_l2norm:
-        False
-      lr:
-        0.001
-      weight_decay:
-        0.000001
-      patience:
-        30
-      max_epoch:
-        300
-      mini_batch_flag:
-        False
-
     GCN:
       hidden_dim:
         64
@@ -268,43 +191,6 @@ node_classification:
         300
       mini_batch_flag:
         False
-
-    mp_GNN:
-      hidden_dim:
-        64
-
-      layers_pre_mp:
-        1
-      layers_post_mp:
-        1
-      layers_gnn:
-        3
-      stage_type:
-        stack
-
-      activation:
-        relu
-      dropout:
-        0.5
-      has_bn:
-        False
-      gnn_type:
-        hanconv
-      macro_func:
-        attention
-
-      has_l2norm:
-        False
-      lr:
-        0.001
-      weight_decay:
-        0.000001
-      patience:
-        30
-      max_epoch:
-        300
-      mini_batch_flag:
-        False
   HGBn-IMDB:
     homo_GNN:
       hidden_dim:
@@ -331,43 +217,6 @@ node_classification:
         0.001
       weight_decay:
         0.0001
-      patience:
-        30
-      max_epoch:
-        300
-      mini_batch_flag:
-        False
-
-    mp_GNN:
-      hidden_dim:
-        64
-
-      layers_pre_mp:
-        1
-      layers_post_mp:
-        1
-      layers_gnn:
-        3
-      stage_type:
-        stack
-
-      activation:
-        relu
-      dropout:
-        0.5
-      has_bn:
-        False
-      gnn_type:
-        hanconv
-      macro_func:
-        attention
-
-      has_l2norm:
-        False
-      lr:
-        0.001
-      weight_decay:
-        0.000001
       patience:
         30
       max_epoch:

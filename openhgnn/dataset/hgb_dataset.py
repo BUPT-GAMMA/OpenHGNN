@@ -19,7 +19,7 @@ class HGBDataset(DGLDataset):
         self.data_path = './openhgnn/dataset/{}.zip'.format(self.prefix_task)
         self.g_path = './openhgnn/dataset/{}/{}.bin'.format(self.prefix_task, name)
         raw_dir = './openhgnn/dataset'
-        url = self._prefix + '{}.zip'.format(self.prefix_task)
+        url = self._prefix + 'dataset/{}.zip'.format(self.prefix_task)
         super(HGBDataset, self).__init__(name=name,
                                         url=url,
                                         raw_dir=raw_dir,

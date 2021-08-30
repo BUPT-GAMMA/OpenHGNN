@@ -18,10 +18,10 @@ def OpenHGNN(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', '-m', default='mp_GNN', type=str, help='name of models')
-    parser.add_argument('--task', '-t', default='node_classification', type=str, help='name of task')
+    parser.add_argument('--model', '-m', default='homo_GNN', type=str, help='name of models')
+    parser.add_argument('--task', '-t', default='link_prediction', type=str, help='name of task')
     # link_prediction / node_classification
-    parser.add_argument('--dataset', '-d', default='HGBn-IMDB', type=str, help='name of datasets')
+    parser.add_argument('--dataset', '-d', default='HGBl-amazon', type=str, help='name of datasets')
     parser.add_argument('--gpu', '-g', default='0', type=int, help='-1 means cpu')
     parser.add_argument('--repeat', '-r', default='5', type=int, help='-1 means cpu')
     args = parser.parse_args()
