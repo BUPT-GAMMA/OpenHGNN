@@ -35,10 +35,8 @@ class NodeClassification(BaseFlow):
 
         self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
-        if hasattr(self.task.dataset, 'in_dim') and self.task.dataset.has_feature:
+        if hasattr(self.task.dataset, 'in_dim'):
             self.args.in_dim = self.task.dataset.in_dim
-        else:
-            pass
 
         if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
@@ -51,15 +49,9 @@ class NodeClassification(BaseFlow):
 
         self.evaluator = self.task.get_evaluator('f1')
         self.loss_fn = self.task.get_loss_fn()
-        if self.task.dataset.has_feature:
-            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-            self.has_feature = True
-        else:
-            self.has_feature = False
-            self.input_feature = HeteroEmbedLayer(get_nodes_dict(self.hg), args.in_dim).to(self.device)
-            self.optimizer = torch.optim.Adam([{'params': self.model.parameters()},
-                                               {'params': self.input_feature.parameters()}],
-                                              lr=args.lr, weight_decay=args.weight_decay)
+
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+
 
         self.optimizer = (
             torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay))
@@ -205,7 +197,7 @@ class NodeClassification(BaseFlow):
 
             if mask is not None:
                 loss = self.loss_fn(logits[mask], self.labels[mask]).item()
-                if self.args.task.multi_label:
+                if self.task.multi_label:
                     pred = (logits[mask].cpu().numpy()>0).astype(int)
                 else:
                     pred = logits[mask].argmax(dim=1).to('cpu')
