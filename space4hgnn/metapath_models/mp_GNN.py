@@ -192,11 +192,7 @@ class mp_GNN(BaseModel):
                     self._cached_coalesced_graph[meta_path] = mp_g
 
             if hasattr(self, 'embedding_layer'):
-<<<<<<< Updated upstream:space4hgnn/metapath_models/mp_GNN.py
                 h = self.embedding_layer(torch.arange(hg.num_nodes(self.category)).to(hg.device))
-=======
-                h = self.embedding_layer(torch.arange(hg.num_nodes()))
->>>>>>> Stashed changes:space4hgnn/metapath_models/mp_gnn.py
             else:
                 h = hg.nodes[self.category].data['h']
             if hasattr(self, 'pre_mp'):
