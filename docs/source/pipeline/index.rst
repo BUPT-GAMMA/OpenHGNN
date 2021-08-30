@@ -19,5 +19,5 @@ We define three components:
 
    overview
    task
-   models
+   model
    trainerFlow

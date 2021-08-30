@@ -30,7 +30,7 @@ Welcome to OpenHGNN's documentation!
    :hidden:
    :glob:
 
-   api/index
+   api/models
 
 
 This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on `DGL [Deep Graph Library] <https://github.com/dmlc/dgl>`_. We integrate SOTA models of heterogeneous graph.

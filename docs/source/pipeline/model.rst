@@ -3,19 +3,23 @@
 Model
 ========
 
-A model plays a role of encoder. For input given a hetero-graph or MFG and feature (if available), the model need to output a dict of node embedding. In general, it should ouput all nodes embedding. It is allowed that just output the embedding of target nodes which are participated in loss calculation.
+A model plays a role of encoder. For input given a hetero-graph or MFG and feature (if available),
+the model need to output a dict of node embedding. In general, it should ouput all nodes embedding.
+It is allowed that just output the embedding of target nodes which are participated in loss calculation.
 
 It mainly contains two parts: model builder and forward propagation.
 
 Model Builder
 --------------
 
-We create a classmethod build_model_from_args for every model. with that, we can use args and hg to build up a custom model with model-specific hyper-parameters. So it is necessary to implement the func build_model_from_args in your model.
+We create a classmethod build_model_from_args for every model.
+With that, we can use args and hg to build up a custom model with model-specific hyper-parameters.
+So it is necessary to implement the func build_model_from_args in your model.
 
 forward propagation
 -----------------------
 
-.. code:: bash
+.. code:: python
 
    def forward(self, hg=None, feat_dict=None, *args, **wkags):
    '''
@@ -70,8 +74,36 @@ Model Category
 
 How to build a new model
 --------------------------
+First step
 
-1. Create a class your_model that inherits the `BaseModel <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/base_model.py>`_ and register the model with @register_model(str).
-2. Implement the classmethod build_model_from_args.
-3. Implement the forward().
-4. Fill the dict SUPPORTED_MODELS in `models/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/__init__.py>`_
+We should create a class your_model that inherits
+the `BaseModel <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/base_model.py>`_
+and register the model with @register_model(str).
+
+.. code-block:: python
+
+    from openhgnn.models import BaseModel, register_model
+    @register_model('demo_model')
+    class Demo(BaseModel):
+        ...
+
+Second step
+
+We must implement the classmethod build_model_from_args , other functions like __init__(), forward() and so on.
+
+.. code-block:: python
+
+    ...
+    class Demo(BaseModel):
+        @classmethod
+        def build_model_from_args(cls, args, hg):
+            ...
+            return cls(...)
+        def __init__():
+            return
+        def forward(hg, h_dict=None):
+            return h_dict
+
+Finally
+
+We should fill the dict SUPPORTED_MODELS in `models/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/__init__.py>`_
