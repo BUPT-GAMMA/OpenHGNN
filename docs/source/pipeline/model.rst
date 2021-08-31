@@ -74,6 +74,7 @@ Model Category
 
 How to build a new model
 --------------------------
+
 **First step**
 
 We should create a class your_model that inherits

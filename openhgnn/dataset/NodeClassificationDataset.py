@@ -13,13 +13,21 @@ from . import AcademicDataset, HGBDataset
 
 @register_dataset('node_classification')
 class NodeClassificationDataset(BaseDataset):
-    """
-    metric: Accuracy, multi-label f1 or multi-class f1. Default: `accuracy`
+    r"""
+    Description
+    -----------
+    The class *NodeClassificationDataset* is a base class for datasets which can be used in task *node classification*.
+    So its subclass should contain attributes such as graph, category, num_classes and so on.
+    Besides, it should implement the functions *get_labels()* and *get_idx()*.
     """
 
     def __init__(self):
         super(NodeClassificationDataset, self).__init__()
+        self.g = None
+        self.category = None
+        self.num_classes = None
         self.has_feature = False
+        self.in_dim = None
 
     def get_labels(self):
         raise NotImplemented
