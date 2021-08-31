@@ -74,7 +74,7 @@ Model Category
 
 How to build a new model
 --------------------------
-First step
+**First step**
 
 We should create a class your_model that inherits
 the `BaseModel <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/base_model.py>`_
@@ -87,7 +87,7 @@ and register the model with @register_model(str).
     class Demo(BaseModel):
         ...
 
-Second step
+**Second step**
 
 We must implement the classmethod build_model_from_args , other functions like __init__(), forward() and so on.
 
@@ -104,6 +104,6 @@ We must implement the classmethod build_model_from_args , other functions like _
         def forward(hg, h_dict=None):
             return h_dict
 
-Finally
+**Finally**
 
 We should fill the dict SUPPORTED_MODELS in `models/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/__init__.py>`_

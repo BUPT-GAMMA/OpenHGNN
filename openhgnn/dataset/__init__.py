@@ -3,6 +3,7 @@ from .base_dataset import BaseDataset
 from .utils import load_acm, load_acm_raw
 from .academic_graph import AcademicDataset
 from .hgb_dataset import HGBDataset
+from .NodeClassificationDataset import HIN_NodeCLassification
 
 DATASET_REGISTRY = {}
 
