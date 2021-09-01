@@ -10,12 +10,20 @@ class HeteroFeature(nn.Module):
     This is a feature preprocessing component which is dealt with various heterogeneous feature situation.
 
     In general, we will face the following three situations.
-    1. The dataset has not feature at all.
-    2. The dataset has features in every node type.
-    3. The dataset has features of a part of node types.
+
+        1. The dataset has not feature at all.
+
+        2. The dataset has features in every node type.
+
+        3. The dataset has features of a part of node types.
 
     To deal with that, we implement the HeteroFeature.In every situation, we can see that
-    1.
+
+        1. We will build embeddings for all node types.
+
+        2. We will build linear layer for all node types.
+
+        3. We will build embeddings for parts of node types and linear layer for parts of node types which have original feature.
 
     Parameters
     ----------
@@ -32,6 +40,13 @@ class HeteroFeature(nn.Module):
     need_trans: bool, optional
         A flag to control whether to transform original feature linearly. Default is ``True``.
 
+    Attributes
+    -----------
+    embed_dict : nn.ParameterDict
+        store the embeddings
+
+    hetero_linear : HeteroLinearLayer
+        A heterogeneous linear layer to transform original feature.
     """
     def __init__(self, h_dict, n_dict, embed_size, need_trans=True, all_feats=True):
         """

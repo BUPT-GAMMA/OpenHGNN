@@ -1,10 +1,15 @@
 Dataset
 ==========
 
+.. automodule:: dataset
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Base dataset
 -------------
 
-.. automodule:: dataset.base_dataset
+.. autoclass:: dataset.NodeClassificationDataset.
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +17,7 @@ Base dataset
 Node classification
 ---------------------
 
-.. autoclass:: dataset.NodeClassificationDataset.HIN_NodeClassification
+.. autoclass:: dataset.NodeClassificationDataset
     :members:
     :undoc-members:
     :show-inheritance:
