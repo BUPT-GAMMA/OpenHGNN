@@ -29,8 +29,12 @@ Welcome to OpenHGNN's documentation!
    :hidden:
    :glob:
 
-   api/dataset
+   api/openhgnn.dataset
+   api/openhgnn.models
+   api/openhgnn.tasks
+   api/openhgnn.trainerflow
    api/model
+   api/dataset
    api/task
    api/trainerflow
 
