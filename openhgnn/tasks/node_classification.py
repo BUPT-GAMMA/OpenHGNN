@@ -18,7 +18,7 @@ class NodeClassification(BaseTask):
             self.train_idx, self.val_idx, self.test_idx = self.dataset.get_idx()
         self.evaluator = Evaluator(args.seed)
         self.labels = self.dataset.get_labels()
-        self.multi_label = True if args.dataset=='HGBn-IMDB' else False
+        self.multi_label = True if args.dataset == 'HGBn-IMDB' else False
 
     def get_graph(self):
         return self.dataset.g
@@ -58,4 +58,3 @@ class NodeClassification(BaseTask):
 
     def get_labels(self):
         return self.labels
-

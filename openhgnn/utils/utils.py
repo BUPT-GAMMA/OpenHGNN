@@ -78,7 +78,6 @@ class EarlyStopping(object):
             self.counter = 0
         return self.early_stop
 
-
     def loss_step(self, loss, model):
         if self.best_loss is None:
             self.best_loss = loss
