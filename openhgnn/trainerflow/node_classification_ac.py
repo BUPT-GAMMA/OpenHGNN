@@ -6,8 +6,7 @@ import torch
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 import torch.nn.functional as F
-from openhgnn.models import build_model
-from openhgnn.models import HGNN_AC
+from ..models import build_model
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import extract_embed, EarlyStopping

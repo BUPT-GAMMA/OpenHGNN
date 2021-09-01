@@ -8,7 +8,8 @@ The task means downstream task. So it is related to dataset closely.
 Included Object:
 --------------------
 
-* `Dataset <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/#Dataset>`_, containing the heterogeneous graph as DGLGraph, as well as node/edge features and additional dataset-specific information.
+* :ref:`api-dataset`,
+containing the heterogeneous graph as DGLGraph, as well as node/edge features and additional dataset-specific information.
 * Evaluation Metric, a callable object which takes in the prediction and the ground truth label, and returns an output.
 
    * Currently we will implement evaluation metrics for node classification and link prediction.
@@ -42,6 +43,24 @@ Supported task
 How to build a new trainerflow
 ---------------------------------
 
-1. Create a class your_task that inherits the `BaseTask <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/tasks/base_task.py>`_ and register the task with @register_task(str).
-2. We decorate the func evaluate() with @abstractmethod. So the evaluate() must be overridden, or the your_task cannot be instantiated.
-3. Fill the dict SUPPORTED_TASKS in `task/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/tasks/__init__.py>`_
+**First step**
+
+We should create a class your_task that inherits
+the `BaseTask <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/tasks/base_task.py>`_
+and register the model with @register_task(str).
+We give the task recommendation as an example.
+
+.. code-block:: python
+
+    from openhgnn.tasks import BaseTask, register_task
+    @register_task('recommendation')
+    class Recommendation(BaseTask):
+        ...
+
+*Note*
+
+We decorate the func evaluate() with @abstractmethod. So the evaluate() must be overridden, or the your_task cannot be instantiated.
+
+**Finally**
+
+We should fill the dict SUPPORTED_TASKS in `task/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/tasks/__init__.py>`_

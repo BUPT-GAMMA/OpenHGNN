@@ -3,11 +3,11 @@ from sklearn.metrics import f1_score
 from tqdm import tqdm
 import numpy as np
 import torch.nn as nn
-from openhgnn.models import build_model
-from openhgnn.models.DMGI import LogReg
-from openhgnn.tasks import build_task
-from openhgnn.trainerflow import register_flow, BaseFlow
-from openhgnn.utils import EarlyStopping
+from ..models import build_model
+from ..models.DMGI import LogReg
+from ..tasks import build_task
+from ..trainerflow import register_flow, BaseFlow
+from ..utils import EarlyStopping
 
 
 @register_flow("DMGI_trainer")

@@ -1,7 +1,5 @@
 import dgl
-from dgl.nn.pytorch import GATConv
-
-from openhgnn.models import register_model, BaseModel
+from . import register_model, BaseModel
 import torch.nn as nn
 import numpy as np
 

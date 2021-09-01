@@ -2,3 +2,7 @@ sphinx
 sphinx_rtd_theme
 sphinx-markdown-tables
 recommonmark
+sphinx_copybutton==0.4.0
+ogb>=1.1.0
+torch>=1.8.1
+dgl==0.7a210527
