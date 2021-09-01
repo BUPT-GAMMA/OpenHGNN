@@ -1,45 +1,45 @@
-openhgnn.tasks package
+tasks package
 ======================
 
 Submodules
 ----------
 
-openhgnn.tasks.base\_task module
+tasks.base\_task module
 --------------------------------
 
-.. automodule:: openhgnn.tasks.base_task
+.. automodule:: tasks.base_task
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.tasks.demo module
+tasks.demo module
 --------------------------
 
-.. automodule:: openhgnn.tasks.demo
+.. automodule:: tasks.demo
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.tasks.link\_prediction module
+tasks.link\_prediction module
 --------------------------------------
 
-.. automodule:: openhgnn.tasks.link_prediction
+.. automodule:: tasks.link_prediction
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.tasks.node\_classification module
+tasks.node\_classification module
 ------------------------------------------
 
-.. automodule:: openhgnn.tasks.node_classification
+.. automodule:: tasks.node_classification
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.tasks.recommendation module
+tasks.recommendation module
 ------------------------------------
 
-.. automodule:: openhgnn.tasks.recommendation
+.. automodule:: tasks.recommendation
    :members:
    :undoc-members:
    :show-inheritance:
@@ -47,7 +47,7 @@ openhgnn.tasks.recommendation module
 Module contents
 ---------------
 
-.. automodule:: openhgnn.tasks
+.. automodule:: tasks
    :members:
    :undoc-members:
    :show-inheritance:
