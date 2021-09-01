@@ -8,7 +8,8 @@ The task means downstream task. So it is related to dataset closely.
 Included Object:
 --------------------
 
-* `Dataset <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/#Dataset>`_, containing the heterogeneous graph as DGLGraph, as well as node/edge features and additional dataset-specific information.
+* :ref:`api-dataset`,
+containing the heterogeneous graph as DGLGraph, as well as node/edge features and additional dataset-specific information.
 * Evaluation Metric, a callable object which takes in the prediction and the ground truth label, and returns an output.
 
    * Currently we will implement evaluation metrics for node classification and link prediction.
