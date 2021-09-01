@@ -1,5 +1,5 @@
 import torch.nn.functional as F
-
+import torch.nn as nn
 from . import BaseTask, register_task
 from ..dataset import build_dataset
 from ..utils import Evaluator
@@ -18,11 +18,14 @@ class NodeClassification(BaseTask):
             self.train_idx, self.val_idx, self.test_idx = self.dataset.get_idx()
         self.evaluator = Evaluator(args.seed)
         self.labels = self.dataset.get_labels()
+        self.multi_label = True if args.dataset == 'HGBn-IMDB' else False
 
     def get_graph(self):
         return self.dataset.g
 
     def get_loss_fn(self):
+        if self.multi_label:
+            return nn.BCEWithLogitsLoss()
         return F.cross_entropy
 
     def get_evaluator(self, name):
@@ -45,12 +48,13 @@ class NodeClassification(BaseTask):
             return result_dict
         elif name == 'f1_lr':
             return self.evaluator.nc_with_LR(logits, self.labels, self.train_idx, self.test_idx)
-        else:
+        elif name == 'f1':
             return self.evaluator.f1_node_classification(self.labels[mask], logits)
+        else:
+            raise ValueError('The metric is not supported!')
 
     def get_idx(self):
         return self.train_idx, self.val_idx, self.test_idx
 
     def get_labels(self):
         return self.labels
-
