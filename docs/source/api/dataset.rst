@@ -12,7 +12,7 @@ Base dataset
 Node classification
 ---------------------
 
-.. autoclass:: dataset.HIN_NodeCLassification
+.. autoclass:: dataset.HIN_NodeClassification
     :members:
     :undoc-members:
     :show-inheritance:

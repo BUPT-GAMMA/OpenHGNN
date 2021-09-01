@@ -1,69 +1,69 @@
-openhgnn.dataset package
+dataset package
 ========================
 
 Submodules
 ----------
 
-openhgnn.dataset.LinkPredictionDataset module
+dataset.LinkPredictionDataset module
 ---------------------------------------------
 
-.. automodule:: openhgnn.dataset.LinkPredictionDataset
+.. automodule:: dataset.LinkPredictionDataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.dataset.NodeClassificationDataset module
+dataset.NodeClassificationDataset module
 -------------------------------------------------
 
-.. automodule:: openhgnn.dataset.NodeClassificationDataset
+.. automodule:: dataset.NodeClassificationDataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.dataset.RecommendationDataset module
+dataset.RecommendationDataset module
 ---------------------------------------------
 
-.. automodule:: openhgnn.dataset.RecommendationDataset
+.. automodule:: dataset.RecommendationDataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.dataset.academic\_graph module
+dataset.academic\_graph module
 ---------------------------------------
 
-.. automodule:: openhgnn.dataset.academic_graph
+.. automodule:: dataset.academic_graph
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.dataset.base\_dataset module
+dataset.base\_dataset module
 -------------------------------------
 
-.. automodule:: openhgnn.dataset.base_dataset
+.. automodule:: dataset.base_dataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.dataset.hgb\_dataset module
+dataset.hgb\_dataset module
 ------------------------------------
 
-.. automodule:: openhgnn.dataset.hgb_dataset
+.. automodule:: dataset.hgb_dataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.dataset.knowledge\_graph module
+dataset.knowledge\_graph module
 ----------------------------------------
 
-.. automodule:: openhgnn.dataset.knowledge_graph
+.. automodule:: dataset.knowledge_graph
    :members:
    :undoc-members:
    :show-inheritance:
 
-openhgnn.dataset.utils module
+dataset.utils module
 -----------------------------
 
-.. automodule:: openhgnn.dataset.utils
+.. automodule:: dataset.utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -71,7 +71,7 @@ openhgnn.dataset.utils module
 Module contents
 ---------------
 
-.. automodule:: openhgnn.dataset
+.. automodule:: dataset
    :members:
    :undoc-members:
    :show-inheritance:
