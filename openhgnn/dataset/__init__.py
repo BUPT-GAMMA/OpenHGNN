@@ -62,6 +62,8 @@ def build_dataset(dataset, task):
         _dataset = 'kg_link_prediction'
     elif dataset == 'demo':
         _dataset = 'demo_' + task
+    elif dataset in ['amazon']:
+        _dataset = 'slice_' + task
     return DATASET_REGISTRY[_dataset](dataset)
 
 

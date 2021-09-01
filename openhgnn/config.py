@@ -302,6 +302,33 @@ class Config(object):
             self.isSemi = conf.getboolean("DMGI", "isSemi")
             self.isBias = conf.getboolean("DMGI", "isBias")
             self.isAttn = conf.getboolean("DMGI", "isAttn")
+            
+        elif model == 'SLiCE':
+            self.data_name = conf.get('SLiCE','data_name')
+            self.num_walks_per_node=conf.getint('SLiCE','num_walks_per_node')
+            self.beam_width=conf.getint('SLiCE','beam_width')
+            self.max_length=conf.getint('SLiCE','max_length')
+            self.walk_type=conf.get("SLiCE",'walk_type')
+            self.batch_size=conf.getint('SLiCE','batch_size')
+            self.outdir=conf.get('SLiCE','outdir')
+            self.n_pred=conf.getint('SLiCE','n_pred')
+            self.max_pred=conf.getint('SLiCE','max_pred')
+            self.lr=conf.getfloat('SLiCE','lr')
+            self.n_epochs=conf.getint('SLiCE','n_epochs')
+            self.get_bert_encoder_embeddings=conf.getboolean('SLiCE','get_bert_encoder_embeddings')
+            self.checkpoint=conf.getint('SLiCE','checkpoint')
+            self.path_option = conf.get("SLiCE",'path_option')
+            self.ft_batch_size=conf.getint('SLiCE','ft_batch_size')
+            #self.embed_dir=conf.get('SLiCE','embed_dir')
+            self.d_model=conf.getint('SLiCE','d_model')
+            self.ft_d_ff=conf.getint('SLiCE','ft_d_ff')
+            self.ft_layer=conf.get('SLiCE','ft_layer')
+            self.ft_drop_rate=conf.getfloat('SLiCE','ft_drop_rate')
+            self.ft_input_option=conf.get('SLiCE','ft_input_option')
+            self.n_layers=conf.getint('SLiCE','n_layers')
+            self.ft_lr=conf.getfloat('SLiCE','ft_lr')
+            self.ft_n_epochs=conf.getint('SLiCE','ft_n_epochs')
+            self.ft_checkpoint=conf.getint('SLiCE','ft_checkpoint')
 
     def __repr__(self):
         return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset
