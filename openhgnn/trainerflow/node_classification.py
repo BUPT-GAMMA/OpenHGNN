@@ -242,4 +242,3 @@ class NodeClassification(BaseFlow):
         metric = evaluator(y_trues,y_predicts.argmax(dim=1).to('cpu'))
         return metric, loss
     
-    
