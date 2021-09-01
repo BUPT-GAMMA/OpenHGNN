@@ -241,3 +241,5 @@ class NodeClassification(BaseFlow):
         evaluator = self.task.get_evaluator(name='f1')
         metric = evaluator(y_trues,y_predicts.argmax(dim=1).to('cpu'))
         return metric, loss
+    
+    
