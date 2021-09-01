@@ -2,7 +2,7 @@ import dgl
 import numpy as np
 from dgl.data.knowledge_graph import load_data
 import torch as th
-from openhgnn.dataset import BaseDataset, register_dataset
+from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
 from dgl.data.utils import load_graphs
 

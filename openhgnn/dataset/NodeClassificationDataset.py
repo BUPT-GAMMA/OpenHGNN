@@ -1,13 +1,12 @@
 import dgl
 import dgl.function as fn
-from dgl.data import DGLDataset
 import torch as th
 import numpy as np
-from . import load_acm, load_acm_raw
-from openhgnn.dataset import BaseDataset, register_dataset
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
 from ogb.nodeproppred import DglNodePropPredDataset
+from . import load_acm, load_acm_raw
+from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
 
 

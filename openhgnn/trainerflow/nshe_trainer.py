@@ -6,7 +6,7 @@ from ..models import build_model
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import EarlyStopping
-from openhgnn.utils.sampler import get_epoch_samples
+from ..utils.sampler import get_epoch_samples
 
 @register_flow("nshetrainer")
 class NSHETrainer(BaseFlow):
