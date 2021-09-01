@@ -27,7 +27,7 @@ class NodeClassificationDataset(BaseDataset):
         self.category = None
         self.num_classes = None
         self.has_feature = False
-        self.in_dim = None
+        # self.in_dim = None
 
     def get_labels(self):
         raise NotImplemented
