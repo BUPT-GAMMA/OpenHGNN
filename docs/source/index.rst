@@ -21,7 +21,6 @@ Welcome to OpenHGNN's documentation!
    :titlesonly:
    :glob:
 
-   guide/index
    pipeline/index
 
 .. toctree::

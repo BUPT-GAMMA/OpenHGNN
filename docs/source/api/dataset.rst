@@ -1,8 +1,8 @@
 Dataset
-======
+==========
 
 Base dataset
----------
+-------------
 
 .. automodule:: dataset.base_dataset
     :members:
@@ -10,7 +10,7 @@ Base dataset
     :show-inheritance:
 
 Node classification
----------
+---------------------
 
 .. autoclass:: dataset.HIN_NodeCLassification
     :members:

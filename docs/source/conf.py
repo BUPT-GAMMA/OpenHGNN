@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../openhgnn'))
+sys.path.insert(0, os.path.abspath('../../openhgnn'))
 
 
 # -- Project information -----------------------------------------------------
@@ -32,7 +32,11 @@ release = 'v0.1.0'
 # ones.
 # extensions = [
 # ]
-extensions = ['recommonmark', 'sphinx_markdown_tables', 'sphinx.ext.autodoc']
+extensions = ['recommonmark',
+              'sphinx_markdown_tables',
+              'sphinx.ext.autodoc',
+              'sphinx_copybutton',
+              ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
