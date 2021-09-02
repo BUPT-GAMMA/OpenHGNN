@@ -76,7 +76,6 @@ class DMGI_trainer(BaseFlow):
                  self.train_idx, self.val_idx, self.test_idx,
                  self.labels, self.num_classes, self.args.device)
 
-
     def _full_train_setp(self):
 
         self.model.train()
@@ -96,37 +95,19 @@ class DMGI_trainer(BaseFlow):
         loss = loss.detach().numpy()
         return loss
 
+    def _test_step(self, split=None, logits=None):
+        pass
+
+    def _mini_train_step(self, ):
+        pass
+
+    def loss_calculation(self, positive_graph, negative_graph, embedding):
+        pass
 
     def calculate_J(self, result, lbl):
-        r"""
-            Two formulas to calculate the final objective :math:`\mathcal{J}`
-            If isSemi = Ture, introduce a semi-supervised module into our framework that predicts the labels of labeled nodes from
-            the consensus embedding Z. More precisely, we minimize the cross-entropy error over the labeled nodes:
-
-            .. math::
-              \begin{equation}
-                \mathcal{J}_{\text {semi }}=\sum_{r \in \mathcal{R}} \mathcal{L}^{(r)}+\alpha \ell_{\mathrm{cs}}+\beta\|\Theta\|+\gamma \ell_{\text {sup }}
-              \end{equation}
-
-            Where :math:`\gamma` is  the coefficient of the semi-supervised module, the way to calculate :math:`\ell_{\text {sup }}` :
-
-            .. math::
-              \begin{equation}
-                \ell_{\text {sup }}=-\frac{1}{\left|\mathcal{Y}_{L}\right|} \sum_{l \in \mathcal{Y}_{L}} \sum_{i=1}^{c} Y_{l i} \ln \hat{Y}_{l i}
-              \end{equation}
-
-            If isSemi = False:
-
-            .. math::
-              \begin{equation}
-                \mathcal{J}=\sum_{r \in \mathcal{R}} \mathcal{L}^{(r)}+\alpha \ell_{\mathrm{cs}}+\beta\|\Theta\|^{2}
-              \end{equation}
-
-            Where :math:`\alpha` controls the importance of the consensus regularization,
-            :math:`mathcal{L}^{(r)}`  is cross entropy.
-            """
 
         logits = result['logits']
+
         xent = nn.CrossEntropyLoss()
         b_xent = nn.BCEWithLogitsLoss()
         xent_loss = None
@@ -146,17 +127,7 @@ class DMGI_trainer(BaseFlow):
             sup = result['semi']
             semi_loss = xent(sup[self.train_idx], self.labels[self.train_idx])
             loss += self.sup_coef * semi_loss
-            return loss
-
-
-    def _test_step(self, split=None, logits=None):
-        pass
-
-    def _mini_train_step(self, ):
-        pass
-
-    def loss_calculation(self, positive_graph, negative_graph, embedding):
-        pass
+        return loss
 
 
 def evaluate(embeds, idx_train, idx_val, idx_test, labels, num_classes, device):
@@ -237,7 +208,6 @@ def evaluate(embeds, idx_train, idx_val, idx_test, labels, num_classes, device):
                                                                                                 np.std(macro_f1s),
                                                                                                 np.mean(micro_f1s),
                                                                                                 np.std(micro_f1s)))
-
 
 
 
