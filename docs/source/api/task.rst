@@ -1,6 +1,6 @@
 .. _api-task:
 
-openhgnn.task
+Task
 =================================
 
 BaseTask

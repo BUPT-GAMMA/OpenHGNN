@@ -1,4 +1,4 @@
-models
+Models
 ======
 
 BaseModel
@@ -9,10 +9,26 @@ BaseModel
     :undoc-members:
     :show-inheritance:
 
-HeteroFeature
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+HAN
+--------------------------
 
-.. autoclass:: models.HeteroFeature.HeteroFeature
-    :members:
-    :show-inheritance:
+.. automodule:: models.HAN
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
+HetGNN
+-----------------------------
+
+.. automodule:: models.HetGNN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+NSHE
+-----------------------------
+
+.. automodule:: models.NSHE
+   :members:
+   :undoc-members:
+   :show-inheritance:

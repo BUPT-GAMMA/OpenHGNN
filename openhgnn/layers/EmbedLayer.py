@@ -4,10 +4,28 @@ import torch.nn.functional as F
 
 
 class HeteroEmbedLayer(nn.Module):
-    r"""Embedding layer for featureless heterograph."""
+    r"""
+    Description
+    ------------
+    Embedding layer for featureless heterograph.
+
+
+    Parameter
+    -----------
+    n_nodes_dict : dict
+        Key of dict means node type,
+        value of dict means number of nodes.
+    embed_size : int
+        Dimension of embedding,
+    activation : callable activation function/layer or None, optional
+        If not None, applies an activation function to the updated node features.
+        Default: ``None``.
+    dropout : float, optional
+        Dropout rate. Default: ``0.0``
+    """
 
     def __init__(self,
-                 n_nodes,
+                 n_nodes_dict,
                  embed_size,
                  embed_name='embed',
                  activation=None,
@@ -21,7 +39,7 @@ class HeteroEmbedLayer(nn.Module):
 
         # create weight embeddings for each node for each relation
         self.embeds = nn.ParameterDict()
-        for ntype, nodes in n_nodes.items():
+        for ntype, nodes in n_nodes_dict.items():
             embed = nn.Parameter(th.FloatTensor(nodes, self.embed_size))
             # initrange = 1.0 / self.embed_size
             # nn.init.uniform_(embed, -initrange, initrange)
@@ -29,7 +47,11 @@ class HeteroEmbedLayer(nn.Module):
             self.embeds[ntype] = embed
 
     def forward(self, block=None):
-        """Forward computation
+        r"""
+        Description
+        ------------
+        Forward computation
+
         Parameters
         ----------
         block : DGLHeteroGraph, optional

@@ -85,14 +85,6 @@ models.HetGNN module
    :undoc-members:
    :show-inheritance:
 
-models.HeteroFeature module
-------------------------------------
-
-.. automodule:: models.HeteroFeature
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 models.HeteroGraphConv module
 --------------------------------------
 

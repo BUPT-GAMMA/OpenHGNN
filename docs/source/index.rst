@@ -33,11 +33,11 @@ Welcome to OpenHGNN's documentation!
    api/openhgnn.models
    api/openhgnn.tasks
    api/openhgnn.trainerflow
-   api/model
    api/dataset
    api/task
+   api/layer
+   api/model
    api/trainerflow
-
 
 
 This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on `DGL [Deep Graph Library] <https://github.com/dmlc/dgl>`_. We integrate SOTA models of heterogeneous graph.

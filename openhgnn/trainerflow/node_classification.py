@@ -2,7 +2,8 @@ import dgl
 import torch
 from tqdm import tqdm
 from ..utils.sampler import get_node_data_loader
-from ..models import build_model, HeteroFeature
+from ..models import build_model
+from ..layers.HeteroLinear import HeteroFeature
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils.logger import printInfo
@@ -186,7 +187,8 @@ class NodeClassification(BaseFlow):
     def _full_test_step(self, mode=None, logits=None):
         self.model.eval()
         with torch.no_grad():
-            logits = logits if logits else self.model(self.hg)[self.category]
+            h_dict = self.input_feature()
+            logits = logits if logits else self.model(self.hg, h_dict)[self.category]
             if mode == "train":
                 mask = self.train_idx
             elif mode == "validation":
