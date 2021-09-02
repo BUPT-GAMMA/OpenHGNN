@@ -102,6 +102,15 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             self.has_feature = True
+        elif dataset_name == 'HGBl-LastFM':
+            dataset = HGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = False
+        elif dataset_name == 'HGBl-PubMed':
+            dataset = HGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = True
+
         self.g = g
 
     def load_link_pred(self, path):
