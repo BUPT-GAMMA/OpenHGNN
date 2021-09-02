@@ -58,4 +58,3 @@ class NodeClassification(BaseTask):
 
     def get_labels(self):
         return self.labels
-

@@ -18,7 +18,7 @@ class BaseModel(nn.Module, metaclass=ABCMeta):
     def forward(self, *args):
         r"""
         Description
-        ____________
+        ------------
         The model plays a role of encoder. So the forward will encoder original features into new features.
 
         Parameter

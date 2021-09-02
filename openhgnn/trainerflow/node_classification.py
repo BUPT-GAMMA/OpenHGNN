@@ -36,10 +36,6 @@ class NodeClassification(BaseFlow):
 
         self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
-        if self.task.dataset.has_feature:
-            self.args.in_dim = self.task.dataset.in_dim
-        else:
-            self.args.in_dim = self.args.hidden_dim
 
         if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
@@ -137,7 +133,8 @@ class NodeClassification(BaseFlow):
         if self.args.dataset[:4] == 'HGBn':
             self.model.eval()
             with torch.no_grad():
-                logits = self.model(self.hg)[self.category]
+                h_dict = self.input_feature()
+                logits = self.model(self.hg, h_dict)[self.category]
                 self.task.dataset.save_results(logits=logits, file_path=self.args.HGB_results_path)
             return
         if self.args.mini_batch_flag and hasattr(self, 'val_loader'):

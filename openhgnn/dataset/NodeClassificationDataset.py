@@ -296,6 +296,8 @@ class HGB_NodeClassification(NodeClassificationDataset):
             num_classes = 5
             g.nodes['keyword'].data['h'] = th.eye(g.number_of_nodes('keyword'))
             self.in_dim = g.ndata['h'][category].shape[1]
+            # RuntimeError: result type Float can't be cast to the desired output type Long
+            self.multi_label = True
         else:
             raise ValueError
         self.g, self.category, self.num_classes = g, category, num_classes

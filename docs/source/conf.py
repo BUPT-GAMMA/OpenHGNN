@@ -35,6 +35,13 @@ release = 'v0.1.0'
 extensions = ['recommonmark',
               'sphinx_markdown_tables',
               'sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.coverage',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.napoleon',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.graphviz',
               'sphinx_copybutton',
               ]
 
