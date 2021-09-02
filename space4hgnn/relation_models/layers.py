@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import dgl
 from dgl.nn.pytorch import GraphConv, HeteroGraphConv
 
+
 class HeteroGeneralLayer(nn.Module):
     '''General wrapper for layers'''
 
@@ -47,7 +48,7 @@ class BatchNorm1dNode(nn.Module):
 class RGCNConv(nn.Module):
     def __init__(self, rel_names, dim_in, dim_out, bias=False, **kwargs):
         super(RGCNConv, self).__init__()
-        self.model = dgl.nn.HeteroGraphConv({
+        self.model = HeteroGraphConv({
             rel:  dgl.nn.pytorch.GraphConv(dim_in, dim_out, bias=bias)
             for rel in rel_names
         })
