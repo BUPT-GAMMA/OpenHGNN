@@ -5,8 +5,9 @@ import torch.nn.functional as F
 
 from space4hgnn.metapath_models.layers import GeneralLayer
 from space4hgnn.models.layers import MultiLinearLayer
-from openhgnn.models import BaseModel, register_model, HeteroMLPLayer
-from openhgnn.models import HeteroEmbedLayer
+from openhgnn.models import BaseModel, register_model
+from openhgnn.layers.HeteroLinear import HeteroMLPLayer
+from openhgnn.layers.EmbedLayer import HeteroEmbedLayer
 from openhgnn.utils import get_nodes_dict
 
 
@@ -150,11 +151,8 @@ class mp_GNN(BaseModel):
                     if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
                         if etype[0] != etype[2]:
                             self.meta_paths.append((etype, dst_e))
-        if args.has_feature == False:
-            self.embedding_layer = nn.Embedding(hg.num_nodes(self.category), args.hidden_dim)
-            args.in_dim = args.hidden_dim
 
-        if args.layers_pre_mp > 0:
+        if args.layers_pre_mp - 1 > 0:
             self.pre_mp = GNNPreMP(args)
 
         if args.layers_gnn > 0:
@@ -179,7 +177,7 @@ class mp_GNN(BaseModel):
         #
         # self.apply(init_weights)
 
-    def forward(self, hg):
+    def forward(self, hg, h_dict):
         with hg.local_scope():
 
             if self._cached_graph is None or self._cached_graph is not hg:
@@ -191,10 +189,7 @@ class mp_GNN(BaseModel):
                     mp_g = dgl.add_self_loop(mp_g)
                     self._cached_coalesced_graph[meta_path] = mp_g
 
-            if hasattr(self, 'embedding_layer'):
-                h = self.embedding_layer(torch.arange(hg.num_nodes(self.category)).to(hg.device))
-            else:
-                h = hg.nodes[self.category].data['h']
+            h = h_dict[self.category]
             if hasattr(self, 'pre_mp'):
                 h = self.pre_mp(h)
             if hasattr(self, 'gnn'):

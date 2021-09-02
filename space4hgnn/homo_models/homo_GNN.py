@@ -4,8 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from space4hgnn.models.layers import GeneralLayer, MultiLinearLayer
-from openhgnn.models import BaseModel, register_model, HeteroMLPLayer
-from openhgnn.models import HeteroEmbedLayer
+from openhgnn.models import BaseModel, register_model
+from openhgnn.layers.HeteroLinear import HeteroMLPLayer
+from openhgnn.layers.EmbedLayer import HeteroEmbedLayer
 from openhgnn.utils import get_nodes_dict
 ########### Layer ############
 def GNNLayer(gnn_type, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
@@ -123,7 +124,8 @@ def HGNNPreMP(args, hg):
     if num_pre_mp > 0:
         linear_dict = {}
         for ntype in hg.ntypes:
-            in_dim = hg.nodes[ntype].data['h'].shape[1]
+            #in_dim = hg.nodes[ntype].data['h'].shape[1]
+            in_dim = args.hidden_dim
             linear_dict[ntype] = [in_dim]
             for _ in range(num_pre_mp):
                 linear_dict[ntype].append(args.hidden_dim)
@@ -166,18 +168,10 @@ class homo_GNN(BaseModel):
 
         # Just For HGBl-amazon dataset, cause it has one node type and two edge types
         if self.one_node_type:
-            if args.has_feature == False:
-                self.embedding_layer = nn.Embedding(hg.num_nodes(), args.hidden_dim)
-                args.in_dim = args.hidden_dim
-            else:
-                args.in_dim = hg.ndata['h'].shape[1]
-            if args.layers_pre_mp > 0:
+            if args.layers_pre_mp - 1> 0:
                 self.pre_mp = GNNPreMP(args)
             self.post_mp = GNNPostMP(args)
         else:
-            if args.has_feature == False:
-                self.embedding_layer = HeteroEmbedLayer(get_nodes_dict(hg), args.hidden_dim)
-                hg.ndata['h'] = self.embedding_layer()
             if args.layers_pre_mp > 0:
                 self.pre_mp = HGNNPreMP(args, hg)
             self.post_mp = HGNNPostMP(args, hg)
@@ -196,15 +190,11 @@ class homo_GNN(BaseModel):
                                 has_l2norm=args.has_l2norm)
         # self.apply(init_weights)
 
-    def forward(self, hg):
+    def forward(self, hg, h_dict):
         with hg.local_scope():
             if self.one_node_type:
-                if hasattr(self, 'embedding_layer'):
-                    h = self.embedding_layer(torch.arange(hg.num_nodes()))
-                else:
-                    h = hg.ndata['h']
                 if hasattr(self, 'pre_mp'):
-                    h = self.pre_mp(h)
+                    h = self.pre_mp(h_dict)
                 homo_g = dgl.to_homogeneous(hg)
                 homo_g = dgl.remove_self_loop(homo_g)
                 homo_g = dgl.add_self_loop(homo_g)
@@ -213,10 +203,6 @@ class homo_GNN(BaseModel):
                 if hasattr(self, 'post_mp'):
                     out_h = self.post_mp(out_h)
             else:
-                if hasattr(self, 'embedding_layer'):
-                    h_dict = self.embedding_layer()
-                else:
-                    h_dict = hg.ndata['h']
                 if hasattr(self, 'pre_mp'):
                     h_dict = self.pre_mp(h_dict)
 

@@ -4,11 +4,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from . import HeteroGeneralLayer
-from openhgnn.models import BaseModel, register_model, HeteroMLPLayer
-from openhgnn.models import HeteroEmbedLayer
+from openhgnn.models import BaseModel, register_model
+from openhgnn.layers.HeteroLinear import HeteroMLPLayer
 from openhgnn.utils import get_nodes_dict
 ########### Layer ############
-def GNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
+def HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
     return HeteroGeneralLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm)
 
 
@@ -115,7 +115,8 @@ def HGNNPreMP(args, hg):
     if num_pre_mp > 0:
         linear_dict = {}
         for ntype in hg.ntypes:
-            in_dim = hg.nodes[ntype].data['h'].shape[1]
+            #in_dim = hg.nodes[ntype].data['h'].shape[1]
+            in_dim = args.hidden_dim
             linear_dict[ntype] = [in_dim]
             for _ in range(num_pre_mp):
                 linear_dict[ntype].append(args.hidden_dim)
@@ -146,11 +147,8 @@ class relation_HGNN(BaseModel):
         """
         """
         super(relation_HGNN, self).__init__()
-        if args.has_feature == False:
-            self.embedding_layer = HeteroEmbedLayer(get_nodes_dict(hg), args.hidden_dim).to(args.device)
-            hg.ndata['h'] = self.embedding_layer()
 
-        if args.layers_pre_mp > 0:
+        if args.layers_pre_mp - 1> 0:
             self.pre_mp = HGNNPreMP(args, hg)
 
         if args.layers_gnn > 0:
@@ -172,12 +170,8 @@ class relation_HGNN(BaseModel):
         #
         # self.apply(init_weights)
 
-    def forward(self, hg):
+    def forward(self, hg, h_dict):
         with hg.local_scope():
-            if hasattr(self, 'embedding_layer'):
-                h_dict = self.embedding_layer()
-            else:
-                h_dict = hg.ndata['h']
             if hasattr(self, 'pre_mp'):
                 h_dict = self.pre_mp(h_dict)
             if hasattr(self, 'hgnn'):
