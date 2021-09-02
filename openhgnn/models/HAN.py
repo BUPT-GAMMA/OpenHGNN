@@ -1,12 +1,3 @@
-"""
-This model shows an example of using dgl.metapath_reachable_graph on the original heterogeneous
-graph.
-Because the original HAN implementation only gives the preprocessed homogeneous graph, this model
-could not reproduce the result in HAN as they did not provide the preprocessing code, and we
-constructed another dataset from ACM with a different set of papers, connections, features and
-labels.
-"""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,10 +5,25 @@ import torch.nn.functional as F
 import dgl
 from dgl.nn.pytorch import GATConv
 from . import BaseModel, register_model
-
+from .macro_layer.SemanticConv import SemanticAttention
 
 @register_model('HAN')
 class HAN(BaseModel):
+    r"""
+    Description
+    ------------
+    This model shows an example of using dgl.metapath_reachable_graph on the original heterogeneous
+    graph.Because the original HAN implementation only gives the preprocessed homogeneous graph, this model
+    could not reproduce the result in HAN as they did not provide the preprocessing code, and we
+    constructed another dataset from ACM with a different set of papers, connections, features and
+    labels.
+    Parameter
+    ------------
+    meta_paths : list
+        contain multiple meta-paths.
+    category : str
+        The category means the head and tail node of metapaths
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         etypes = hg.canonical_etypes
@@ -26,7 +32,8 @@ class HAN(BaseModel):
             if etype[0] == args.category:
                 for dst_e in etypes:
                     if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
-                        mps.append([etype, dst_e])
+                        if etype[0] != etype[2]:
+                            mps.append([etype, dst_e])
 
         return cls(meta_paths=mps, category=args.category,
                     in_size=args.in_dim, hidden_size=args.hidden_dim,
@@ -53,29 +60,11 @@ class HAN(BaseModel):
         return {self.category: self.linear(h)}
 
 
-class SemanticAttention(nn.Module):
-    def __init__(self, in_size, hidden_size=128):
-        super(SemanticAttention, self).__init__()
-
-        self.project = nn.Sequential(
-            nn.Linear(in_size, hidden_size),
-            nn.Tanh(),
-            nn.Linear(hidden_size, 1, bias=False)
-        )
-
-    def forward(self, z):
-        w = self.project(z).mean(0)                    # (M, 1)
-        beta = torch.softmax(w, dim=0)                 # (M, 1)
-        beta = beta.expand((z.shape[0],) + beta.shape) # (N, M, 1)
-
-        return (beta * z).sum(1)                       # (N, D * K)
-
-
 class HANLayer(nn.Module):
     """
     HAN layer.
-    Arguments
-    ---------
+    Parameters
+    -----------
     meta_paths : list of metapaths, each as a list of edge types
     in_size : input feature dimension
     out_size : output feature dimension
