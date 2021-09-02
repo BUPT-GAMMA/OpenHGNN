@@ -1,6 +1,6 @@
 .. _api-task:
 
-openhgnn.task
+Task
 =================================
 
 BaseTask
@@ -10,3 +10,12 @@ BaseTask
     :members:
     :undoc-members:
     :show-inheritance:
+
+Node classification Task
+---------------------
+
+.. autoclass:: tasks.node_classification.NodeClassification
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

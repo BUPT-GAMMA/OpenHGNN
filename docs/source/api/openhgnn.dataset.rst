@@ -1,10 +1,40 @@
-dataset package
+openhgnn.dataset
 ========================
 
-Submodules
-----------
+Node Classification Dataset
+-------------------------------------------------
 
-dataset.LinkPredictionDataset module
+.. automodule:: dataset.NodeClassificationDataset
+
+BaseNode Classification Dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: dataset.NodeClassificationDataset.NodeClassificationDataset
+    :members:
+    :show-inheritance:
+
+RDF Node Classification Dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: dataset.NodeClassificationDataset.RDF_NodeClassification
+    :members:
+    :show-inheritance:
+
+HIN Node Classification Dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: dataset.NodeClassificationDataset.HIN_NodeClassification
+    :members:
+    :show-inheritance:
+
+HGB Node Classification Dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: dataset.NodeClassificationDataset.HGB_NodeClassification
+    :members:
+    :show-inheritance:
+
+LinkPredictionDataset
 ---------------------------------------------
 
 .. automodule:: dataset.LinkPredictionDataset
@@ -12,13 +42,6 @@ dataset.LinkPredictionDataset module
    :undoc-members:
    :show-inheritance:
 
-dataset.NodeClassificationDataset module
--------------------------------------------------
-
-.. automodule:: dataset.NodeClassificationDataset
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 dataset.RecommendationDataset module
 ---------------------------------------------

@@ -17,13 +17,51 @@ This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) 
 
 - Python  >= 3.6
 - [PyTorch](https://pytorch.org/get-started/locally/)  >= 1.7.1
-- [DGL](https://github.com/dmlc/dgl) >= 0.6.1
+- [DGL](https://github.com/dmlc/dgl) >= 0.7.0
+
+- CPU or NVIDIA GPU, Linux, Python3
+
+**1. Python environment (Optional):** We recommend using Conda package manager
+
+```
+conda create -n openhgnn python=3.7
+source activate openhgnn
+```
+
+**2. Pytorch:** Install [PyTorch](https://pytorch.org/). We have verified GraphGym under PyTorch 1.8.0. For example:
+
+```bash
+# CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
+pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+```
+
+**3. DGL:** Install [DGL](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html), follow their instructions. For example:
+
+```
+# CUDA versions: cpu, cu101, cu102, cu110, cu111
+pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
+```
+
+**4. OpenHGNN and other dependencies:**
+
+```
+git clone https://github.com/BUPT-GAMMA/OpenHGNN
+cd OpenHGNN
+pip install -r requirements.txt
+pip install -e .  # From latest verion
+```
 
 #### Running an existing baseline model on an existing benchmark [dataset](./openhgnn/dataset/#Dataset)
 
 ```bash
 python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 ```
+
+-m means model name
+
+-d means datset name
+
+-t means task name
 
 -g controls which gpu you will use. If you do not have gpu, set -g -1.
 
@@ -39,26 +77,7 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.
 
-## Why OpenHGNN
-
-### Relation with [DGL](https://github.com/dmlc/dgl)
-
-OpenHGNN is a high-level package built on top of DGL; it will not cover efficient implementation of low-level components in C++.
-
-### Relation with [OpenHINE](https://github.com/BUPT-GAMMA/OpenHINE)
-
-| Package  | Heterograph structure | Models                            | Efficiency  | Others                                     |
-| -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
-| OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
-| OpenHGNN | heterograph           | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
-
-We aim to build more embedding methods(implemented in OpenHINE) in OpenHGNN.
-
-To avoid reinventing the wheel, we use the DGL as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
-
-![image](./docs/source/_static/image-001.jpg)
-
-
+**Note**: If you are intrested in some model, you can refer to the below models list.
 
 ## [Models](./openhgnn/models/#Model)
 
@@ -87,6 +106,29 @@ To avoid reinventing the wheel, we use the DGL as our backend. So we build the n
 - [Heterogeneous Graph Propagation Network[TKDE 2021]](https://ieeexplore.ieee.org/abstract/document/9428609)
 - [Self-supervised Heterogeneous Graph Neural Network with Co-contrastive Learning[KDD 2021]](https://arxiv.org/abs/2105.09111)
 - Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]
+
+
+
+## Why OpenHGNN
+
+### Relation with [DGL](https://github.com/dmlc/dgl)
+
+OpenHGNN is a high-level package built on top of DGL; it will not cover efficient implementation of low-level components in C++.
+
+### Relation with [OpenHINE](https://github.com/BUPT-GAMMA/OpenHINE)
+
+| Package  | Heterograph structure | Models                            | Efficiency  | Others                                     |
+| -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
+| OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
+| OpenHGNN | heterograph           | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
+
+We aim to build more embedding methods(implemented in OpenHINE) in OpenHGNN.
+
+To avoid reinventing the wheel, we use the DGL as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
+
+![image](./docs/source/_static/image-001.jpg)
+
+
 
 ## A Pipeline of OpenHGNN
 

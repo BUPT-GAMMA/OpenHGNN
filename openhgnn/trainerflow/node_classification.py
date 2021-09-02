@@ -2,7 +2,8 @@ import dgl
 import torch
 from tqdm import tqdm
 from ..utils.sampler import get_node_data_loader
-from ..models import build_model, HeteroFeature
+from ..models import build_model
+from ..layers.HeteroLinear import HeteroFeature
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils.logger import printInfo
