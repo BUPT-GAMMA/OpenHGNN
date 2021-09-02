@@ -5,7 +5,6 @@ import torch as th
 from tqdm import tqdm
 import torch.nn as nn
 import torch
-from openhgnn.models import build_model
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
 from ..tasks import build_task

@@ -17,12 +17,14 @@ class HAN(BaseModel):
     could not reproduce the result in HAN as they did not provide the preprocessing code, and we
     constructed another dataset from ACM with a different set of papers, connections, features and
     labels.
+
     Parameter
     ------------
     meta_paths : list
         contain multiple meta-paths.
     category : str
         The category means the head and tail node of metapaths
+
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
@@ -63,6 +65,7 @@ class HAN(BaseModel):
 class HANLayer(nn.Module):
     """
     HAN layer.
+
     Parameters
     -----------
     meta_paths : list of metapaths, each as a list of edge types

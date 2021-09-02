@@ -9,7 +9,8 @@ import torch.nn.functional as F
 from dgl import function as fn
 from dgl.utils import expand_as_pair
 from dgl.nn.functional import edge_softmax
-from . import HeteroEmbedLayer, BaseModel, register_model
+from . import BaseModel, register_model
+from ..layers.EmbedLayer import HeteroEmbedLayer
 from ..sampler.RSHN_sampler import coarsened_line_graph
 from ..utils import get_nodes_dict
 

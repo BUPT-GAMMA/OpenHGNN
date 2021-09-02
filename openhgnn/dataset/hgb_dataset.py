@@ -12,14 +12,15 @@ class HGBDataset(DGLDataset):
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
-        assert name in ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB', 'HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']
+        assert name in ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB',
+                        'HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']
         self.prefix_task = name[:4]
         # HGBn means node classification
         # HGBl means link prediction
         self.data_path = './openhgnn/dataset/{}.zip'.format(self.prefix_task)
         self.g_path = './openhgnn/dataset/{}/{}.bin'.format(self.prefix_task, name)
         raw_dir = './openhgnn/dataset'
-        url = self._prefix + '{}.zip'.format(self.prefix_task)
+        url = self._prefix + 'dataset/{}.zip'.format(self.prefix_task)
         super(HGBDataset, self).__init__(name=name,
                                         url=url,
                                         raw_dir=raw_dir,

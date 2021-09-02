@@ -57,6 +57,10 @@ BEST_CONFIGS = {
             },
             'imdb4GTN': {
                 'lr': 0.001, 'weight_decay': 0.00001, 'num_heads': [2, 2, 2]
+            },
+            'HGBn-ACM': {
+            },
+            'HGBn-DBLP': {
             }
 
         },

@@ -6,7 +6,8 @@ import dgl.nn as dglnn
 import dgl.function as fn
 import math
 
-from . import BaseModel, register_model, HeteroEmbedLayer
+from . import BaseModel, register_model
+from ..layers.EmbedLayer import HeteroEmbedLayer
 from ..utils import get_nodes_dict
 
 

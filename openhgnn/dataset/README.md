@@ -2,7 +2,7 @@
 
 A dataset is related to a task, so it is a part of task.
 
-So dataset should load not only a heterograph[DGLGraph], but also some index involving training, validation and testing. The node/edge feature is not necessary, but most models need node feature. So we will build node feature with [*HeteroEmbedLayer*](../models/EmbedLayer.py) in general, and we build it in the trainerflow when dataset has no feature.
+So dataset should load not only a heterograph[DGLGraph], but also some index involving training, validation and testing. The node/edge feature is not necessary, but most models need node feature. So we will build node feature with [*HeteroEmbedLayer*](../layers/EmbedLayer.py) in general, and we build it in the trainerflow when dataset has no feature.
 
 For now, we have two downstream tasks, which are node classification and link prediction.
 

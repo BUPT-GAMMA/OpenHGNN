@@ -1,8 +1,6 @@
 import importlib
-from.NEW_model import MLP_follow_model
+from .NEW_model import MLP_follow_model
 from .base_model import BaseModel
-from .EmbedLayer import HeteroEmbedLayer, hetero_linear, multi_2Linear
-from .layers import HeteroLinearLayer, HeteroMLPLayer
 
 MODEL_REGISTRY = {}
 

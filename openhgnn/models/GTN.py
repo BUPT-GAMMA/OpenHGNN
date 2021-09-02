@@ -1,10 +1,9 @@
 import dgl
 import torch as th
-import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-from openhgnn.utils.utils import extract_mtx_with_id_edge
+from ..utils.utils import extract_mtx_with_id_edge
 from . import BaseModel, register_model
 
 

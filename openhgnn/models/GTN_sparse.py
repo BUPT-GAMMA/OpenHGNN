@@ -58,9 +58,9 @@ class GTN(BaseModel):
         return norm_H
 
 
-    def forward(self, hg, h=None):
+    def forward(self, hg, h):
         with hg.local_scope():
-            #Ws = []
+            hg.ndata['h'] = h
             # * =============== Extract edges in original graph ================
             if self.category_idx is None:
                 self.A, self.h, self.category_idx = transform_relation_graph_list(hg, category=self.category,

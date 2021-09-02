@@ -1,37 +1,83 @@
 import dgl
 import dgl.function as fn
-from dgl.data import DGLDataset
 import torch as th
 import numpy as np
-from . import load_acm, load_acm_raw
-from openhgnn.dataset import BaseDataset, register_dataset
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
 from ogb.nodeproppred import DglNodePropPredDataset
+from . import load_acm_raw
+from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
 
 
 @register_dataset('node_classification')
 class NodeClassificationDataset(BaseDataset):
-    """
-    metric: Accuracy, multi-label f1 or multi-class f1. Default: `accuracy`
+    r"""
+    Description
+    -----------
+    The class *NodeClassificationDataset* is a base class for datasets which can be used in task *node classification*.
+    So its subclass should contain attributes such as graph, category, num_classes and so on.
+    Besides, it should implement the functions *get_labels()* and *get_idx()*.
+
+    Attribute
+    -------------
+    g : dgl.DGLHeteroGraph
+        The heterogeneous graph.
+    category : str
+        The category(or target) node type need to be predict. In general, we predict only one node type.
+    num_classes : int
+        The target node  will be classified into num_classes categories.
+    has_feature : bool
+        Whether the dataset has feature. Default ``False``.
     """
 
     def __init__(self):
         super(NodeClassificationDataset, self).__init__()
+        self.g = None
+        self.category = None
+        self.num_classes = None
         self.has_feature = False
+        # self.in_dim = None
 
     def get_labels(self):
+        r"""
+        Description
+        ------------
+        The subclass of dataset should overwrite the function. We can get labels of target node.
+
+        return
+        -------
+        train_idx, val_idx, test_idx
+        """
         raise NotImplemented
 
     def get_idx(self, ):
+        r"""
+        Description
+        ------------
+        The subclass of dataset should overwrite the function. We can get idx of train, validation and test through it.
+
+        return
+        -------
+        train_idx, val_idx, test_idx
+        """
         raise NotImplemented
 
 
 @register_dataset('rdf_node_classification')
-class RDF_NodeCLassification(NodeClassificationDataset):
+class RDF_NodeClassification(NodeClassificationDataset):
+    r"""
+    Description
+    ------------
+    The RDF dataset will be used in task *entity classification*.
+    It contains AIFB/MUTAG/MUTAG/BGS.
+    And we download from dgl and process it.
+
+    So if you want to get more information, refer to
+    `RDF datasets <https://docs.dgl.ai/api/python/dgl.data.html#rdf-datasets>`_
+    """
     def __init__(self, dataset_name):
-        super(RDF_NodeCLassification, self).__init__()
+        super(RDF_NodeClassification, self).__init__()
         self.g, self.category, self.num_classes = self.load_RDF_dgl(dataset_name)
         self.has_feature = False
 
@@ -76,9 +122,21 @@ class RDF_NodeCLassification(NodeClassificationDataset):
 
 
 @register_dataset('hin_node_classification')
-class HIN_NodeCLassification(NodeClassificationDataset):
+class HIN_NodeClassification(NodeClassificationDataset):
+    r"""
+    Description
+    ------------
+    The HGB dataset are all used in different papers. So we preprocess them and store them as form of dgl.DGLHeteroGraph.
+    The dataset name combined with paper name through 4(for).
+
+
+
+    Dataset Name
+    ------------
+    acm4NSHE/acm4GTN/acm4NARS/acm_han_raw/academic4HetGNN/dblp4MAGNN/imdb4MAGNN/...
+    """
     def __init__(self, dataset_name):
-        super(HIN_NodeCLassification, self).__init__()
+        super(HIN_NodeClassification, self).__init__()
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
 
     def load_HIN(self, name_dataset):
@@ -189,9 +247,22 @@ class HIN_NodeCLassification(NodeClassificationDataset):
 
 
 @register_dataset('HGBn_node_classification')
-class HGB_NodeCLassification(NodeClassificationDataset):
+class HGB_NodeClassification(NodeClassificationDataset):
+    r"""
+    Description
+    ------------
+    The HGB dataset will be used in task *node classification*.
+    And we download from dgl and process it.
+
+    Dataset Name
+    ------------
+    HGBn-ACM/HGBn-DBLP/HGBn-Freebase/HGBn-IMDB
+
+    So if you want to get more information, refer to
+    `HGB datasets <https://github.com/THUDM/HGB>`_
+    """
     def __init__(self, dataset_name):
-        super(HGB_NodeCLassification, self).__init__()
+        super(HGB_NodeClassification, self).__init__()
         self.dataset_name = dataset_name
         self.has_feature = True
         if dataset_name == 'HGBn-ACM':
@@ -225,8 +296,6 @@ class HGB_NodeCLassification(NodeClassificationDataset):
             num_classes = 5
             g.nodes['keyword'].data['h'] = th.eye(g.number_of_nodes('keyword'))
             self.in_dim = g.ndata['h'][category].shape[1]
-            # RuntimeError: result type Float can't be cast to the desired output type Long
-            self.multi_label = True
         else:
             raise ValueError
         self.g, self.category, self.num_classes = g, category, num_classes
@@ -299,9 +368,9 @@ class HGB_NodeCLassification(NodeClassificationDataset):
 
 
 @register_dataset('ogbn_node_classification')
-class OGB_NodeCLassification(NodeClassificationDataset):
+class OGB_NodeClassification(NodeClassificationDataset):
     def __init__(self, dataset_name):
-        super(OGB_NodeCLassification, self).__init__()
+        super(OGB_NodeClassification, self).__init__()
         if dataset_name == 'ogbn-mag':
             dataset = DglNodePropPredDataset(name='ogbn-mag')
             self.category = 'paper'  # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)

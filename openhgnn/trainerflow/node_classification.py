@@ -3,10 +3,11 @@ import torch
 from tqdm import tqdm
 from ..utils.sampler import get_node_data_loader
 from ..models import build_model
+from ..layers.HeteroLinear import HeteroFeature
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils.logger import printInfo
-from ..utils import extract_embed, EarlyStopping
+from ..utils import extract_embed, EarlyStopping, get_nodes_dict
 
 
 @register_flow("node_classification")
@@ -35,8 +36,11 @@ class NodeClassification(BaseFlow):
 
         self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
-        if hasattr(self.task.dataset, 'in_dim'):
+        if self.task.dataset.has_feature:
             self.args.in_dim = self.task.dataset.in_dim
+        else:
+            self.args.in_dim = self.args.hidden_dim
+
         if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
             args.out_dim = self.num_classes
@@ -48,8 +52,9 @@ class NodeClassification(BaseFlow):
 
         self.evaluator = self.task.get_evaluator('f1')
         self.loss_fn = self.task.get_loss_fn()
-        self.optimizer = (
-            torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay))
+
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
@@ -63,6 +68,8 @@ class NodeClassification(BaseFlow):
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
     def preprocess(self):
+        self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         if self.args.model == 'GTN':
             if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == True:
                 self.optimizer = torch.optim.Adam([{'params': self.model.gcn.parameters()},
@@ -148,8 +155,8 @@ class NodeClassification(BaseFlow):
 
     def _full_train_step(self):
         self.model.train()
-
-        logits = self.model(self.hg)[self.category]
+        h_dict = self.input_feature()
+        logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
         self.optimizer.zero_grad()
         loss.backward()
@@ -180,7 +187,8 @@ class NodeClassification(BaseFlow):
     def _full_test_step(self, mode=None, logits=None):
         self.model.eval()
         with torch.no_grad():
-            logits = logits if logits else self.model(self.hg)[self.category]
+            h_dict = self.input_feature()
+            logits = logits if logits else self.model(self.hg, h_dict)[self.category]
             if mode == "train":
                 mask = self.train_idx
             elif mode == "validation":
@@ -192,7 +200,7 @@ class NodeClassification(BaseFlow):
 
             if mask is not None:
                 loss = self.loss_fn(logits[mask], self.labels[mask]).item()
-                if self.args.task.multi_label:
+                if self.task.multi_label:
                     pred = (logits[mask].cpu().numpy()>0).astype(int)
                 else:
                     pred = logits[mask].argmax(dim=1).to('cpu')
