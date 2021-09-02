@@ -9,6 +9,15 @@ BaseModel
     :undoc-members:
     :show-inheritance:
 
+DMGI
+-----------------------------
+
+.. automodule:: models.DMGI
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 HAN
 --------------------------
 

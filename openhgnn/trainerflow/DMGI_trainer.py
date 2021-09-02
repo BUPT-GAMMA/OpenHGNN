@@ -20,6 +20,7 @@ class DMGI_trainer(BaseFlow):
         self.model_name = args.model
         self.device = args.device
         self.task = build_task(args)
+        self.semi_loss_fn = self.task.get_loss_fn()
         self.num_classes = self.task.dataset.num_classes
         self.hg = self.task.get_graph().to(self.device)
 
@@ -30,20 +31,20 @@ class DMGI_trainer(BaseFlow):
         # get category
         self.args.category = self.task.dataset.category
         self.category = self.args.category
-
+        self.args.num_classes = self.task.dataset.num_classes
         # get feat.shape[0]
-        if hasattr(self.task.dataset, 'in_dim'):
+        if self.task.dataset.has_feature:
             self.args.in_dim = self.task.dataset.in_dim
-        # get category num_classes
-        args.num_classes = self.num_classes
+        else:
+            self.args.in_dim = self.args.hidden_dim
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
 
-        self.optimizer = (torch.optim.Adam(self.model.parameters(),
+        self.optimizer = torch.optim.Adam(self.model.parameters(),
                                            lr=args.lr,
-                                           weight_decay=self.args.l2_coef))
+                                           weight_decay=self.args.l2_coef)
         self.patience = args.patience
         self.max_epoch = args.max_epoch
         # get category's numbers

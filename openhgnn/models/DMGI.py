@@ -101,9 +101,11 @@ class DMGI(BaseModel):
         self.init_weight()
         print("category:{}, category's classes:{}, isBias:{},"
               " isAttn:{}, isSemi:{}".format(category, num_classes,isBias,isAttn,isSemi))
+
     def init_weight(self):
         nn.init.xavier_normal_(self.H)
     # samp_bias1, samp_bias2  default  None
+
     def forward(self, hg, samp_bias1=None, samp_bias2=None ):
         r"""
         The formula to compute the relation-type specific cross entropy :math:`\mathcal{L}^{(r)}`
