@@ -12,6 +12,48 @@ import torch.nn.functional as F
 
 @register_model('DMGI')
 class DMGI(BaseModel):
+    r"""
+
+    Description
+    -----------
+    **Title:** Unsupervised Attributed Multiplex Network Embedding
+
+    **Authors:** Chanyoung Park, Donghyun Kim, Jiawei Han, Hwanjo Yu
+
+    DMGI was introduced in `[paper] <https://doi.org/10.1609/aaai.v34i04.5985/>`_
+    and parameters are defined as follows:
+
+    Parameters
+    ----------
+        meta_paths : dict
+            Extract metapaths from graph
+        sc : int
+            Introducing a weight to self-connections
+        category : string
+            The category of the nodes to be classificated
+        in_size : int
+            Input feature size
+        hid_unit : int
+            Hidden units size
+        dropout : float
+            Dropout rate on feature. Defaults: ``0.5``.
+        num_nodes : int
+            The number of all nodes of category in graph
+        num_classes : int
+            The numbers of category's types
+        isBias :bool
+            If True, adds a learnable bias to the output.Defaults: ``False``.
+        isAttn : bool
+            If True, adopt the attention mechanism to calculate loss . Defaults: ``False``.
+        isSemi : bool
+            If True, add isSemi's loss to calculate loss
+
+
+    Attributes
+    ----------
+        H : torch.FloatTensor
+            The learnable weight tensor.
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         etypes = hg.canonical_etypes
@@ -28,7 +70,6 @@ class DMGI(BaseModel):
                    hid_unit=args.hid_unit, dropout=args.dropout,
                    num_nodes=num_nodes, num_classes=args.num_classes,
                    isSemi=args.isSemi,isAttn=args.isAttn, isBias=args.isBias)
-
 
     def __init__(self, meta_paths, sc, category, in_size, hid_unit,
                  dropout, num_nodes, num_classes, isBias, isAttn, isSemi):
@@ -64,7 +105,19 @@ class DMGI(BaseModel):
         nn.init.xavier_normal_(self.H)
     # samp_bias1, samp_bias2  default  None
     def forward(self, hg, samp_bias1=None, samp_bias2=None ):
+        r"""
+        The formula to compute the relation-type specific cross entropy :math:`\mathcal{L}^{(r)}`
 
+        .. math::
+        \begin{equation}
+          \mathcal{L}^{(r)}=\sum_{v_{i} \in \mathcal{V}}^{n} \log \mathcal{D}\left(\mathbf{h}_{i}^{(r)}, \mathbf{s}^{(r)}\right)+\sum_{j=1}^{n} \log \left(1-\mathcal{D}\left(\tilde{\mathbf{h}}_{j}^{(r)}, \mathbf{s}^{(r)}\right)\right)
+        \end{equation}
+
+        where :math:`h_{i}^{(r)}`  is calculate by :math:`\mathbf{h}_{i}=\sigma\left(\sum_{j \in N(i)} \frac{1}{c_{i j}} \mathbf{x}_{j} \mathbf{W}\right)` ,
+        :math:`s^{(r)}` is :math:`\mathbf{s}^{(r)}=\operatorname{Readout}\left(\mathbf{H}^{(r)}\right)=\sigma\left(\frac{1}{n} \sum_{i=1}^{n} \mathbf{h}_{i}^{(r)}\right)` .
+        :math:`\mathcal{D}` is a discriminator that scores patchsummary representation pairs
+        :math:`\tilde{\mathbf{h}}_{j}^{(r)}` corrupt the original attribute matrix by shuffling it.
+        """
         h_1_all = [];h_2_all = [];c_all = [];logits = []
         result = {}
         # process features
@@ -93,6 +146,20 @@ class DMGI(BaseModel):
 
         # Attention or not
         if self.isAttn:
+            r"""
+                .. math::
+                  \begin{equation}
+                    \mathbf{h}_{i}=\mathcal{Q}\left(\left\{\mathbf{h}^{(r)} \mid r \in \mathcal{R}\right\}\right)=\sum_{r \in \mathcal{R}} a_{i}^{(r)} \mathbf{h}^{(r)}
+                  \end{equation}
+
+                where :math:`a_{i}^{(r)}` denotes the importance of relationr in generating the final embedding of node videfined as:
+
+                .. math::
+                  \begin{equation}
+                    a_{i}^{(r)}=\frac{\exp \left(\mathbf{q}^{(r)} \cdot \mathbf{h}_{i}^{(r)}\right)}{\sum_{r^{\prime} \in \mathcal{R}} \exp \left(\mathbf{q}^{\left(r^{\prime}\right)} \cdot \mathbf{h}_{i}^{r^{\prime}}\right)}
+                  \end{equation}
+                """
+
             h_1_all_lst = [];h_2_all_lst = []
             h_1_all_, h_2_all_, c_all_ = self.attn(h_1_all, h_2_all, c_all)
             h_1_all_lst.append(h_1_all_); h_2_all_lst.append(h_2_all_);
@@ -112,6 +179,16 @@ class DMGI(BaseModel):
 
         # semi-supervised module
         if self.isSemi:
+            r"""
+            Extension to Semi-Supervised Learning
+
+            .. math::
+              \begin{equation}
+                \ell_{\text {sup }}=-\frac{1}{\left|\mathcal{Y}_{L}\right|} \sum_{l \in \mathcal{Y}_{L}} \sum_{i=1}^{c} Y_{l i} \ln \hat{Y}_{l i}
+              \end{equation}
+
+            Where :math:`mathcal{Y}_{L}` is the set of node indices with labels
+            """
             semi = self.logistic(self.H).squeeze(0)
             result['semi'] = semi
 
@@ -143,6 +220,17 @@ class DMGI(BaseModel):
 
 '''The encoder is a single–layered GCN'''
 class GraphConvLayer(nn.Module):
+    r"""
+    The encoder is a single-layer GCN:
+
+    .. math::
+      \begin{equation}
+        \mathbf{H}^{(r)}=g_{r}\left(\mathbf{X}, \mathbf{A}^{(r)} \mid \mathbf{W}^{(r)}\right)=\sigma\left(\hat{\mathbf{D}}_{r}^{-\frac{1}{2}} \hat{\mathbf{A}}^{(r)} \hat{\mathbf{D}}_{r}^{-\frac{1}{2}} \mathbf{X} \mathbf{W}^{(r)}\right)
+      \end{equation}
+
+    where :math:`\hat{\mathbf{A}}^{(r)}=\mathbf{A}^{(r)}+w \mathbf{I}_{n}' ,
+    :math:`\hat{D}_{i i}=\sum_{j} \hat{A}_{i j}`
+    """
     def __init__(self,
                  in_feat,
                  out_feat,
@@ -165,6 +253,7 @@ class GraphConvLayer(nn.Module):
         res = self.act(res)
 
         return res
+
 '''In the experiments, some relation type is more beneficial for a 
 certain downstream task than others. Therefore, we can adopt the 
 attention mechanism'''
@@ -218,6 +307,18 @@ D is a discriminator that scores patchsummary representation pairs.
 In this paper, we apply a simple bilinear scoring function as it 
 empirically performs the best in our experiments:'''
 class Discriminator(nn.Module):
+
+    r"""
+    The discriminator
+
+    .. math::
+      \begin{equation}
+        \mathcal{D}\left(\mathbf{h}_{i}^{(r)}, \mathbf{s}^{(r)}\right)=\sigma\left(\mathbf{h}_{i}^{(r) T} \mathbf{M}^{(r)} \mathbf{s}^{(r)}\right)
+      \end{equation}
+
+    where :math:`M^{(r)}` is a trainable scoring matrix.
+    """
+
     def __init__(self, n_h):
         super(Discriminator, self).__init__()
         self.f_k_bilinear = nn.Bilinear(n_h, n_h, 1)
@@ -247,6 +348,16 @@ class Discriminator(nn.Module):
 
 '''considering the efficiency of the method, we simply employ average pooling'''
 class AvgReadout(nn.Module):
+
+    r"""
+    Considering the efficiency of the method, we simply employ average pooling, computing the average of the set of embedding matrices
+
+    .. math::
+      \begin{equation}
+        \mathbf{H}=\mathcal{Q}\left(\left\{\mathbf{H}^{(r)} \mid r \in \mathcal{R}\right\}\right)=\frac{1}{|\mathcal{R}|} \sum_{r \in \mathcal{R}} \mathbf{H}^{(r)}
+      \end{equation}
+    """
+
     def __init__(self):
         super(AvgReadout, self).__init__()
     def forward(self, seq):
@@ -254,7 +365,14 @@ class AvgReadout(nn.Module):
 
 '''logreg'''
 class LogReg(nn.Module):
-    # 64 hid    label.shape[1]
+    r"""
+    Parameters
+    ----------
+    ft_in : int
+        Size of hid_units
+    nb_class : int
+        The number of category's types
+    """
     def __init__(self, ft_in, nb_classes):
         super(LogReg, self).__init__()
         self.fc = nn.Linear(ft_in, nb_classes)
