@@ -136,7 +136,8 @@ class NodeClassification(BaseFlow):
         if self.args.dataset[:4] == 'HGBn':
             self.model.eval()
             with torch.no_grad():
-                logits = self.model(self.hg)[self.category]
+                h_dict = self.input_feature()
+                logits = self.model(self.hg, h_dict)[self.category]
                 self.task.dataset.save_results(logits=logits, file_path=self.args.HGB_results_path)
             return
         if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
@@ -186,7 +187,8 @@ class NodeClassification(BaseFlow):
     def _full_test_step(self, mode=None, logits=None):
         self.model.eval()
         with torch.no_grad():
-            logits = logits if logits else self.model(self.hg)[self.category]
+            h_dict = self.input_feature()
+            logits = logits if logits else self.model(self.hg, h_dict)[self.category]
             if mode == "train":
                 mask = self.train_idx
             elif mode == "validation":
