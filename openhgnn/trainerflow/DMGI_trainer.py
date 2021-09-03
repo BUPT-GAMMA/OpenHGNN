@@ -3,11 +3,11 @@ from sklearn.metrics import f1_score
 from tqdm import tqdm
 import numpy as np
 import torch.nn as nn
-from ..models import build_model
-from ..models.DMGI import LogReg
-from ..tasks import build_task
-from ..trainerflow import register_flow, BaseFlow
-from ..utils import EarlyStopping
+from openhgnn.models import build_model
+from openhgnn.models.DMGI import LogReg
+from openhgnn.tasks import build_task
+from openhgnn.trainerflow import register_flow, BaseFlow
+from openhgnn.utils import EarlyStopping
 
 
 @register_flow("DMGI_trainer")
@@ -20,7 +20,12 @@ class DMGI_trainer(BaseFlow):
         self.model_name = args.model
         self.device = args.device
         self.task = build_task(args)
+
         self.semi_loss_fn = self.task.get_loss_fn()
+        if hasattr(args, 'metric'):
+            self.metric = args.metric
+        else:
+            self.metric = 'f1'
         self.num_classes = self.task.dataset.num_classes
         self.hg = self.task.get_graph().to(self.device)
 
@@ -31,20 +36,22 @@ class DMGI_trainer(BaseFlow):
         # get category
         self.args.category = self.task.dataset.category
         self.category = self.args.category
-        self.args.num_classes = self.task.dataset.num_classes
+
         # get feat.shape[0]
-        if self.task.dataset.has_feature:
+        if hasattr(self.task.dataset, 'in_dim'):
             self.args.in_dim = self.task.dataset.in_dim
         else:
             self.args.in_dim = self.args.hidden_dim
+        # get category num_classes
+        args.num_classes = self.num_classes
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
 
-        self.optimizer = torch.optim.Adam(self.model.parameters(),
+        self.optimizer = (torch.optim.Adam(self.model.parameters(),
                                            lr=args.lr,
-                                           weight_decay=self.args.l2_coef)
+                                           weight_decay=self.args.l2_coef))
         self.patience = args.patience
         self.max_epoch = args.max_epoch
         # get category's numbers
@@ -73,9 +80,7 @@ class DMGI_trainer(BaseFlow):
 
         # Evaluation
         model.eval()
-        evaluate(model.H.data.detach(),
-                 self.train_idx, self.val_idx, self.test_idx,
-                 self.labels, self.num_classes, self.args.device)
+        self.evaluate(model.H.data.detach(),)
 
     def _full_train_setp(self):
 
@@ -157,85 +162,82 @@ class DMGI_trainer(BaseFlow):
         return loss
 
 
-def evaluate(embeds, idx_train, idx_val, idx_test, labels, num_classes, device):
-    hid_units = embeds.shape[2]
+    def evaluate(self, embeds):
+        hid_units = embeds.shape[2]
 
-    xent = nn.CrossEntropyLoss()
+        xent = self.semi_loss_fn
 
-    train_embs = embeds[0, idx_train]
-    val_embs = embeds[0, idx_val]
-    test_embs = embeds[0, idx_test]
+        train_embs = embeds[0, self.train_idx]
+        val_embs = embeds[0, self.val_idx]
+        test_embs = embeds[0, self.test_idx]
 
-    train_lbls = labels[idx_train]
-    val_lbls = labels[idx_val]
-    test_lbls = labels[idx_test]
+        train_lbls = self.labels[self.train_idx]
+        val_lbls = self.labels[self.val_idx]
+        test_lbls = self.labels[self.test_idx]
 
-    accs = [];micro_f1s = [];macro_f1s = [];macro_f1s_val = []
-    for _ in range(50):
-        # hid_unit , category's num_classes
-        log = LogReg(hid_units, num_classes)  # 64 3
-        opt = torch.optim.Adam(log.parameters(), lr=0.01, weight_decay=0.0)
-        log.to(device)
+        val_accs = [];test_accs = []
+        val_micro_f1s = [];test_micro_f1s = []
+        val_macro_f1s = [];test_macro_f1s = []
+        for _ in range(50):
+            log = LogReg(hid_units, self.num_classes)
+            opt = torch.optim.Adam(log.parameters(), lr=0.01, weight_decay=0.0)
+            log.to(self.device)
 
-        val_accs = []; test_accs = []
-        val_micro_f1s = []; test_micro_f1s = []
-        val_macro_f1s = []; test_macro_f1s = []
+            accs = []
+            micro_f1s = []
+            macro_f1s = []
+            macro_f1s_val = []  ##
+            for iter_ in range(50):
+                # train
+                log.train()
+                opt.zero_grad()
 
+                logits = log(train_embs)
+                loss = xent(logits, train_lbls)
 
-        for iter_ in range(50):
-            # train
-            log.train()
-            opt.zero_grad()
+                loss.backward()
+                opt.step()
 
-            logits = log(train_embs)
-            loss = xent(logits, train_lbls)
+                # val
+                logits = log(val_embs)
+                preds = torch.argmax(logits, dim=1)
 
-            loss.backward()
-            opt.step()
+                val_acc = torch.sum(preds == val_lbls).float() / val_lbls.shape[0]
+                val_f1_macro = f1_score(val_lbls.cpu(), preds.cpu(), average='macro')
+                val_f1_micro = f1_score(val_lbls.cpu(), preds.cpu(), average='micro')
 
-            # val
-            logits = log(val_embs)
-            # predict val's label
-            preds = torch.argmax(logits, dim=1)
+                val_accs.append(val_acc.item())
+                val_macro_f1s.append(val_f1_macro)
+                val_micro_f1s.append(val_f1_micro)
 
-            val_acc = torch.sum(preds == val_lbls).float() / val_lbls.shape[0]
+                # test
+                logits = log(test_embs)
+                preds = torch.argmax(logits, dim=1)
 
-            val_f1_macro = f1_score(val_lbls.cpu(), preds.cpu(), average='macro')
-            val_f1_micro = f1_score(val_lbls.cpu(), preds.cpu(), average='micro')
+                test_acc = torch.sum(preds == test_lbls).float() / test_lbls.shape[0]
+                test_f1_macro = f1_score(test_lbls.cpu(), preds.cpu(), average='macro')
+                test_f1_micro = f1_score(test_lbls.cpu(), preds.cpu(), average='micro')
 
-            val_accs.append(val_acc.item())
-            val_macro_f1s.append(val_f1_macro)
-            val_micro_f1s.append(val_f1_micro)
-
-            # test
-            logits = log(test_embs)
-            preds = torch.argmax(logits, dim=1)
-
-            test_acc = torch.sum(preds == test_lbls).float() / test_lbls.shape[0]
-            test_f1_macro = f1_score(test_lbls.cpu(), preds.cpu(), average='macro')
-            test_f1_micro = f1_score(test_lbls.cpu(), preds.cpu(), average='micro')
-
-            test_accs.append(test_acc.item())
-            test_macro_f1s.append(test_f1_macro)
-            test_micro_f1s.append(test_f1_micro)
+                test_accs.append(test_acc.item())
+                test_macro_f1s.append(test_f1_macro)
+                test_micro_f1s.append(test_f1_micro)
 
 
-        max_iter = val_accs.index(max(val_accs))
-        accs.append(test_accs[max_iter])
+            max_iter = val_accs.index(max(val_accs))
+            accs.append(test_accs[max_iter])
 
-        max_iter = val_macro_f1s.index(max(val_macro_f1s))
-        macro_f1s.append(test_macro_f1s[max_iter])
-        macro_f1s_val.append(val_macro_f1s[max_iter])
+            max_iter = val_macro_f1s.index(max(val_macro_f1s))
+            macro_f1s.append(test_macro_f1s[max_iter])
+            macro_f1s_val.append(val_macro_f1s[max_iter]) ###
 
-        max_iter = val_micro_f1s.index(max(val_micro_f1s))
-        micro_f1s.append(test_micro_f1s[max_iter])
+            max_iter = val_micro_f1s.index(max(val_micro_f1s))
+            micro_f1s.append(test_micro_f1s[max_iter])
 
 
-    print("\t[Classification] Macro-F1: {:.4f} ({:.4f}) | Micro-F1: {:.4f} ({:.4f})".format(np.mean(macro_f1s),
-                                                                                                np.std(macro_f1s),
-                                                                                                np.mean(micro_f1s),
-                                                                                                np.std(micro_f1s)))
-
+        print("\t[Classification] Macro-F1: {:.4f} ({:.4f}) | Micro-F1: {:.4f} ({:.4f})".format(np.mean(macro_f1s),
+                                                                                                    np.std(macro_f1s),
+                                                                                                    np.mean(micro_f1s),
+                                                                                                    np.std(micro_f1s)))
 
 
 
