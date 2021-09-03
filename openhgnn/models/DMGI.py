@@ -58,11 +58,7 @@ class DMGI(BaseModel):
     def build_model_from_args(cls, args, hg):
         etypes = hg.canonical_etypes
         mps = []
-        # for etype in etypes:
-        #     if etype[0] == args.category:
-        #         for dst_e in etypes:
-        #             if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
-        #                 mps.append([etype, dst_e])
+
         for etype in etypes:
             if etype[0] == args.category:
                 for dst_e in etypes:
@@ -240,13 +236,6 @@ class DMGI(BaseModel):
             shuf = feat[idx]
             shuf_feats.append(shuf)
         return shuf_feats
-
-
-
-
-
-
-
 
 
 '''In the experiments, some relation type is more beneficial for a 

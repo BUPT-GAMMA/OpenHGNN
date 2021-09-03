@@ -175,18 +175,18 @@ class DMGI_trainer(BaseFlow):
         val_lbls = self.labels[self.val_idx]
         test_lbls = self.labels[self.test_idx]
 
-        accs = [];micro_f1s = [];macro_f1s = [];macro_f1s_val = []
+        val_accs = [];test_accs = []
+        val_micro_f1s = [];test_micro_f1s = []
+        val_macro_f1s = [];test_macro_f1s = []
         for _ in range(50):
-            # hid_unit , category's num_classes
-            log = LogReg(hid_units, self.num_classes)  # 64 3
+            log = LogReg(hid_units, self.num_classes)
             opt = torch.optim.Adam(log.parameters(), lr=0.01, weight_decay=0.0)
             log.to(self.device)
 
-            val_accs = []; test_accs = []
-            val_micro_f1s = []; test_micro_f1s = []
-            val_macro_f1s = []; test_macro_f1s = []
-
-
+            accs = []
+            micro_f1s = []
+            macro_f1s = []
+            macro_f1s_val = []  ##
             for iter_ in range(50):
                 # train
                 log.train()
@@ -200,13 +200,13 @@ class DMGI_trainer(BaseFlow):
 
                 # val
                 logits = log(val_embs)
-                # predict val's label
                 preds = torch.argmax(logits, dim=1)
 
+                val_acc = torch.sum(preds == val_lbls).float() / val_lbls.shape[0]
                 val_f1_macro = f1_score(val_lbls.cpu(), preds.cpu(), average='macro')
                 val_f1_micro = f1_score(val_lbls.cpu(), preds.cpu(), average='micro')
-                print(val_f1_macro, val_f1_micro)
 
+                val_accs.append(val_acc.item())
                 val_macro_f1s.append(val_f1_macro)
                 val_micro_f1s.append(val_f1_micro)
 
@@ -214,20 +214,21 @@ class DMGI_trainer(BaseFlow):
                 logits = log(test_embs)
                 preds = torch.argmax(logits, dim=1)
 
-                # test_acc = torch.sum(preds == test_lbls).float() / test_lbls.shape[0]
+                test_acc = torch.sum(preds == test_lbls).float() / test_lbls.shape[0]
                 test_f1_macro = f1_score(test_lbls.cpu(), preds.cpu(), average='macro')
                 test_f1_micro = f1_score(test_lbls.cpu(), preds.cpu(), average='micro')
-                print(test_f1_macro, test_f1_micro)
 
+                test_accs.append(test_acc.item())
                 test_macro_f1s.append(test_f1_macro)
                 test_micro_f1s.append(test_f1_micro)
+
 
             max_iter = val_accs.index(max(val_accs))
             accs.append(test_accs[max_iter])
 
             max_iter = val_macro_f1s.index(max(val_macro_f1s))
             macro_f1s.append(test_macro_f1s[max_iter])
-            macro_f1s_val.append(val_macro_f1s[max_iter])
+            macro_f1s_val.append(val_macro_f1s[max_iter]) ###
 
             max_iter = val_micro_f1s.index(max(val_micro_f1s))
             micro_f1s.append(test_micro_f1s[max_iter])
@@ -237,11 +238,6 @@ class DMGI_trainer(BaseFlow):
                                                                                                     np.std(macro_f1s),
                                                                                                     np.mean(micro_f1s),
                                                                                                     np.std(micro_f1s)))
-
-
-
-
-
 
 
 
