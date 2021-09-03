@@ -13,7 +13,7 @@ Welcome to OpenHGNN's documentation!
    :glob:
 
    install/index
-   pipeline/usage
+   install/usage
 
 .. toctree::
    :maxdepth: 2

@@ -88,8 +88,10 @@ class LinkPrediction(BaseFlow):
             # self.neg_test_graph = self.task.dataset.neg_test_graph.to(self.device)
 
     def preprocess(self):
-        if type(self.hg.ndata['h']) == dict:
+        if isinstance(self.hg.ndata['h'], dict):
             self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+        elif isinstance(self.hg.ndata['h'], th.Tensor):
+            self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
         self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         return
 
@@ -181,8 +183,8 @@ class LinkPrediction(BaseFlow):
 
     def _full_train_setp(self):
         self.model.train()
-        embedding = self.model(self.hg)
-
+        h_dict = self.input_feature()
+        embedding = self.model(self.hg, h_dict)
         negative_graph = self.construct_negative_graph()
         loss = self.loss_calculation(self.positive_graph, negative_graph, embedding)
 

@@ -193,8 +193,9 @@ class homo_GNN(BaseModel):
     def forward(self, hg, h_dict):
         with hg.local_scope():
             if self.one_node_type:
+                h = h_dict[hg.ntypes[0]]
                 if hasattr(self, 'pre_mp'):
-                    h = self.pre_mp(h_dict)
+                    h = self.pre_mp(h)
                 homo_g = dgl.to_homogeneous(hg)
                 homo_g = dgl.remove_self_loop(homo_g)
                 homo_g = dgl.add_self_loop(homo_g)

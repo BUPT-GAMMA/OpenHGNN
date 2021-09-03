@@ -1,4 +1,4 @@
-:: _api_model:
+.. _api-model:
 
 Models
 ======
