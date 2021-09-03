@@ -19,7 +19,7 @@ class NodeClassificationDataset(BaseDataset):
     So its subclass should contain attributes such as graph, category, num_classes and so on.
     Besides, it should implement the functions *get_labels()* and *get_idx()*.
 
-    Attribute
+    Attributes
     -------------
     g : dgl.DGLHeteroGraph
         The heterogeneous graph.
@@ -47,7 +47,7 @@ class NodeClassificationDataset(BaseDataset):
 
         return
         -------
-        train_idx, val_idx, test_idx
+        labels : torch.Tensor
         """
         raise NotImplemented
 
@@ -59,7 +59,7 @@ class NodeClassificationDataset(BaseDataset):
 
         return
         -------
-        train_idx, val_idx, test_idx
+        train_idx, val_idx, test_idx : torch.Tensor
         """
         raise NotImplemented
 
@@ -133,7 +133,8 @@ class HIN_NodeClassification(NodeClassificationDataset):
 
     Dataset Name
     ------------
-    acm4NSHE/acm4GTN/acm4NARS/acm_han_raw/academic4HetGNN/dblp4MAGNN/imdb4MAGNN/...
+    acm4NSHE/acm4GTN/acm4NARS/
+    acm_han_raw/academic4HetGNN/dblp4MAGNN/imdb4MAGNN/...
     """
     def __init__(self, dataset_name):
         super(HIN_NodeClassification, self).__init__()
@@ -198,6 +199,13 @@ class HIN_NodeClassification(NodeClassificationDataset):
             else:
                 return NotImplementedError('Unsupported dataset {}'.format(name_dataset))
             return g, category, num_classes
+        elif name_dataset in ['demo']:
+            data_path = './openhgnn/dataset/graph.bin'
+            category = 'author'
+            num_classes = 4
+            g, _ = load_graphs(data_path)
+            g = g[0].long()
+            self.in_dim = g.ndata['h'][category].shape[1]
         # g, _ = load_graphs(data_path)
         # g = g[0]
         return g, category, num_classes

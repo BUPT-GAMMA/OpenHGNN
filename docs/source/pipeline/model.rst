@@ -78,7 +78,7 @@ How to build a new model
 **First step**
 
 We should create a class your_model that inherits
-the :ref:`api-models-BaseModel`.
+the api_model_ .
 and register the model with @register_model(str).
 
 .. code-block:: python

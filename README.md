@@ -23,7 +23,7 @@ This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) 
 
 **1. Python environment (Optional):** We recommend using Conda package manager
 
-```
+```bash
 conda create -n openhgnn python=3.7
 source activate openhgnn
 ```
@@ -57,17 +57,18 @@ pip install -e .  # From latest verion
 python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 ```
 
--m means model name
+usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
+               [--gpu GPU] [--use_best_config]
 
--d means datset name
+*optional arguments*:
+  -h, --help            show this help message and exit
+  --model MODEL,	-m MODEL	name of models
+  --task TASK,	-t TASK	name of task
+  --dataset DATASET,	-d DATASET	name of datasets
+  --gpu GPU, -g GPU	controls which gpu you will use. If you do not have gpu, set -g -1.
+  --use_best_config	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. 
 
--t means task name
-
--g controls which gpu you will use. If you do not have gpu, set -g -1.
-
---use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. 
-
---use_hpo Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
+​	--use_hpo Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
 
 e.g.: 
 
@@ -77,7 +78,7 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.
 
-**Note**: If you are intrested in some model, you can refer to the below models list.
+**Note**: If you are interested in some model, you can refer to the below models list.
 
 ## [Models](./openhgnn/models/#Model)
 

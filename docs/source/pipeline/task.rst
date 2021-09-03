@@ -8,8 +8,9 @@ The task means downstream task. So it is related to dataset closely.
 Included Object:
 --------------------
 
-* :ref:`api-dataset`,
-containing the heterogeneous graph as DGLGraph, as well as node/edge features and additional dataset-specific information.
+* :ref:`api-dataset`, containing the heterogeneous graph as DGLGraph, as well as node/edge features
+and additional dataset-specific information.
+
 * Evaluation Metric, a callable object which takes in the prediction and the ground truth label, and returns an output.
 
    * Currently we will implement evaluation metrics for node classification and link prediction.
@@ -40,7 +41,7 @@ Supported task
 * Node classification
 * Link prediction
 
-How to build a new trainerflow
+How to build a new task
 ---------------------------------
 
 **First step**

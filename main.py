@@ -15,7 +15,7 @@ if __name__ == '__main__':
     # link_prediction / node_classification
     parser.add_argument('--dataset', '-d', default='HGBn-acm', type=str, help='name of datasets')
     parser.add_argument('--gpu', '-g', default='0', type=int, help='-1 means cpu')
-    parser.add_argument('--use_best_config', action='store_true', help='-1 means cpu')
+    parser.add_argument('--use_best_config', action='store_true', help='will load utils.best_config')
     args = parser.parse_args()
 
     config_file = ["./openhgnn/config.ini"]
