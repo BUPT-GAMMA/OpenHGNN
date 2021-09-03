@@ -58,11 +58,13 @@ class DMGI(BaseModel):
     def build_model_from_args(cls, args, hg):
         etypes = hg.canonical_etypes
         mps = []
+
         for etype in etypes:
             if etype[0] == args.category:
                 for dst_e in etypes:
                     if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
-                        mps.append([etype, dst_e])
+                        if etype[0] != etype[2]:
+                            mps.append([etype, dst_e])
         num_nodes = hg.num_nodes(args.category)
 
         return cls(meta_paths=mps, sc=args.sc,
@@ -81,14 +83,27 @@ class DMGI(BaseModel):
         self.isAttn = isAttn
         self.isSemi = isSemi
         self.sc = sc
-        self.gcn = nn.ModuleList([GraphConvLayer(in_size,
-                                                 hid_unit,
-                                                 dropout,
-                                                 bias=isBias) for _ in range(len(meta_paths))])
+        r"""
+            The encoder is a single-layer GCN:
+
+            .. math::
+              \begin{equation}
+                \mathbf{H}^{(r)}=g_{r}\left(\mathbf{X}, \mathbf{A}^{(r)} \mid \mathbf{W}^{(r)}\right)=\sigma\left(\hat{\mathbf{D}}_{r}^{-\frac{1}{2}} \hat{\mathbf{A}}^{(r)} \hat{\mathbf{D}}_{r}^{-\frac{1}{2}} \mathbf{X} \mathbf{W}^{(r)}\right)
+              \end{equation}
+
+            where :math:`\hat{\mathbf{A}}^{(r)}=\mathbf{A}^{(r)}+w \mathbf{I}_{n}` ,
+            :math:`\hat{D}_{i i}=\sum_{j} \hat{A}_{i j}`
+            """
+        self.gcn = nn.ModuleList([dglnn.GraphConv(in_feats=in_size,
+                                                  out_feats=hid_unit,
+                                                  activation=nn.ReLU(),
+                                                  bias=isBias,
+                                                  allow_zero_in_degree=True) for _ in range(len(meta_paths))])
+
         self.disc = Discriminator(hid_unit)
         self.readout = AvgReadout()
         self.readout_act_func = nn.Sigmoid()
-
+        self.dropout = dropout
         self.num_nodes = num_nodes
         # num_head = 1
         self.H = nn.Parameter(torch.FloatTensor(1, num_nodes, hid_unit))
@@ -106,14 +121,14 @@ class DMGI(BaseModel):
         nn.init.xavier_normal_(self.H)
     # samp_bias1, samp_bias2  default  None
 
-    def forward(self, hg, samp_bias1=None, samp_bias2=None ):
+    def forward(self, hg, samp_bias1=None, samp_bias2=None):
         r"""
         The formula to compute the relation-type specific cross entropy :math:`\mathcal{L}^{(r)}`
 
         .. math::
-        \begin{equation}
-          \mathcal{L}^{(r)}=\sum_{v_{i} \in \mathcal{V}}^{n} \log \mathcal{D}\left(\mathbf{h}_{i}^{(r)}, \mathbf{s}^{(r)}\right)+\sum_{j=1}^{n} \log \left(1-\mathcal{D}\left(\tilde{\mathbf{h}}_{j}^{(r)}, \mathbf{s}^{(r)}\right)\right)
-        \end{equation}
+          \begin{equation}
+            \mathcal{L}^{(r)}=\sum_{v_{i} \in \mathcal{V}}^{n} \log \mathcal{D}\left(\mathbf{h}_{i}^{(r)}, \mathbf{s}^{(r)}\right)+\sum_{j=1}^{n} \log \left(1-\mathcal{D}\left(\tilde{\mathbf{h}}_{j}^{(r)}, \mathbf{s}^{(r)}\right)\right)
+          \end{equation}
 
         where :math:`h_{i}^{(r)}`  is calculate by :math:`\mathbf{h}_{i}=\sigma\left(\sum_{j \in N(i)} \frac{1}{c_{i j}} \mathbf{x}_{j} \mathbf{W}\right)` ,
         :math:`s^{(r)}` is :math:`\mathbf{s}^{(r)}=\operatorname{Readout}\left(\mathbf{H}^{(r)}\right)=\sigma\left(\frac{1}{n} \sum_{i=1}^{n} \mathbf{h}_{i}^{(r)}\right)` .
@@ -132,6 +147,9 @@ class DMGI(BaseModel):
             new_g = dgl.metapath_reachable_graph(hg, meta_path)
             for i in range(self.sc):
                 new_g = dgl.add_self_loop(new_g)
+
+            feats[idx] = F.dropout(feats[idx], self.dropout, training=self.training)
+            shuf_feats[idx] = F.dropout(shuf_feats[idx], self.dropout, training=self.training)
 
             h_1 = self.gcn[idx](new_g, feats[idx])
             c = self.readout(h_1)
@@ -219,42 +237,6 @@ class DMGI(BaseModel):
             shuf_feats.append(shuf)
         return shuf_feats
 
-
-'''The encoder is a single–layered GCN'''
-class GraphConvLayer(nn.Module):
-    r"""
-    The encoder is a single-layer GCN:
-
-    .. math::
-      \begin{equation}
-        \mathbf{H}^{(r)}=g_{r}\left(\mathbf{X}, \mathbf{A}^{(r)} \mid \mathbf{W}^{(r)}\right)=\sigma\left(\hat{\mathbf{D}}_{r}^{-\frac{1}{2}} \hat{\mathbf{A}}^{(r)} \hat{\mathbf{D}}_{r}^{-\frac{1}{2}} \mathbf{X} \mathbf{W}^{(r)}\right)
-      \end{equation}
-
-    where :math:`\hat{\mathbf{A}}^{(r)}=\mathbf{A}^{(r)}+w \mathbf{I}_{n}' ,
-    :math:`\hat{D}_{i i}=\sum_{j} \hat{A}_{i j}`
-    """
-    def __init__(self,
-                 in_feat,
-                 out_feat,
-                 dropout,
-                 bias=True):
-        super(GraphConvLayer, self).__init__()
-        self.in_feat = in_feat
-        self.out_feat = out_feat
-        self.bias = bias
-        self.dropout = dropout
-        self.conv = dglnn.GraphConv(in_feats=in_feat,
-                                    out_feats=out_feat,
-                                    bias=bias,
-                                    allow_zero_in_degree=True)
-        self.act = nn.ReLU()
-
-    def forward(self, hg, feats):
-        feats = F.dropout(feats, self.dropout, training=self.training)
-        res = self.conv(hg, feats)
-        res = self.act(res)
-
-        return res
 
 '''In the experiments, some relation type is more beneficial for a 
 certain downstream task than others. Therefore, we can adopt the 
