@@ -11,6 +11,8 @@ BaseModel
     :undoc-members:
     :show-inheritance:
 
+.. _
+
 DMGI
 -----------------------------
 
@@ -32,6 +34,14 @@ HetGNN
 -----------------------------
 
 .. automodule:: models.HetGNN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+NARS
+-----------------------------
+
+.. automodule:: models.NARS
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,7 +1,8 @@
 import dgl
 import torch
 from tqdm import tqdm
-from ..models import build_model, HeteroEmbedLayer
+from ..models import build_model
+from ..layers.EmbedLayer import HeteroEmbedLayer
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import extract_embed, EarlyStopping, get_nodes_dict

@@ -48,7 +48,6 @@ pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
 git clone https://github.com/BUPT-GAMMA/OpenHGNN
 cd OpenHGNN
 pip install -r requirements.txt
-pip install -e .  # From latest verion
 ```
 
 #### Running an existing baseline model on an existing benchmark [dataset](./openhgnn/dataset/#Dataset)

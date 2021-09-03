@@ -9,7 +9,7 @@ class GeneralLinear(nn.Module):
     ------------
     General Linear, combined with activation, normalization(batch and L2), dropout and so on.
 
-    Parameter
+    Parameters
     ------------
     in_features : int
         size of each input sample, which is fed into nn.Linear
@@ -66,7 +66,7 @@ class HeteroLinearLayer(nn.Module):
     Even though they may have same dimension, they may have different semantic in every dimension.
     So we use a linear layer for each node type to map all node features to a shared feature space.
 
-    Parameter
+    Parameters
     ----------
     linear_dict : dict
         Key of dict can be node type(node name), value of dict is a list contains input dimension and output dimension.
@@ -93,7 +93,7 @@ class HeteroLinearLayer(nn.Module):
 
     def forward(self, dict_h: dict) -> dict:
         r"""
-        Parameter
+        Parameters
         ----------
         dict_h : dict
             A dict of heterogeneous feature
@@ -115,7 +115,7 @@ class HeteroMLPLayer(nn.Module):
     HeteroMLPLayer contains multiple GeneralLinears, different with HeteroLinearLayer.
     The latter contains only one layer.
 
-    Parameter
+    Parameters
     ----------
     linear_dict : dict
         Key of dict can be node type(node name), value of dict is a list contains input, hidden and output dimension.

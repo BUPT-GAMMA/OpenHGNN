@@ -10,7 +10,7 @@ class HeteroEmbedLayer(nn.Module):
     Embedding layer for featureless heterograph.
 
 
-    Parameter
+    Parameters
     -----------
     n_nodes_dict : dict
         Key of dict means node type,
