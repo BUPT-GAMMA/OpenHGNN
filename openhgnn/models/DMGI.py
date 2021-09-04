@@ -69,17 +69,18 @@ class DMGI(BaseModel):
 
         return cls(meta_paths=mps, sc=args.sc,
                    category=args.category, in_size=args.in_dim,
-                   hid_unit=args.hid_unit, dropout=args.dropout,
+                   hid_unit=args.hid_unit, nheads=args.num_heads,dropout=args.dropout,
                    num_nodes=num_nodes, num_classes=args.num_classes,
                    isSemi=args.isSemi,isAttn=args.isAttn, isBias=args.isBias)
 
-    def __init__(self, meta_paths, sc, category, in_size, hid_unit,
+    def __init__(self, meta_paths, sc, category, in_size, hid_unit,nheads,
                  dropout, num_nodes, num_classes, isBias, isAttn, isSemi):
         super(DMGI, self).__init__()
         self.category = category
         # self.layers = nn.ModuleList()
         self.hid = hid_unit
         self.meta_paths = meta_paths
+        self.nheads = nheads
         self.isAttn = isAttn
         self.isSemi = isSemi
         self.sc = sc
@@ -111,7 +112,10 @@ class DMGI(BaseModel):
         self.logistic = LogReg(hid_unit, num_classes)
 
         if self.isAttn:
-            self.attn = Attention(hid_units=hid_unit, num_mps=len(meta_paths), num_ndoes=num_nodes)
+            self.attn = nn.ModuleList(Attention(hid_units=hid_unit,
+                                                num_mps=len(meta_paths),
+                                                num_ndoes=num_nodes) for _ in range(nheads))
+            # self.attn = Attention(hid_units=hid_unit, num_mps=len(meta_paths), num_ndoes=num_nodes)
 
         self.init_weight()
         print("category:{}, category's classes:{}, isBias:{},"
@@ -180,12 +184,13 @@ class DMGI(BaseModel):
                   \end{equation}
                 """
 
-            h_1_all_lst = [];h_2_all_lst = []
-            h_1_all_, h_2_all_, c_all_ = self.attn(h_1_all, h_2_all, c_all)
-            h_1_all_lst.append(h_1_all_); h_2_all_lst.append(h_2_all_);
+            h_1_all_lst = [];h_2_all_lst = [];c_all_lst = []
+            for h_idx in range(self.nheads):
+                h_1_all_, h_2_all_, c_all_ = self.attn[h_idx](h_1_all, h_2_all, c_all)
+                h_1_all_lst.append(h_1_all_);h_2_all_lst.append(h_2_all_); c_all_lst.append(c_all_)
 
-            h_1_all = torch.mean(torch.cat(h_1_all, 0), 0).unsqueeze(0)
-            h_2_all = torch.mean(torch.cat(h_2_all, 0), 0).unsqueeze(0)
+            h_1_all = torch.mean(torch.cat(h_1_all_lst, 0), 0).unsqueeze(0)
+            h_2_all = torch.mean(torch.cat(h_2_all_lst, 0), 0).unsqueeze(0)
 
         else:
             h_1_all = torch.mean(torch.cat(h_1_all, 0), 0).unsqueeze(0)
@@ -222,7 +227,7 @@ class DMGI(BaseModel):
         feats = feats[self.category].data
         for mp in meta_paths:
             rowsum = feats.sum(1)
-            r_inv = torch.pow(rowsum, -1).flatten()  
+            r_inv = torch.pow(rowsum, -1).flatten()
             r_inv[torch.isinf(r_inv)] = 0.
             r_mat_inv = torch.diag(r_inv)
             feats = torch.spmm(r_mat_inv, feats)
