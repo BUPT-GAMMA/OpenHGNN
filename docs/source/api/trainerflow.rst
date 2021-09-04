@@ -1,6 +1,6 @@
 .. _api-trainerflow:
 
-openhgnn.trainerflow
+Trainerflow
 =================================
 
 .. py:module:: trainerflow

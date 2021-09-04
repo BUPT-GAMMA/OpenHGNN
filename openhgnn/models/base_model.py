@@ -6,7 +6,11 @@ import torch.nn as nn
 class BaseModel(nn.Module, metaclass=ABCMeta):
     @classmethod
     def build_model_from_args(cls, args, hg):
-        """Build a new models instance."""
+        r"""
+        Build the model instance from args and hg.
+
+        So every subclass inheriting it should override the method.
+        """
         raise NotImplementedError("Models must implement the build_model_from_args method")
 
     def __init__(self):
@@ -16,7 +20,22 @@ class BaseModel(nn.Module, metaclass=ABCMeta):
         self.evaluator = None
 
     def forward(self, *args):
-        raise NotImplementedError
+        r"""
+        Description
+        ------------
+        The model plays a role of encoder. So the forward will encoder original features into new features.
 
-    def predict(self, data):
+        Parameters
+        -----------
+        hg : dgl.DGlHeteroGraph
+            the heterogeneous graph
+        h_dict : dict
+            the dict of heterogeneous feature
+
+        Return
+        -------
+        out_dic : dict
+            A dict of encoded feature. In general, it should ouput all nodes embedding.
+            It is allowed that just output the embedding of target nodes which are participated in loss calculation.
+        """
         raise NotImplementedError

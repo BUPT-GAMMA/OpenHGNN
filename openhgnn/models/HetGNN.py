@@ -1,12 +1,3 @@
-"""
-HetGNN[KDD2019]
-Heterogeneous Graph Neural Network
-Paper: https://dl.acm.org/doi/abs/10.1145/3292500.3330961
-Code: https://github.com/chuxuzhang/KDD2019_HetGNN
-
-The author of the paper only gives the academic dataset.
-
-"""
 import dgl
 import torch as th
 import torch.nn as nn
@@ -17,6 +8,14 @@ from . import BaseModel, register_model
 
 @register_model('HetGNN')
 class HetGNN(BaseModel):
+    r"""
+    HetGNN[KDD2019]-
+    Heterogeneous Graph Neural Network
+    `Paper Link <https://dl.acm.org/doi/abs/10.1145/3292500.3330961>'
+    `Code Link <https://github.com/chuxuzhang/KDD2019_HetGNN>`
+
+    The author of the paper only gives the academic dataset.
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         return cls(hg, args)
@@ -152,10 +151,13 @@ class Het_Aggregate(nn.Module):
 
 
 class aggregate_het_neigh(nn.Module):
-    '''
-    Aggregating Heterogeneous Neighbors(C3)
+    r"""
+    Description
+    --------------
+    It is a Aggregating Heterogeneous Neighbors(C3)
     Same Type Neighbors Aggregation
-    '''
+    """
+
     def __init__(self, ntypes, dim):
         super(aggregate_het_neigh, self).__init__()
         self.neigh_rnn = nn.ModuleDict({})

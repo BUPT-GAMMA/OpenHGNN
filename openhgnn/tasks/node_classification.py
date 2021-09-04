@@ -7,7 +7,7 @@ from ..utils import Evaluator
 
 @register_task("node_classification")
 class NodeClassification(BaseTask):
-    """Node classification tasks."""
+    r"""Node classification tasks."""
     def __init__(self, args):
         super(NodeClassification, self).__init__()
         self.dataset = build_dataset(args.dataset, 'node_classification')
@@ -58,4 +58,3 @@ class NodeClassification(BaseTask):
 
     def get_labels(self):
         return self.labels
-

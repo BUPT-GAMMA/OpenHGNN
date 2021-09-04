@@ -31,7 +31,7 @@ def forward(self, hg=None, feat_dict=None, *args, **wkags):
 Input: The args *hg* and *feat_dict* are not necessary. 
 
 - If you just want to train model with full-batch training, you can pass the *hg* to the model in the __init__ .
-- If the feature of dataset is not provided, build a *[HeteroEmbedLayer](./EmbedLayer.py)*.
+- If the feature of dataset is not provided, build a *[HeteroEmbedLayer](../layers/EmbedLayer.py)*.
 
 Output: A dict of embedding.
 

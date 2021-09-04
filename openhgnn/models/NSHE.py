@@ -1,18 +1,11 @@
-"""
-NSHE[IJCAI2020]
-Network Schema Preserving Heterogeneous Information Network Embedding
-Paper: http://www.shichuan.org/doc/87.pdf
-Code: https://github.com/Andy-Border/NSHE
 
-We use two dataset acm imdb
-
-"""
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv
 import dgl
-from . import BaseModel, register_model, HeteroMLPLayer, HeteroLinearLayer
+from . import BaseModel, register_model
+from ..layers.HeteroLinear import HeteroMLPLayer, HeteroLinearLayer
 
 '''
 In paper repo performance		
@@ -34,6 +27,13 @@ IMDB<Classification>     Micro-F1 = 0.6209, Macro-F1 = 0.6053
 
 @register_model('NSHE')
 class NSHE(BaseModel):
+    r"""
+    NSHE[IJCAI2020]
+    Network Schema Preserving Heterogeneous Information Network Embedding
+    `Paper Link <http://www.shichuan.org/doc/87.pdf>`
+    `Code Link https://github.com/Andy-Border/NSHE`
+
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         return cls(hg, 'GCN', project_dim=args.dim_size['project'],

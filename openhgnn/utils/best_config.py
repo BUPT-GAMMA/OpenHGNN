@@ -57,14 +57,30 @@ BEST_CONFIGS = {
             },
             'imdb4GTN': {
                 'lr': 0.001, 'weight_decay': 0.00001, 'num_heads': [2, 2, 2]
+            },
+            'HGBn-ACM': {
+            },
+            'HGBn-DBLP': {
             }
 
         },
         'NARS': {
             'general': {},
-            'acm4NARS': {
-                'lr': 0.001, 'num_heads': [8], 'hidden_dim': 64, 'dropout': 0.5, 'weight_decay': 0.001,
-                'num_epochs': 200, 'patience': 100, 'metric': 'acc'
+            'HGBn-ACM': {
+                'lr': 0.001, 'num_heads': [8], 'num_hops': 2, 'hidden_dim': 64, 'dropout': 0.5, 'weight_decay': 0.001,
+                'num_epochs': 200, 'patience': 100, 'metric': 'acc',
+            },
+            'HGBn-DBLP': {
+                'lr': 0.001, 'num_heads': [8], 'num_hops': 2, 'hidden_dim': 64, 'dropout': 0.5, 'weight_decay': 0.001,
+                'num_epochs': 200, 'patience': 100, 'metric': 'acc',
+            },
+            'HGBn-Freebase': {
+                'lr': 0.001, 'num_heads': [8], 'num_hops': 2, 'hidden_dim': 64, 'dropout': 0.5, 'weight_decay': 0.001,
+                'num_epochs': 200, 'patience': 100, 'metric': 'acc',
+            },
+            'HGBn-IMDB': {
+                'lr': 0.001, 'num_heads': [8], 'num_hops': 2, 'hidden_dim': 64, 'dropout': 0.5, 'weight_decay': 0.001,
+                'num_epochs': 200, 'patience': 100, 'metric': 'acc',
             },
 
 

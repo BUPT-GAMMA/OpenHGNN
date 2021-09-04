@@ -1,4 +1,6 @@
-models
+.. _api-model:
+
+Models
 ======
 
 BaseModel
@@ -8,3 +10,46 @@ BaseModel
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. _
+
+DMGI
+-----------------------------
+
+.. automodule:: models.DMGI
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+HAN
+--------------------------
+
+.. automodule:: models.HAN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+HetGNN
+-----------------------------
+
+.. automodule:: models.HetGNN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+NARS
+-----------------------------
+
+.. automodule:: models.NARS
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+NSHE
+-----------------------------
+
+.. automodule:: models.NSHE
+   :members:
+   :undoc-members:
+   :show-inheritance:

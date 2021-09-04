@@ -3,7 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import init
-from . import BaseModel, register_model, HeteroEmbedLayer
+from . import BaseModel, register_model
+from ..layers.EmbedLayer import HeteroEmbedLayer
 from ..utils import get_nodes_dict
 """
     u_embedding: Embedding for center word.

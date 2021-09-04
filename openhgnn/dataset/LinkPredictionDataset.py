@@ -2,7 +2,7 @@ import dgl
 import numpy as np
 from dgl.data.knowledge_graph import load_data
 import torch as th
-from openhgnn.dataset import BaseDataset, register_dataset
+from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
 from dgl.data.utils import load_graphs
 
@@ -144,6 +144,15 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             self.has_feature = True
+        elif dataset_name == 'HGBl-LastFM':
+            dataset = HGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = False
+        elif dataset_name == 'HGBl-PubMed':
+            dataset = HGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = True
+
         self.g = g
 
     def load_link_pred(self, path):

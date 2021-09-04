@@ -5,13 +5,14 @@ import torch as th
 from tqdm import tqdm
 import torch.nn as nn
 import torch
-from openhgnn.models import build_model
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import extract_embed, get_nodes_dict
 from collections.abc import Mapping
-from ..models import build_model, HeteroEmbedLayer
+from ..models import build_model
+from ..layers.EmbedLayer import HeteroEmbedLayer
+from ..layers.HeteroLinear import HeteroFeature
 
 
 class NegativeSampler(object):
@@ -50,6 +51,8 @@ class LinkPrediction(BaseFlow):
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
 
+
+
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
@@ -85,7 +88,11 @@ class LinkPrediction(BaseFlow):
             # self.neg_test_graph = self.task.dataset.neg_test_graph.to(self.device)
 
     def preprocess(self):
-
+        if isinstance(self.hg.ndata['h'], dict):
+            self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+        elif isinstance(self.hg.ndata['h'], th.Tensor):
+            self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         return
 
     def train(self):
@@ -176,12 +183,8 @@ class LinkPrediction(BaseFlow):
 
     def _full_train_setp(self):
         self.model.train()
-        # if self.has_feature == True:
-        #     h = self.hg.ndata['h']
-        # else:
-        #     h = self.input_feature()
-        embedding = self.model(self.hg)
-
+        h_dict = self.input_feature()
+        embedding = self.model(self.hg, h_dict)
         negative_graph = self.construct_negative_graph()
         loss = self.loss_calculation(self.positive_graph, negative_graph, embedding)
 

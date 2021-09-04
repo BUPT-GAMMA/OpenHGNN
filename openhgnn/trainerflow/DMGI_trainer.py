@@ -20,6 +20,12 @@ class DMGI_trainer(BaseFlow):
         self.model_name = args.model
         self.device = args.device
         self.task = build_task(args)
+
+        self.semi_loss_fn = self.task.get_loss_fn()
+        if hasattr(args, 'metric'):
+            self.metric = args.metric
+        else:
+            self.metric = 'f1'
         self.num_classes = self.task.dataset.num_classes
         self.hg = self.task.get_graph().to(self.device)
 
@@ -34,6 +40,8 @@ class DMGI_trainer(BaseFlow):
         # get feat.shape[0]
         if hasattr(self.task.dataset, 'in_dim'):
             self.args.in_dim = self.task.dataset.in_dim
+        else:
+            self.args.in_dim = self.args.hidden_dim
         # get category num_classes
         args.num_classes = self.num_classes
 
@@ -72,10 +80,7 @@ class DMGI_trainer(BaseFlow):
 
         # Evaluation
         model.eval()
-        evaluate(model.H.data.detach(),
-                 self.train_idx, self.val_idx, self.test_idx,
-                 self.labels, self.num_classes, self.args.device)
-
+        self.evaluate(model.H.data.detach(),)
 
     def _full_train_setp(self):
 
@@ -87,6 +92,52 @@ class DMGI_trainer(BaseFlow):
         lbl = torch.cat((lbl_1, lbl_2), 1).to(self.args.device)
 
         result = self.model(self.hg)
+
+        loss = self.calculate_J(result, lbl)
+
+        loss.backward()
+        optm.step()
+        loss = loss.cpu()
+        loss = loss.detach().numpy()
+        return loss
+
+    def _test_step(self, split=None, logits=None):
+        pass
+
+    def _mini_train_step(self, ):
+        pass
+
+    def loss_calculation(self, positive_graph, negative_graph, embedding):
+        pass
+
+    def calculate_J(self, result, lbl):
+        r"""
+            Two formulas to calculate the final objective :math:`\mathcal{J}`
+            If isSemi = Ture, introduce a semi-supervised module into our framework that predicts the labels of labeled nodes from
+            the consensus embedding Z. More precisely, we minimize the cross-entropy error over the labeled nodes:
+
+            .. math::
+              \begin{equation}
+                \mathcal{J}_{\text {semi }}=\sum_{r \in \mathcal{R}} \mathcal{L}^{(r)}+\alpha \ell_{\mathrm{cs}}+\beta\|\Theta\|+\gamma \ell_{\text {sup }}
+              \end{equation}
+
+            Where :math:`\gamma` is  the coefficient of the semi-supervised module, the way to calculate :math:`\ell_{\text {sup }}` :
+
+            .. math::
+              \begin{equation}
+                \ell_{\text {sup }}=-\frac{1}{\left|\mathcal{Y}_{L}\right|} \sum_{l \in \mathcal{Y}_{L}} \sum_{i=1}^{c} Y_{l i} \ln \hat{Y}_{l i}
+              \end{equation}
+
+            If isSemi = False:
+
+            .. math::
+              \begin{equation}
+                \mathcal{J}=\sum_{r \in \mathcal{R}} \mathcal{L}^{(r)}+\alpha \ell_{\mathrm{cs}}+\beta\|\Theta\|^{2}
+              \end{equation}
+
+            Where :math:`\alpha` controls the importance of the consensus regularization,
+            :math:`mathcal{L}^{(r)}`  is cross entropy.
+            """
         logits = result['logits']
 
         xent = nn.CrossEntropyLoss()
@@ -108,104 +159,85 @@ class DMGI_trainer(BaseFlow):
             sup = result['semi']
             semi_loss = xent(sup[self.train_idx], self.labels[self.train_idx])
             loss += self.sup_coef * semi_loss
-
-        loss.backward()
-        optm.step()
-        loss = loss.cpu()
-        loss = loss.detach().numpy()
         return loss
 
 
-    def _test_step(self, split=None, logits=None):
-        pass
+    def evaluate(self, embeds):
+        hid_units = embeds.shape[2]
+
+        xent = self.semi_loss_fn
+
+        train_embs = embeds[0, self.train_idx]
+        val_embs = embeds[0, self.val_idx]
+        test_embs = embeds[0, self.test_idx]
+
+        train_lbls = self.labels[self.train_idx]
+        val_lbls = self.labels[self.val_idx]
+        test_lbls = self.labels[self.test_idx]
+
+        val_accs = [];test_accs = []
+        val_micro_f1s = [];test_micro_f1s = []
+        val_macro_f1s = [];test_macro_f1s = []
+        for _ in range(50):
+            log = LogReg(hid_units, self.num_classes)
+            opt = torch.optim.Adam(log.parameters(), lr=0.01, weight_decay=0.0)
+            log.to(self.device)
+
+            accs = []
+            micro_f1s = []
+            macro_f1s = []
+            macro_f1s_val = []  ##
+            for iter_ in range(50):
+                # train
+                log.train()
+                opt.zero_grad()
+
+                logits = log(train_embs)
+                loss = xent(logits, train_lbls)
+
+                loss.backward()
+                opt.step()
+
+                # val
+                logits = log(val_embs)
+                preds = torch.argmax(logits, dim=1)
+
+                val_acc = torch.sum(preds == val_lbls).float() / val_lbls.shape[0]
+                val_f1_macro = f1_score(val_lbls.cpu(), preds.cpu(), average='macro')
+                val_f1_micro = f1_score(val_lbls.cpu(), preds.cpu(), average='micro')
+
+                val_accs.append(val_acc.item())
+                val_macro_f1s.append(val_f1_macro)
+                val_micro_f1s.append(val_f1_micro)
+
+                # test
+                logits = log(test_embs)
+                preds = torch.argmax(logits, dim=1)
+
+                test_acc = torch.sum(preds == test_lbls).float() / test_lbls.shape[0]
+                test_f1_macro = f1_score(test_lbls.cpu(), preds.cpu(), average='macro')
+                test_f1_micro = f1_score(test_lbls.cpu(), preds.cpu(), average='micro')
+
+                test_accs.append(test_acc.item())
+                test_macro_f1s.append(test_f1_macro)
+                test_micro_f1s.append(test_f1_micro)
 
 
-    def _mini_train_step(self, ):
-        pass
+            max_iter = val_accs.index(max(val_accs))
+            accs.append(test_accs[max_iter])
 
-    def loss_calculation(self, positive_graph, negative_graph, embedding):
-        pass
+            max_iter = val_macro_f1s.index(max(val_macro_f1s))
+            macro_f1s.append(test_macro_f1s[max_iter])
+            macro_f1s_val.append(val_macro_f1s[max_iter]) ###
 
-
-def evaluate(embeds, idx_train, idx_val, idx_test, labels, num_classes, device):
-    hid_units = embeds.shape[2]
-
-    xent = nn.CrossEntropyLoss()
-
-    train_embs = embeds[0, idx_train]
-    val_embs = embeds[0, idx_val]
-    test_embs = embeds[0, idx_test]
-
-    train_lbls = labels[idx_train]
-    val_lbls = labels[idx_val]
-    test_lbls = labels[idx_test]
-
-    accs = [];micro_f1s = [];macro_f1s = [];macro_f1s_val = []
-    for _ in range(50):
-        # hid_unit , category's num_classes
-        log = LogReg(hid_units, num_classes)  # 64 3
-        opt = torch.optim.Adam(log.parameters(), lr=0.01, weight_decay=0.0)
-        log.to(device)
-
-        val_accs = []; test_accs = []
-        val_micro_f1s = []; test_micro_f1s = []
-        val_macro_f1s = []; test_macro_f1s = []
+            max_iter = val_micro_f1s.index(max(val_micro_f1s))
+            micro_f1s.append(test_micro_f1s[max_iter])
 
 
-        for iter_ in range(50):
-            # train
-            log.train()
-            opt.zero_grad()
-
-            logits = log(train_embs)
-            loss = xent(logits, train_lbls)
-
-            loss.backward()
-            opt.step()
-
-            # val
-            logits = log(val_embs)
-            # predict val's label
-            preds = torch.argmax(logits, dim=1)
-
-            val_acc = torch.sum(preds == val_lbls).float() / val_lbls.shape[0]
-
-            val_f1_macro = f1_score(val_lbls.cpu(), preds.cpu(), average='macro')
-            val_f1_micro = f1_score(val_lbls.cpu(), preds.cpu(), average='micro')
-
-            val_accs.append(val_acc.item())
-            val_macro_f1s.append(val_f1_macro)
-            val_micro_f1s.append(val_f1_micro)
-
-            # test
-            logits = log(test_embs)
-            preds = torch.argmax(logits, dim=1)
-
-            test_acc = torch.sum(preds == test_lbls).float() / test_lbls.shape[0]
-            test_f1_macro = f1_score(test_lbls.cpu(), preds.cpu(), average='macro')
-            test_f1_micro = f1_score(test_lbls.cpu(), preds.cpu(), average='micro')
-
-            test_accs.append(test_acc.item())
-            test_macro_f1s.append(test_f1_macro)
-            test_micro_f1s.append(test_f1_micro)
-
-
-        max_iter = val_accs.index(max(val_accs))
-        accs.append(test_accs[max_iter])
-
-        max_iter = val_macro_f1s.index(max(val_macro_f1s))
-        macro_f1s.append(test_macro_f1s[max_iter])
-        macro_f1s_val.append(val_macro_f1s[max_iter])
-
-        max_iter = val_micro_f1s.index(max(val_micro_f1s))
-        micro_f1s.append(test_micro_f1s[max_iter])
-
-
-    print("\t[Classification] Macro-F1: {:.4f} ({:.4f}) | Micro-F1: {:.4f} ({:.4f})".format(np.mean(macro_f1s),
-                                                                                                np.std(macro_f1s),
-                                                                                                np.mean(micro_f1s),
-                                                                                                np.std(micro_f1s)))
-
+        print("\t[Classification] Macro-F1: {:.4f} ({:.4f}) | Micro-F1: {:.4f} ({:.4f})".format(np.mean(macro_f1s),
+                                                                                                    np.std(macro_f1s),
+                                                                                                    np.mean(micro_f1s),
+                                                                                                    np.std(micro_f1s)))
 
 
 

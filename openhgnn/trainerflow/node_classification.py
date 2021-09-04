@@ -3,10 +3,11 @@ import torch
 from tqdm import tqdm
 from ..utils.sampler import get_node_data_loader
 from ..models import build_model
+from ..layers.HeteroLinear import HeteroFeature
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils.logger import printInfo
-from ..utils import extract_embed, EarlyStopping
+from ..utils import extract_embed, EarlyStopping, get_nodes_dict
 
 
 @register_flow("node_classification")
@@ -35,8 +36,6 @@ class NodeClassification(BaseFlow):
 
         self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
-        if hasattr(self.task.dataset, 'in_dim'):
-            self.args.in_dim = self.task.dataset.in_dim
 
         if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
@@ -52,9 +51,6 @@ class NodeClassification(BaseFlow):
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
-
-        self.optimizer = (
-            torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay))
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
@@ -68,6 +64,8 @@ class NodeClassification(BaseFlow):
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
     def preprocess(self):
+        self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         if self.args.model == 'GTN':
             if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == True:
                 self.optimizer = torch.optim.Adam([{'params': self.model.gcn.parameters()},
@@ -135,7 +133,8 @@ class NodeClassification(BaseFlow):
         if self.args.dataset[:4] == 'HGBn':
             self.model.eval()
             with torch.no_grad():
-                logits = self.model(self.hg)[self.category]
+                h_dict = self.input_feature()
+                logits = self.model(self.hg, h_dict)[self.category]
                 self.task.dataset.save_results(logits=logits, file_path=self.args.HGB_results_path)
             return
         if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
@@ -153,8 +152,8 @@ class NodeClassification(BaseFlow):
 
     def _full_train_step(self):
         self.model.train()
-
-        logits = self.model(self.hg)[self.category]
+        h_dict = self.input_feature()
+        logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
         self.optimizer.zero_grad()
         loss.backward()
@@ -185,7 +184,8 @@ class NodeClassification(BaseFlow):
     def _full_test_step(self, mode=None, logits=None):
         self.model.eval()
         with torch.no_grad():
-            logits = logits if logits else self.model(self.hg)[self.category]
+            h_dict = self.input_feature()
+            logits = logits if logits else self.model(self.hg, h_dict)[self.category]
             if mode == "train":
                 mask = self.train_idx
             elif mode == "validation":
