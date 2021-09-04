@@ -61,7 +61,7 @@ class EarlyStopping(object):
             self.counter = 0
         return self.early_stop
 
-    def step_value(self, score, model):
+    def step_score(self, score, model):
         if self.best_score is None:
             self.best_score = score
             self.save_model(model)
