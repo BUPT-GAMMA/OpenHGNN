@@ -20,7 +20,7 @@ class DMGI(BaseModel):
 
     **Authors:** Chanyoung Park, Donghyun Kim, Jiawei Han, Hwanjo Yu
 
-    DMGI was introduced in `[paper] <https://doi.org/10.1609/aaai.v34i04.5985/>`_
+    DMGI was introduced in `[paper] <https://ojs.aaai.org//index.php/AAAI/article/view/5985>`_
     and parameters are defined as follows:
 
     Parameters
