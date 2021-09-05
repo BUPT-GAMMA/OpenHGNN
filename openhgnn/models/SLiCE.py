@@ -10,7 +10,6 @@ from . import BaseModel, register_model
 from .CompGCN import CompGraphConvLayer
 from ..utils.gcn_transform import GCNTransform
 from ..utils.gcn_graph_encoder import GCNGraphEncoder
-from ..utils.utils import load_pickle
 
 def gcn_out2bert_input(node_emb, batch_id_maps, input_ids, special_tokens):
     for ii in range(len(input_ids)):

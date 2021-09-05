@@ -117,7 +117,7 @@ class SLiCE_LinkPrediction(LinkPredictionDataset):
         self.labels=self.g.edata['label']
         for task in ['train','valid','test']:
             mask=self.g.edata[task+'_mask']
-            index = th.nonzero(mask).squeeze()
+            index = th.nonzero(mask).squeeze()#index of nonzero
             if task=='train':
                 self.train_idx=index
             elif task=='valid':
