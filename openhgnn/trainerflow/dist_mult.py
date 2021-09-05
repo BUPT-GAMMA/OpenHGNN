@@ -100,15 +100,7 @@ class DistMult(BaseFlow):
                 epoch_iter.set_description(
                     f"Epoch: {epoch:03d}, Val-mrr: {metric:.4f}, Loss:{loss:.4f}"
                 )
-                if metric >= best_score:
-                    best_score = metric
-                    best_model = copy.deepcopy(self.model)
-                    patience = 0
-                else:
-                    patience += 1
-                    if patience == self.patience:
-                        epoch_iter.close()
-                        break
+                early_stop = stopper.step(val_loss, val_score, self.model)
         print(f"Valid mrr = {best_score: .4f}")
         self.model = best_model
         test_mrr = self._test_step(split="test")

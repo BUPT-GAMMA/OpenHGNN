@@ -13,30 +13,13 @@ from collections.abc import Mapping
 from ..models import build_model
 from ..layers.EmbedLayer import HeteroEmbedLayer
 from ..layers.HeteroLinear import HeteroFeature
-
-
-class NegativeSampler(object):
-    def __init__(self, g, k):
-        # caches the probability distribution
-        self.weights = {
-            etype: g.in_degrees(etype=etype).float() ** 0.75
-            for etype in g.etypes
-        }
-        self.k = k
-
-    def __call__(self, g, eids_dict):
-        result_dict = {}
-        for etype, eids in eids_dict.items():
-            src, _ = g.find_edges(eids, etype=etype)
-            src = src.repeat_interleave(self.k)
-            dst = self.weights[etype].multinomial(len(src), replacement=True)
-            result_dict[etype] = (src, dst)
-        return result_dict
-
+from ..sampler.negative_sampler import Uniform_exclusive
 
 @register_flow("recommendation")
 class Recommendation(BaseFlow):
-    """Recommendation flows."""
+    """
+    Recommendation flows.
+    """
 
     def __init__(self, args):
         super(Recommendation, self).__init__(args)
@@ -47,11 +30,9 @@ class Recommendation(BaseFlow):
 
         self.task = build_task(args)
         self.hg = self.task.get_graph().to(self.device)
-        #self.target_link = self.task.dataset.target_link
+        self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
-
-
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
@@ -63,31 +44,13 @@ class Recommendation(BaseFlow):
         )
         self.patience = args.patience
         self.max_epoch = args.max_epoch
-        if self.args.mini_batch_flag:
-            self.hg = self.hg.to('cpu')
-            train_eid_dict = {
-                etype: self.hg.edges(etype=etype, form='eid')
-                for etype in self.hg.canonical_etypes}
-
-            sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
-            self.dataloader = dgl.dataloading.EdgeDataLoader(
-                self.hg, train_eid_dict, sampler, device=self.device,
-                    negative_sampler=NegativeSampler(self.hg, 1), batch_size=100,
-                shuffle=True, drop_last=False, num_workers=0
-            )
-        else:
-
-            # self.train_eid_dict = {
-            #     self.target_link: self.hg.edges(etype=self.target_link, form='eid')}
-            self.train_eid_dict = {
-                etype: self.hg.edges(etype=etype, form='eid')
-                for etype in self.hg.canonical_etypes}
-            self.positive_graph = self.hg
-            self.negative_sampler = NegativeSampler(self.hg, 10)
-            # self.pos_test_graph = self.task.dataset.pos_test_graph.to(self.device)
-            # self.neg_test_graph = self.task.dataset.neg_test_graph.to(self.device)
 
     def preprocess(self):
+        self.train_hg, self.val_hg, self.test_hg = self.task.get_idx()
+        self.train_hg = self.train_hg.to(self.device)
+        self.val_hg = self.val_hg.to(self.device)
+        self.test_hg = self.test_hg.to(self.device)
+        self.negative_graph = self.task.dataset.construct_negative_graph(self.train_hg).to(self.device)
         if isinstance(self.hg.ndata['h'], dict):
             self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
         elif isinstance(self.hg.ndata['h'], th.Tensor):
@@ -147,13 +110,14 @@ class Recommendation(BaseFlow):
         return all_loss
 
     def loss_calculation(self, positive_graph, negative_graph, embedding):
-        p_score = self.ScorePredictor(positive_graph, embedding).repeat_interleave(10)
+        p_score = self.ScorePredictor(positive_graph, embedding).repeat_interleave(99)
         n_score = self.ScorePredictor(negative_graph, embedding)
         label = th.ones(len(n_score), device=self.device)
         loss = F.binary_cross_entropy_with_logits(p_score - n_score, label)
         return loss
 
-    def ScorePredictor(self, edge_subgraph, x):
+    def ScorePredictor(self, hg, x):
+        edge_subgraph = hg[self.target_link]
         with edge_subgraph.local_scope():
             for ntype in edge_subgraph.ntypes:
                 edge_subgraph.nodes[ntype].data['x'] = x[ntype]
@@ -165,29 +129,11 @@ class Recommendation(BaseFlow):
     def regularization_loss(self, embedding):
         return th.mean(embedding.pow(2)) + th.mean(self.r_embedding.pow(2))
 
-    def construct_negative_graph(self,):
-        neg_srcdst = self.negative_sampler(self.positive_graph, self.train_eid_dict)
-        if not isinstance(neg_srcdst, Mapping):
-            assert len(self.hg.etypes) == 1, \
-                'graph has multiple or no edge types; '\
-                'please return a dict in negative sampler.'
-            neg_srcdst = {self.hg.canonical_etypes[0]: neg_srcdst}
-        # Get dtype from a tuple of tensors
-        #dtype = F.dtype(list(neg_srcdst.values())[0][0])
-        neg_edges = {
-            etype: neg_srcdst.get(etype[1], (th.IntTensor([]), th.IntTensor([])))
-            for etype in self.positive_graph.canonical_etypes}
-        neg_pair_graph = dgl.heterograph(
-            neg_edges, {ntype: self.positive_graph.number_of_nodes(ntype) for ntype in self.positive_graph.ntypes})
-        return neg_pair_graph
-
     def _full_train_setp(self):
         self.model.train()
         h_dict = self.input_feature()
-        embedding = self.model(self.hg, h_dict)
-        negative_graph = self.construct_negative_graph()
-        loss = self.loss_calculation(self.positive_graph, negative_graph, embedding)
-
+        embedding = self.model(self.train_hg, h_dict)
+        loss = self.loss_calculation(self.train_hg, self.negative_graph, embedding)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -197,11 +143,9 @@ class Recommendation(BaseFlow):
     def _test_step(self, split=None, logits=None):
         self.model.eval()
         with th.no_grad():
-            if self.has_feature == True:
-                h = self.hg.ndata['h']
-            else:
-                h = self.input_feature()
-            embedding = self.model(self.hg, h)
+            h_dict = self.input_feature()
+            embedding = self.model(self.train_hg, h_dict)
+
             p_score = self.ScorePredictor(self.pos_test_graph, embedding).unsqueeze(0)
             n_score = self.ScorePredictor(self.neg_test_graph, embedding)
             n_score = th.reshape(n_score, (99, -1))

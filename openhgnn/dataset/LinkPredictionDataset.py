@@ -144,20 +144,64 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             self.has_feature = True
+            self.target_link = [('product', 'product-product-0', 'product'),
+                                ('product', 'product-product-1', 'product')]
         elif dataset_name == 'HGBl-LastFM':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             self.has_feature = False
+            self.target_link = [('user', 'user-artist', 'artist')]
         elif dataset_name == 'HGBl-PubMed':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             self.has_feature = True
+            self.target_link = [('1', '1_to_1', '1')]
 
         self.g = g
 
     def load_link_pred(self, path):
         return
 
+    def get_idx(self):
+        r"""
+        Get graphs for train, valid or test.
+        @return:
+        """
+        val_edge_dict = {}
+        test_edge_dict = {}
+        ntypes = []
+        train_graph = self.g
+        val_ratio = 0.1
+        for etype in self.target_link:
+            train_mask = self.g.edges[etype].data['train_mask'].squeeze()
+            train_index = th.nonzero(train_mask).squeeze()
+            random_int = th.randperm(len(train_index))[:int(len(train_index) * val_ratio)]
+            val_index = train_index[random_int]
+            val_edge = self.g.find_edges(val_index, etype)
+
+            test_mask = self.g.edges[etype].data['test_mask'].squeeze()
+            test_index = th.nonzero(test_mask).squeeze()
+            test_edge = self.g.find_edges(test_index, etype)
+
+            val_edge_dict[etype] = val_edge
+            test_edge_dict[etype] = test_edge
+            ntypes.append(etype[0])
+            ntypes.append(etype[2])
+
+            train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
+
+        val_graph = dgl.heterograph(val_edge_dict,
+                                         {ntype: self.g.number_of_nodes(ntype) for ntype in set(ntypes)})
+        test_graph = dgl.heterograph(test_edge_dict,
+                                          {ntype: self.g.number_of_nodes(ntype) for ntype in set(ntypes)})
+
+        return train_graph, val_graph, test_graph
+
+    def save_results(self, score, file_path):
+        pass
+        # with open(file_path, "w") as f:
+        #     for l, r, c in zip(edge_list[0], edge_list[1], confidence):
+        #         f.write(f"{l}\t{r}\t{edge_type}\t{c}\n")
 
 def build_graph_from_triplets(num_nodes, num_rels, triplets):
     """ Create a DGL graph. The graph is bidirectional because RGCN authors
