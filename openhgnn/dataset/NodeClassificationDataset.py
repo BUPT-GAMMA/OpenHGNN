@@ -360,14 +360,14 @@ class HGB_NodeClassification(NodeClassificationDataset):
 
     def save_results(self, logits, file_path):
         test_logits = logits[self.test_idx]
-        if self.dataset_name == 'HGBn-imdb':
+        if self.dataset_name == 'HGBn-IMDB':
             pred = (test_logits.cpu().numpy() > 0).astype(int)
             multi_label = []
             for i in range(pred.shape[0]):
                 label_list = [str(j) for j in range(pred[i].shape[0]) if pred[i][j] == 1]
                 multi_label.append(','.join(label_list))
             pred = multi_label
-        elif self.dataset_name in ['HGBn-acm', 'HGBn-dblp', 'HGBn-freebase']:
+        elif self.dataset_name in ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase']:
             pred = test_logits.cpu().numpy().argmax(axis=1)
             pred = np.array(pred)
         else:
