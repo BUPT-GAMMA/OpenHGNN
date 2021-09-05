@@ -71,9 +71,6 @@ def Aggr_mean(z):
     return z.mean(1)
 
 layer_dict = {
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
     'hanconv': HANConv,
 }
