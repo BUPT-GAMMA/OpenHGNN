@@ -32,7 +32,7 @@ class NodeClassification(BaseFlow):
         if hasattr(args, 'metric'):
             self.metric = args.metric
         else:
-            self.metric = 'f1'
+            self.metric = 'acc'
 
         self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
@@ -41,8 +41,11 @@ class NodeClassification(BaseFlow):
             print('Modify the out_dim with num_classes')
             args.out_dim = self.num_classes
         self.args.has_feature = self.task.dataset.has_feature
+
         self.args.category = self.task.dataset.category
         self.category = self.args.category
+        self.args.out_node_type = [self.category]
+
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
@@ -120,13 +123,12 @@ class NodeClassification(BaseFlow):
 
                 printInfo(self.metric, epoch, train_score, train_loss, val_score, val_loss)
 
-                early_stop = stopper.step(val_loss, val_score, self.model)
+                early_stop = stopper.loss_step(val_loss, self.model)
                 if early_stop:
                     print('Early Stop!\tEpoch:' + str(epoch))
                     break
 
-
-        print(f"Valid_score_{self.metric} = {stopper.best_score: .4f}, Min_loss = {stopper.best_loss: .4f}")
+        print(f"Valid_score_{self.metric} = Min_loss = {stopper.best_loss: .4f}")
         stopper.load_model(self.model)
 
         ############ TEST SCORE #########

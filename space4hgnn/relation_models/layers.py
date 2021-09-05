@@ -49,7 +49,7 @@ class RGCNConv(nn.Module):
     def __init__(self, rel_names, dim_in, dim_out, bias=False, **kwargs):
         super(RGCNConv, self).__init__()
         self.model = HeteroGraphConv({
-            rel:  dgl.nn.pytorch.GraphConv(dim_in, dim_out, bias=bias)
+            rel: layer_dict[rel_names](dim_in, dim_out, num_heads=1, bias=bias)
             for rel in rel_names
         })
 
@@ -60,5 +60,9 @@ class RGCNConv(nn.Module):
 
 
 layer_dict = {
-    'rgcnconv': RGCNConv,
+    'gcnconv': dgl.nn.pytorch.GraphConv,
+    'sageconv': dgl.nn.pytorch.SAGEConv,
+    'gatconv': dgl.nn.pytorch.GATConv,
+    'ginconv': dgl.nn.pytorch.GINConv,
+    'appnpconv': dgl.nn.pytorch.APPNPConv
 }

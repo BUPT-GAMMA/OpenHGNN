@@ -31,6 +31,7 @@ class LinkPrediction(BaseFlow):
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
 
+        self.args.out_node_type = self.task.dataset.ntypes
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
@@ -122,11 +123,9 @@ class LinkPrediction(BaseFlow):
 
     def ScorePredictor(self, edge_subgraph, x):
         with edge_subgraph.local_scope():
-            if len(edge_subgraph.ntypes) == 1:
-                edge_subgraph.ndata['x'] = x
-            else:
-                for ntype in edge_subgraph.ntypes:
-                    edge_subgraph.nodes[ntype].data['x'] = x[ntype]
+
+            for ntype in edge_subgraph.ntypes:
+                edge_subgraph.nodes[ntype].data['x'] = x[ntype]
             for etype in edge_subgraph.canonical_etypes:
                 edge_subgraph.apply_edges(
                     dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)

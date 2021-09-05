@@ -147,7 +147,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             ntypes.append(etype[2])
 
             train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
-
+        self.ntypes = set(ntypes)
         val_graph = dgl.heterograph(val_edge_dict,
                                          {ntype: self.g.number_of_nodes(ntype) for ntype in set(ntypes)})
         test_graph = dgl.heterograph(test_edge_dict,
