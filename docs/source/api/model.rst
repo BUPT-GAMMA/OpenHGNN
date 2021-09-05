@@ -53,3 +53,11 @@ NSHE
    :members:
    :undoc-members:
    :show-inheritance:
+
+MHNF
+-----------------------------
+
+.. automodule:: models.MHNF
+   :members:
+   :undoc-members:
+   :show-inheritance:

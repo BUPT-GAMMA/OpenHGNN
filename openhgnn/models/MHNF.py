@@ -4,22 +4,93 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv, EdgeWeightNorm
-from ..utils import transform_relation_graph_list
+
+#from ..utils import transform_relation_graph_list
 from . import BaseModel, register_model
 
-"""
-MHNF: Multi-hop Heterogeneous Neighborhood information Fusion graph representation learning
-Paper:https://arxiv.org/pdf/2106.09289.pdf
-The author of the paper don't gives source code, so we implement the model according to the description 
-in the paper and the dataset using GTN dataset which is similar to the description in MHNF paper.
-In fact, MHNF model is similar to GTN using attention mechanism to aggregate different channel and
-different hop GTN layer representation to product a final representation. Then passing a MLP layer to
-do node classification task.
-The model HMAE HLHIA HSAF correspond to the description in the paper. You can see more detail message 
-by reading paper.  
-"""
+def transform_relation_graph_list(hg, category, h ,identity=True):
+    r'''
+        extract subgraph :math:`G_i` from :math:`G` in which
+        only edges whose type :math:`R_i` belongs to :math:`\mathcal{R}`
+
+        Parameters
+        ----------
+            hg : dgl.heterograph
+                Input heterogeneous graph
+            category : string
+                Type of predicted nodes.
+            h : dict
+                The projecting feature of each type node.
+            identity : bool
+                If True, the identity matrix will be added to relation matrix set.
+    '''
+
+    # get target category id
+    for i, ntype in enumerate(hg.ntypes):
+        if ntype == category:
+            category_id = i
+        hg.nodes[ntype].data['h'] = h[ntype]
+    g = dgl.to_homogeneous(hg, ndata='h')
+    # find out the target node ids in g
+    loc = (g.ndata[dgl.NTYPE] == category_id)
+    category_idx = th.arange(g.num_nodes())[loc]
+
+
+    edges = g.edges()
+    etype = g.edata[dgl.ETYPE]
+    ctx = g.device
+    #g.edata['w'] = th.ones(g.num_edges(), device=ctx)
+    num_edge_type = th.max(etype).item()
+    graph_list = []
+    for i in range(num_edge_type + 1):
+        e_ids = th.nonzero(etype == i).squeeze()
+        sg = dgl.graph((edges[0][e_ids], edges[1][e_ids]), num_nodes=g.num_nodes())
+        sg.edata['w'] = th.ones(sg.num_edges(), device=ctx)
+        graph_list.append(sg)
+    if identity == True:
+        x = th.arange(0, g.num_nodes(), device=ctx)
+        sg = dgl.graph((x, x))
+        sg.edata['w'] = th.ones(g.num_nodes(), device=ctx)
+        graph_list.append(sg)
+    return graph_list, g.ndata['h'], category_idx
+
 @register_model('MHNF')
 class MHNF(BaseModel):
+    r"""
+
+        Description
+        -----------
+        MHNF from paper `Multi-hop Heterogeneous Neighborhood information Fusion graph representation learning
+        <https://arxiv.org/pdf/2106.09289.pdf>`__.
+
+        Given a heterogeneous graph :math:`G` and its edge relation type set :math:`\mathcal{R}`.Then we can extract l-hops hybrid adjacency matrix list
+        in HMAE model. The hybrid adjacency matrix list can be used in HLHIA model to generate l-hops representations. Then HSAF
+        model use attention mechanism to aggregate l-hops representations and because of multi-channel conv, the
+        HSAF model also  aggregates different channels l-hops representations to generate a final representation.
+        You can see detail operation in correspond model.
+
+        Parameters
+        ----------
+            num_edge_type : int
+                Number of relations.
+            num_channels : int
+                Number of conv channels.
+            in_dim : int
+                The dimension of input feature.
+            hidden_dim : int
+                The dimension of hidden layer.
+            num_class : int
+                Number of classification type.
+            num_layers : int
+                Length of hybrid metapath.
+            category : string
+                Type of predicted nodes.
+            norm : bool
+                If True, the adjacency matrix will be normalized.
+            identity : bool
+                If True, the identity matrix will be added to relation matrix set.
+
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         if args.identity == True:
@@ -28,7 +99,7 @@ class MHNF(BaseModel):
             num_edge_type = len(hg.canonical_etypes)
         # add self-loop edge
         return cls(num_edge_type=num_edge_type, num_channels=args.num_channels,
-                    in_dim=args.in_dim, hidden_dim=args.hidden_dim, num_class=args.out_dim,
+                    in_dim=args.hidden_dim, hidden_dim=args.hidden_dim, num_class=args.out_dim,
                     num_layers=args.num_layers, category=args.category, norm=args.norm_emd_flag, identity=args.identity)
 
     def __init__(self, num_edge_type, num_channels, in_dim, hidden_dim, num_class, num_layers, category, norm, identity):
@@ -54,7 +125,7 @@ class MHNF(BaseModel):
             #Ws = []
             # * =============== Extract edges in original graph ================
             if self.category_idx is None:
-                self.A, self.h, self.category_idx = transform_relation_graph_list(hg, category=self.category,
+                self.A, self.h, self.category_idx = transform_relation_graph_list(hg, category=self.category, h=h,
                                                         identity=self.identity)
             # g = dgl.to_homogeneous(hg, ndata='h')
             #X_ = self.gcn(g, self.h)
@@ -66,10 +137,49 @@ class MHNF(BaseModel):
 
 
 class HSAF(nn.Module):
-    '''
+    r'''
+
+        Description
+        -----------
         HSAF: Hierarchical Semantic Attention Fusion
-        HSAF operation use two level attention mechanism
-        aggregate representation list to final representation
+
+        The HSAF model use two level attention mechanism to generate final representation
+
+        * Hop-level attention
+
+          .. math::
+              \alpha_{i, l}^{\Phi_{p}}=\sigma\left[\delta^{\Phi_{p}} \tanh \left(W^{\Phi_{p}} Z_{i, l}^{\Phi_{p}}\right)\right]
+
+          In which, :math:`\alpha_{i, l}^{\Phi_{p}}` is the importance of the information :math:`\left(Z_{i, l}^{\Phi_{p}}\right)`
+          of the l-th-hop neighbors of node i under the path :math:`\Phi_{p}`, and :math:`\delta^{\Phi_{p}}` represents the learnable matrix.
+
+          Then normalize :math:`\alpha_{i, l}^{\Phi_{p}}`
+
+          .. math::
+              \beta_{i, l}^{\Phi_{p}}=\frac{\exp \left(\alpha_{i, l}^{\Phi_{p}}\right)}{\sum_{j=1}^{L} \exp \left(\alpha_{i, j}^{\Phi_{p}}\right)}
+
+          Finally, we get hop-level attention representation in one hybrid metapath.
+
+          .. math::
+              Z_{i}^{\Phi_{p}}=\sum_{l=1}^{L} \beta_{l}^{\Phi_{p}} Z_{l}^{\Phi_{p}}
+
+        * Channel-level attention
+
+          It also can be seen as multi-head attention mechanism.
+
+          .. math::
+              \alpha_{i, \Phi_{p}}=\sigma\left[\delta \tanh \left(W Z_{i}^{\Phi_{p}}\right)\right.
+
+          Then normalize :math:`\alpha_{i, \Phi_{p}}`
+
+          .. math::
+              \beta_{i, \Phi_{p}}=\frac{\exp \left(\alpha_{i, \Phi_{p}}\right)}{\sum_{p^{\prime} \in P} \exp \left(\alpha_{\Phi_{p^{\prime}}}\right)}
+
+          Finally, we get final representation of every nodes.
+
+          .. math::
+              Z_{i}=\sum_{p \in P} \beta_{i, \Phi_{p}} Z_{i, \Phi_{p}}
+
     '''
     def __init__(self, num_edge_type, num_channels, num_layers, in_dim, hidden_dim):
         super(HSAF, self).__init__()
@@ -124,12 +234,18 @@ class HSAF(nn.Module):
         return channel_attention
 
 class HLHIA(nn.Module):
-    """
+    r"""
+        Description
+        -----------
         HLHIA: The Hop-Level Heterogeneous Information Aggregation
-        HLHIA layer record node embedding
-        in all channel level and all layer level
-        which will be used in HSAF to generate final representation
-        by attention mechanism.
+
+        The l-hop representation :math:`Z_{l}` is generated by the original node feature through a graph conv
+
+        .. math::
+           Z_{l}^{\Phi_{p}} = \sigma\left[\left(D_{(l)}^{\Phi_{p}}\right)^{-1} A_{(l)}^{\Phi_{p}} h W^{\Phi_{p}}\right]
+
+        where :math:`\Phi_{p}` is the hybrid l-hop metapath and `\mathcal{h}` is the original node feature.
+
     """
     def __init__(self, num_edge_type, num_channels, num_layers, in_dim, hidden_dim):
         super(HLHIA, self).__init__()
@@ -148,11 +264,7 @@ class HLHIA(nn.Module):
             self.gcn_list.append(GraphConv(in_feats=self.in_dim, out_feats=hidden_dim, norm='none', activation=F.relu))
         self.norm = EdgeWeightNorm(norm='right')
 
-    """
-        The number of representation in channel_attention_list
-        is num_channels*num_layers.
-        Each representation is a tensor with dimension n*out_dim
-    """
+
     def forward(self, A, h):
         layer_list = []
         for i in range(len(self.layers)):
@@ -180,11 +292,15 @@ class HLHIA(nn.Module):
         return channel_attention_list
 
 class HMAELayer(nn.Module):
-    """
+    r"""
+        Description
+        -----------
         HMAE: Hybrid Metapath Autonomous Extraction
-        HMAE layer is similar to GTLayer in GTN,
-        but the softmax operation is added to
-        hybrid adjacency matrix directly.
+
+        The method to generate l-hop hybrid adjacency matrix
+
+        .. math::
+            A_{(l)}=\Pi_{i=1}^{l} A_{i}
     """
     def __init__(self, in_channels, out_channels, first=True):
         super(HMAELayer, self).__init__()
@@ -198,10 +314,6 @@ class HMAELayer(nn.Module):
         else:
             self.conv1 = GTConv(in_channels, out_channels)
 
-    """
-        Perform a Softmax operation on each row of the extracted
-        hybrid relationship matrix.
-    """
     def softmax_norm(self, H):
         norm_H = []
         for i in range(len(H)):
@@ -227,8 +339,18 @@ class HMAELayer(nn.Module):
 
 
 class GTConv(nn.Module):
-    """
+    r"""
+        Description
+        -----------
         The method to extract hybrid relationship matrix is similar to GTN.
+
+
+        we conv each sub adjacency matrix :math:`A_{R_{i}}` to a one-hop hybrid adjacency matrix A_{1}:
+
+        .. math::
+            A_{1} = conv\left(A ; W_{c}\right)=\sum_{R_{i} \in R} w_{R_{i}} A_{R_{i}}
+
+        where :math:`R_i \subseteq \mathcal{R}`
     """
     def __init__(self, in_channels, out_channels):
         super(GTConv, self).__init__()
