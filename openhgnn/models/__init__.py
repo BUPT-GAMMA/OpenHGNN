@@ -1,6 +1,8 @@
 import importlib
 from .NEW_model import MLP_follow_model
 from .base_model import BaseModel
+import sys
+sys.path.append("..")
 
 MODEL_REGISTRY = {}
 

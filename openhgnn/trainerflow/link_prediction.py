@@ -21,12 +21,6 @@ class LinkPrediction(BaseFlow):
     def __init__(self, args):
         super(LinkPrediction, self).__init__(args)
 
-        self.args = args
-        self.model_name = args.model
-        self.device = args.device
-
-        self.task = build_task(args)
-        self.hg = self.task.get_graph().to(self.device)
         self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
@@ -50,12 +44,8 @@ class LinkPrediction(BaseFlow):
         self.test_hg = self.test_hg.to(self.device)
         self.negative_sampler = Uniform(1)
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
-        if isinstance(self.hg.ndata['h'], dict):
-            self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
-        elif isinstance(self.hg.ndata['h'], th.Tensor):
-            self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
-        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
-        return
+        self.preprocess_feature()
+
 
     def train(self):
         self.preprocess()

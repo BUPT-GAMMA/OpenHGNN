@@ -8,8 +8,9 @@ from openhgnn.models import BaseModel, register_model
 from space4hgnn.models.MLP import HGNNPostMP, HGNNPreMP
 from openhgnn.utils import get_nodes_dict
 ########### Layer ############
-def HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
-    return HeteroGeneralLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm)
+
+def HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm, **kwargs):
+    return HeteroGeneralLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm, **kwargs)
 
 
 ########### Block: multiple layers ############
@@ -17,19 +18,20 @@ def HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2
 class HGNNSkipBlock(nn.Module):
     '''Skip block for HGNN'''
 
-    def __init__(self, gnn_type, rel_names, dim_in, dim_out, num_layers, stage_type, dropout, act, has_bn, has_l2norm):
+    def __init__(self, gnn_type, rel_names, dim_in, dim_out, num_layers,
+                 stage_type, dropout, act, has_bn, has_l2norm, **kwargs):
         super(HGNNSkipBlock, self).__init__()
         self.stage_type = stage_type
         self.f = nn.ModuleList()
         if num_layers == 1:
-            self.f.append(HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm))
+            self.f.append(HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm, **kwargs))
         else:
             self.f = []
             for i in range(num_layers - 1):
                 d_in = dim_in if i == 0 else dim_out
-                self.f.append(HGNNLayer(gnn_type, rel_names, d_in, dim_out, dropout, act, has_bn, has_l2norm))
+                self.f.append(HGNNLayer(gnn_type, rel_names, d_in, dim_out, dropout, act, has_bn, has_l2norm, **kwargs))
             d_in = dim_in if num_layers == 1 else dim_out
-            self.f.append(HGNNLayer(gnn_type, rel_names, d_in, dim_out, dropout, act, has_bn, has_l2norm))
+            self.f.append(HGNNLayer(gnn_type, rel_names, d_in, dim_out, dropout, act, has_bn, has_l2norm, **kwargs))
         self.act = act
         if stage_type == 'skipsum':
             assert dim_in == dim_out, 'Sum skip must have same dim_in, dim_out'
@@ -56,12 +58,13 @@ class HGNNSkipBlock(nn.Module):
 class HGNNStackStage(nn.Module):
     '''Simple Stage that stack GNN layers'''
 
-    def __init__(self, gnn_type, rel_names, stage_type, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
+    def __init__(self, gnn_type, rel_names, stage_type, dim_in, dim_out,
+                 num_layers, skip_every, dropout, act, has_bn, has_l2norm, **kwargs):
         super(HGNNStackStage, self).__init__()
 
         for i in range(num_layers):
             d_in = dim_in if i == 0 else dim_out
-            layer = HGNNLayer(gnn_type, rel_names, d_in, dim_out, dropout, act, has_bn, has_l2norm)
+            layer = HGNNLayer(gnn_type, rel_names, d_in, dim_out, dropout, act, has_bn, has_l2norm, **kwargs)
             self.add_module('layer{}'.format(i), layer)
         self.dim_out = dim_out
         self.has_l2norm = has_l2norm
@@ -79,7 +82,7 @@ class HGNNSkipStage(nn.Module):
     ''' Stage with skip connections'''
 
     def __init__(self, gnn_type, rel_names, stage_type, dim_in, dim_out,
-                 num_layers, skip_every, dropout, act, has_bn, has_l2norm):
+                 num_layers, skip_every, dropout, act, has_bn, has_l2norm, **kwargs):
         super(HGNNSkipStage, self).__init__()
         assert num_layers % skip_every == 0, \
             'cfg.gnn.skip_every must be multiples of cfg.gnn.layer_mp' \
@@ -89,7 +92,7 @@ class HGNNSkipStage(nn.Module):
                 d_in = dim_in if i == 0 else dim_out
             elif stage_type == 'skipconcat':
                 d_in = dim_in if i == 0 else dim_in + i * dim_out
-            block = HGNNSkipBlock(gnn_type, rel_names, d_in, dim_out, skip_every, stage_type, dropout, act, has_bn, has_l2norm)
+            block = HGNNSkipBlock(gnn_type, rel_names, d_in, dim_out, skip_every, stage_type, dropout, act, has_bn, has_l2norm, **kwargs)
             self.add_module('block{}'.format(i), block)
         if stage_type == 'skipconcat':
             self.dim_out = d_in + dim_out
