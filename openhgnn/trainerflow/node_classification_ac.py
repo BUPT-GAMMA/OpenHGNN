@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from ..models import build_model
 from . import BaseFlow, register_flow
 from ..tasks import build_task
-from ..utils import EarlyStopping, get_nodes_dict
+from ..utils import EarlyStopping
 
 
 @register_flow("node_classification_ac")
