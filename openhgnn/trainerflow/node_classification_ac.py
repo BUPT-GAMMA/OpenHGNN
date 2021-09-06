@@ -6,16 +6,19 @@ import torch
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 import torch.nn.functional as F
-from ..models import build_model, HeteroFeature
+from ..models import build_model
 from . import BaseFlow, register_flow
 from ..tasks import build_task
-from ..utils import extract_embed, EarlyStopping, get_nodes_dict
+from ..utils import EarlyStopping, get_nodes_dict
 
 
 @register_flow("node_classification_ac")
 class NodeClassificationAC(BaseFlow):
-    """Node classification with attribute completion flows.
+    """
+    Node classification with attribute completion flows.
+    
     Supported Model: MAGNN_AC
+    
     Supported Dataset：IMDB
 
     The task is to classify the nodes of HIN(Heterogeneous Information Network).
