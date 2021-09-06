@@ -67,5 +67,6 @@ SUPPORTED_MODELS = {
     'GAT': 'space4hgnn.homo_models.GAT',
     'homo_GNN': 'space4hgnn.homo_models.homo_GNN',
     'relation_HGNN': 'space4hgnn.relation_models.rel_HGNN',
-    'mp_GNN': 'space4hgnn.metapath_models.mp_GNN'
+    'mp_GNN': 'space4hgnn.metapath_models.mp_GNN',
+    'KGCN': 'openhgnn.models.KGCN',
 }

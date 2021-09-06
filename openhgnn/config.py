@@ -15,7 +15,6 @@ class Config(object):
                 self.device = th.device('cuda', int(gpu))
             else:
                 print("cuda is not available, please set 'gpu' -1")
-
         try:
             conf.read(file_path)
         except:
@@ -302,6 +301,18 @@ class Config(object):
             self.isSemi = conf.getboolean("DMGI", "isSemi")
             self.isBias = conf.getboolean("DMGI", "isBias")
             self.isAttn = conf.getboolean("DMGI", "isAttn")
+        
+        elif model == 'KGCN':
+            self.weight_decay = conf.getfloat("KGCN", "weight_decay")
+            self.batch_size = conf.getint("KGCN", "batch_size")
+            self.in_dim = conf.getint('KGCN', 'in_dim')
+            self.out_dim = conf.getint('KGCN', 'out_dim')
+            self.lr = conf.getfloat("KGCN", "lr")
+            self.n_neighbor = conf.getint("KGCN", "n_neighbor")
+            self.aggregate = conf.get("KGCN", "aggregate")
+            self.n_item = conf.getint("KGCN", "n_relation")
+            self.n_user = conf.getint("KGCN", "n_user")
+            self.epoch_iter = conf.getint("KGCN", "epoch_iter")
 
     def __repr__(self):
         return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset
