@@ -32,7 +32,7 @@ class NodeClassification(BaseFlow):
         if hasattr(args, 'metric'):
             self.metric = args.metric
         else:
-            self.metric = 'acc'
+            self.metric = 'f1'
 
         self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
@@ -67,8 +67,6 @@ class NodeClassification(BaseFlow):
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
     def preprocess(self):
-        self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
-        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         if self.args.model == 'GTN':
             if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == True:
                 self.optimizer = torch.optim.Adam([{'params': self.model.gcn.parameters()},
@@ -100,6 +98,10 @@ class NodeClassification(BaseFlow):
                                                                          sampled_node_type=self.category,
                                                                          train_idx=self.train_idx, valid_idx=self.valid_idx,
                                                                          test_idx=self.test_idx)
+
+
+        self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         return
 
     def train(self):

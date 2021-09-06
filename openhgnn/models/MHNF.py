@@ -4,55 +4,9 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv, EdgeWeightNorm
-
-#from ..utils import transform_relation_graph_list
+from ..utils import transform_relation_graph_list
 from . import BaseModel, register_model
-
-def transform_relation_graph_list(hg, category, h ,identity=True):
-    r'''
-        extract subgraph :math:`G_i` from :math:`G` in which
-        only edges whose type :math:`R_i` belongs to :math:`\mathcal{R}`
-
-        Parameters
-        ----------
-            hg : dgl.heterograph
-                Input heterogeneous graph
-            category : string
-                Type of predicted nodes.
-            h : dict
-                The projecting feature of each type node.
-            identity : bool
-                If True, the identity matrix will be added to relation matrix set.
-    '''
-
-    # get target category id
-    for i, ntype in enumerate(hg.ntypes):
-        if ntype == category:
-            category_id = i
-        hg.nodes[ntype].data['h'] = h[ntype]
-    g = dgl.to_homogeneous(hg, ndata='h')
-    # find out the target node ids in g
-    loc = (g.ndata[dgl.NTYPE] == category_id)
-    category_idx = th.arange(g.num_nodes())[loc]
-
-
-    edges = g.edges()
-    etype = g.edata[dgl.ETYPE]
-    ctx = g.device
-    #g.edata['w'] = th.ones(g.num_edges(), device=ctx)
-    num_edge_type = th.max(etype).item()
-    graph_list = []
-    for i in range(num_edge_type + 1):
-        e_ids = th.nonzero(etype == i).squeeze()
-        sg = dgl.graph((edges[0][e_ids], edges[1][e_ids]), num_nodes=g.num_nodes())
-        sg.edata['w'] = th.ones(sg.num_edges(), device=ctx)
-        graph_list.append(sg)
-    if identity == True:
-        x = th.arange(0, g.num_nodes(), device=ctx)
-        sg = dgl.graph((x, x))
-        sg.edata['w'] = th.ones(g.num_nodes(), device=ctx)
-        graph_list.append(sg)
-    return graph_list, g.ndata['h'], category_idx
+from .GTN_sparse import GTConv
 
 @register_model('MHNF')
 class MHNF(BaseModel):
@@ -123,14 +77,17 @@ class MHNF(BaseModel):
     def forward(self, hg, h=None):
         with hg.local_scope():
             #Ws = []
+            hg.ndata['h'] = h
             # * =============== Extract edges in original graph ================
             if self.category_idx is None:
-                self.A, self.h, self.category_idx = transform_relation_graph_list(hg, category=self.category, h=h,
+                self.A, h, self.category_idx = transform_relation_graph_list(hg, category=self.category,
                                                         identity=self.identity)
+            else:
+                g = dgl.to_homogeneous(hg, ndata='h')
+                h = g.ndata['h']
             # g = dgl.to_homogeneous(hg, ndata='h')
             #X_ = self.gcn(g, self.h)
             A = self.A
-            h = self.h
             final_representation = self.HSAF(A, h)
             y = self.linear(final_representation)
             return {self.category: y[self.category_idx]}
@@ -233,6 +190,7 @@ class HSAF(nn.Module):
             -1)
         return channel_attention
 
+
 class HLHIA(nn.Module):
     r"""
         Description
@@ -264,7 +222,6 @@ class HLHIA(nn.Module):
             self.gcn_list.append(GraphConv(in_feats=self.in_dim, out_feats=hidden_dim, norm='none', activation=F.relu))
         self.norm = EdgeWeightNorm(norm='right')
 
-
     def forward(self, A, h):
         layer_list = []
         for i in range(len(self.layers)):
@@ -291,6 +248,7 @@ class HLHIA(nn.Module):
             channel_attention_list.append(layer_attention_list)
         return channel_attention_list
 
+
 class HMAELayer(nn.Module):
     r"""
         Description
@@ -309,10 +267,10 @@ class HMAELayer(nn.Module):
         self.first = first
         self.norm = EdgeWeightNorm(norm='right')
         if self.first == True:
-            self.conv1 = GTConv(in_channels, out_channels)
-            self.conv2 = GTConv(in_channels, out_channels)
+            self.conv1 = GTConv(in_channels, out_channels, softmax_flag=False)
+            self.conv2 = GTConv(in_channels, out_channels, softmax_flag=False)
         else:
-            self.conv1 = GTConv(in_channels, out_channels)
+            self.conv1 = GTConv(in_channels, out_channels, softmax_flag=False)
 
     def softmax_norm(self, H):
         norm_H = []
@@ -336,44 +294,3 @@ class HMAELayer(nn.Module):
             g = dgl.adj_product_graph(result_A[i], result_B[i], 'w_sum')
             H.append(g)
         return H, W, result_A
-
-
-class GTConv(nn.Module):
-    r"""
-        Description
-        -----------
-        The method to extract hybrid relationship matrix is similar to GTN.
-
-
-        we conv each sub adjacency matrix :math:`A_{R_{i}}` to a one-hop hybrid adjacency matrix A_{1}:
-
-        .. math::
-            A_{1} = conv\left(A ; W_{c}\right)=\sum_{R_{i} \in R} w_{R_{i}} A_{R_{i}}
-
-        where :math:`R_i \subseteq \mathcal{R}`
-    """
-    def __init__(self, in_channels, out_channels):
-        super(GTConv, self).__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.weight = nn.Parameter(th.Tensor(out_channels, in_channels))
-        self.bias = None
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        nn.init.normal_(self.weight, std=0.01)
-        if self.bias is not None:
-            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
-            bound = 1 / math.sqrt(fan_in)
-            nn.init.uniform_(self.bias, -bound, bound)
-
-    def forward(self, A):
-        filter = self.weight # If remove softmax
-        num_channels = filter.shape[0]
-        results = []
-        for i in range(num_channels):
-            for j, g in enumerate(A):
-                A[j].edata['w_sum'] = g.edata['w'] * filter[i][j]
-            sum_g = dgl.adj_sum_graph(A, 'w_sum')
-            results.append(sum_g)
-        return results

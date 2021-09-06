@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from . import HeteroGeneralLayer
+from .layers import HeteroGeneralLayer
 from openhgnn.models import BaseModel, register_model
 from space4hgnn.models.MLP import HGNNPostMP, HGNNPreMP
 from openhgnn.utils import get_nodes_dict
@@ -78,7 +78,8 @@ class HGNNStackStage(nn.Module):
 class HGNNSkipStage(nn.Module):
     ''' Stage with skip connections'''
 
-    def __init__(self, gnn_type, rel_names, stage_type, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
+    def __init__(self, gnn_type, rel_names, stage_type, dim_in, dim_out,
+                 num_layers, skip_every, dropout, act, has_bn, has_l2norm):
         super(HGNNSkipStage, self).__init__()
         assert num_layers % skip_every == 0, \
             'cfg.gnn.skip_every must be multiples of cfg.gnn.layer_mp' \
@@ -134,15 +135,16 @@ class relation_HGNN(BaseModel):
             HGNNStage = stage_dict[args.stage_type]
             self.hgnn = HGNNStage(gnn_type=args.gnn_type,
                                   rel_names=hg.etypes,
-                                stage_type=args.stage_type,
-                                dim_in=args.hidden_dim,
-                                dim_out=args.hidden_dim,
-                                num_layers=args.layers_gnn,
-                                skip_every=1,
-                                dropout=args.dropout,
-                                act=args.activation,
-                                has_bn=args.has_bn,
-                                has_l2norm=args.has_l2norm)
+                                  stage_type=args.stage_type,
+                                  dim_in=args.hidden_dim,
+                                  dim_out=args.hidden_dim,
+                                  num_layers=args.layers_gnn,
+                                  skip_every=1,
+                                  dropout=args.dropout,
+                                  act=args.activation,
+                                  has_bn=args.has_bn,
+                                  has_l2norm=args.has_l2norm,
+                                  macro_func=args.macro_func)
         #     d_in = self.mp.dim_out
 
         gnn_out_dim = self.hgnn.dim_out

@@ -172,10 +172,19 @@ def ccorr(a, b):
 
 
 def transform_relation_graph_list(hg, category, identity=True):
-    '''
-    input a heterogensous graph
-    return graph list where every graph just contains a relation.
-    '''
+    r"""
+        extract subgraph :math:`G_i` from :math:`G` in which
+        only edges whose type :math:`R_i` belongs to :math:`\mathcal{R}`
+
+        Parameters
+        ----------
+            hg : dgl.heterograph
+                Input heterogeneous graph
+            category : string
+                Type of predicted nodes.
+            identity : bool
+                If True, the identity matrix will be added to relation matrix set.
+    """
 
     # get target category id
     for i, ntype in enumerate(hg.ntypes):
