@@ -8,7 +8,7 @@
 - Clone the Openhgnn-DGL
 
   ```bash
-  python main.py -m MAGNN_AC -t node_classification -d imdb4MAGNN -g 0
+  python main.py -m MAGNN_AC -t node_classification_ac -d imdb4MAGNN -g 0
   ```
 
   If you do not have gpu, set -gpu -1.
