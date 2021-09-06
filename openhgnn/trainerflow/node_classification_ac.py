@@ -6,10 +6,10 @@ import torch
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 import torch.nn.functional as F
-from ..models import build_model
+from ..models import build_model, HeteroFeature
 from . import BaseFlow, register_flow
 from ..tasks import build_task
-from ..utils import extract_embed, EarlyStopping
+from ..utils import extract_embed, EarlyStopping, get_nodes_dict
 
 
 @register_flow("node_classification_ac")
@@ -80,7 +80,7 @@ class NodeClassificationAC(BaseFlow):
 
     def preprocess(self):
         r'''
-        Parameters Definition
+        Parameters
         ----------
         ntypes: list
             node types of the dataset
@@ -93,6 +93,8 @@ class NodeClassificationAC(BaseFlow):
         feat_drop_idx: list
             nodes that drop feature
         '''
+        self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         self.ntypes = list(self.model.in_feats.keys())
         self.in_dim = []
         self.adj = {}
@@ -178,7 +180,8 @@ class NodeClassificationAC(BaseFlow):
             
             #Combination with HIN model, e.g. MAGNN
             self.model.train()
-            logits = self.model(self.hg)[self.category]
+            h_dict = self.input_feature()
+            logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx],
                             self.labels[self.train_idx])
         
@@ -195,7 +198,8 @@ class NodeClassificationAC(BaseFlow):
     def _test_step(self, split=None, logits=None):
         self.model.eval()
         with torch.no_grad():
-            logits = logits if logits else self.model(self.hg)[self.category]
+            h_dict = self.input_feature()
+            logits = logits if logits else self.model(self.hg, h_dict)[self.category]
             if split == "train":
                 mask = self.train_idx
             elif split == "val":
