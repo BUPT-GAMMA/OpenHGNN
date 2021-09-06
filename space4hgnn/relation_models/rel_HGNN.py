@@ -3,9 +3,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from . import HeteroGeneralLayer
+from .layers import HeteroGeneralLayer
 from openhgnn.models import BaseModel, register_model
-from openhgnn.layers.HeteroLinear import HeteroMLPLayer
+from space4hgnn.models.MLP import HGNNPostMP, HGNNPreMP
 from openhgnn.utils import get_nodes_dict
 ########### Layer ############
 def HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm):
@@ -38,14 +38,17 @@ class HGNNSkipBlock(nn.Module):
         h_0 = h
         for layer in self.f:
             h = layer(g, h)
-        if self.stage_type == 'skipsum':
-            h = h + h_0
-        elif self.stage_type == 'skipconcat':
-            h = torch.cat((h_0, h), 1)
-        else:
-            raise ValueError('stage_type must in [skipsum, skipconcat]')
-        h = self.act(h)
-        return h
+        out_h = {}
+        for key, value in h_0.items():
+
+            if self.stage_type == 'skipsum':
+                out_h[key] = self.act(h[key] + h_0[key])
+            elif self.stage_type == 'skipconcat':
+                out_h[key] = self.act(torch.cat((h[key], h_0[key]), 1))
+            else:
+                raise ValueError('stage_type must in [skipsum, skipconcat]')
+
+        return out_h
 
 
 ########### Stage: NN except start and head ############
@@ -75,7 +78,8 @@ class HGNNStackStage(nn.Module):
 class HGNNSkipStage(nn.Module):
     ''' Stage with skip connections'''
 
-    def __init__(self, gnn_type, rel_names, stage_type, dim_in, dim_out, num_layers, skip_every, dropout, act, has_bn, has_l2norm):
+    def __init__(self, gnn_type, rel_names, stage_type, dim_in, dim_out,
+                 num_layers, skip_every, dropout, act, has_bn, has_l2norm):
         super(HGNNSkipStage, self).__init__()
         assert num_layers % skip_every == 0, \
             'cfg.gnn.skip_every must be multiples of cfg.gnn.layer_mp' \
@@ -108,32 +112,7 @@ stage_dict = {
     'skipconcat': HGNNSkipStage,
 }
 
-#stage_dict = {**register.stage_dict, **stage_dict}
 
-def HGNNPreMP(args, hg):
-    num_pre_mp = args.layers_pre_mp
-    if num_pre_mp > 0:
-        linear_dict = {}
-        for ntype in hg.ntypes:
-            #in_dim = hg.nodes[ntype].data['h'].shape[1]
-            in_dim = args.hidden_dim
-            linear_dict[ntype] = [in_dim]
-            for _ in range(num_pre_mp):
-                linear_dict[ntype].append(args.hidden_dim)
-    return HeteroMLPLayer(linear_dict, act=args.activation, dropout=args.dropout,
-                          has_l2norm=args.has_l2norm, has_bn=args.has_bn)
-
-def HGNNPostMP(args, hg):
-    num_post_mp = args.layers_post_mp
-    if num_post_mp > 0:
-        linear_dict = {}
-        for ntype in hg.ntypes:
-            linear_dict[ntype] = [args.hidden_dim]
-            for _ in range(num_post_mp-1):
-                linear_dict[ntype].append(args.hidden_dim)
-            linear_dict[ntype].append(args.out_dim)
-    return HeteroMLPLayer(linear_dict, act=args.activation, dropout=args.dropout,
-                          has_l2norm=args.has_l2norm, has_bn=args.has_bn)
 ########### Model: start + stage + head ############
 
 @register_model('relation_HGNN')
@@ -141,32 +120,35 @@ class relation_HGNN(BaseModel):
     '''General homogeneous GNN model'''
     @classmethod
     def build_model_from_args(cls, args, hg):
-        return cls(args, hg)
+        out_node_type = args.out_node_type
+        return cls(args, hg, out_node_type)
 
-    def __init__(self, args, hg, **kwargs):
+    def __init__(self, args, hg, out_node_type, **kwargs):
         """
         """
         super(relation_HGNN, self).__init__()
-
-        if args.layers_pre_mp - 1> 0:
-            self.pre_mp = HGNNPreMP(args, hg)
+        self.out_node_type = out_node_type
+        if args.layers_pre_mp - 1 > 0:
+            self.pre_mp = HGNNPreMP(args, hg.ntypes, args.layers_pre_mp, args.hidden_dim, args.hidden_dim)
 
         if args.layers_gnn > 0:
             HGNNStage = stage_dict[args.stage_type]
             self.hgnn = HGNNStage(gnn_type=args.gnn_type,
                                   rel_names=hg.etypes,
-                                stage_type=args.stage_type,
-                                dim_in=args.hidden_dim,
-                                dim_out=args.hidden_dim,
-                                num_layers=args.layers_gnn,
-                                skip_every=1,
-                                dropout=args.dropout,
-                                act=args.activation,
-                                has_bn=args.has_bn,
-                                has_l2norm=args.has_l2norm)
+                                  stage_type=args.stage_type,
+                                  dim_in=args.hidden_dim,
+                                  dim_out=args.hidden_dim,
+                                  num_layers=args.layers_gnn,
+                                  skip_every=1,
+                                  dropout=args.dropout,
+                                  act=args.activation,
+                                  has_bn=args.has_bn,
+                                  has_l2norm=args.has_l2norm,
+                                  macro_func=args.macro_func)
         #     d_in = self.mp.dim_out
 
-        self.post_mp = HGNNPostMP(args, hg)
+        gnn_out_dim = self.hgnn.dim_out
+        self.post_mp = HGNNPostMP(args, self.out_node_type, args.layers_post_mp, gnn_out_dim, args.out_dim)
         #
         # self.apply(init_weights)
 
@@ -177,12 +159,9 @@ class relation_HGNN(BaseModel):
             if hasattr(self, 'hgnn'):
                 h_dict = self.hgnn(hg, h_dict)
             if hasattr(self, 'post_mp'):
-                out_h = self.post_mp(h_dict)
+                out_h = {}
+                for key, value in h_dict.items():
+                    if key in self.out_node_type:
+                        out_h[key] = value
+                out_h = self.post_mp(out_h)
         return out_h
-
-    def h2dict(self, h, hdict):
-        pre = 0
-        for i, value in hdict.items():
-            hdict[i] = h[pre:value.shape[0]+pre]
-            pre += value.shape[0]
-        return hdict

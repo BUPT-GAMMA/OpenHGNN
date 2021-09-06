@@ -8,18 +8,21 @@ import torch
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
 from ..tasks import build_task
+from ..utils import extract_embed, get_nodes_dict
+from collections.abc import Mapping
 from ..models import build_model
+from ..layers.EmbedLayer import HeteroEmbedLayer
 from ..layers.HeteroLinear import HeteroFeature
-from dgl.dataloading.negative_sampler import Uniform
-from ..utils import extract_embed, EarlyStopping, get_nodes_dict
+from ..sampler.negative_sampler import Uniform_exclusive
 
-
-@register_flow("link_prediction")
-class LinkPrediction(BaseFlow):
-    """Link Prediction flows."""
+@register_flow("recommendation")
+class Recommendation(BaseFlow):
+    """
+    Recommendation flows.
+    """
 
     def __init__(self, args):
-        super(LinkPrediction, self).__init__(args)
+        super(Recommendation, self).__init__(args)
 
         self.args = args
         self.model_name = args.model
@@ -31,7 +34,6 @@ class LinkPrediction(BaseFlow):
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
 
-        self.args.out_node_type = self.task.dataset.ntypes
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
@@ -48,8 +50,7 @@ class LinkPrediction(BaseFlow):
         self.train_hg = self.train_hg.to(self.device)
         self.val_hg = self.val_hg.to(self.device)
         self.test_hg = self.test_hg.to(self.device)
-        self.negative_sampler = Uniform(1)
-        self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
+        self.negative_graph = self.task.dataset.construct_negative_graph(self.train_hg).to(self.device)
         if isinstance(self.hg.ndata['h'], dict):
             self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
         elif isinstance(self.hg.ndata['h'], th.Tensor):
@@ -60,8 +61,10 @@ class LinkPrediction(BaseFlow):
     def train(self):
         self.preprocess()
         epoch_iter = tqdm(range(self.max_epoch))
+        patience = 0
+        best_score = 100
         best_model = copy.deepcopy(self.model)
-        stopper = EarlyStopping(self.args.patience, self._checkpoint)
+
         for epoch in tqdm(range(self.max_epoch), ncols=80):
             if self.args.mini_batch_flag:
                 loss = self._mini_train_step()
@@ -70,25 +73,19 @@ class LinkPrediction(BaseFlow):
             if epoch % 2 == 0:
                 metric = self._test_step()
                 epoch_iter.set_description(
-                    f"Epoch: {epoch:03d}, roc_auc: {metric:.4f}, Loss:{loss:.4f}"
+                    f"Epoch: {epoch:03d}, NDCG: {metric:.4f}, Loss:{loss:.4f}"
                 )
-                early_stop = stopper.step_score(metric, self.model)
-                if early_stop:
-                    print('Early Stop!\tEpoch:' + str(epoch))
-                    break
-        print(f"Valid_score_ = {stopper.best_score: .4f}")
-        stopper.load_model(self.model)
-
-
-        ############ TEST SCORE #########
-        if self.args.dataset[:4] == 'HGBl':
-            self.model.eval()
-            with torch.no_grad():
-                h_dict = self.input_feature()
-                embedding = self.model(self.hg, h_dict)
-                score = th.sigmoid(self.ScorePredictor(self.test_hg, embedding))
-                self.task.dataset.save_results(logits=score, file_path=self.args.HGB_results_path)
-            return
+                if metric <= best_score:
+                    best_score = metric
+                    best_model = copy.deepcopy(self.model)
+                    patience = 0
+                else:
+                    patience += 1
+                    if patience == self.patience:
+                        epoch_iter.close()
+                        break
+        print(f"Valid mrr = {best_score: .4f}")
+        self.model = best_model
         test_mrr = self._test_step(split="test")
         val_mrr = self._test_step(split="val")
         print(f"Test mrr = {test_mrr:.4f}")
@@ -113,49 +110,30 @@ class LinkPrediction(BaseFlow):
         return all_loss
 
     def loss_calculation(self, positive_graph, negative_graph, embedding):
-        p_score = self.ScorePredictor(positive_graph, embedding)
+        p_score = self.ScorePredictor(positive_graph, embedding).repeat_interleave(99)
         n_score = self.ScorePredictor(negative_graph, embedding)
-
-        p_label = th.ones(len(p_score), device=self.device)
-        n_label = th.zeros(len(n_score), device=self.device)
-        loss = F.binary_cross_entropy_with_logits(th.cat((p_score, n_score)), th.cat((p_label, n_label)))
+        label = th.ones(len(n_score), device=self.device)
+        loss = F.binary_cross_entropy_with_logits(p_score - n_score, label)
         return loss
 
-    def ScorePredictor(self, edge_subgraph, x):
+    def ScorePredictor(self, hg, x):
+        edge_subgraph = hg[self.target_link]
         with edge_subgraph.local_scope():
-
             for ntype in edge_subgraph.ntypes:
                 edge_subgraph.nodes[ntype].data['x'] = x[ntype]
-            for etype in edge_subgraph.canonical_etypes:
-                edge_subgraph.apply_edges(
-                    dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
+            edge_subgraph.apply_edges(
+                dgl.function.u_dot_v('x', 'x', 'score'))
             score = edge_subgraph.edata['score']
-            if isinstance(score, dict):
-                result = []
-                for _, value in score.items():
-                    result.append(value)
-                score = th.cat(result)
             return score.squeeze()
 
     def regularization_loss(self, embedding):
         return th.mean(embedding.pow(2)) + th.mean(self.r_embedding.pow(2))
 
-    def construct_negative_graph(self, hg):
-        e_dict = {
-            etype: hg.edges(etype=etype, form='eid')
-            for etype in hg.canonical_etypes}
-        neg_srcdst = self.negative_sampler(hg, e_dict)
-        neg_pair_graph = dgl.heterograph(neg_srcdst,
-                                         {ntype: hg.number_of_nodes(ntype) for ntype in hg.ntypes})
-        return neg_pair_graph
-
     def _full_train_setp(self):
         self.model.train()
         h_dict = self.input_feature()
         embedding = self.model(self.train_hg, h_dict)
-        negative_graph = self.construct_negative_graph(self.positive_graph)
-        loss = self.loss_calculation(self.positive_graph, negative_graph, embedding)
-
+        loss = self.loss_calculation(self.train_hg, self.negative_graph, embedding)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -166,14 +144,18 @@ class LinkPrediction(BaseFlow):
         self.model.eval()
         with th.no_grad():
             h_dict = self.input_feature()
-            embedding = self.model(self.hg, h_dict)
-            negative_graph = self.construct_negative_graph(self.val_hg)
-            p_score = th.sigmoid(self.ScorePredictor(self.val_hg, embedding))
-            n_score = th.sigmoid(self.ScorePredictor(negative_graph, embedding))
-            p_label = th.ones(len(p_score), device=self.device)
-            n_label = th.zeros(len(n_score), device=self.device)
+            embedding = self.model(self.train_hg, h_dict)
 
-        from sklearn.metrics import f1_score, auc, roc_auc_score
-        metric = roc_auc_score(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu() )
+            p_score = self.ScorePredictor(self.pos_test_graph, embedding).unsqueeze(0)
+            n_score = self.ScorePredictor(self.neg_test_graph, embedding)
+            n_score = th.reshape(n_score, (99, -1))
+            matrix = th.cat((p_score, n_score), 0).t().cpu().numpy()
+
+            y_true = np.zeros_like(matrix)
+            y_true[:, 0] = 1
+            # _, indices = torch.sort(matrix, dim=0, descending=True)
+            # rank = th.nonzero(indices == 0, as_tuple=True)[0]
+            from sklearn.metrics import ndcg_score
+            metric = ndcg_score(y_true, matrix, k=10)
 
         return metric

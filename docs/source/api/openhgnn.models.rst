@@ -157,6 +157,14 @@ models.NSHE module
    :undoc-members:
    :show-inheritance:
 
+models.MHNF module
+---------------------------
+
+.. automodule:: models.MHNF
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 models.RGCN module
 ---------------------------
 

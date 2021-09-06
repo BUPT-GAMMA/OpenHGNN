@@ -39,7 +39,7 @@ class HAN(BaseModel):
                             mps.append([etype, dst_e])
 
         return cls(meta_paths=mps, category=args.category,
-                    in_size=args.in_dim, hidden_size=args.hidden_dim,
+                    in_size=args.hidden_dim, hidden_size=args.hidden_dim,
                     out_size=args.out_dim,
                     num_heads=args.num_heads,
                     dropout=args.dropout)
@@ -54,9 +54,9 @@ class HAN(BaseModel):
                                         hidden_size, num_heads[l], dropout))
         self.linear = nn.Linear(hidden_size * num_heads[-1], out_size)
 
-    def forward(self, g, h=None):
+    def forward(self, g, h_dict):
 
-        h = g.nodes[self.category].data['h']
+        h = h_dict[self.category]
         for gnn in self.layers:
             h = gnn(g, h)
 

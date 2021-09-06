@@ -13,6 +13,7 @@ class Recommendation(BaseTask):
         self.n_dataset = args.dataset
         self.dataset = build_dataset(args.dataset, 'recommendation')
         # self.evaluator = Evaluator()
+        self.train_hg, self.val_hg, self.test_hg = self.dataset.get_idx()
         self.evaluator = Evaluator(args.seed)
 
     def get_graph(self):
@@ -33,11 +34,8 @@ class Recommendation(BaseTask):
         if name == 'ndcg':
             return self.evaluator.ndcg(y_true, y_score)
 
-    def get_batch(self):
-        return self.dataset.train_batch, self.dataset.test_batch
-
     def get_idx(self):
-        return self.train_idx, self.val_idx, self.test_idx
+        return self.train_hg, self.val_hg, self.test_hg
 
     def get_labels(self):
         return self.dataset.get_labels()

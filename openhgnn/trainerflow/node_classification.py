@@ -41,8 +41,11 @@ class NodeClassification(BaseFlow):
             print('Modify the out_dim with num_classes')
             args.out_dim = self.num_classes
         self.args.has_feature = self.task.dataset.has_feature
+
         self.args.category = self.task.dataset.category
         self.category = self.args.category
+        self.args.out_node_type = [self.category]
+
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
@@ -64,8 +67,6 @@ class NodeClassification(BaseFlow):
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
     def preprocess(self):
-        self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
-        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         if self.args.model == 'GTN':
             if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == True:
                 self.optimizer = torch.optim.Adam([{'params': self.model.gcn.parameters()},
@@ -97,6 +98,10 @@ class NodeClassification(BaseFlow):
                                                                          sampled_node_type=self.category,
                                                                          train_idx=self.train_idx, valid_idx=self.valid_idx,
                                                                          test_idx=self.test_idx)
+
+
+        self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         return
 
     def train(self):
@@ -120,13 +125,12 @@ class NodeClassification(BaseFlow):
 
                 printInfo(self.metric, epoch, train_score, train_loss, val_score, val_loss)
 
-                early_stop = stopper.step(val_loss, val_score, self.model)
+                early_stop = stopper.loss_step(val_loss, self.model)
                 if early_stop:
                     print('Early Stop!\tEpoch:' + str(epoch))
                     break
 
-
-        print(f"Valid_score_{self.metric} = {stopper.best_score: .4f}, Min_loss = {stopper.best_loss: .4f}")
+        print(f"Valid_score_{self.metric} = Min_loss = {stopper.best_loss: .4f}")
         stopper.load_model(self.model)
 
         ############ TEST SCORE #########

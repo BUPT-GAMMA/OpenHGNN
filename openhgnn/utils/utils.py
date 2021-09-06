@@ -61,7 +61,7 @@ class EarlyStopping(object):
             self.counter = 0
         return self.early_stop
 
-    def step_value(self, score, model):
+    def step_score(self, score, model):
         if self.best_score is None:
             self.best_score = score
             self.save_model(model)
@@ -172,10 +172,19 @@ def ccorr(a, b):
 
 
 def transform_relation_graph_list(hg, category, identity=True):
-    '''
-    input a heterogensous graph
-    return graph list where every graph just contains a relation.
-    '''
+    r"""
+        extract subgraph :math:`G_i` from :math:`G` in which
+        only edges whose type :math:`R_i` belongs to :math:`\mathcal{R}`
+
+        Parameters
+        ----------
+            hg : dgl.heterograph
+                Input heterogeneous graph
+            category : string
+                Type of predicted nodes.
+            identity : bool
+                If True, the identity matrix will be added to relation matrix set.
+    """
 
     # get target category id
     for i, ntype in enumerate(hg.ntypes):

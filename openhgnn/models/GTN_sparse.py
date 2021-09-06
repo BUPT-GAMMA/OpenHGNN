@@ -12,16 +12,17 @@ from . import BaseModel, register_model
 class GTN(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
-        if args.identity == True:
+        if args.identity:
             num_edge_type = len(hg.canonical_etypes) + 1
         else:
             num_edge_type = len(hg.canonical_etypes)
         # add self-loop edge
         return cls(num_edge_type=num_edge_type, num_channels=args.num_channels,
-                    in_dim=args.in_dim, hidden_dim=args.hidden_dim, num_class=args.out_dim,
-                    num_layers=args.num_layers, category=args.category, norm=args.norm_emd_flag, identity=args.identity)
+                   in_dim=args.hidden_dim, hidden_dim=args.hidden_dim, num_class=args.out_dim,
+                   num_layers=args.num_layers, category=args.category, norm=args.norm_emd_flag, identity=args.identity)
 
-    def __init__(self, num_edge_type, num_channels, in_dim, hidden_dim, num_class, num_layers, category, norm, identity):
+    def __init__(self, num_edge_type, num_channels, in_dim, hidden_dim, num_class, num_layers, category, norm,
+                 identity):
         super(GTN, self).__init__()
         self.num_edge_type = num_edge_type
         self.num_channels = num_channels
@@ -57,18 +58,18 @@ class GTN(BaseModel):
             norm_H.append(g)
         return norm_H
 
-
     def forward(self, hg, h):
         with hg.local_scope():
             hg.ndata['h'] = h
             # * =============== Extract edges in original graph ================
             if self.category_idx is None:
-                self.A, self.h, self.category_idx = transform_relation_graph_list(hg, category=self.category,
-                                                        identity=self.identity)
-            # g = dgl.to_homogeneous(hg, ndata='h')
-            #X_ = self.gcn(g, self.h)
+                self.A, h, self.category_idx = transform_relation_graph_list(hg, category=self.category,
+                                                                             identity=self.identity)
+            else:
+                g = dgl.to_homogeneous(hg, ndata='h')
+                h = g.ndata['h']
+            # X_ = self.gcn(g, self.h)
             A = self.A
-            h = self.h
             # * =============== Get new graph structure ================
             for i in range(self.num_layers):
                 if i == 0:
@@ -77,7 +78,7 @@ class GTN(BaseModel):
                     H, W = self.layers[i](A, H)
                 if self.is_norm == True:
                     H = self.normalization(H)
-                #Ws.append(W)
+                # Ws.append(W)
             # * =============== GCN Encoder ================
             for i in range(self.num_channels):
                 g = dgl.remove_self_loop(H[i])
@@ -102,14 +103,14 @@ class GTLayer(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.first = first
-        if self.first == True:
+        if self.first:
             self.conv1 = GTConv(in_channels, out_channels)
             self.conv2 = GTConv(in_channels, out_channels)
         else:
             self.conv1 = GTConv(in_channels, out_channels)
 
     def forward(self, A, H_=None):
-        if self.first == True:
+        if self.first:
             result_A = self.conv1(A)
             result_B = self.conv2(A)
             W = [(F.softmax(self.conv1.weight, dim=1)).detach(), (F.softmax(self.conv2.weight, dim=1)).detach()]
@@ -125,29 +126,41 @@ class GTLayer(nn.Module):
 
 
 class GTConv(nn.Module):
+    r"""
+        Description
+        -----------
+        The method to extract hybrid relationship matrix is similar to GTN.
 
-    def __init__(self, in_channels, out_channels):
+
+        we conv each sub adjacency matrix :math:`A_{R_{i}}` to a one-hop hybrid adjacency matrix A_{1}:
+
+        .. math::
+            A_{1} = conv\left(A ; W_{c}\right)=\sum_{R_{i} \in R} w_{R_{i}} A_{R_{i}}
+
+        where :math:`R_i \subseteq \mathcal{R}`
+    """
+
+    def __init__(self, in_channels, out_channels, softmax_flag=True):
         super(GTConv, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.weight = nn.Parameter(th.Tensor(out_channels, in_channels))
-        self.bias = None
+        self.softmax_flag = softmax_flag
         self.reset_parameters()
 
     def reset_parameters(self):
         nn.init.normal_(self.weight, std=0.01)
-        if self.bias is not None:
-            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
-            bound = 1 / math.sqrt(fan_in)
-            nn.init.uniform_(self.bias, -bound, bound)
 
     def forward(self, A):
-        filter = F.softmax(self.weight, dim=1)
-        num_channels = filter.shape[0]
+        if self.softmax_flag:
+            Filter = F.softmax(self.weight, dim=1)
+        else:
+            Filter = self.weight
+        num_channels = Filter.shape[0]
         results = []
         for i in range(num_channels):
             for j, g in enumerate(A):
-                A[j].edata['w_sum'] = g.edata['w'] * filter[i][j]
+                A[j].edata['w_sum'] = g.edata['w'] * Filter[i][j]
             sum_g = dgl.adj_sum_graph(A, 'w_sum')
             results.append(sum_g)
         return results
