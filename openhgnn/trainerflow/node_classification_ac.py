@@ -93,8 +93,6 @@ class NodeClassificationAC(BaseFlow):
         feat_drop_idx: list
             nodes that drop feature
         '''
-        self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
-        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         self.ntypes = list(self.model.in_feats.keys())
         self.in_dim = []
         self.adj = {}
@@ -180,8 +178,7 @@ class NodeClassificationAC(BaseFlow):
             
             #Combination with HIN model, e.g. MAGNN
             self.model.train()
-            h_dict = self.input_feature()
-            logits = self.model(self.hg, h_dict)[self.category]
+            logits = self.model(self.hg)[self.category]
         loss = self.loss_fn(logits[self.train_idx],
                             self.labels[self.train_idx])
         
@@ -198,8 +195,7 @@ class NodeClassificationAC(BaseFlow):
     def _test_step(self, split=None, logits=None):
         self.model.eval()
         with torch.no_grad():
-            h_dict = self.input_feature()
-            logits = logits if logits else self.model(self.hg, h_dict)[self.category]
+            logits = logits if logits else self.model(self.hg)[self.category]
             if split == "train":
                 mask = self.train_idx
             elif split == "val":
