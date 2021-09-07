@@ -227,15 +227,27 @@ class HeteroFeature(nn.Module):
 
         Returns
         -------
-        h_dict : dict
+        dict [str, th.Tensor]
             The output feature dictionary of feature.
         """
-        h_dict = {}
+        out_dict = {}
         for ntype, _ in self.n_nodes_dict.items():
             if self.h_dict.get(ntype) is None:
-                h_dict[ntype] = self.embed_dict[ntype]
+                out_dict[ntype] = self.embed_dict[ntype]
         if self.need_trans:
-            h_dict.update(self.hetero_linear(self.h_dict))
+            out_dict.update(self.hetero_linear(self.h_dict))
         else:
-            h_dict.update(self.h_dict)
-        return h_dict
+            out_dict.update(self.h_dict)
+        return out_dict
+
+    def forward_nodes(self, nodes_dict):
+        out_feature = {}
+        for ntype, nid in nodes_dict.items():
+            if self.h_dict.get(ntype) is None:
+                out_feature[ntype] = self.embed_dict[ntype][nid]
+            else:
+                if self.need_trans:
+                    out_feature[ntype] = self.hetero_linear(self.h_dict)[ntype][nid]
+                else:
+                    out_feature[ntype] = self.h_dict[ntype][nid]
+        return out_feature

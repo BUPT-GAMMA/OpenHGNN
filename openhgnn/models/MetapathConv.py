@@ -18,6 +18,6 @@ class MetapathConv(nn.Module):
         for i, meta_path in enumerate(self.meta_paths):
             new_g = g_list[meta_path]
             semantic_embeddings.append(self.mods[i](new_g, h).flatten(1))
-        semantic_embeddings = th.stack(semantic_embeddings, dim=1)  # (N, M, D * K)
+        #semantic_embeddings = th.stack(semantic_embeddings, dim=1)  # (N, M, D * K)
 
         return self.SemanticConv(semantic_embeddings)  # (N, D * K)

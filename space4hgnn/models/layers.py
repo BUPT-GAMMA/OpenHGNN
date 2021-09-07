@@ -1,10 +1,54 @@
+import dgl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import dgl
+from openhgnn.models.MetapathConv import MetapathConv
+from openhgnn.models.macro_layer.SemanticConv import SemanticAttention
 
-## General classes
+
+class MPConv(nn.Module):
+    def __init__(self, name, dim_in, dim_out, bias=False, **kwargs):
+        super(MPConv, self).__init__()
+        macro_func = kwargs['macro_func']
+        meta_paths = kwargs['meta_paths']
+        if macro_func == 'attention':
+            macro_func = SemanticAttention(dim_out)
+        elif macro_func == 'sum':
+            macro_func = Aggr_sum
+        elif macro_func == 'mean':
+            macro_func = Aggr_mean
+        elif macro_func == 'max':
+            macro_func = Aggr_max
+        self.model = MetapathConv(
+            meta_paths,
+            [homo_layer_dict[name](dim_in, dim_out, bias=bias)
+            #[dgl.nn.pytorch.GraphConv(dim_in, dim_out, bias=bias)
+            for _ in meta_paths],
+            macro_func
+        )
+        self.meta_paths = meta_paths
+
+    def forward(self, mp_g_list, h):
+        h = self.model(mp_g_list, h)
+        return h
+
+
+def Aggr_sum(z):
+    z = torch.stack(z, dim=1)
+    return z.sum(1)
+
+
+def Aggr_max(z):
+    z = torch.stack(z, dim=1)
+    return z.max(1)
+
+
+def Aggr_mean(z):
+    z = torch.stack(z, dim=1)
+    return z.mean(1)
+
+
 class GeneralLayer(nn.Module):
     '''General wrapper for layers'''
 
@@ -12,8 +56,12 @@ class GeneralLayer(nn.Module):
                  has_l2norm=False, **kwargs):
         super(GeneralLayer, self).__init__()
         self.has_l2norm = has_l2norm
-        self.layer = layer_dict[name](dim_in, dim_out,
-                                      bias=not has_bn, **kwargs)
+        if kwargs.get('meta_paths') is not None:
+            self.layer = MPConv(name, dim_in, dim_out,
+                                          bias=not has_bn, **kwargs)
+        else:
+            self.layer = homo_layer_dict[name](dim_in, dim_out,
+                                          bias=not has_bn, **kwargs)
         layer_wrapper = []
         if has_bn:
             layer_wrapper.append(nn.BatchNorm1d(dim_out))
@@ -97,7 +145,7 @@ class BatchNorm1dNode(nn.Module):
 class GCNConv(nn.Module):
     def __init__(self, dim_in, dim_out, bias=False, **kwargs):
         super(GCNConv, self).__init__()
-        self.model = dgl.nn.pytorch.GraphConv(dim_in, dim_out, bias=bias)
+        self.model = dgl.nn.pytorch.GraphConv(dim_in, dim_out, bias=bias, allow_zero_in_degree=True)
 
     def forward(self, g, h):
         h = self.model(g, h)
@@ -109,15 +157,15 @@ class SAGEConv(nn.Module):
         super(SAGEConv, self).__init__()
         self.model = dgl.nn.pytorch.SAGEConv(dim_in, dim_out, aggregator_type='mean', bias=bias)
 
-    def forward(self, batch):
-        batch.node_feature = self.model(batch.node_feature, batch.edge_index)
-        return batch
+    def forward(self, g, h):
+        h = self.model(g, h)
+        return h
 
 
 class GATConv(nn.Module):
     def __init__(self, dim_in, dim_out, bias=False, **kwargs):
         super(GATConv, self).__init__()
-        self.model = dgl.nn.pytorch.GATConv(dim_in, dim_out, num_heads=1, bias=bias)
+        self.model = dgl.nn.pytorch.GATConv(dim_in, dim_out, num_heads=1, bias=bias, allow_zero_in_degree=True)
 
     def forward(self, g, h):
         # Note, falatten
@@ -128,67 +176,30 @@ class GATConv(nn.Module):
 class GINConv(nn.Module):
     def __init__(self, dim_in, dim_out, bias=False, **kwargs):
         super(GINConv, self).__init__()
-        gin_nn = nn.Sequential(nn.Linear(dim_in, dim_out), nn.ReLU(),
+        lin = nn.Sequential(nn.Linear(dim_in, dim_out, bias), nn.ReLU(),
                                nn.Linear(dim_out, dim_out))
-        self.model = pyg.nn.GINConv(gin_nn)
+        self.model = dgl.nn.pytorch.GINConv(lin, 'max')
 
-    def forward(self, batch):
-        batch.node_feature = self.model(batch.node_feature, batch.edge_index)
-        return batch
+    def forward(self, g, h):
+        h = self.model(g, h)
+        return h
 
 
-class SplineConv(nn.Module):
+class APPNPConv(nn.Module):
     def __init__(self, dim_in, dim_out, bias=False, **kwargs):
-        super(SplineConv, self).__init__()
-        self.model = pyg.nn.SplineConv(dim_in, dim_out,
-                                       dim=1, kernel_size=2, bias=bias)
-
-    def forward(self, batch):
-        batch.node_feature = self.model(batch.node_feature, batch.edge_index,
-                                        batch.edge_feature)
-        return batch
-
-
-class GeneralConv(nn.Module):
-    def __init__(self, dim_in, dim_out, bias=False, **kwargs):
-        super(GeneralConv, self).__init__()
-        self.model = GeneralConvLayer(dim_in, dim_out, bias=bias)
-
-    def forward(self, batch):
-        batch.node_feature = self.model(batch.node_feature, batch.edge_index)
-        return batch
+        super(APPNPConv, self).__init__()
+        self.model = dgl.nn.pytorch.APPNPConv(k=3, alpha=0.5)
+        self.lin = nn.Linear(dim_in, dim_out, bias, )
+    def forward(self, g, h):
+        h = self.model(g, h)
+        h = self.lin(h)
+        return h
 
 
-class GeneralEdgeConv(nn.Module):
-    def __init__(self, dim_in, dim_out, bias=False, **kwargs):
-        super(GeneralEdgeConv, self).__init__()
-        self.model = GeneralEdgeConvLayer(dim_in, dim_out, bias=bias)
-
-    def forward(self, batch):
-        batch.node_feature = self.model(batch.node_feature, batch.edge_index,
-                                        edge_feature=batch.edge_feature)
-        return batch
-
-
-class GeneralSampleEdgeConv(nn.Module):
-    def __init__(self, dim_in, dim_out, bias=False, **kwargs):
-        super(GeneralSampleEdgeConv, self).__init__()
-        self.model = GeneralEdgeConvLayer(dim_in, dim_out, bias=bias)
-
-    def forward(self, batch):
-        edge_mask = torch.rand(batch.edge_index.shape[1]) < cfg.gnn.keep_edge
-        edge_index = batch.edge_index[:, edge_mask]
-        edge_feature = batch.edge_feature[edge_mask, :]
-        batch.node_feature = self.model(batch.node_feature, edge_index,
-                                        edge_feature=edge_feature)
-        return batch
-
-
-layer_dict = {
+homo_layer_dict = {
     'gcnconv': GCNConv,
     'sageconv': SAGEConv,
     'gatconv': GATConv,
-    'splineconv': SplineConv,
     'ginconv': GINConv,
-    'generalconv': GeneralConv,
+    'appnpconv': APPNPConv
 }

@@ -2,6 +2,10 @@ import os
 import torch
 from abc import ABC, abstractmethod
 
+from ..tasks import build_task
+from ..layers.HeteroLinear import HeteroFeature
+from ..utils import get_nodes_dict
+
 
 class BaseFlow(ABC):
 
@@ -21,6 +25,24 @@ class BaseFlow(ABC):
                 self._checkpoint = None
         # if args.dataset[:3] == 'HGB':
         #     args.HGB_results_path = os.path.join("./openhgnn/output/{}/{}.txt".format(args.model, args.dataset[5:]))
+
+        self.args = args
+        self.model_name = args.model
+        self.device = args.device
+        self.task = build_task(args)
+        self.hg = self.task.get_graph().to(self.device)
+        self.args.meta_paths = self.task.dataset.meta_paths
+        self.patience = args.patience
+        self.max_epoch = args.max_epoch
+        self.optimizer = None
+        self.loss_fn = self.task.get_loss_fn()
+
+    def preprocess_feature(self):
+        if isinstance(self.hg.ndata['h'], dict):
+            self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+        elif isinstance(self.hg.ndata['h'], torch.Tensor):
+            self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
 
     @abstractmethod
     def train(self):

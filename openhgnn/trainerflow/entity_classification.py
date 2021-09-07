@@ -10,7 +10,7 @@ from ..utils import extract_embed, EarlyStopping, get_nodes_dict
 
 @register_flow("entity_classification")
 class EntityClassification(BaseFlow):
-    """Node classification flows.
+    r"""Node classification flows.
     Supported Model: RGCN/CompGCN/RSHN
     Supported Dataset：AIFB/MUTAG/BGS/AM
         Dataset description can be found in https://github.com/dmlc/dgl/tree/master/examples/pytorch/rgcn-hetero
@@ -20,37 +20,15 @@ class EntityClassification(BaseFlow):
     def __init__(self, args):
         super(EntityClassification, self).__init__(args)
 
-        self.args = args
-        self.model_name = args.model
-        self.device = args.device
-        self.task = build_task(args)
-
-        self.hg = self.task.get_graph().to(self.device)
         self.num_classes = self.task.dataset.num_classes
 
-        if hasattr(self.task.dataset, 'in_dim'):
-            self.args.in_dim = self.task.dataset.in_dim
-        elif not hasattr(self.args, 'in_dim'):
-            raise ValueError('Set input dimension parameter!')
         # Build the model. If the output dim is not equal the number of classes, modify the dim.
         if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
             self.args.out_dim = self.num_classes
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
-
-        self.loss_fn = self.task.get_loss_fn()
-        if self.task.dataset.has_feature:
-            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-            self.has_feature = True
-        else:
-            self.has_feature = False
-            self.input_feature = HeteroEmbedLayer(get_nodes_dict(self.hg), args.in_dim).to(self.device)
-            self.optimizer = torch.optim.Adam([{'params': self.model.parameters()},
-                                               {'params': self.input_feature.parameters()}],
-                                              lr=args.lr, weight_decay=args.weight_decay)
-        self.patience = args.patience
-        self.max_epoch = args.max_epoch
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
         self.category = self.task.dataset.category
         self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
@@ -68,6 +46,7 @@ class EntityClassification(BaseFlow):
             )
 
     def preprocess(self):
+        self.preprocess_feature()
         return
 
     def train(self):
@@ -87,10 +66,6 @@ class EntityClassification(BaseFlow):
                 epoch_iter.set_description(
                     f"Epoch: {epoch:03d}, Loss:{loss: .4f}, Train_acc: {train_acc:.4f}, Val_acc: {val_acc:.4f}, Val_loss: {val_loss:.4f}"
                 )
-                #print(f'Test_acc:{acc["test"]:.4f}')
-                # print(
-                #     f"Epoch: {epoch:03d}, Loss:{loss: .4f}, Train_acc: {train_acc:.4f}, Val_acc: {val_acc:.4f}, Val_loss: {val_loss:.4f}"
-                # )
                 early_stop = stopper.loss_step(val_loss, self.model)
                 if early_stop:
                     print('Early Stop!\tEpoch:' + str(epoch))
@@ -100,16 +75,13 @@ class EntityClassification(BaseFlow):
         stopper.load_model(self.model)
         test_acc, _ = self._test_step(split="test")
         val_acc, _ = self._test_step(split="val")
-        print(f"Test accuracy = {test_acc:.4f}")
+        print(f"Valid accuracy = {val_acc:.4f}, Test accuracy = {test_acc:.4f}")
         return dict(Acc=test_acc, ValAcc=val_acc)
 
     def _full_train_step(self):
         self.model.train()
-        if self.has_feature == True:
-            h = self.hg.ndata['h']
-        else:
-            h = self.input_feature()
-        logits = self.model(self.hg, h)[self.category]
+        h_dict = self.input_feature()
+        logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
         self.optimizer.zero_grad()
         loss.backward()
@@ -125,10 +97,8 @@ class EntityClassification(BaseFlow):
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
             # batch_tic = time.time()
             lbl = self.labels[seeds].to(self.device).squeeze()
-            if self.has_feature:
-                h = blocks[0].srcdata['h']
-            else:
-                h = self.input_feature.forward_nodes(input_nodes)
+
+            h = self.input_feature.forward_nodes(input_nodes)
             logits = self.model(blocks, h)[self.category]
             loss = self.loss_fn(logits, lbl)
             loss_all += loss.item()
@@ -184,7 +154,8 @@ class EntityClassification(BaseFlow):
     def _test_step(self, split=None, logits=None):
         self.model.eval()
         with torch.no_grad():
-            logits = logits if logits else self.model(self.hg, self.input_feature())[self.category]
+            h_dict = self.input_feature()
+            logits = logits if logits else self.model(self.hg, h_dict)[self.category]
         if split == "train":
             mask = self.train_idx
         elif split == "val":
