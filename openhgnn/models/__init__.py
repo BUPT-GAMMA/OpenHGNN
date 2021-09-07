@@ -1,6 +1,8 @@
 import importlib
 from .NEW_model import MLP_follow_model
 from .base_model import BaseModel
+import sys
+sys.path.append("..")
 
 MODEL_REGISTRY = {}
 
@@ -9,13 +11,10 @@ def register_model(name):
     """
     New models types can be added to cogdl with the :func:`register_model`
     function decorator.
-
     For example::
-
         @register_model('gat')
         class GAT(BaseModel):
             (...)
-
     Args:
         name (str): the name of the models
     """
@@ -63,10 +62,11 @@ SUPPORTED_MODELS = {
     'NSHE': 'openhgnn.models.NSHE',
     'NARS': 'openhgnn.models.NARS',
     'RHGNN': 'openhgnn.models.RHGNN',
+    'HPN': 'openhgnn.models.HPN',
     'GCN': 'space4hgnn.homo_models.GCN',
     'GAT': 'space4hgnn.homo_models.GAT',
-    'KGCN': 'openhgnn.models.KGCN',
     'homo_GNN': 'space4hgnn.homo_models.homo_GNN',
     'relation_HGNN': 'space4hgnn.relation_models.rel_HGNN',
-    'mp_GNN': 'space4hgnn.metapath_models.mp_GNN',
+    'mp_GNN': 'space4hgnn.metapath_models.mp_GNN'
+
 }
