@@ -146,6 +146,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.has_feature = True
             self.target_link = [('product', 'product-product-0', 'product'),
                                 ('product', 'product-product-1', 'product')]
+            self.link = [0, 1]
         elif dataset_name == 'HGBl-LastFM':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
@@ -189,7 +190,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             ntypes.append(etype[2])
 
             train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
-
+        self.ntypes = set(ntypes)
         val_graph = dgl.heterograph(val_edge_dict,
                                          {ntype: self.g.number_of_nodes(ntype) for ntype in set(ntypes)})
         test_graph = dgl.heterograph(test_edge_dict,
@@ -199,9 +200,9 @@ class HGB_LinkPrediction(LinkPredictionDataset):
 
     def save_results(self, score, file_path):
         pass
-        # with open(file_path, "w") as f:
-        #     for l, r, c in zip(edge_list[0], edge_list[1], confidence):
-        #         f.write(f"{l}\t{r}\t{edge_type}\t{c}\n")
+        with open(file_path, "w") as f:
+            for l, r, c in zip(edge_list[0], edge_list[1], confidence):
+                f.write(f"{l}\t{r}\t{edge_type}\t{c}\n")
 
 def build_graph_from_triplets(num_nodes, num_rels, triplets):
     """ Create a DGL graph. The graph is bidirectional because RGCN authors

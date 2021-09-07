@@ -21,16 +21,11 @@ class LinkPrediction(BaseFlow):
     def __init__(self, args):
         super(LinkPrediction, self).__init__(args)
 
-        self.args = args
-        self.model_name = args.model
-        self.device = args.device
-
-        self.task = build_task(args)
-        self.hg = self.task.get_graph().to(self.device)
         self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
 
+        self.args.out_node_type = self.task.dataset.ntypes
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
@@ -49,12 +44,8 @@ class LinkPrediction(BaseFlow):
         self.test_hg = self.test_hg.to(self.device)
         self.negative_sampler = Uniform(1)
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
-        if isinstance(self.hg.ndata['h'], dict):
-            self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
-        elif isinstance(self.hg.ndata['h'], th.Tensor):
-            self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
-        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
-        return
+        self.preprocess_feature()
+
 
     def train(self):
         self.preprocess()
@@ -122,11 +113,9 @@ class LinkPrediction(BaseFlow):
 
     def ScorePredictor(self, edge_subgraph, x):
         with edge_subgraph.local_scope():
-            if len(edge_subgraph.ntypes) == 1:
-                edge_subgraph.ndata['x'] = x
-            else:
-                for ntype in edge_subgraph.ntypes:
-                    edge_subgraph.nodes[ntype].data['x'] = x[ntype]
+
+            for ntype in edge_subgraph.ntypes:
+                edge_subgraph.nodes[ntype].data['x'] = x[ntype]
             for etype in edge_subgraph.canonical_etypes:
                 edge_subgraph.apply_edges(
                     dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)

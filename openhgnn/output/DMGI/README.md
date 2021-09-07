@@ -1,6 +1,6 @@
-# DMGI
+# DMGI[AAAI2020]
 
-Paper:[Unsupervised Attributed Multiplex Network Embedding](https://doi.org/10.1609/aaai.v34i04.5985/)
+Paper:[Unsupervised Attributed Multiplex Network Embedding](https://ojs.aaai.org//index.php/AAAI/article/view/5985)
 
 Code from author:[https://github.com/pcy1302/DMGI](https://github.com/pcy1302/DMGI)
 
@@ -18,43 +18,24 @@ If you do not have gpu, set -gpu -1.
 
 ## candidate dataset
 
-acm_han_raw
+acm_han_raw/imdb4GTN
 
 NOTE: DMGI can handle imdb dataset, we will add the dataset in our further work.
 
-### description
+### Performance
 
-- Number of nodes
+Node classification 
 
-  | paper    | 4025 |
-  | -------- | ---- |
-  | author    | 17431 |
-  | field   | 73 |
-  
--   Number of edges
+| Node classification | acm   | imdb4GTN |
+| ------------------- | ----- | -------- |
+| paper               | 89.8  | ---      |
+| OpenHGNN            | 89.73 | 52.52    |
 
-    | paper-author | 13407  |
-    | -------------- | ----- |
-    | paper-field    | 4025 |
-    
--   Subsets: paper-author, paper-field
+### TrainerFlow: DMGI_trainer
 
+The model is  trained in unsupervisied node classification.
 
-## performance
-
-Node classification
-
-| |accuracy|
-|----|----|
-|DMGI|0.895 ± 0.003|
-
-
-## TrainerFlow: DMGI_trainer
-
-
-
-
-## Hyper-parameter specific to the model
+### Hyper-parameter specific to the model
 
 ```python
 learning_rate = 0.0005
@@ -67,12 +48,19 @@ sup_coef = 0.1
 patience =20
 hid_unit = 64
 num_heads = 1
+max_epoch = 10000
 isSemi = False
 isBias = False
 isAttn = False
 ```
 
+Best config can be found in  [best_config](../../utils/best_config.py)
 
+### Related API in DGL
+
+[dgl.add_self_loop](https://docs.dgl.ai/generated/dgl.add_self_loop.html?highlight=add_self#dgl.add_self_loop)
+
+[GraphConv](https://docs.dgl.ai/en/latest/api/python/nn.pytorch.html?#graphconv)
 
 ## More
 

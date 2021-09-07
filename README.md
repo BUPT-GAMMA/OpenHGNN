@@ -93,11 +93,13 @@ It is under development, and we release it in a nightly build version. For now, 
 - [HetGNN](./openhgnn/output/HetGNN)[KDD 2019] for node classification and link prediction
 - [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
 - [RSHN](./openhgnn/output/RSHN)[ICDM 2019] for entity classification
+- [DGMI](./openhgnn/output/DMGI)[AAAI 2020] for node classification
 - [MAGNN](./openhgnn/output/MAGNN)[WWW 2020] for node classification
 - [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020] for entity classification
 - [NSHE](./openhgnn/output/NSHE)[IJCAI 2020] for node classification
 - [NARS](./openhgnn/output/NARS) for node classification
 - [MHNF](./openhgnn/output/MHNF) for node classification
+- [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021] for node classification
 
 ### To be supported models
 

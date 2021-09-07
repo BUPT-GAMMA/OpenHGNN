@@ -1,9 +1,12 @@
 import os
 import dgl
+import random
 import torch as th
 from . import BaseDataset, register_dataset
 from dgl.data.utils import load_graphs
-from ..sampler.negative_sampler import Uniform_exclusive
+from .multigraph import MultiGraphDataset
+from openhgnn.sampler.negative_sampler import Uniform_exclusive
+
 
 
 @register_dataset('recommendation')
@@ -13,6 +16,34 @@ class RecommendationDataset(BaseDataset):
     """
     def __init__(self,):
         super(RecommendationDataset, self).__init__()
+
+
+@register_dataset('kgcn_recommendation')
+class KGCN_Recommendation(RecommendationDataset):
+    def __init__(self, dataset_name):
+            super(RecommendationDataset, self).__init__()
+            dataset = MultiGraphDataset(name=dataset_name, raw_dir='')
+            self.g = dataset[0].long()
+            self.g_1 = dataset[1].long()
+            self.get_idx()
+
+    def get_idx(self, validation=True):
+        ratingsGraph = self.g_1
+        n_data = ratingsGraph.num_edges()
+        indexList = [i for i in range(n_data)]
+        random.shuffle(indexList)
+        trainIndex = indexList[:int(n_data*0.6)]
+        evalIndex = indexList[int(n_data*0.6):int(n_data*0.8)]
+        testIndex = indexList[int(n_data*0.6):int(n_data*0.8)]
+
+        return trainIndex, evalIndex, testIndex
+    
+    def get_train_data(self):
+        pass
+
+    def get_labels(self):
+        return self.label
+    
 
 
 @register_dataset('hin_recommendation')

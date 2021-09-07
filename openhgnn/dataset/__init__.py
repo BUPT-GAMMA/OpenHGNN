@@ -60,6 +60,8 @@ def build_dataset(dataset, task):
     elif dataset in ['wn18', 'FB15k', 'FB15k-237']:
         assert task == 'link_prediction'
         _dataset = 'kg_link_prediction'
+    elif dataset in ['LastFM4KGCN']:
+        _dataset = 'kgcn_recommendation'
     elif dataset in ['yelp']:
         _dataset = 'hin_' + task
     elif dataset == 'demo':

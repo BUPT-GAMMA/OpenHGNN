@@ -106,8 +106,8 @@ class RDF_NodeClassification(NodeClassificationDataset):
         train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
         test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
         if validation:
-            val_idx = train_idx[:len(train_idx) // 10]
-            train_idx = train_idx[len(train_idx) // 10:]
+            val_idx = train_idx[:len(train_idx) // 5]
+            train_idx = train_idx[len(train_idx) // 5:]
         else:
             val_idx = train_idx
             train_idx = train_idx
@@ -281,6 +281,10 @@ class HGB_NodeClassification(NodeClassificationDataset):
             g.nodes['term'].data['h'] = th.eye(g.number_of_nodes('term'))
             self.in_dim = g.ndata['h'][category].shape[1]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+            self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')),
+                               (('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper')),
+                               (('paper', 'paper-term', 'term'), ('term', 'term-paper', 'paper'))]
+
         elif dataset_name == 'HGBn-DBLP':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
@@ -288,6 +292,12 @@ class HGB_NodeClassification(NodeClassificationDataset):
             num_classes = 4
             g.nodes['venue'].data['h'] = th.eye(g.number_of_nodes('venue'))
             self.in_dim = g.ndata['h'][category].shape[1]
+            self.meta_paths = [(('author', 'author-paper', 'paper'), ('paper', 'paper-author', 'author')),
+                               (('author', 'author-paper', 'paper'), ('paper', 'paper-term', 'term'),
+                                ('term', 'term-paper', 'paper'), ('paper', 'paper-author', 'author')),
+                               (('author', 'author-paper', 'paper'), ('paper', 'paper-venue', 'venue'),
+                                ('venue', 'venue-paper', 'paper'), ('paper', 'paper-author', 'author')),
+                               ]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         elif dataset_name == 'HGBn-Freebase':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
@@ -295,6 +305,13 @@ class HGB_NodeClassification(NodeClassificationDataset):
             category = 'BOOK'
             num_classes = 8
             self.has_feature = False
+            self.meta_paths = [(('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                ('ORGANIZATION', 'ORGANIZATION-to-MUSIC', 'MUSIC'),
+                                ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')),
+                               (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                ('ORGANIZATION', 'ORGANIZATION-for-BUSINESS', 'BUSINESS'),
+                                ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK'))]
+
             #self.in_dim = g.ndata['h'][category].shape[1]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         elif dataset_name == 'HGBn-IMDB':
@@ -304,6 +321,9 @@ class HGB_NodeClassification(NodeClassificationDataset):
             num_classes = 5
             g.nodes['keyword'].data['h'] = th.eye(g.number_of_nodes('keyword'))
             self.in_dim = g.ndata['h'][category].shape[1]
+            self.meta_paths = [(('movie', 'movie->actor', 'actor'), ('actor', 'actor->movie', 'movie')),
+                               (('movie', 'movie->director', 'director'), ('director', 'director->movie', 'movie')),
+                               (('movie', 'movie->keyword', 'keyword'), ('keyword', 'keyword->movie', 'movie'))]
             # RuntimeError: result type Float can't be cast to the desired output type Long
             self.multi_label = True
         else:

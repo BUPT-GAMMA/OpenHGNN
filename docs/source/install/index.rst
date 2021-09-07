@@ -25,16 +25,16 @@ Python environment requirments
 
 .. code:: bash
 
-conda create -n openhgnn python=3.7
-source activate openhgnn
+    conda create -n openhgnn python=3.7
+    source activate openhgnn
 
 
 **2. Pytorch:** Install `PyTorch <https://pytorch.org/>`_. We have verified GraphGym under PyTorch 1.8.0. For example:
 
 .. code:: bash
 
-# CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
-pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+    # CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
+    pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
 
 **3. DGL:** Install `DGL <https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html>`_,
@@ -42,13 +42,13 @@ follow their instructions. For example:
 
 .. code:: bash
 
-# CUDA versions: cpu, cu101, cu102, cu110, cu111
-pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
+    # CUDA versions: cpu, cu101, cu102, cu110, cu111
+    pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
 
 **4. OpenHGNN and other dependencies:**
 
 .. code:: bash
 
-git clone https://github.com/BUPT-GAMMA/OpenHGNN
-cd OpenHGNN
-pip install -r requirements.txt
+    git clone https://github.com/BUPT-GAMMA/OpenHGNN
+    cd OpenHGNN
+    pip install -r requirements.txt
