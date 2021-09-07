@@ -31,9 +31,11 @@ class BaseFlow(ABC):
         self.device = args.device
         self.task = build_task(args)
         self.hg = self.task.get_graph().to(self.device)
+        self.args.meta_paths = self.task.dataset.meta_paths
         self.patience = args.patience
         self.max_epoch = args.max_epoch
         self.optimizer = None
+        self.loss_fn = self.task.get_loss_fn()
 
     def preprocess_feature(self):
         if isinstance(self.hg.ndata['h'], dict):

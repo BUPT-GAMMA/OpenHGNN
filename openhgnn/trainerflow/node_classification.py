@@ -5,7 +5,7 @@ from ..utils.sampler import get_node_data_loader
 from ..models import build_model
 from ..layers.HeteroLinear import HeteroFeature
 from . import BaseFlow, register_flow
-from ..utils.logger import printInfo
+from ..utils.logger import printInfo, printMetric
 from ..utils import extract_embed, EarlyStopping, get_nodes_dict
 
 
@@ -44,10 +44,8 @@ class NodeClassification(BaseFlow):
         self.model = self.model.to(self.device)
 
         self.evaluator = self.task.get_evaluator('f1')
-        self.loss_fn = self.task.get_loss_fn()
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-
 
         self.train_idx, self.valid_idx, self.test_idx = self.task.get_idx()
         self.labels = self.task.get_labels().to(self.device)
@@ -121,11 +119,16 @@ class NodeClassification(BaseFlow):
                     print('Early Stop!\tEpoch:' + str(epoch))
                     break
 
-        print(f"Valid_score_{self.metric} = Min_loss = {stopper.best_loss: .4f}")
         stopper.load_model(self.model)
-
         ############ TEST SCORE #########
         if self.args.dataset[:4] == 'HGBn':
+
+            if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
+                val_score, val_loss = self._mini_test_step(mode='validation')
+            else:
+                val_score, val_loss = self._full_test_step(mode='validation')
+
+            printMetric(self.metric, val_score, 'validation')
             self.model.eval()
             with torch.no_grad():
                 h_dict = self.input_feature()
@@ -139,10 +142,8 @@ class NodeClassification(BaseFlow):
             test_score, _ = self._full_test_step(mode='test')
             val_score, val_loss = self._full_test_step(mode='validation')
 
-        if isinstance(test_score, tuple):
-            print(f"Test_macro_{self.metric} = {test_score[0]:.4f}, Test_micro_{self.metric}: {test_score[1]:.4f}")
-        else:
-            print(f"Test_{self.metric} = {test_score:.4f}")
+        printMetric(self.metric, val_score, 'validation')
+        printMetric(self.metric, test_score, 'test')
         return dict(Acc=test_score, ValAcc=val_score)
 
     def _full_train_step(self):

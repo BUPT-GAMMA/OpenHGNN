@@ -35,14 +35,17 @@ class MPConv(nn.Module):
 
 
 def Aggr_sum(z):
+    z = torch.stack(z, dim=1)
     return z.sum(1)
 
 
 def Aggr_max(z):
+    z = torch.stack(z, dim=1)
     return z.max(1)
 
 
 def Aggr_mean(z):
+    z = torch.stack(z, dim=1)
     return z.mean(1)
 
 

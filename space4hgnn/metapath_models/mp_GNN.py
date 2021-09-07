@@ -1,6 +1,7 @@
 import dgl
 from space4hgnn.models.MLP import GNNPreMP, GNNPostMP
 from openhgnn.models import BaseModel, register_model
+from openhgnn.utils.utils import extract_metapaths
 from space4hgnn.models.skipgnn import stage_dict
 
 
@@ -18,14 +19,10 @@ class mp_GNN(BaseModel):
         """
         super(mp_GNN, self).__init__()
         self.category = args.category
-        self.meta_paths = []
-        for etype in hg.canonical_etypes:
-            if etype[0] == args.category:
-                for dst_e in hg.canonical_etypes:
-                    if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
-                        if etype[0] != etype[2]:
-                            self.meta_paths.append((etype, dst_e))
-
+        if args.meta_paths is None:
+            extract_metapaths(self.category, hg.canonical_etypes)
+        else:
+            self.meta_paths = args.meta_paths
         if args.layers_pre_mp - 1 > 0:
             self.pre_mp = GNNPreMP(args, args.hidden_dim, args.hidden_dim)
 

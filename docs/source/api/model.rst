@@ -84,3 +84,28 @@ MHNF.GTConv
 .. autoclass:: models.GTN.GTConv
    :members:
 
+HPN
+-----------------------------
+
+.. automodule:: models.HPN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+HGNN_AC
+-----------------------------
+
+.. automodule:: models.HGNN_AC
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+RGCN
+-----------------------------
+
+.. automodule:: models.RGCN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
