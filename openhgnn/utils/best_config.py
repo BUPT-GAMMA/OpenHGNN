@@ -182,9 +182,9 @@ BEST_CONFIGS = {
     "recommendation": {
         'KGCN': {
             "general": {},
-            'lastfmKGCN': {
-                'in_dim': 16, 'hidden_dim': 16,'n_relation' : 60,
-                'batch_size': 128,'lr' : 0.0005
+            'LastFM4KGCN': {
+                'in_dim': 16, 'hidden_dim': 16, 'n_relation': 60,
+                'batch_size': 1, 'lr' : 0.0005
             },
         }
     },

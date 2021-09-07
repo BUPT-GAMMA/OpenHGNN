@@ -8,7 +8,6 @@ from ..utils import get_nodes_dict
 
 
 class BaseFlow(ABC):
-
     def __init__(self, args):
         super(BaseFlow, self).__init__()
         self.evaluator = None

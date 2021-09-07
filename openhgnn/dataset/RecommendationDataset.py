@@ -25,18 +25,17 @@ class KGCN_Recommendation(RecommendationDataset):
             dataset = MultiGraphDataset(name=dataset_name, raw_dir='')
             self.g = dataset[0].long()
             self.g_1 = dataset[1].long()
-            self.get_idx()
+
 
     def get_idx(self, validation=True):
         ratingsGraph = self.g_1
-        n_data = ratingsGraph.num_edges()
-        indexList = [i for i in range(n_data)]
-        random.shuffle(indexList)
-        trainIndex = indexList[:int(n_data*0.6)]
-        evalIndex = indexList[int(n_data*0.6):int(n_data*0.8)]
-        testIndex = indexList[int(n_data*0.6):int(n_data*0.8)]
+        n_edges = ratingsGraph.num_edges()
+        random_int = th.randperm(n_edges)
+        train_idx = random_int[:int(n_edges*0.6)]
+        val_idx = random_int[int(n_edges*0.6):int(n_edges*0.8)]
+        test_idx = random_int[int(n_edges*0.6):int(n_edges*0.8)]
 
-        return trainIndex, evalIndex, testIndex
+        return train_idx, val_idx, test_idx
     
     def get_train_data(self):
         pass
