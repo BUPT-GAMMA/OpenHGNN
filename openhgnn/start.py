@@ -39,7 +39,7 @@ def get_trainerflow(model, task):
             return 'link_prediction'
     elif model in ['HetGNN']:
         return 'hetgnntrainer'
-    elif model in ['HAN', 'MAGNN', 'GTN', 'NARS', 'MHNF', 'RHGNN']:
+    elif model in ['HAN', 'MAGNN', 'GTN', 'NARS', 'MHNF', 'RHGNN', 'HPN']:
         if task in ['node_classification']:
             return 'node_classification'
         if task in ['link_prediction']:

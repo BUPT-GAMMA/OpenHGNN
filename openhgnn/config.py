@@ -302,6 +302,19 @@ class Config(object):
             self.isSemi = conf.getboolean("DMGI", "isSemi")
             self.isBias = conf.getboolean("DMGI", "isBias")
             self.isAttn = conf.getboolean("DMGI", "isAttn")
+        elif model == 'HPN':
+            self.lr = conf.getfloat("HPN", "learning_rate")
+            self.weight_decay = conf.getfloat("HPN", "weight_decay")
+            self.seed = conf.getint("HPN", "seed")
+            self.dropout = conf.getfloat("HPN", "dropout")
+            self.out_embedsize = conf.getint("HPN", "out_embedsize")
+            self.hidden_dim = conf.getint('HPN', 'hidden_dim')
+            self.k_layer = conf.getint("HPN", "k_layer")
+            self.alpha = conf.getfloat("HPN", "alpha")
+            self.edge_drop = conf.getfloat("HPN", "edge_drop")
+            self.patience = conf.getint('HPN', 'patience')
+            self.max_epoch = conf.getint('HPN', 'max_epoch')
+            self.mini_batch_flag = conf.getboolean("HPN", "mini_batch_flag")
 
     def __repr__(self):
         return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset
