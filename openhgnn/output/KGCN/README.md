@@ -62,7 +62,7 @@ Yanhu Mo[GAMMA LAB]
 
 #### If you have any questions,
 
-Submit an issue or email to  [lfq@bupt.edu.cn](mailto:lfq@bupt.edu.cn).
+Submit an issue or email to  [myth@bupt.edu.cn](mailto:myth@bupt.edu.cn).
 
 
 
