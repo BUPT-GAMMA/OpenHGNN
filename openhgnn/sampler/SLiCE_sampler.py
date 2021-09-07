@@ -279,7 +279,6 @@ class SLiCESampler(object):
             (relation,u', v, "0"), here u'-> v does not exist in self.G
         returns : random.shuffle(true_edges + false_edges)
         """
-
         # collect nodes of different types
         g=self.g
         node_type_to_ids = dict()

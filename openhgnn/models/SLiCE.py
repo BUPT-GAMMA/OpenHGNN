@@ -8,8 +8,132 @@ import dgl
 import dgl.nn as dglnn
 from . import BaseModel, register_model
 from .CompGCN import CompGraphConvLayer
-from ..utils.gcn_transform import GCNTransform
-from ..utils.gcn_graph_encoder import GCNGraphEncoder
+
+def get_norm_id(id_map, some_id):
+    #如果不存在，返回一个id最大值
+    if some_id not in id_map:
+        id_map[some_id] = len(id_map)
+    return id_map[some_id]
+
+"""
+从大图中根据一组边获得一个子图
+"""
+def norm_graph(node_id_map, edge_id_map, edge_list):
+    norm_edge_list = []
+    for e in edge_list:
+        norm_edge_list.append(
+            (
+                get_norm_id(node_id_map, e[0]),
+                get_norm_id(node_id_map, e[1]),
+                get_norm_id(edge_id_map, e[2]),
+            )
+        )
+    return norm_edge_list
+class NodeEncoder(torch.nn.Module):
+    def __init__(
+        self,
+        base_embedding_dim,
+        num_nodes,
+        pretrained_node_embedding_tensor,
+        is_pre_trained,
+    ):
+
+        super().__init__()
+        self.pretrained_node_embedding_tensor = pretrained_node_embedding_tensor
+        self.base_embedding_dim = base_embedding_dim
+
+        if not is_pre_trained:
+            self.base_embedding_layer = torch.nn.Embedding(
+                num_nodes, base_embedding_dim
+            ).cuda()
+            self.base_embedding_layer.weight.data.uniform_(-1, 1)
+        else:
+            self.base_embedding_layer = torch.nn.Embedding.from_pretrained(
+                pretrained_node_embedding_tensor
+            ).cuda()
+
+    def forward(self, node_id):
+        node_id = torch.LongTensor([int(node_id)]).cuda()
+        x_base = self.base_embedding_layer(node_id)
+
+        return x_base
+
+class GCNGraphEncoder(torch.nn.Module):
+    def __init__(
+        self,
+        G,
+        pretrained_node_embedding_tensor,
+        is_pre_trained,
+        base_embedding_dim,
+        max_length,
+    ):
+
+        super().__init__()
+        self.g = G
+        self.base_embedding_dim = base_embedding_dim
+        self.max_length = max_length
+        self.no_nodes = self.g.num_nodes() #用DGL的表示方式
+        self.no_relations = self.g.num_edges()
+        # print('check *************', self.no_relations)
+
+        self.node_embedding = NodeEncoder(
+            base_embedding_dim,
+            self.no_nodes,
+            pretrained_node_embedding_tensor,
+            is_pre_trained,
+        )
+
+        self.special_tokens = {"[PAD]": 0, "[MASK]": 1}
+        self.special_embed = torch.nn.Embedding(
+            len(self.special_tokens), base_embedding_dim
+        )
+        self.special_embed.weight.data.uniform_(-1, 1)
+
+    def forward(self, subgraphs_list, masked_nodes):
+        num_subgraphs = len(subgraphs_list)
+        batch_counts = []
+        batch_id_maps = []
+
+        for ii, _ in enumerate(subgraphs_list):
+            node_id_map = dict()#key: id, value: 
+            edge_type_map = dict()#key: edge_type, value: 
+            #将nodeid转为从0开始
+            batch_id_maps.append((node_id_map, edge_type_map))
+            batch_counts.append((len(node_id_map), len(edge_type_map)))
+
+        node_emb = torch.zeros(
+            num_subgraphs, self.max_length + 1, self.base_embedding_dim#+1是因为包含
+        )
+
+        for ii in range(len(subgraphs_list)):
+            node_id_map = batch_id_maps[ii][0]
+            edge_type_map = batch_id_maps[ii][1]
+            masked_set = masked_nodes[ii].cpu().numpy().tolist()
+
+            for node_id, norm_node_id in node_id_map.items():
+                if node_id not in masked_set:  # used to ignore the masked nodes
+                    try:
+                        normalized_node_id = node_id
+                    except KeyError:  # FIXME - replaced bare except
+                        normalized_node_id = int(node_id)
+                    node_emb[ii][norm_node_id] = self.node_embedding(normalized_node_id)
+
+        # get embeddings for special tokens
+        # will be used for masking and padding before bert layer
+        special_tokens_embed = {}
+        for token in self.special_tokens:
+            node_id = Variable(torch.LongTensor([self.special_tokens[token]]))
+            tmp_embed = self.special_embed(node_id)
+            special_tokens_embed[self.special_tokens[token] + self.no_nodes] = {
+                "token": token,
+                "embed": tmp_embed,
+            }
+
+        return (
+            node_emb,
+            batch_id_maps,
+            special_tokens_embed,
+        )
 
 def gcn_out2bert_input(node_emb, batch_id_maps, input_ids, special_tokens):
     for ii in range(len(input_ids)):
@@ -32,7 +156,7 @@ def gcn_out2bert_input(node_emb, batch_id_maps, input_ids, special_tokens):
 
     return out
 
-def get_attn_pad_mask(seq_q, seq_k, pad_id):
+def get_attn_pad_mask(seq_q, seq_k, pad_id):                                                                                                                                                                                                                                                                                                                                                                                                                    
     batch_size, len_q = len(seq_q), len(seq_q[0])
     batch_size, len_k = len(seq_k), len(seq_k[0])
     # print(batch_size, len_q, len_k)
@@ -67,7 +191,7 @@ class ScaledDotProductAttention(torch.nn.Module):
     def forward(self, Q, K, V, attn_mask=None):
         # print('mask', attn_mask.size())
         scores = torch.matmul(Q, K.transpose(-1, -2)) / np.sqrt(self.d_k)
-        scores.masked_fill_(attn_mask == True, -1e9)
+        scores.masked_fill_(attn_mask == True, -1e9)#change dropped softmax value into 
         attn = torch.nn.Softmax(dim=-1)(scores)
         context = torch.matmul(attn, V)
 
@@ -91,14 +215,15 @@ class MultiHeadAttention(torch.nn.Module):
         self.layerNorm = torch.nn.LayerNorm(self.d_model)
 
     def forward(self, Q, K, V, attn_mask=None):
+        #This V is not the V matrix of dot attention. 
         residual, batch_size = Q, Q.size(0)
-        q_s = self.W_Q(Q).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
+        q_s = self.W_Q(Q).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)#128(batcch)*4(head)*7(n_nodes)*64(d_k)
         k_s = self.W_K(K).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
         v_s = self.W_V(V).view(batch_size, -1, self.n_heads, self.d_v).transpose(1, 2)
 
         if attn_mask is not None:
             attn_mask = attn_mask.unsqueeze(1).repeat(1, self.n_heads, 1, 1)
-        context, attn = self.scaled_dot_prod_attn(q_s, k_s, v_s, attn_mask=attn_mask)
+        context, attn = self.scaled_dot_prod_attn(q_s, k_s, v_s, attn_mask=attn_mask)#context is H*A
         context = (
             context.transpose(1, 2)
             .contiguous()
@@ -160,7 +285,6 @@ class SLiCE(BaseModel):
         max_length=6,#max length of walks
         num_gcn_layers=2,#number of gcn layers before bert
         node_edge_composition_func="mult",#options for node and edge compostion, sub|circ_conv|mult|no_rel
-        gcn_option="no_gcn",#preprocess bert input once or alternate gcn and bert, preprocess|alternate|no_gcn
         get_embeddings=False,#indicate if need to get node vectors from BERT encoder output
         fine_tuning_layer=False,):
 
@@ -171,15 +295,9 @@ class SLiCE(BaseModel):
         self.max_length = max_length
         self.get_embeddings = get_embeddings
         self.node_edge_composition_func = node_edge_composition_func
-        self.gcn_option = gcn_option
         self.fine_tuning_layer = fine_tuning_layer
         self.no_nodes = G.num_nodes()
 
-        if self.gcn_option == "preprocess":
-            self.num_gcn_layers = num_gcn_layers
-        elif self.gcn_option == "alternate":
-            assert num_gcn_layers % 2 == 0
-            self.num_gcn_layers = int(num_gcn_layers / 2)
         #FIXME 暂时是用随机初始化，pretrain tensor是None
         self.gcn_graph_encoder = GCNGraphEncoder(
             G,
@@ -188,11 +306,6 @@ class SLiCE(BaseModel):
             base_embedding_dim,
             max_length,
         )
-
-        if self.gcn_option in ["preprocess", "alternate"]:
-            self.gcn_transform = GCNTransform(
-                base_embedding_dim, self.num_gcn_layers, self.node_edge_composition_func
-            )
 
         self.layers = torch.nn.ModuleList(
             [EncoderLayer(d_model, d_k, d_v, d_ff, n_heads) for _ in range(n_layers)]
@@ -204,50 +317,37 @@ class SLiCE(BaseModel):
         self.decoder = torch.nn.Linear(self.d_model, self.no_nodes).cuda()
     def set_fine_tuning(self):
         self.fine_tuning_layer = True
+    def mask_gen(self):
 
-    def forward(self, subgraphs_list, all_nodes, masked_pos, masked_nodes):
+        return masked_pos,masked_nodes
+    def forward(self, subgraphs_list):
+        for subgraph in subgraph_list:
+            src,dst=subgraph.edges()    
+        all_nodes.append(list(set(src+dst)))
+        masked_pos,masked_nodes=self.mask_gen()
         # 将节点embedding和关系的embedding初始化，并采样得到
         # context generation
         (
-            norm_subgraph_list,
             node_emb,
-            relation_emb,
             batch_id_maps,
             special_tokens_embed,#PAD和MASK
         ) = self.gcn_graph_encoder(subgraphs_list, masked_nodes)
-        if self.gcn_option == "preprocess":
-            # Preprocess bert input with 2 or 4 GCN layers
-            node_emb, relation_emb = self.gcn_transform(
-                "subgraph_list", norm_subgraph_list, node_emb, relation_emb
-            )
-            # print("Processed GCN subgraph encoder")
         node_emb = gcn_out2bert_input(
-            node_emb, batch_id_maps, all_nodes, special_tokens_embed
+            node_emb, batch_id_maps, all_nodes, special_tokens_embed#all nodes: 
         )
         output = node_emb.cuda()
-        # print('check1',len(all_nodes[0]))
         enc_self_attn_mask = get_attn_pad_mask(all_nodes, all_nodes, self.no_nodes)
         # contextual translation
         for layer in self.layers:
-            if self.gcn_option == "alternate":
-                # FIXME is this option working?
-                # Preprocess with 1/2 GCN layer before each bert layer
-                node_emb, relation_emb = self.gcn_transform(
-                    "subgraph_list", norm_subgraph_list, output.cpu(), relation_emb
-                )
-                node_emb = gcn_out2bert_input(
-                    node_emb, batch_id_maps, all_nodes, special_tokens_embed
-                )
-                output = node_emb.cuda()
             output, enc_self_attn = layer(output, enc_self_attn_mask)
             try:
-                layer_output = torch.cat((layer_output, output.unsqueeze(1)), 1)
+                layer_output = torch.cat((layer_output, output.unsqueeze(1)), 1)#output embedding of each layer
             except NameError:  # FIXME - replaced bare except
                 layer_output = output.unsqueeze(1)
 
             if self.fine_tuning_layer:
                 try:
-                    att_output = torch.cat((att_output, enc_self_attn.unsqueeze(0)), 0)
+                    att_output = torch.cat((att_output, enc_self_attn.unsqueeze(0)), 0)#output attention of each layer
                 except NameError:  # FIXME - replaced bare except
                     att_output = enc_self_attn.unsqueeze(0)
 
@@ -275,7 +375,7 @@ class SLiCE(BaseModel):
             else:
                 return pred_score
 
-class FinetuneLayer(torch.nn.Module):
+class SLiCEFinetuneLayer(torch.nn.Module):
     @classmethod
     def build_model_from_args(cls, args, hg):
         return cls(attr_graph=hg,d_model=args.d_model,ft_d_ff=args.ft_d_ff,

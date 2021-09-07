@@ -29,7 +29,7 @@ import copy
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from openhgnn.models import build_model
-from openhgnn.models.SLiCE import SLiCE, FinetuneLayer
+from openhgnn.models.SLiCE import SLiCE, SLiCEFinetuneLayer
 from ..utils import extract_embed, EarlyStopping
 
 from ..sampler.SLiCE_sampler import SLiCESampler
@@ -45,7 +45,7 @@ class SLiCETrainer(BaseFlow):
         self.g=self.task.get_graph().to(self.device)
         self.model=dict()
         self.model['pretrain']=SLiCE.build_model_from_args(self.args,self.g)
-        self.model['finetune']=FinetuneLayer.build_model_from_args(args)
+        self.model['finetune']=SLiCEFinetuneLayer.build_model_from_args(args)
         self.evaluator=self.task.get_evaluator('slice')
         #loss function
         self.loss_fn=self.task.get_loss_fn()
