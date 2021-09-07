@@ -245,6 +245,18 @@ class Config(object):
             self.category = conf.get("RHGNN", "category")
             self.out_dim = conf.getint("RHGNN", "out_dim")
         
+        elif model == 'KGCN':
+            self.weight_decay = conf.getfloat("KGCN", "weight_decay")
+            self.batch_size = conf.getint("KGCN", "batch_size")
+            self.in_dim = conf.getint('KGCN', 'in_dim')
+            self.out_dim = conf.getint('KGCN', 'out_dim')
+            self.lr = conf.getfloat("KGCN", "lr")
+            self.n_neighbor = conf.getint("KGCN", "n_neighbor")
+            self.aggregate = conf.get("KGCN", "aggregate")
+            self.n_item = conf.getint("KGCN", "n_relation")
+            self.n_user = conf.getint("KGCN", "n_user")
+            self.epoch_iter = conf.getint("KGCN", "epoch_iter")
+            
         elif model == 'MAGNN_AC':
             self.lr = conf.getfloat("MAGNN_AC", "learning_rate")
             self.weight_decay = conf.getfloat("MAGNN_AC", "weight_decay")
@@ -302,17 +314,7 @@ class Config(object):
             self.isBias = conf.getboolean("DMGI", "isBias")
             self.isAttn = conf.getboolean("DMGI", "isAttn")
         
-        elif model == 'KGCN':
-            self.weight_decay = conf.getfloat("KGCN", "weight_decay")
-            self.batch_size = conf.getint("KGCN", "batch_size")
-            self.in_dim = conf.getint('KGCN', 'in_dim')
-            self.out_dim = conf.getint('KGCN', 'out_dim')
-            self.lr = conf.getfloat("KGCN", "lr")
-            self.n_neighbor = conf.getint("KGCN", "n_neighbor")
-            self.aggregate = conf.get("KGCN", "aggregate")
-            self.n_item = conf.getint("KGCN", "n_relation")
-            self.n_user = conf.getint("KGCN", "n_user")
-            self.epoch_iter = conf.getint("KGCN", "epoch_iter")
+        
 
     def __repr__(self):
         return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset
