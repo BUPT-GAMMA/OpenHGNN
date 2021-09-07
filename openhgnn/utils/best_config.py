@@ -105,27 +105,40 @@ BEST_CONFIGS = {
                          'max_epoch': 500, 'patience': 10,
                          }
         },
+        'DMGI': {
+            'general': {
+                'seed': 0, 'sc': 3, 'learning_rate': 0.0005
+            },
+            'acm_han_raw': {'l2_coef': 0.0001, 'dropout': 0.5, 'reg_coef': 0.001,
+                            'patience': 20, 'sup_coef': 0.1, 'hid_unit': 64,
+                            'isSemi': False, 'isBias': False, 'isAttn': False
+                            },
+            'imdb4GTN': {'l2_coef': 0.0001, 'dropout': 0.5, 'reg_coef': 0.1,
+                         'patience': 50, 'sup_coef': 0.1, 'hid_unit': 64,
+                         'isSemi': False, 'isBias': False, 'isAttn': False
+                         }
+        },
         'RGCN': {
             'general': {
                 'seed': 0, 'patience': 20, 'validation': True
             },
             'aifb': {
-                'lr': 0.01, 'weight_decay': 0, 'max_epoch': 50, 'in_dim': 16,
-                'hidden_dim': 16, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'dropout': 0,
+                'lr': 0.005, 'weight_decay': 0, 'max_epoch': 100,
+                'hidden_dim': 32, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'dropout': 0.1,
                 'mini_batch_flag': False, 'validation': True
                      },
             'mutag': {
-                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 50, 'in_dim': 8,
-                'hidden_dim': 16, 'n_bases': 30, 'n_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0.05,
+                'lr': 0.001, 'weight_decay': 0.0005, 'max_epoch': 50,
+                'hidden_dim': 32, 'n_bases': 30, 'n_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0.05,
                 'mini_batch_flag': False, 'validation': True
             },
             'bgs': {
-                'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50, 'in_dim': 32,
+                'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50,
                 'hidden_dim': 16, 'n_bases': 40, 'n_layers': 3, 'batch_size': 126, 'fanout': 4, 'dropout': 0.1,
-                'mini_batch_flag': False, 'validation': True
+                'mini_batch_flag': True, 'validation': True
             },
             'am': {
-                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 100, 'in_dim': 16,
+                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 50,
                 'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
                 'mini_batch_flag': True, 'validation': True
             },

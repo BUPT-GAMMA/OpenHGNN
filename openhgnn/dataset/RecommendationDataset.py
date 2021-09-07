@@ -1,11 +1,12 @@
 import os
 import dgl
 import torch as th
+import sys
+sys.path.append(".")
 from . import BaseDataset, register_dataset
 from dgl.data.utils import load_graphs
 from ..sampler.negative_sampler import Uniform_exclusive
-import sys
-sys.path.append("..")
+
 
 
 @register_dataset('recommendation')

@@ -1,15 +1,6 @@
-"""
-This model shows an example of using dgl.metapath_reachable_graph on the original heterogeneous
-graph.
-
-"""
-
+import dgl
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-import dgl
-from scipy import sparse as sp
 from . import BaseModel, register_model
 from dgl.nn.pytorch.conv import APPNPConv
 
@@ -20,18 +11,25 @@ class HPN(BaseModel):
     Description
     ------------
     This model shows an example of using dgl.metapath_reachable_graph on the original heterogeneous
-    graph.HPN from paper 'Heterogeneous Graph Propagation Network <https://ieeexplore.ieee.org/abstract/document/9428609>'
+    graph.HPN from paper 'Heterogeneous Graph Propagation Network
+    <https://ieeexplore.ieee.org/abstract/document/9428609>'__.
     The author did not provide codes. So, we complete it according to the implementation of HAN
+
+
     .. math::
         \bold Z^\Phi=\mathcal{P}_\Phi(\bold X)=g_\Phi(f_\Phi(\bold X))
 
+        where :math:`\bold X` denotes initial feature matrix and :math:`\bold Z^\Phi` denotes semantic-specific node embedding.
+
         \bold H^\Phi=f_\Phi(\bold X)=\sigma(\bold X · \bold W^\Phi+\bold b^\Phi)
+
+        where :math:`\bold H^\Phi` is projected node feature matrix
 
         \mathbf{Z}^{\Phi, k}=g_{\Phi}\left(\mathbf{Z}^{\Phi, k-1}\right)=(1-\gamma) \cdot \mathbf{M}^{\Phi} \cdot \mathbf{Z}^{\Phi, k-1}+\gamma \cdot \mathbf{H}^{\Phi}
 
-        w_{\Phi_{p}}=\frac{1}{|\mathcal{V}|} \sum_{i \in \mathcal{V}} \mathbf{q}^{\mathrm{T}} \cdot \tanh \left(\mathbf{W} \cdot \mathbf{z}_{i}^{\Phi_{p}}+\mathbf{b}\right)
+        where :math:`\bold Z^{\Phi,k}` denotes node embedding learned by k-th layer semantic propagation mechanism. :math:`\gamma` is a weight scalar which indicates the
+        importance of characteristic of node in aggregating process
 
-        \mathbf{Z}=\sum_{p=1}^{P} \beta_{\Phi_{p}} \cdot \mathbf{Z}^{\Phi_{p}}
 
 
     Parameters
@@ -49,9 +47,9 @@ class HPN(BaseModel):
     out_embedsizes : int
         Dimension of the final embedding Z
     k_layer : int
-        propagation times :math:'K'.
+        propagation times
     alpha : float
-        Value of restart probability :math:'\alpha'.
+        Value of restart probability
     edge_drop : float, optional
         The dropout rate on edges that controls the
         messages received by each node. Default: ``0``.
@@ -113,29 +111,7 @@ class SemanticFusion(nn.Module):
 
 
 class HPNLayer(nn.Module):
-    """
-    HPN layer.
-    Arguments
-    ---------
-    meta_paths : list of metapaths, each as a list of edge types
-    in_size : input feature dimension
-    dropout : Dropout probability
-    k_layer : propagation times
-    alpha   : Value of restart probability
-    edge_drop : the dropout rate on edges that controls the messages received by each node
-    out_embedsize : Dimension of the final embedding Z
 
-    Inputs
-    ------
-    g : DGLHeteroGraph
-        The heterogeneous graph
-    h : tensor
-        Input features
-    Outputs
-    -------
-    tensor
-        The output feature
-    """
     def __init__(self, meta_paths, in_size, dropout,k_layer, alpha, edge_drop, out_embedsize):
         super(HPNLayer, self).__init__()
 
