@@ -1,5 +1,6 @@
 import os
 import dgl
+import random
 import torch as th
 import sys
 sys.path.append(".")
@@ -16,6 +17,40 @@ class RecommendationDataset(BaseDataset):
     """
     def __init__(self,):
         super(RecommendationDataset, self).__init__()
+
+@register_dataset('kgcn_recommendation')
+class KGCN_Recommendation(RecommendationDataset):
+    def __init__(self, dataset_name):
+            super(RecommendationDataset, self).__init__()
+            self.g = self.load_KGCN(dataset_name)
+            self.get_idx()
+            
+    
+    def load_KGCN(self, name_dataset):
+        if name_dataset == 'lastfmKGCN':
+            g = load_graphs("./openhgnn/dataset/lastfmKGCN.bin")
+            return g
+        
+    
+    def get_idx(self,validation=True):
+
+        ratingsGraph = self.g[0][1]
+        n_data = ratingsGraph.num_edges()
+        indexList = [i for i in range(n_data)]
+        random.shuffle(indexList)
+        trainIndex = indexList[:int(n_data*0.6)]
+        evalIndex = indexList[int(n_data*0.6):int(n_data*0.8)]
+        testIndex = indexList[int(n_data*0.6):int(n_data*0.8)]
+
+        return trainIndex, evalIndex, testIndex
+
+    
+    def get_train_data(self):
+        pass
+
+    def get_labels(self):
+        return self.label
+    
 
 
 @register_dataset('hin_recommendation')

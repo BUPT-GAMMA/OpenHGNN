@@ -52,6 +52,8 @@ def get_trainerflow(model, task):
         return 'nshetrainer'
     elif model == 'DMGI':
         return 'DMGI_trainer'
+    elif model in ['KGCN']:
+        return 'kgcntrainer'
 
 
 def trans_feature(hg, het_gnn):
