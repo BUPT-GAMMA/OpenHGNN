@@ -11,10 +11,13 @@ def register_model(name):
     """
     New models types can be added to cogdl with the :func:`register_model`
     function decorator.
+
     For example::
+
         @register_model('gat')
         class GAT(BaseModel):
             (...)
+
     Args:
         name (str): the name of the models
     """
