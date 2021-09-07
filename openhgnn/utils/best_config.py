@@ -105,6 +105,19 @@ BEST_CONFIGS = {
                          'max_epoch': 500, 'patience': 10,
                          }
         },
+        'DMGI': {
+            'general': {
+                'seed': 0,  'sc': 3, 'learning_rate' : 0.0005
+            },
+            'acm_han_raw': {'l2_coef': 0.0001, 'dropout': 0.5,'reg_coef': 0.001,
+                            'patience': 20,'sup_coef': 0.1, 'hid_unit': 64,
+                            'isSemi': False,'isBias': False,'isAttn': False
+            },
+            'imdb4GTN': {'l2_coef': 0.0001, 'dropout': 0.5,'reg_coef': 0.1,
+                         'patience': 50,'sup_coef': 0.1, 'hid_unit': 64,
+                         'isSemi': False,'isBias': False,'isAttn': False
+            }
+        },
         'RGCN': {
             'general': {
                 'seed': 0, 'patience': 20, 'validation': True
