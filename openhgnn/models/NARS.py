@@ -118,7 +118,8 @@ class NARS(BaseModel):
         )
 
     def forward(self, hg, h_dict):
-        # feats = preprocess_features(hg, self.mps, self.args, self.args.device, h_dict, self.category)
+
+        #ffeats = [x.to(self.device) for x in self.feats]
         ffeats = [x.to(self.device) for x in self.feats]
         return {self.category: self.seq.forward(ffeats)}
 
@@ -159,12 +160,12 @@ def preprocess_features(g, mps, args, device, predict):
 
     num_paper, feat_size = g.nodes[predict].data["h"].shape
 
-    new_feats = [th.zeros(num_paper, len(mps), feat_size) for _ in range(args.R + 1)]
+    new_feats = [th.zeros(num_paper, len(mps), feat_size) for _ in range(args.num_hops + 1)]
 
     for subset_id, subset in enumerate(mps):
         # print(subset)
         feats = gen_rel_subset_feature(g, subset, args, device, predict)
-        for i in range(args.R + 1):
+        for i in range(args.num_hops + 1):
             feat = feats[i]
             new_feats[i][:feat.shape[0], subset_id, :] = feat
         feats = None
@@ -217,7 +218,7 @@ def gen_rel_subset_feature(g, rel_subset, args, device, predict):
     res = []
 
     # compute k-hop feature
-    for hop in range(1, args.R + 1):
+    for hop in range(1, args.num_hops + 1):
         ntype2feat = {}
         for etype in new_g.etypes:
             stype, _, dtype = new_g.to_canonical_etype(etype)
@@ -236,7 +237,7 @@ def gen_rel_subset_feature(g, rel_subset, args, device, predict):
                 res.append(old_feat.cpu())
             feat_dict[f"hop_{hop}"] = ntype2feat.pop(ntype).mul_(feat_dict["norm"])
 
-    res.append(new_g.nodes[predict].data.pop(f"hop_{args.R}").cpu())
+    res.append(new_g.nodes[predict].data.pop(f"hop_{args.num_hops}").cpu())
     return res
 
 

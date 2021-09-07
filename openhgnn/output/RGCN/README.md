@@ -22,7 +22,7 @@
 
 | Method               | AIFB  | MUTAG | BGS   | AM    |
 | -------------------- | ----- | ----- | ----- | ----- |
-| **RGCN(dgl)**（best) | 97.22 | 72.05 | 93.10 | 89.90 |
+| **RGCN(dgl)**（best) | 97.22 | 72.06 | 96.55 | 88.89 |
 
 ## TrainerFlow: [entity classification flow](../../trainerflow/#Entity_classification_flow)
 

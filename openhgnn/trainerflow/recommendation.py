@@ -24,12 +24,6 @@ class Recommendation(BaseFlow):
     def __init__(self, args):
         super(Recommendation, self).__init__(args)
 
-        self.args = args
-        self.model_name = args.model
-        self.device = args.device
-
-        self.task = build_task(args)
-        self.hg = self.task.get_graph().to(self.device)
         self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
@@ -42,8 +36,6 @@ class Recommendation(BaseFlow):
         self.optimizer = (
             th.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         )
-        self.patience = args.patience
-        self.max_epoch = args.max_epoch
 
     def preprocess(self):
         self.train_hg, self.val_hg, self.test_hg = self.task.get_idx()
@@ -51,12 +43,7 @@ class Recommendation(BaseFlow):
         self.val_hg = self.val_hg.to(self.device)
         self.test_hg = self.test_hg.to(self.device)
         self.negative_graph = self.task.dataset.construct_negative_graph(self.train_hg).to(self.device)
-        if isinstance(self.hg.ndata['h'], dict):
-            self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
-        elif isinstance(self.hg.ndata['h'], th.Tensor):
-            self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
-        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
-        return
+        self.preprocess_feature()
 
     def train(self):
         self.preprocess()

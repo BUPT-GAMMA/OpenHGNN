@@ -1,4 +1,3 @@
-"""RGCN layer implementation"""
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,10 +7,36 @@ from . import BaseModel, register_model
 
 @register_model('RGCN')
 class RGCN(BaseModel):
+    """
+    **Title:** Modeling Relational Data with Graph Convolutional Networks
 
+    **Authors:** Michael Schlichtkrull, Thomas N. Kipf, Peter Bloem, Rianne van den Berg, Ivan Titov, Max Welling
+
+    RGCN was introduced in `[paper] <https://arxiv.org/abs/1703.06103>`_
+    and parameters are defined as follows:
+
+    Parameters
+    ----------
+    in_dim : int
+        Input feature size.
+    hidden_dim : int
+        Hidden dimension .
+    out_dim : int
+        Output feature size.
+    etypes : list[str]
+        Relation names.
+    num_bases : int, optional
+        Number of bases. If is none, use number of relations. Default: None.
+    num_hidden_layers: int
+        Number of RelGraphConvLayer
+    dropout : float, optional
+        Dropout rate. Default: 0.0
+    use_self_loop : bool, optional
+        True to include self loop message. Default: False
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
-        return cls(args.in_dim,
+        return cls(args.hidden_dim,
                    args.hidden_dim,
                    args.out_dim,
                    hg.etypes,
@@ -77,6 +102,7 @@ class RGCN(BaseModel):
 
 class RelGraphConvLayer(nn.Module):
     r"""Relational graph convolution layer.
+
     Parameters
     ----------
     in_feat : int
@@ -191,42 +217,3 @@ class RelGraphConvLayer(nn.Module):
             return self.dropout(h)
 
         return {ntype: _apply(ntype, h) for ntype, h in hs.items()}
-
-
-class RelGraphEmbed(nn.Module):
-    r"""Embedding layer for featureless heterograph."""
-
-    def __init__(self,
-                 g,
-                 embed_size,
-                 embed_name='embed',
-                 activation=None,
-                 dropout=0.0):
-        super(RelGraphEmbed, self).__init__()
-        self.g = g
-        self.embed_size = embed_size
-        self.embed_name = embed_name
-        self.activation = activation
-        self.dropout = nn.Dropout(dropout)
-
-        # create weight embeddings for each node for each relation
-        self.embeds = nn.ParameterDict()
-        for ntype in g.ntypes:
-            embed = nn.Parameter(th.Tensor(g.number_of_nodes(ntype), self.embed_size))
-            nn.init.uniform_(embed, a=-1, b=1)
-            self.embeds[ntype] = embed
-
-    def forward(self, block=None):
-        """Forward computation
-        Parameters
-        ----------
-        block : DGLHeteroGraph, optional
-            If not specified, directly return the full graph with embeddings stored in
-            :attr:`embed_name`. Otherwise, extract and store the embeddings to the block
-            graph and return.
-        Returns
-        -------
-        DGLHeteroGraph
-            The block graph fed with embeddings.
-        """
-        return self.embeds
