@@ -28,11 +28,10 @@ class KGCNTrainer(BaseFlow):
         self.device = args.device
         self.l2_weight = args.weight_decay
         self.task = build_task(args)
-        self.glist = self.task.get_graph()
+        self.g = self.hg
 
-        if args.dataset == 'lastfmKGCN':
-            self.g = self.glist[0][0].to(self.device)
-            self.ratingsGraph = self.glist[0][1].to(self.device)
+        if args.dataset == 'LastFM4KGCN':
+            self.ratingsGraph = self.task.dataset.g_1.to(self.device)
             self.neighborList = [8]
             self.trainIndex, self.evalIndex, self.testIndex = self.task.get_idx()
 

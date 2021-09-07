@@ -11,24 +11,26 @@ class HPN(BaseModel):
     Description
     ------------
     This model shows an example of using dgl.metapath_reachable_graph on the original heterogeneous
-    graph.HPN from paper 'Heterogeneous Graph Propagation Network
-    <https://ieeexplore.ieee.org/abstract/document/9428609>'__.
+    graph.HPN from paper `Heterogeneous Graph Propagation Network
+    <https://ieeexplore.ieee.org/abstract/document/9428609>`__.
     The author did not provide codes. So, we complete it according to the implementation of HAN
 
 
     .. math::
-        \bold Z^\Phi=\mathcal{P}_\Phi(\bold X)=g_\Phi(f_\Phi(\bold X))
+        \mathbf{Z}^{\Phi}=\mathcal{P}_{\Phi}(\mathbf{X})=g_\Phi(f_\Phi(\mathbf{X}))
 
-        where :math:`\bold X` denotes initial feature matrix and :math:`\bold Z^\Phi` denotes semantic-specific node embedding.
+    where :math:`\mathbf{X}` denotes initial feature matrix and :math:`\mathbf{Z^\Phi}` denotes semantic-specific node embedding.
 
-        \bold H^\Phi=f_\Phi(\bold X)=\sigma(\bold X · \bold W^\Phi+\bold b^\Phi)
+    .. math::
+        \mathbf{H}^{\Phi}=f_\Phi(\mathbf{X})=\sigma(\mathbf{X} \cdot \mathbf{W}^\Phi+\mathbf{b}^{\Phi})
 
-        where :math:`\bold H^\Phi` is projected node feature matrix
+    where :math:`\mathbf{H}^{\Phi}` is projected node feature matrix
 
+    .. math::
         \mathbf{Z}^{\Phi, k}=g_{\Phi}\left(\mathbf{Z}^{\Phi, k-1}\right)=(1-\gamma) \cdot \mathbf{M}^{\Phi} \cdot \mathbf{Z}^{\Phi, k-1}+\gamma \cdot \mathbf{H}^{\Phi}
 
-        where :math:`\bold Z^{\Phi,k}` denotes node embedding learned by k-th layer semantic propagation mechanism. :math:`\gamma` is a weight scalar which indicates the
-        importance of characteristic of node in aggregating process
+    where :math:`\mathbf{Z}^{\Phi,k}` denotes node embedding learned by k-th layer semantic propagation mechanism. :math:`\gamma` is a weight scalar which indicates the
+    importance of characteristic of node in aggregating process
 
 
 

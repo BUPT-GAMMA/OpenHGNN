@@ -22,6 +22,8 @@ class Config(object):
             print("failed!")
         # training dataset path
         self.seed = 0
+        self.patience = 1
+        self.max_epoch = 1
         self.task = task
         self.model = model
         self.dataset = dataset
@@ -315,6 +317,17 @@ class Config(object):
             self.patience = conf.getint('HPN', 'patience')
             self.max_epoch = conf.getint('HPN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("HPN", "mini_batch_flag")
+        elif model == 'KGCN':
+            self.weight_decay = conf.getfloat("KGCN", "weight_decay")
+            self.batch_size = conf.getint("KGCN", "batch_size")
+            self.in_dim = conf.getint('KGCN', 'in_dim')
+            self.out_dim = conf.getint('KGCN', 'out_dim')
+            self.lr = conf.getfloat("KGCN", "lr")
+            self.n_neighbor = conf.getint("KGCN", "n_neighbor")
+            self.aggregate = conf.get("KGCN", "aggregate")
+            self.n_item = conf.getint("KGCN", "n_relation")
+            self.n_user = conf.getint("KGCN", "n_user")
+            self.epoch_iter = conf.getint("KGCN", "epoch_iter")
 
     def __repr__(self):
         return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset
