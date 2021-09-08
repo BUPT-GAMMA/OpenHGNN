@@ -316,7 +316,7 @@ def generate(aggr, i):
     fileNamePath = os.path.split(os.path.realpath(__file__))[0]
     if not os.path.exists('./config'):
         os.makedirs('./config')
-    name = './config/' + aggr + '_' + i + '.yaml'
+    name = 'config/' + aggr + '_' + i + '.yaml'
     yamlPath = os.path.join(fileNamePath, name)
 
     f = open(yamlPath,'w')

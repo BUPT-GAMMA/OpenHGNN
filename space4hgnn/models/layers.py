@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from openhgnn.models.MetapathConv import MetapathConv
+from openhgnn.layers.MetapathConv import MetapathConv
 from openhgnn.models.macro_layer.SemanticConv import SemanticAttention
 
 
@@ -23,7 +23,6 @@ class MPConv(nn.Module):
         self.model = MetapathConv(
             meta_paths,
             [homo_layer_dict[name](dim_in, dim_out, bias=bias)
-            #[dgl.nn.pytorch.GraphConv(dim_in, dim_out, bias=bias)
             for _ in meta_paths],
             macro_func
         )
@@ -41,7 +40,7 @@ def Aggr_sum(z):
 
 def Aggr_max(z):
     z = torch.stack(z, dim=1)
-    return z.max(1)
+    return z.max(1)[0]
 
 
 def Aggr_mean(z):

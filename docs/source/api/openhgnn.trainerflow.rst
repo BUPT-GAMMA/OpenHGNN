@@ -1,85 +1,85 @@
-trainerflow package
+openhgnn.trainerflow package
 ============================
 
 Submodules
 ----------
 
-trainerflow.base\_flow module
+openhgnn.trainerflow.base\_flow module
 --------------------------------------
 
-.. automodule:: trainerflow.base_flow
+.. automodule:: openhgnn.trainerflow.base_flow
    :members:
    :undoc-members:
    :show-inheritance:
 
-trainerflow.demo module
+openhgnn.trainerflow.demo module
 --------------------------------
 
-.. automodule:: trainerflow.demo
+.. automodule:: openhgnn.trainerflow.demo
    :members:
    :undoc-members:
    :show-inheritance:
 
-trainerflow.dist\_mult module
+openhgnn.trainerflow.dist\_mult module
 --------------------------------------
 
-.. automodule:: trainerflow.dist_mult
+.. automodule:: openhgnn.trainerflow.dist_mult
    :members:
    :undoc-members:
    :show-inheritance:
 
-trainerflow.entity\_classification module
+openhgnn.trainerflow.entity\_classification module
 --------------------------------------------------
 
-.. automodule:: trainerflow.entity_classification
+.. automodule:: openhgnn.trainerflow.entity_classification
    :members:
    :undoc-members:
    :show-inheritance:
 
-trainerflow.hetgnn\_trainer module
+openhgnn.trainerflow.hetgnn\_trainer module
 -------------------------------------------
 
-.. automodule:: trainerflow.hetgnn_trainer
+.. automodule:: openhgnn.trainerflow.hetgnn_trainer
    :members:
    :undoc-members:
    :show-inheritance:
 
-trainerflow.hgt\_trainer module
+openhgnn.trainerflow.hgt\_trainer module
 ----------------------------------------
 
-.. automodule:: trainerflow.hgt_trainer
+.. automodule:: openhgnn.trainerflow.hgt_trainer
    :members:
    :undoc-members:
    :show-inheritance:
 
-trainerflow.link\_prediction module
+openhgnn.trainerflow.link\_prediction module
 --------------------------------------------
 
-.. automodule:: trainerflow.link_prediction
+.. automodule:: openhgnn.trainerflow.link_prediction
    :members:
    :undoc-members:
    :show-inheritance:
 
-trainerflow.networkschema module
+openhgnn.trainerflow.networkschema module
 -----------------------------------------
 
-.. automodule:: trainerflow.networkschema
+.. automodule:: openhgnn.trainerflow.networkschema
    :members:
    :undoc-members:
    :show-inheritance:
 
-trainerflow.node\_classification module
+openhgnn.trainerflow.node\_classification module
 ------------------------------------------------
 
-.. automodule:: trainerflow.node_classification
+.. automodule:: openhgnn.trainerflow.node_classification
    :members:
    :undoc-members:
    :show-inheritance:
 
-trainerflow.nshe\_trainer module
+openhgnn.trainerflow.nshe\_trainer module
 -----------------------------------------
 
-.. automodule:: trainerflow.nshe_trainer
+.. automodule:: openhgnn.trainerflow.nshe_trainer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -87,7 +87,7 @@ trainerflow.nshe\_trainer module
 Module contents
 ---------------
 
-.. automodule:: trainerflow
+.. automodule:: openhgnn.trainerflow
    :members:
    :undoc-members:
    :show-inheritance:

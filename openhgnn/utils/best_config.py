@@ -125,12 +125,12 @@ BEST_CONFIGS = {
             },
             'aifb': {
                 'lr': 0.005, 'weight_decay': 0, 'max_epoch': 100,
-                'hidden_dim': 32, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'dropout': 0.1,
+                'hidden_dim': 32, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'dropout': 0,
                 'mini_batch_flag': False, 'validation': True
                      },
             'mutag': {
-                'lr': 0.001, 'weight_decay': 0.0005, 'max_epoch': 50,
-                'hidden_dim': 32, 'n_bases': 30, 'n_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0.05,
+                'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50,
+                'hidden_dim': 32, 'n_bases': 30, 'n_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0.5,
                 'mini_batch_flag': False, 'validation': True
             },
             'bgs': {
@@ -184,7 +184,7 @@ BEST_CONFIGS = {
             "general": {},
             'LastFM4KGCN': {
                 'in_dim': 16, 'hidden_dim': 16, 'n_relation': 60,
-                'batch_size': 1, 'lr' : 0.0005
+                'batch_size': 128, 'lr' : 0.0005
             },
         }
     },

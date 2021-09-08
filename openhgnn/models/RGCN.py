@@ -103,6 +103,8 @@ class RGCN(BaseModel):
 class RelGraphConvLayer(nn.Module):
     r"""Relational graph convolution layer.
 
+    We use 'HeteroGraphConv <https://docs.dgl.ai/api/python/nn.pytorch.html#heterographconv>_' to implement the model.
+
     Parameters
     ----------
     in_feat : int
