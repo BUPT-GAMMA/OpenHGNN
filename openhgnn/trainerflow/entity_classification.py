@@ -76,6 +76,13 @@ class EntityClassification(BaseFlow):
         test_acc, _ = self._test_step(split="test")
         val_acc, _ = self._test_step(split="val")
         print(f"Valid accuracy = {val_acc:.4f}, Test accuracy = {test_acc:.4f}")
+        if self.args.dataset[:4] == 'HGBn':
+            self.model.eval()
+            with torch.no_grad():
+                h_dict = self.input_feature()
+                logits = self.model(self.hg, h_dict)[self.category]
+                self.task.dataset.save_results(logits=logits, file_path=self.args.HGB_results_path)
+            return
         return dict(Acc=test_acc, ValAcc=val_acc)
 
     def _full_train_step(self):

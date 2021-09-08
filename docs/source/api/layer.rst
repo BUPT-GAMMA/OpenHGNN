@@ -50,3 +50,5 @@ MetapathConv
 ------------------------------------
 
 .. automodule:: openhgnn.layers.MetapathConv
+    :members:
+    :show-inheritance:

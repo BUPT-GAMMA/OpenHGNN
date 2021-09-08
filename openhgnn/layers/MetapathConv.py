@@ -8,8 +8,9 @@ class MetapathConv(nn.Module):
     Description
     ------------
     MetapathConv is a aggregation function based on meta-path.
-    We could choose Attention or APPNP way to aggregate node features.
+    We could choose Attention/ APPNP or any GraphConvLayer to aggregate node features.
     After that we will get embeddings based on all meta-path and fusion them.
+
     .. math::
         \mathbf{Z}=\mathcal{F}(Z^{\Phi_1},Z^{\Phi_2},...,Z^{\Phi_p})=\mathcal{F}(f(H,\Phi_1),f(H,\Phi_2),...,f(H,\Phi_p))
 
@@ -18,12 +19,12 @@ class MetapathConv(nn.Module):
 
     Parameters
     ------------
-    meta_paths : list
+    meta_paths : list[tuple]
         contain multiple meta-paths.
-    mods : nn.Module
+    mods : nn.ModuleList
         aggregation function
-    macro_func : str
-        way of semantic fusion
+    macro_func : callable aggregation func
+        A semantic aggregation way, e.g. 'mean', 'max', 'sum' or 'attention'
 
 
     """
@@ -38,17 +39,15 @@ class MetapathConv(nn.Module):
         r"""
         Parameters
         -----------
-        g_list : DGLHeteroGraph
-            The heterogeneous graph
-        h : tensor
+        g_list : list of DGLGraph
+            A list of DGLGraph extracted by metapaths.
+        h : Tensor
             The input features
 
         Returns
         --------
         h : tensor
             The output features
-
-
         """
         semantic_embeddings = []
 

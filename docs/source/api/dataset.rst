@@ -1,4 +1,4 @@
-.. _api_dataset:
+.. _api-dataset:
 
 Dataset
 ========================
@@ -8,7 +8,10 @@ Node Classification Dataset
 
 .. automodule:: openhgnn.dataset.NodeClassificationDataset
 
-BaseNode Classification Dataset
+
+.. _api-base-node-dataset:
+
+Base Node Classification Dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: openhgnn.dataset.NodeClassificationDataset.NodeClassificationDataset
@@ -40,15 +43,29 @@ Link Prediction Dataset
 ---------------------------------------------
 
 .. automodule:: openhgnn.dataset.LinkPredictionDataset
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
+HIN Link Prediction Dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.dataset.LinkPredictionDataset.HIN_LinkPrediction
+    :members:
+    :show-inheritance:
+
+HGB Link Prediction Dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.dataset.LinkPredictionDataset.HGB_LinkPrediction
+    :members:
+    :show-inheritance:
 
 Recommendation Dataset
 ---------------------------------------------
 
 .. automodule:: openhgnn.dataset.RecommendationDataset
-   :members:
-   :undoc-members:
-   :show-inheritance:
+
+KGCN Recommendation Dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.dataset.LinkPredictionDataset.KGCN_Recommendation
+    :members:
+    :show-inheritance:

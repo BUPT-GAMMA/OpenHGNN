@@ -22,8 +22,9 @@ class BaseFlow(ABC):
                                                 f"{args.model}_{args.dataset}.pt")
             else:
                 self._checkpoint = None
-        # if args.dataset[:3] == 'HGB':
-        #     args.HGB_results_path = os.path.join("./openhgnn/output/{}/{}.txt".format(args.model, args.dataset[5:]))
+
+        if not hasattr(args, 'HGB_results_path') and args.dataset[:3] == 'HGB':
+            args.HGB_results_path = os.path.join("./openhgnn/output/{}/{}_{}.txt".format(args.model, args.dataset[5:], args.seed))
 
         self.args = args
         self.model_name = args.model

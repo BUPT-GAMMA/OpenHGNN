@@ -46,7 +46,7 @@ class NodeClassificationDataset(BaseDataset):
         r"""
         Description
         ------------
-        The subclass of dataset should overwrite the function. We can get labels of target node.
+        The subclass of dataset should overwrite the function. We can get labels of target nodes through it.
 
         return
         -------
@@ -62,7 +62,7 @@ class NodeClassificationDataset(BaseDataset):
 
         return
         -------
-        train_idx, val_idx, test_idx : torch.Tensor
+        train_idx, val_idx, test_idx : torch.Tensor, torch.Tensor, torch.Tensor
         """
         raise NotImplemented
 
@@ -73,11 +73,13 @@ class RDF_NodeClassification(NodeClassificationDataset):
     Description
     ------------
     The RDF dataset will be used in task *entity classification*.
-    It contains AIFB/MUTAG/MUTAG/BGS.
-    And we download from dgl and process it.
+    Dataset Name : aifb/ mutag/ bgs/ am.
+    We download from dgl and process it, refer to
+    `RDF datasets <https://docs.dgl.ai/api/python/dgl.data.html#rdf-datasets>`_.
 
-    So if you want to get more information, refer to
-    `RDF datasets <https://docs.dgl.ai/api/python/dgl.data.html#rdf-datasets>`_
+    Notes
+    ------
+    They are all have no feature.
     """
     def __init__(self, dataset_name):
         super(RDF_NodeClassification, self).__init__()
@@ -104,6 +106,17 @@ class RDF_NodeClassification(NodeClassificationDataset):
         return kg, category, num_classes
 
     def get_idx(self, validation=True):
+        r"""
+
+        Parameters
+        ----------
+        validation : bool
+            Whether to split dataset. Default ``True``. If it is False, val_idx will be same with train_idx.
+
+        Returns
+        -------
+            train_idx, val_idx, test_idx
+        """
         train_mask = self.g.nodes[self.category].data.pop('train_mask')
         test_mask = self.g.nodes[self.category].data.pop('test_mask')
         train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
@@ -132,10 +145,8 @@ class HIN_NodeClassification(NodeClassificationDataset):
     The HIN dataset are all used in different papers. So we preprocess them and store them as form of dgl.DGLHeteroGraph.
     The dataset name combined with paper name through 4(for).
 
-    Dataset Name
-    ------------
-    acm4NSHE/acm4GTN/acm4NARS/
-    acm_han_raw/academic4HetGNN/dblp4MAGNN/imdb4MAGNN/...
+    Dataset Name :
+    acm4NSHE/ acm4GTN/ acm4NARS/ acm_han_raw/ academic4HetGNN/ dblp4MAGNN/ imdb4MAGNN/ ...
     """
     def __init__(self, dataset_name):
         super(HIN_NodeClassification, self).__init__()
@@ -261,10 +272,8 @@ class HGB_NodeClassification(NodeClassificationDataset):
     Description
     ------------
     The HGB dataset will be used in task *node classification*.
-    And we download from dgl and process it.
 
-    Dataset Name
-    ------------
+    Dataset Name :
     HGBn-ACM/HGBn-DBLP/HGBn-Freebase/HGBn-IMDB
 
     So if you want to get more information, refer to
@@ -369,7 +378,14 @@ class HGB_NodeClassification(NodeClassificationDataset):
         return self.train_idx, self.valid_idx, self.test_idx
 
     def get_labels(self):
-        # RuntimeError: Expected object of scalar type Long but got scalar type Float for argument #2 'target' in call to _thnn_nll_loss_forward
+        r"""
+        Notes
+        ------
+        In general, the labels are th.FloatTensor.
+        But for multi-label dataset, they should be th.LongTensor. Or it will raise
+        RuntimeError: Expected object of scalar type Long but got scalar type Float for argument #2 target' in call to _thnn_nll_loss_forward
+        """
+
         if 'labels' in self.g.nodes[self.category].data:
             labels = self.g.nodes[self.category].data.pop('labels').long()
         elif 'label' in self.g.nodes[self.category].data:
@@ -380,6 +396,17 @@ class HGB_NodeClassification(NodeClassificationDataset):
         return self.labels
 
     def save_results(self, logits, file_path):
+        r"""
+        To save test results of HGBn.
+
+        Parameters
+        ----------
+        logits: th.Tensor
+            The prediction of target nodes.
+        file_path : str
+            The path to save file.
+
+        """
         test_logits = logits[self.test_idx]
         if self.dataset_name == 'HGBn-IMDB':
             pred = (test_logits.cpu().numpy() > 0).astype(int)

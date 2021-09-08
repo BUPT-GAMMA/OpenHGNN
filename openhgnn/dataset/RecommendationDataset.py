@@ -1,6 +1,5 @@
 import os
 import dgl
-import random
 import torch as th
 from . import BaseDataset, register_dataset
 from dgl.data.utils import load_graphs
@@ -19,12 +18,14 @@ class RecommendationDataset(BaseDataset):
 
 @register_dataset('kgcn_recommendation')
 class KGCN_Recommendation(RecommendationDataset):
+    r"""
+    Which is used in KGCN.
+    """
     def __init__(self, dataset_name):
             super(RecommendationDataset, self).__init__()
             dataset = MultiGraphDataset(name=dataset_name, raw_dir='')
             self.g = dataset[0].long()
             self.g_1 = dataset[1].long()
-
 
     def get_idx(self, validation=True):
         ratingsGraph = self.g_1
@@ -41,7 +42,6 @@ class KGCN_Recommendation(RecommendationDataset):
 
     def get_labels(self):
         return self.label
-    
 
 
 @register_dataset('hin_recommendation')

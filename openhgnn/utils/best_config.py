@@ -29,6 +29,17 @@ BEST_CONFIGS = {
                 'hidden_dim': 16, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
                 'mini_batch_flag': True, 'validation': True
             },
+            'HGBn-ACM': {
+
+            },
+            'HGBn-DBLP': {
+                'n_layers': 2, 'hidden_dim': 16, 'dropout': 0.5
+            },
+            'HGBn-Freebase': {
+                'n_layers': 5, 'hidden_dim': 16, 'dropout': 0.5
+            },
+            'HGBn-IMDB': {
+            }
         },
         'CompGCN': {
             'general': {
