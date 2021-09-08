@@ -24,14 +24,15 @@ class LinkPrediction(BaseFlow):
         self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
-
+        if args.dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
+            self.node_shift = self.task.dataset.shift_dict
+            self.test_edge_type = self.task.dataset.test_edge_type
         self.args.out_node_type = self.task.dataset.ntypes
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
         self.evaluator = self.task.get_evaluator('mrr')
-
         self.optimizer = (
             th.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         )
@@ -78,7 +79,7 @@ class LinkPrediction(BaseFlow):
                 h_dict = self.input_feature()
                 embedding = self.model(self.hg, h_dict)
                 score = th.sigmoid(self.ScorePredictor(self.test_hg, embedding))
-                self.task.dataset.save_results(hg=self.test_hg, node_shift=self.calculate_node_shift(), test_edge_type=self.args.test_edge_type, score=score, file_path=self.args.HGB_results_path)
+                self.task.dataset.save_results(hg=self.test_hg, node_shift=self.node_shift, test_edge_type=self.test_edge_type, score=score, file_path=self.args.HGB_results_path)
             return
         test_mrr = self._test_step(split="test")
         val_mrr = self._test_step(split="val")

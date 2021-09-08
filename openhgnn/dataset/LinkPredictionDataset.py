@@ -105,21 +105,38 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.target_link = [('product', 'product-product-0', 'product'),
                                 ('product', 'product-product-1', 'product')]
             self.link = [0, 1]
+            self.node_type = ["product"]
+            self.test_edge_type = {'product-product-0': 0, 'product-product-1': 1}
+
         elif dataset_name == 'HGBl-LastFM':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             self.has_feature = False
             self.target_link = [('user', 'user-artist', 'artist')]
+            self.node_type = ['user', 'artist', 'tag']
+            self.test_edge_type = {'user-artist': 0}
+
         elif dataset_name == 'HGBl-PubMed':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             self.has_feature = True
             self.target_link = [('1', '1_to_1', '1')]
+            self.node_type = ['0', '1', '2', '3']
+            self.test_edge_type = {'1_to_1': 2}
 
         self.g = g
+        self.shift_dict = self.calculate_node_shift()
 
     def load_link_pred(self, path):
         return
+
+    def calculate_node_shift(self):
+        node_shift_dict = {}
+        count = 0
+        for type in self.node_type:
+            node_shift_dict[type] = count
+            count += self.g.num_nodes(type)
+        return node_shift_dict
 
     def get_idx(self):
         r"""

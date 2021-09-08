@@ -517,13 +517,6 @@ link_prediction:
         300
       mini_batch_flag:
         False
-      node_type:
-        - product
-      test_edge_type:
-        product-product-0:
-          0
-        product-product-1:
-          1
 
   HGBl-PubMed:
     homo_GNN:
@@ -562,14 +555,6 @@ link_prediction:
         300
       mini_batch_flag:
         False
-      node_type:
-        - "0"
-        - "1"
-        - "2"
-        - "3"
-      test_edge_type:
-        1_to_1:
-          2
 
   HGBl-LastFM:
     homo_GNN:
@@ -608,10 +593,3 @@ link_prediction:
         300
       mini_batch_flag:
         False
-      node_type:
-        - user
-        - artist
-        - tag
-      test_edge_type:
-        user-artist:
-          0
