@@ -142,5 +142,3 @@ class HPNLayer(nn.Module):
 
         h = self.model(self._cached_coalesced_graph, h)
         return h
-
-
