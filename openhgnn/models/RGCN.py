@@ -8,8 +8,7 @@ from . import BaseModel, register_model
 @register_model('RGCN')
 class RGCN(BaseModel):
     """
-    **Title:** `Modeling Relational Data with Graph Convolutional Networks
-        <https://arxiv.org/abs/1703.06103>`_
+    **Title:** `Modeling Relational Data with Graph Convolutional Networks <https://arxiv.org/abs/1703.06103>`_
 
     **Authors:** Michael Schlichtkrull, Thomas N. Kipf, Peter Bloem, Rianne van den Berg, Ivan Titov, Max Welling
 

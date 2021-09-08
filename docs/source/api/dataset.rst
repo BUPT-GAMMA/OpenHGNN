@@ -6,40 +6,40 @@ Dataset
 Node Classification Dataset
 -------------------------------------------------
 
-.. automodule:: dataset.NodeClassificationDataset
+.. automodule:: openhgnn.dataset.NodeClassificationDataset
 
 BaseNode Classification Dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: dataset.NodeClassificationDataset.NodeClassificationDataset
+.. autoclass:: openhgnn.dataset.NodeClassificationDataset.NodeClassificationDataset
     :members:
     :show-inheritance:
 
 RDF Node Classification Dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: dataset.NodeClassificationDataset.RDF_NodeClassification
+.. autoclass:: openhgnn.dataset.NodeClassificationDataset.RDF_NodeClassification
     :members:
     :show-inheritance:
 
 HIN Node Classification Dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: dataset.NodeClassificationDataset.HIN_NodeClassification
+.. autoclass:: openhgnn.dataset.NodeClassificationDataset.HIN_NodeClassification
     :members:
     :show-inheritance:
 
 HGB Node Classification Dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: dataset.NodeClassificationDataset.HGB_NodeClassification
+.. autoclass:: openhgnn.dataset.NodeClassificationDataset.HGB_NodeClassification
     :members:
     :show-inheritance:
 
 Link Prediction Dataset
 ---------------------------------------------
 
-.. automodule:: dataset.LinkPredictionDataset
+.. automodule:: openhgnn.dataset.LinkPredictionDataset
    :members:
    :undoc-members:
    :show-inheritance:
@@ -48,7 +48,7 @@ Link Prediction Dataset
 Recommendation Dataset
 ---------------------------------------------
 
-.. automodule:: dataset.RecommendationDataset
+.. automodule:: openhgnn.dataset.RecommendationDataset
    :members:
    :undoc-members:
    :show-inheritance:

@@ -105,6 +105,16 @@ class ScorePredictor(nn.Module):
 
 class Het_Aggregate(nn.Module):
     r"""
+    The whole model of HetGNN
+
+    Attributes
+    -----------
+    content_rnn : nn.Module
+        het_content_encoder
+    neigh_rnn : nn.Module
+        aggregate_het_neigh
+    atten_w : nn.ModuleDict[str, nn.Module]
+
 
     """
     def __init__(self, ntypes, dim):
@@ -257,9 +267,10 @@ class aggregate_het_neigh(nn.Module):
 
 
 class lstm_aggr(nn.Module):
-    '''
+    r"""
     Aggregate the same neighbors with LSTM
-    '''
+    """
+
     def __init__(self, dim):
         super(lstm_aggr, self).__init__()
         self.lstm = nn.LSTM(dim, int(dim / 2), 1, batch_first=True, bidirectional=True)

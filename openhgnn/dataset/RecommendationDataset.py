@@ -8,7 +8,6 @@ from .multigraph import MultiGraphDataset
 from openhgnn.sampler.negative_sampler import Uniform_exclusive
 
 
-
 @register_dataset('recommendation')
 class RecommendationDataset(BaseDataset):
     """
