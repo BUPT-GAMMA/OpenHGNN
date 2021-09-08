@@ -1,7 +1,7 @@
 .. _api-model:
 
-openhgnn.models
-======
+Models
+=========
 
 BaseModel
 ---------
@@ -11,16 +11,13 @@ BaseModel
     :undoc-members:
     :show-inheritance:
 
-.. _
-
-DMGI
+RGCN
 -----------------------------
 
-.. automodule:: openhgnn.models.DMGI
+.. automodule:: openhgnn.models.RGCN
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 HAN
 --------------------------
@@ -38,10 +35,42 @@ HetGNN
    :undoc-members:
    :show-inheritance:
 
-NARS
+GTN
 -----------------------------
 
-.. automodule:: openhgnn.models.NARS
+.. automodule:: openhgnn.models.GTN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+RSHN
+-----------------------------
+
+.. automodule:: openhgnn.models.RSHN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+DMGI
+-----------------------------
+
+.. automodule:: openhgnn.models.DMGI
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+MAGNN
+-----------------------------
+
+.. automodule:: openhgnn.models.MAGNN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+CompGCN
+-----------------------------
+
+.. automodule:: openhgnn.models.CompGCN
    :members:
    :undoc-members:
    :show-inheritance:
@@ -54,43 +83,19 @@ NSHE
    :undoc-members:
    :show-inheritance:
 
+NARS
+-----------------------------
+
+.. automodule:: openhgnn.models.NARS
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 MHNF
 -----------------------------
 
 .. automodule:: openhgnn.models.MHNF
    :members: openhgnn.models.MHNF.HSAF, openhgnn.models.MHNF.HLHIA, openhgnn.models.MHNF.HMAELayer, openhgnn.models.GTN.GTConv
-
-MHNF.HSAF
-~~~~~~~~~~~~
-
-.. autoclass:: openhgnn.models.MHNF.HSAF
-   :members:
-
-MHNF.HLHIA
-~~~~~~~~~~~~
-
-.. autoclass:: openhgnn.models.MHNF.HLHIA
-   :members:
-
-MHNF.HMAELayer
-~~~~~~~~~~~~
-
-.. autoclass:: openhgnn.models.MHNF.HMAELayer
-   :members:
-
-MHNF.GTConv
-~~~~~~~~~~~~
-
-.. autoclass:: openhgnn.models.GTN.GTConv
-   :members:
-
-HPN
------------------------------
-
-.. automodule:: openhgnn.models.HPN
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 HGNN_AC
 -----------------------------
@@ -100,12 +105,10 @@ HGNN_AC
    :undoc-members:
    :show-inheritance:
 
-RGCN
+HPN
 -----------------------------
 
-.. automodule:: openhgnn.models.RGCN
+.. automodule:: openhgnn.models.HPN
    :members:
    :undoc-members:
    :show-inheritance:
-
-

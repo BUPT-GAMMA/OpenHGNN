@@ -157,13 +157,13 @@ models.NSHE module
    :undoc-members:
    :show-inheritance:
 
-models.MHNF module
----------------------------
 
-.. automodule:: models.MHNF
-   :members:
-   :undoc-members:
-   :show-inheritance:
+MHNF
+-----------------------------
+
+.. automodule:: openhgnn.models.MHNF
+   :members: openhgnn.models.MHNF.HSAF, openhgnn.models.MHNF.HLHIA, openhgnn.models.MHNF.HMAELayer, openhgnn.models.GTN.GTConv
+
 
 models.RGCN module
 ---------------------------

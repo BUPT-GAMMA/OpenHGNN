@@ -103,7 +103,7 @@ class HPNLayer(nn.Module):
         # semantic projection function fΦ projects node into semantic space
 
         self.hidden = nn.Sequential(
-            nn.Linear(in_features=in_size, out_features=out_embedsize, bias=True),
+            #nn.Linear(in_features=in_size, out_features=out_embedsize, bias=True),
             nn.ReLU()
         )
         self.meta_paths = meta_paths

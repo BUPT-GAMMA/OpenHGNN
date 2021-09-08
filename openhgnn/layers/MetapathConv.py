@@ -11,7 +11,6 @@ class MetapathConv(nn.Module):
         self.meta_paths = meta_paths
         self.SemanticConv = macro_func
 
-
     def forward(self, g_list, h):
         semantic_embeddings = []
 
