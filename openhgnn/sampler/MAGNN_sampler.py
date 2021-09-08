@@ -29,7 +29,7 @@ class MAGNN_sampler():
     category : any
         the class of seed_nodes.
     metapath_list : list
-        the type of all metapaths in graph g. e.g. ['MAM', 'MDM', ...]
+        the type of all metapaths in graph g. e.g. ['M-A-M', 'M-D-M', ...]
     num_samples : int
         the maximal number of metapath instances we'd like to sample for each node. i.e. for each node,
         if the number of metapath instances is more than num_samples, we sample num_samples instances randomly based on
