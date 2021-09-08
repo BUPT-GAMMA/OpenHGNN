@@ -4,6 +4,29 @@ import torch.nn as nn
 
 
 class MetapathConv(nn.Module):
+    r"""
+    Description
+    ------------
+    MetapathConv is a aggregation function based on meta-path.
+    We could choose Attention or APPNP way to aggregate node features.
+    After that we will get embeddings based on all meta-path and fusion them.
+    .. math::
+        \mathbf{Z}=\mathcal{F}(Z^{\Phi_1},Z^{\Phi_2},...,Z^{\Phi_p})=\mathcal{F}(f(H,\Phi_1),f(H,\Phi_2),...,f(H,\Phi_p))
+
+    where :math:`\mathcal{F}` denotes semantic fusion function, such as semantic-attention. :math:`\Phi_i` denotes meta-path and
+    :math:`f` denotes the aggregation way, such as GAT, APPNP.
+
+    Parameters
+    ------------
+    meta_paths : list
+        contain multiple meta-paths.
+    mods : nn.Module
+        aggregation function
+    macro_func : str
+        way of semantic fusion
+
+
+    """
     def __init__(self, meta_paths, mods, macro_func, **kargs):
         super(MetapathConv, self).__init__()
         # One GAT layer for each meta path based adjacency matrix
@@ -12,6 +35,21 @@ class MetapathConv(nn.Module):
         self.SemanticConv = macro_func
 
     def forward(self, g_list, h):
+        r"""
+        Parameters
+        -----------
+        g_list : DGLHeteroGraph
+            The heterogeneous graph
+        h : tensor
+            The input features
+
+        Returns
+        --------
+        h : tensor
+            The output features
+
+
+        """
         semantic_embeddings = []
 
         for i, meta_path in enumerate(self.meta_paths):

@@ -33,7 +33,8 @@ class HPN(BaseModel):
         \mathbf{Z}^{\Phi, k}=g_{\Phi}\left(\mathbf{Z}^{\Phi, k-1}\right)=(1-\gamma) \cdot \mathbf{M}^{\Phi} \cdot \mathbf{Z}^{\Phi, k-1}+\gamma \cdot \mathbf{H}^{\Phi}
 
     where :math:`\mathbf{Z}^{\Phi,k}` denotes node embedding learned by k-th layer semantic propagation mechanism. :math:`\gamma` is a weight scalar which indicates the
-    importance of characteristic of node in aggregating process
+    importance of characteristic of node in aggregating process.
+    We use MetapathConv to finish Semantic Propagation and Semantic Fusion.
 
 
 
@@ -50,11 +51,11 @@ class HPN(BaseModel):
     dropout : float
         Dropout probability.
     out_embedsizes : int
-        Dimension of the final embedding Z
+        Dimension of the final embedding Z.
     k_layer : int
-        propagation times
+        propagation times.
     alpha : float
-        Value of restart probability
+        Value of restart probability.
     edge_drop : float, optional
         The dropout rate on edges that controls the
         messages received by each node. Default: ``0``.
@@ -142,3 +143,5 @@ class HPNLayer(nn.Module):
 
         h = self.model(self._cached_coalesced_graph, h)
         return h
+
+
