@@ -1,6 +1,5 @@
 import dgl
 import numpy as np
-import torch
 from dgl.data.knowledge_graph import load_data
 import torch as th
 from . import BaseDataset, register_dataset
