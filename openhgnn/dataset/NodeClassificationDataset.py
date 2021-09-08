@@ -29,6 +29,8 @@ class NodeClassificationDataset(BaseDataset):
         The target node  will be classified into num_classes categories.
     has_feature : bool
         Whether the dataset has feature. Default ``False``.
+    multi_label : bool
+        Whether the node has multi label. Default ``False``. For now, only HGBn-IMDB has multi-label.
     """
 
     def __init__(self):
@@ -37,6 +39,7 @@ class NodeClassificationDataset(BaseDataset):
         self.category = None
         self.num_classes = None
         self.has_feature = False
+        self.multi_label = False
         # self.in_dim = None
 
     def get_labels(self):
@@ -126,10 +129,8 @@ class HIN_NodeClassification(NodeClassificationDataset):
     r"""
     Description
     ------------
-    The HGB dataset are all used in different papers. So we preprocess them and store them as form of dgl.DGLHeteroGraph.
+    The HIN dataset are all used in different papers. So we preprocess them and store them as form of dgl.DGLHeteroGraph.
     The dataset name combined with paper name through 4(for).
-
-
 
     Dataset Name
     ------------
@@ -141,18 +142,18 @@ class HIN_NodeClassification(NodeClassificationDataset):
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
 
     def load_HIN(self, name_dataset):
-        if name_dataset == 'acm4NSHE':
-            dataset = AcademicDataset(name='acm4NSHE', raw_dir='')
-            category = 'paper'
-            g = dataset[0].long()
-            num_classes = 3
-            self.in_dim = g.ndata['h'][category].shape[1]
-        elif name_dataset == 'dblp':
-            data_path = './openhgnn/dataset/dblp_graph.bin'
+        if name_dataset == 'demo_graph':
+            data_path = './openhgnn/dataset/demo_graph.bin'
             category = 'author'
             num_classes = 4
             g, _ = load_graphs(data_path)
             g = g[0].long()
+            self.in_dim = g.ndata['h'][category].shape[1]
+        elif name_dataset == 'acm4NSHE':
+            dataset = AcademicDataset(name='acm4NSHE', raw_dir='')
+            category = 'paper'
+            g = dataset[0].long()
+            num_classes = 3
             self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset == 'dblp4MAGNN':
             dataset = AcademicDataset(name='dblp4MAGNN', raw_dir='')

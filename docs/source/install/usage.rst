@@ -31,6 +31,74 @@ you can refer to the below `models list <https://github.com/BUPT-GAMMA/OpenHGNN#
 
 Evaluate a new dataset in an existing model
 ==============================================
+When the existing dataset can not meet your needs, you can custom your dataset.
+
+In this section, we will create a new dataset HGBn-ACM, which is used in *node classification* task.
+
+**First step: Process dataset**
+We give a `demo <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/debug/test.py>`_ to process the HGBn-ACM.
+
+Download the HGBn-ACM from the `Link <https://www.biendata.xyz/hgb/#/datasets>`_.
+After that, we process it as a `dgl.heterograph <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/dataset#Dataset>`_.
+
+The following code snippet is an example for creating a heterogeneous graph in DGL.
+
+.. code:: python
+
+    >>> import dgl
+    >>> import torch as th
+
+    >>> # Create a heterograph with 3 node types and 3 edges types.
+    >>> graph_data = {
+    ...    ('drug', 'interacts', 'drug'): (th.tensor([0, 1]), th.tensor([1, 2])),
+    ...    ('drug', 'interacts', 'gene'): (th.tensor([0, 1]), th.tensor([2, 3])),
+    ...    ('drug', 'treats', 'disease'): (th.tensor([1]), th.tensor([2]))
+    ... }
+    >>> g = dgl.heterograph(graph_data)
+    >>> g.ntypes
+    ['disease', 'drug', 'gene']
+    >>> g.etypes
+    ['interacts', 'interacts', 'treats']
+    >>> g.canonical_etypes
+    [('drug', 'interacts', 'drug'),
+     ('drug', 'interacts', 'gene'),
+     ('drug', 'treats', 'disease')]
+
+We recommend the feature name set by the `"h"`.
+
+.. code:: python
+
+    g.nodes['drug'].data['h'] = th.ones(3, 1)
+
+DGL provides :func:`dgl.save_graphs` and :func:`dgl.load_graphs` respectively for saving
+heterogeneous graphs in binary format and loading them from binary format.
+So we can use `dgl.load_graphs <https://docs.dgl.ai/en/latest/generated/dgl.load_graphs.html#>`_ to store graph into the local.
+
+.. code:: python
+
+    dgl.save_graphs("demo_graph.bin", g)
+
+**Second step**
+We can get a binary format named *demo_graph.bin*, and we moveit into the directory *openhgnn/dataset/*.
+
+For now, it is not a complete dataset.
+We should specify some important information in the `NodeClassificationDataset.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/NodeClassificationDataset.py#L142>`_
+
+For example, we set the *category*, *num_classes* and *multi_label*(if necessary) with ``"paper"``, `3`, `True`.
+More infos, refer to api_dataset_.
+
+**Third step**
+
+.. code:: bash
+
+    python main.py -m GTN -d demo_graph -t node_classification -g 0 --use_best_config
+
+We can use demo_graph as our dataset name to evaluate a existing model.
+
+If you have another dataset name, you should also modify the `*build_dataset* <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/__init__.py>`_.
+
+How to build a new dataset
+---------------------------
 
 Apply a new model in a
 ==============================================

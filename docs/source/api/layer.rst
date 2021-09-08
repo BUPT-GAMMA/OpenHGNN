@@ -45,3 +45,8 @@ HeteroFeature
 .. autoclass:: openhgnn.layers.HeteroLinear.HeteroFeature
     :members:
     :show-inheritance:
+
+MetapathConv
+------------------------------------
+
+.. automodule:: openhgnn.layers.MetapathConv
