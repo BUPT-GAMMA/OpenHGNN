@@ -105,21 +105,38 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.target_link = [('product', 'product-product-0', 'product'),
                                 ('product', 'product-product-1', 'product')]
             self.link = [0, 1]
+            self.node_type = ["product"]
+            self.test_edge_type = {'product-product-0': 0, 'product-product-1': 1}
+
         elif dataset_name == 'HGBl-LastFM':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             self.has_feature = False
             self.target_link = [('user', 'user-artist', 'artist')]
+            self.node_type = ['user', 'artist', 'tag']
+            self.test_edge_type = {'user-artist': 0}
+
         elif dataset_name == 'HGBl-PubMed':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             self.has_feature = True
             self.target_link = [('1', '1_to_1', '1')]
+            self.node_type = ['0', '1', '2', '3']
+            self.test_edge_type = {'1_to_1': 2}
 
         self.g = g
+        self.shift_dict = self.calculate_node_shift()
 
     def load_link_pred(self, path):
         return
+
+    def calculate_node_shift(self):
+        node_shift_dict = {}
+        count = 0
+        for type in self.node_type:
+            node_shift_dict[type] = count
+            count += self.g.num_nodes(type)
+        return node_shift_dict
 
     def get_idx(self):
         r"""
@@ -156,11 +173,25 @@ class HGB_LinkPrediction(LinkPredictionDataset):
 
         return train_graph, val_graph, test_graph
 
-    def save_results(self, score, file_path):
-        pass
-        with open(file_path, "w") as f:
-            for l, r, c in zip(edge_list[0], edge_list[1], confidence):
-                f.write(f"{l}\t{r}\t{edge_type}\t{c}\n")
+    def save_results(self, hg, node_shift, test_edge_type, score, file_path):
+        with hg.local_scope():
+            src_list = []
+            dst_list = []
+            edge_type_list = []
+            for etype in hg.canonical_etypes:
+                edges = hg.edges(etype=etype)
+                src_id = edges[0]+node_shift[etype[0]]
+                dst_id = edges[1]+node_shift[etype[2]]
+                src_list.append(src_id)
+                dst_list.append(dst_id)
+                edge_type_list.append(th.full((src_id.shape[0],), test_edge_type[etype[1]]))
+
+            src_list = th.cat(src_list)
+            dst_list = th.cat(dst_list)
+            edge_type_list = th.cat(edge_type_list)
+            with open(file_path, "w") as f:
+                for l, r, edge_type, c in zip(src_list, dst_list, edge_type_list,score):
+                    f.write(f"{l}\t{r}\t{edge_type}\t{c}\n")
 
 def build_graph_from_triplets(num_nodes, num_rels, triplets):
     """ Create a DGL graph. The graph is bidirectional because RGCN authors
