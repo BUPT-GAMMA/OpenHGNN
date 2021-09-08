@@ -15,17 +15,54 @@ class HAN(BaseModel):
     Description
     ------------
     This model shows an example of using dgl.metapath_reachable_graph on the original heterogeneous
-    graph.Because the original HAN implementation only gives the preprocessed homogeneous graph, this model
+    graph HAN from paper `Heterogeneous Graph Attention Network <https://arxiv.org/pdf/1903.07293.pdf>`__..
+    Because the original HAN implementation only gives the preprocessed homogeneous graph, this model
     could not reproduce the result in HAN as they did not provide the preprocessing code, and we
     constructed another dataset from ACM with a different set of papers, connections, features and
     labels.
+
+
+    .. math::
+        \mathbf{h}_{i}^{\prime}=\mathbf{M}_{\phi_{i}} \cdot \mathbf{h}_{i}
+
+    where :math:`h_i` and :math:`h'_i` are the original and projected feature of node :math:`i`
+
+    .. math::
+        e_{i j}^{\Phi}=a t t_{\text {node }}\left(\mathbf{h}_{i}^{\prime}, \mathbf{h}_{j}^{\prime} ; \Phi\right)
+
+    where :math:`{att}_{node}` denotes the deep neural network.
+
+    .. math::
+        \alpha_{i j}^{\Phi}=\operatorname{softmax}_{j}\left(e_{i j}^{\Phi}\right)=\frac{\exp \left(\sigma\left(\mathbf{a}_{\Phi}^{\mathrm{T}} \cdot\left[\mathbf{h}_{i}^{\prime} \| \mathbf{h}_{j}^{\prime}\right]\right)\right)}{\sum_{k \in \mathcal{N}_{i}^{\Phi}} \exp \left(\sigma\left(\mathbf{a}_{\Phi}^{\mathrm{T}} \cdot\left[\mathbf{h}_{i}^{\prime} \| \mathbf{h}_{k}^{\prime}\right]\right)\right)}
+
+    where :math:`\sigma` denotes the activation function, || denotes the concatenate
+    operation and :math:`a_{\Phi}` is the node-level attention vector for meta-path :math:`\Phi`.
+
+    .. math::
+        \mathbf{z}_{i}^{\Phi}=\prod_{k=1}^{K} \sigma\left(\sum_{j \in \mathcal{N}_{i}^{\Phi}} \alpha_{i j}^{\Phi} \cdot \mathbf{h}_{j}^{\prime}\right)
+
+    where :math:`z^{\Phi}_i` is the learned embedding of node i for the meta-path :math:`\Phi`.
+    Given the meta-path set {:math:`\Phi_0 ,\Phi_1,...,\Phi_P`},after feeding node features into node-level attentionwe can obtain P groups of
+    semantic-specific node embeddings, denotes as {:math:`Z_0 ,Z_1,...,Z_P`}.
+    We use MetapathConv to finish Node-level Attention and Semantic-level Attention.
+
 
     Parameters
     ------------
     meta_paths : list
         contain multiple meta-paths.
     category : str
-        The category means the head and tail node of metapaths
+        The category means the head and tail node of metapaths.
+    in_size : int
+        input feature dimension.
+    hidden_size : int
+        hidden layer dimension.
+    out_size : int
+        output feature dimension.
+    num_heads : int
+        number of attention heads.
+    dropout : float
+        Dropout probability.
 
     """
     @classmethod
