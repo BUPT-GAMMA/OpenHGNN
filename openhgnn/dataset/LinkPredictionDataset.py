@@ -1,5 +1,6 @@
 import dgl
 import numpy as np
+import torch
 from dgl.data.knowledge_graph import load_data
 import torch as th
 from . import BaseDataset, register_dataset
@@ -156,11 +157,25 @@ class HGB_LinkPrediction(LinkPredictionDataset):
 
         return train_graph, val_graph, test_graph
 
-    def save_results(self, score, file_path):
-        pass
-        with open(file_path, "w") as f:
-            for l, r, c in zip(edge_list[0], edge_list[1], confidence):
-                f.write(f"{l}\t{r}\t{edge_type}\t{c}\n")
+    def save_results(self, hg, node_shift, test_edge_type, score, file_path):
+        with hg.local_scope():
+            src_list = []
+            dst_list = []
+            edge_type_list = []
+            for etype in hg.canonical_etypes:
+                edges = hg.edges(etype=etype)
+                src_id = edges[0]+node_shift[etype[0]]
+                dst_id = edges[1]+node_shift[etype[2]]
+                src_list.append(src_id)
+                dst_list.append(dst_id)
+                edge_type_list.append(th.full((src_id.shape[0],), test_edge_type[etype[1]]))
+
+            src_list = th.cat(src_list)
+            dst_list = th.cat(dst_list)
+            edge_type_list = th.cat(edge_type_list)
+            with open(file_path, "w") as f:
+                for l, r, edge_type, c in zip(src_list, dst_list, edge_type_list,score):
+                    f.write(f"{l}\t{r}\t{edge_type}\t{c}\n")
 
 def build_graph_from_triplets(num_nodes, num_rels, triplets):
     """ Create a DGL graph. The graph is bidirectional because RGCN authors

@@ -26,6 +26,7 @@ class LinkPrediction(BaseFlow):
         self.args.has_feature = self.task.dataset.has_feature
 
         self.args.out_node_type = self.task.dataset.ntypes
+
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
@@ -77,7 +78,7 @@ class LinkPrediction(BaseFlow):
                 h_dict = self.input_feature()
                 embedding = self.model(self.hg, h_dict)
                 score = th.sigmoid(self.ScorePredictor(self.test_hg, embedding))
-                self.task.dataset.save_results(logits=score, file_path=self.args.HGB_results_path)
+                self.task.dataset.save_results(hg=self.test_hg, node_shift=self.calculate_node_shift(), test_edge_type=self.args.test_edge_type, score=score, file_path=self.args.HGB_results_path)
             return
         test_mrr = self._test_step(split="test")
         val_mrr = self._test_step(split="val")
@@ -167,3 +168,11 @@ class LinkPrediction(BaseFlow):
         metric = roc_auc_score(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu() )
 
         return metric
+
+    def calculate_node_shift(self):
+        node_shift_dict = {}
+        count = 0
+        for type in self.args.node_type:
+            node_shift_dict[type] = count
+            count += self.hg.num_nodes(type)
+        return node_shift_dict
