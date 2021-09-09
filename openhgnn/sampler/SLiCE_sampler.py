@@ -46,6 +46,7 @@ class SLiCESampler(object):
         Return:
         return a list of sampled node subgraph
         """
+        print("Sampling node subgraphs...")
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
         if not os.path.exists(self.pretrain_path):
@@ -80,6 +81,7 @@ class SLiCESampler(object):
         Parameters:
         seed_edges: List[(int,int)] a list of edge src and dst
         """
+        print("Sampling edge subgraphs...")
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
         if not os.path.exists(self.finetune_path):
@@ -115,14 +117,14 @@ class SLiCESampler(object):
         """
         #get all neighbors
         all_nbrs=[]
-        all_nbrs.extend(dgl.sampling.sample_neighbors(self.attr_graph,torch.tensor([nodeid]),-1,
+        all_nbrs.extend(dgl.sampling.sample_neighbors(self.g,torch.tensor([nodeid]),-1,
                                                 edge_dir='out',prob='label').edges(order='eid')[1].tolist())  
         if exclude_list is None or len(exclude_list) == 0:
             all_nbrs = list(set(all_nbrs))
         else:
             all_nbrs = list(set(x for x in all_nbrs if x not in exclude_list))
         if len(all_nbrs)<k:
-            all_nbrs.extend(dgl.sampling.sample_neighbors(self.attr_graph,torch.tensor([nodeid]),-1,
+            all_nbrs.extend(dgl.sampling.sample_neighbors(self.g,torch.tensor([nodeid]),-1,
                                                 edge_dir='in',prob='label').edges(order='eid')[0].tolist())                   
         if exclude_list is None or len(exclude_list) == 0:
             all_nbrs = list(set(all_nbrs))
@@ -171,7 +173,7 @@ class SLiCESampler(object):
         source=int(source)
         path = [source]
         nodes_so_far = [source]
-        G = self.attr_graph
+        G = self.g
         #原代码有bug，会导致采样数量不对
         for _ in range(max_num_edges):
             nbrs = self.get_random_k_nbrs(source, exclude_list=nodes_so_far, k=max_num_edges)
@@ -324,5 +326,6 @@ class SLiCESampler(object):
         final_edges = list(set(positive_edge_list + false_edges))
         random.shuffle(final_edges)
         print("Number of positive and negative edges in total",len(final_edges))
-        pickle.dump(final_edges,open(save_path,'wb'))
+        with open(save_path,'wb') as f:
+            pickle.dump(final_edges,f)
         return final_edges

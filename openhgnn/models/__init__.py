@@ -67,9 +67,11 @@ SUPPORTED_MODELS = {
     'RHGNN': 'openhgnn.models.RHGNN',
     'HPN': 'openhgnn.models.HPN',
     'KGCN': 'openhgnn.models.KGCN',
+    'SLiCE':'openhgnn.models.SLiCE',
     'GCN': 'space4hgnn.homo_models.GCN',
     'GAT': 'space4hgnn.homo_models.GAT',
     'homo_GNN': 'space4hgnn.homo_models.homo_GNN',
     'relation_HGNN': 'space4hgnn.relation_models.rel_HGNN',
-    'mp_GNN': 'space4hgnn.metapath_models.mp_GNN'
+    'mp_GNN': 'space4hgnn.metapath_models.mp_GNN',
+    
 }

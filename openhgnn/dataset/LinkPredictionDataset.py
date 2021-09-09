@@ -5,6 +5,7 @@ from dgl.data.utils import load_graphs
 from dgl.data.knowledge_graph import load_data
 from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
+import os
 
 
 @register_dataset('link_prediction')
@@ -95,8 +96,8 @@ class SLiCE_LinkPrediction(LinkPredictionDataset):
     def __init__(self, dataset_name):
         super(SLiCE_LinkPrediction, self).__init__()
         self.data_name=dataset_name
-        self.data_path='./openhgnn/output/SLiCE/'+self.data_name
-        self.g = self.load_HIN(self.data_path)
+        self.data_path='openhgnn/output/SLiCE/'+self.data_name+'.bin'
+        self.g = self.load_HIN()
         self.has_feature = True
         self.edges=dict()
         self.graphs=dict()
@@ -109,14 +110,14 @@ class SLiCE_LinkPrediction(LinkPredictionDataset):
     def load_HIN(self):
         #use homogeneous api
         g, _ = dgl.load_graphs(self.data_path)
-        g=g[0].to_homogeneous(g,ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
+        g=dgl.to_homogeneous(g[0],ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
         return g
 
     def preprocess(self):
         self.labels=self.g.edata['label']
         for task in ['train','valid','test']:
             mask=self.g.edata[task+'_mask']
-            index = th.nonzero(mask).squeeze()#index of nonzero
+            index = th.nonzero(mask.squeeze()).squeeze()#index of nonzero
             if task=='train':
                 self.train_idx=index
             elif task=='valid':
@@ -132,6 +133,8 @@ class SLiCE_LinkPrediction(LinkPredictionDataset):
         return
     def get_labels(self):
         return self.labels
+    def get_idx(self):
+        return self.train_idx,self.valid_idx,self.test_idx
 
 @register_dataset('HGBl_link_prediction')
 class HGB_LinkPrediction(LinkPredictionDataset):

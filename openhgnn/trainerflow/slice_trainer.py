@@ -42,13 +42,14 @@ class SLiCETrainer(BaseFlow):
         self.device=args.device
         self.task=build_task(args)
         self.phase=['train','valid','test']
-        self.g=self.task.get_graph().to(self.device)
+        self.g,_=dgl.load_graphs(self.task.dataset.data_path)
+        self.g=dgl.to_homogeneous(self.g[0],ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
         self.model=dict()
         self.model['pretrain']=SLiCE.build_model_from_args(self.args,self.g)
         self.model['finetune']=SLiCEFinetuneLayer.build_model_from_args(args)
         self.evaluator=self.task.get_evaluator('slice')
         #loss function
-        self.loss_fn=self.task.get_loss_fn()
+        self.loss_fn=torch.nn.CrossEntropyLoss()
         #optimizer
         self.optimizer=dict()
         self.optimizer['pretrain']=optim.Adam(self.model['pretrain'].parameters(), args.lr)
@@ -60,7 +61,7 @@ class SLiCETrainer(BaseFlow):
         self.n_epochs['finetune']=args.ft_n_epochs
         self.batch_size=dict()
         self.batch_size['pretrain']=args.batch_size
-        self.batch_size['finetune']=args.ft_batcch_size
+        self.batch_size['finetune']=args.ft_batch_size
 
         self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
         self.labels = self.task.get_labels().to(self.device)
@@ -71,21 +72,22 @@ class SLiCETrainer(BaseFlow):
         self.edges_label=dict()
         self.edge_subgraphs=dict()
 
-        self.out_dir=args.out_dir
-        self.pretrain_path=self.out_dir+'pretrain/'
-        self.pretrain_save_path=self.pretrain_path+'best_pretrain_model.pt'
-        self.finetune_path=self.out_dir+'finetune/'
-        self.finetune_save_path=self.finetune_path+'best_finetune_model.pt'
+        self.out_dir=args.outdir
+        self.pretrain_path=os.path.join(self.out_dir,'pretrain/')
+        self.pretrain_save_path=os.path.join(self.pretrain_path,'best_pretrain_model.pt')
+        self.finetune_path=os.path.join(self.out_dir,'finetune/')
+        self.finetune_save_path=os.path.join(self.finetune_path,'best_finetune_model.pt')
         self.graphs=dict()
     def preprocess(self):
         self.labels=self.g.edata['label']
-        self.g=self.dataset.g.to_homogeneous(
-            ndata=['feature'],
-            edata=['train_mask','valid_mask','test_mask','label'])
+        # self.g=dgl.to_homogeneous(
+        #     self.g,
+        #     ndata=['feature'],
+        #     edata=['train_mask','valid_mask','test_mask','label'])
         self.graphs['train']=copy.deepcopy(self.g)
         for task in ['train','valid','test']:
             mask=self.g.edata[task+'_mask']
-            index = torch.nonzero(mask).squeeze()
+            index = torch.nonzero(mask.squeeze()).squeeze()
             if task=='train':
                 self.train_idx=index
             elif task=='valid':
@@ -95,19 +97,24 @@ class SLiCETrainer(BaseFlow):
             self.edges[task]=self.g.find_edges(index)
             #finally, g should be a graph containing just train_edges
             if task in ['valid','test']:
-                self.g.remove_edges(index)
+                #self.g.remove_edges(index)
                 #built for valid and test phase(use apply_edge(u_mult_v()) to get similarity score)
                 self.graphs[task]=dgl.graph(self.edges[task])
         #sample walks
-        sampler=SLiCESampler(self.g,num_walks_per_node=self.args.n_pred)#full graph
+        sampler=SLiCESampler(self.g,num_walks_per_node=self.args.n_pred,beam_width=self.args.beam_width,
+                            max_num_edges=self.args.max_length,walk_type=self.args.walk_type,
+                            path_option=self.args.path_option,save_path=self.pretrain_path)#full graph
         #get dataloader for pretrain and finetune evaluation on link prediction
         g=self.g
         #pretrain
         node_walk_path=self.pretrain_path+'node_walks.pickle'
         if os.path.exists(node_walk_path):
-            node_walks=pickle.load(open(node_walk_path,'rb'))
+            with open(str(node_walk_path),'rb') as f:
+                node_walks=pickle.load(f)
         else:
             node_walks=sampler.get_node_subgraph(g.nodes())
+            with open(node_walk_path,'wb') as f:
+                pickle.dump(node_walks,f)
         random.shuffle(node_walks)
         total_len=len(node_walks)
         train_size=int(0.8*total_len)
@@ -119,22 +126,24 @@ class SLiCETrainer(BaseFlow):
         src,dst=g.edges()
         edges=self.edges
         edges['train']=list()
-        edges['valid']=zip(g.find_edges(self.valid_idx))
-        edges['test']=zip(g.find_edges(self.test_idx))
+        edges['valid']=list(zip(g.find_edges(self.valid_idx)))
+        edges['test']=list(zip(g.find_edges(self.test_idx)))
         edges_label=self.edges_label
         edges_label['train']=list()
         edges_label['valid']=self.labels[self.valid_idx]
         edges_label['test']=self.labels[self.test_idx]
         #generate pretrain subgraph
-        train_file=self.finetune_path+'trian_edges.pickle'
+        train_file=os.path.join(self.finetune_path,'train_edges.pickle')
         if os.path.exists(train_file):
-            edges['train'],edges_label['train']=pickle.load(open(train_file,'rb'))
+            with open(train_file,'rb') as f:
+                edges['train'],edges_label['train']=pickle.load(f)
         else:
             edges['train'],edges_label['train']=sampler.generate_false_edges2(edges['train'],train_file)
         #generate finetune subgraph
         finetune_input=self.finetune_path+'finetune_input.pickle'
         if os.path.exists(finetune_input):
-            self.edge_subgraphs=pickle.load(open(finetune_input,'rb'))
+            with open(finetune_input,'rb') as f:
+                self.edge_subgraphs=pickle.load(f)
         else:
             for task in ['train','valid','test']:
                 self.edge_subgraphs[task]=sampler.get_edge_subgraph(edges[task])

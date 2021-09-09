@@ -5,6 +5,7 @@ from torch.autograd import Variable
 import numpy as np
 import math
 import dgl
+import random
 import dgl.nn as dglnn
 from . import BaseModel, register_model
 from .CompGCN import CompGraphConvLayer
@@ -91,32 +92,19 @@ class GCNGraphEncoder(torch.nn.Module):
 
     def forward(self, subgraphs_list, masked_nodes):
         num_subgraphs = len(subgraphs_list)
-        batch_counts = []
-        batch_id_maps = []
-
-        for ii, _ in enumerate(subgraphs_list):
-            node_id_map = dict()#key: id, value: 
-            edge_type_map = dict()#key: edge_type, value: 
-            #将nodeid转为从0开始
-            batch_id_maps.append((node_id_map, edge_type_map))
-            batch_counts.append((len(node_id_map), len(edge_type_map)))
 
         node_emb = torch.zeros(
             num_subgraphs, self.max_length + 1, self.base_embedding_dim#+1是因为包含
         )
 
-        for ii in range(len(subgraphs_list)):
-            node_id_map = batch_id_maps[ii][0]
-            edge_type_map = batch_id_maps[ii][1]
+        for ii,subgraph in enumerate(subgraphs_list):
+            #node_id_map = batch_id_maps[ii][0]
+            #edge_type_map = batch_id_maps[ii][1]
             masked_set = masked_nodes[ii].cpu().numpy().tolist()
-
-            for node_id, norm_node_id in node_id_map.items():
-                if node_id not in masked_set:  # used to ignore the masked nodes
-                    try:
-                        normalized_node_id = node_id
-                    except KeyError:  # FIXME - replaced bare except
-                        normalized_node_id = int(node_id)
-                    node_emb[ii][norm_node_id] = self.node_embedding(normalized_node_id)
+            for node in subgraph.nodes():
+                node_id=subgraph.ndata[dgl.NID]
+                if node not in masked_set:  # used to ignore the masked nodes
+                    node_emb[ii][node] = self.node_embedding(int(node_id))
 
         # get embeddings for special tokens
         # will be used for masking and padding before bert layer
@@ -129,32 +117,7 @@ class GCNGraphEncoder(torch.nn.Module):
                 "embed": tmp_embed,
             }
 
-        return (
-            node_emb,
-            batch_id_maps,
-            special_tokens_embed,
-        )
-
-def gcn_out2bert_input(node_emb, batch_id_maps, input_ids, special_tokens):
-    for ii in range(len(input_ids)):
-        for jj in range(len(input_ids[ii])):
-            if input_ids[ii][jj] in batch_id_maps[ii][0]:
-                gcn_id = batch_id_maps[ii][0][input_ids[ii][jj]]
-                tmp_embed = node_emb[ii][gcn_id].unsqueeze(0)
-            else:
-                special_id = input_ids[ii][jj]
-                tmp_embed = special_tokens[special_id]["embed"]
-            if jj == 0:
-                tmp_out = tmp_embed
-            else:
-                tmp_out = torch.cat((tmp_out, tmp_embed), 0)
-        tmp_out = tmp_out.unsqueeze(0)
-        if ii == 0:
-            out = tmp_out
-        else:
-            out = torch.cat((out, tmp_out), 0)
-
-    return out
+        return node_emb
 
 def get_attn_pad_mask(seq_q, seq_k, pad_id):                                                                                                                                                                                                                                                                                                                                                                                                                    
     batch_size, len_q = len(seq_q), len(seq_q[0])
@@ -233,7 +196,7 @@ class MultiHeadAttention(torch.nn.Module):
 
         return self.layerNorm(output + residual), attn
 
-
+#fNN in the paper
 class PoswiseFeedForwardNet(torch.nn.Module):
     def __init__(self, d_model, d_ff):
 
@@ -269,10 +232,11 @@ class SLiCE(BaseModel):
     def build_model_from_args(cls, args, hg):
         # if args.embed_dir:
         #     pretrained_node_embedding_tensor=load_pickle(args.embed_dir)
-        return cls(G=hg,pretrained_node_embedding_tensor=None)#to-do: 命令行解析
+        return cls(G=hg,pretrained_node_embedding_tensor=None,args=args)#to-do: 命令行解析
     #参数来自原论文默认参数
     def __init__(self,
         G,  #G为DGLGraph
+        args,
         pretrained_node_embedding_tensor,
         n_layers=6,
         d_model=200,
@@ -297,7 +261,7 @@ class SLiCE(BaseModel):
         self.node_edge_composition_func = node_edge_composition_func
         self.fine_tuning_layer = fine_tuning_layer
         self.no_nodes = G.num_nodes()
-
+        self.n_pred=args.n_pred
         #FIXME 暂时是用随机初始化，pretrain tensor是None
         self.gcn_graph_encoder = GCNGraphEncoder(
             G,
@@ -317,26 +281,31 @@ class SLiCE(BaseModel):
         self.decoder = torch.nn.Linear(self.d_model, self.no_nodes).cuda()
     def set_fine_tuning(self):
         self.fine_tuning_layer = True
-    def mask_gen(self):
+    def GCN_MaskGeneration(self,subgraph_sequences):
+        n_pred=self.n_pred
+        masked_nodes = []#node id masked
+        masked_position = []# node index masked
+        for subgraph in subgraph_sequences:
+            num_nodes = subgraph.num_nodes()
+            mask_index = random.sample(range(num_nodes), n_pred)
+            subgraph_masked_nodes = []
+            subgraph_masked_position = []
+            for i in range(num_nodes):
+                if i in mask_index:
+                    subgraph_masked_nodes.append(subgraph.ndata[dgl.NID][i])
+                    subgraph_masked_position.append(i)
+            masked_nodes.append(subgraph_masked_nodes)
+            masked_position.append(subgraph_masked_position)
 
-        return masked_pos,masked_nodes
-    def forward(self, subgraphs_list):
-        for subgraph in subgraph_list:
-            src,dst=subgraph.edges()    
-        all_nodes.append(list(set(src+dst)))
-        masked_pos,masked_nodes=self.mask_gen()
+        return masked_nodes, masked_position
+    def forward(self, subgraph_list):
+        #subgraph list is a list of node subgraphs sampled by slice_sampler
+        masked_nodes,masked_pos=self.GCN_MaskGeneration(subgraph_list)
         # 将节点embedding和关系的embedding初始化，并采样得到
         # context generation
-        (
-            node_emb,
-            batch_id_maps,
-            special_tokens_embed,#PAD和MASK
-        ) = self.gcn_graph_encoder(subgraphs_list, masked_nodes)
-        node_emb = gcn_out2bert_input(
-            node_emb, batch_id_maps, all_nodes, special_tokens_embed#all nodes: 
-        )
+        node_emb = self.gcn_graph_encoder(subgraph_list, masked_nodes)
         output = node_emb.cuda()
-        enc_self_attn_mask = get_attn_pad_mask(all_nodes, all_nodes, self.no_nodes)
+        enc_self_attn_mask = get_attn_pad_mask(self.no_nodes)
         # contextual translation
         for layer in self.layers:
             output, enc_self_attn = layer(output, enc_self_attn_mask)
@@ -371,14 +340,14 @@ class SLiCE(BaseModel):
             # print('check====', pred_score.size())
 
             if self.get_embeddings:
-                return pred_score, output
+                return pred_score, masked_nodes, output
             else:
-                return pred_score
+                return pred_score, masked_nodes
 
 class SLiCEFinetuneLayer(torch.nn.Module):
     @classmethod
-    def build_model_from_args(cls, args, hg):
-        return cls(attr_graph=hg,d_model=args.d_model,ft_d_ff=args.ft_d_ff,
+    def build_model_from_args(cls, args):
+        return cls(d_model=args.d_model,ft_d_ff=args.ft_d_ff,
         ft_layer=args.ft_layer,ft_drop_rate=args.ft_drop_rate,
         ft_input_option=args.ft_input_option,n_layers=args.n_layers)
     def __init__(
@@ -387,7 +356,6 @@ class SLiCEFinetuneLayer(torch.nn.Module):
         ft_d_ff,
         ft_layer,
         ft_drop_rate,
-        attr_graph,
         ft_input_option,
         n_layers,
     ):

@@ -57,6 +57,7 @@ SUPPORTED_FLOWS = {
     'nshetrainer': 'openhgnn.trainerflow.nshe_trainer',
     'demo': 'openhgnn.trainerflow.demo',
     'kgcntrainer':'openhgnn.trainerflow.kgcn_trainer',
-    'DMGI_trainer': 'openhgnn.trainerflow.DMGI_trainer'
+    'DMGI_trainer': 'openhgnn.trainerflow.DMGI_trainer',
+    'slicetrainer':'openhgnn.trainerflow.slice_trainer'
 
 }
