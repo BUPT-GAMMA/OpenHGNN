@@ -58,23 +58,26 @@ class HINRecommendation(RecommendationDataset):
         self.target_link_r = 'item-user'
         self.out_ntypes = ['user', 'item']
         self.has_feature = False
+        # self.process()
+        # self.neg_g = self.construct_negative_graph(self.g)
+
 
     def load_HIN(self, dataset_name):
         g, _ = dgl.load_graphs(dataset_name)
         return g[0]
 
-    def process(self, g):
-        # sub 1 for every node
-        new = {}
-        for etype in g.canonical_etypes:
-            edges = g.edges(etype=etype)
-            new[etype] = (edges[0]-1, edges[1]-1)
-        hg = dgl.heterograph(new)
-        hg.edata['val_mask'] = g.edata['val_mask']
-        hg.edata['test_mask'] = g.edata['test_mask']
-        hg.edata['train_mask'] = g.edata['train_mask']
-        from dgl.data.utils import save_graphs
-        save_graphs("./openhgnn/dataset/yelp.bin", hg)
+    # def process(self, g):
+    #     # sub 1 for every node
+    #     new = {}
+    #     for etype in g.canonical_etypes:
+    #         edges = g.edges(etype=etype)
+    #         new[etype] = (edges[0]-1, edges[1]-1)
+    #     hg = dgl.heterograph(new)
+    #     hg.edata['val_mask'] = g.edata['val_mask']
+    #     hg.edata['test_mask'] = g.edata['test_mask']
+    #     hg.edata['train_mask'] = g.edata['train_mask']
+    #     from dgl.data.utils import save_graphs
+    #     save_graphs(f"./openhgnn/dataset/{self.dataset_name}.bin", hg)
 
     def get_idx(self):
         val_mask = self.g.edges[self.target_link].data['val_mask'].squeeze()
@@ -92,15 +95,17 @@ class HINRecommendation(RecommendationDataset):
 
         train_graph = dgl.remove_edges(self.g, th.cat((val_index, test_index)), self.target_link)
         train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), self.target_link_r)
-        return train_graph, val_graph, test_graph
+
+        train_neg_graph = self.construct_negative_graph(train_graph)
+        return train_graph, train_neg_graph, val_graph, test_graph
 
     def construct_negative_graph(self, train_g):
-        fname = './openhgnn/dataset/yelp4rec/neg_graph_99.bin'
+        fname = f'./openhgnn/dataset/{self.dataset_name}/neg_graph_{self.num_neg}.bin'
         if os.path.exists(fname):
             g, _ = load_graphs(fname)
             return g[0]
         else:
-            k = 99
+            k = self.num_neg
             negative_sampler = Uniform_exclusive(k)
             negative_edges = negative_sampler(train_g.to('cpu'), {
                 self.target_link: th.arange(train_g.num_edges(self.target_link))})
@@ -110,6 +115,8 @@ class HINRecommendation(RecommendationDataset):
                                     {ntype: self.g.number_of_nodes(ntype) for ntype in ['user', 'item']})
             dgl.save_graphs(fname, neg_g)
             return neg_g
+
+        
 
 
 @register_dataset('test_link_prediction')
