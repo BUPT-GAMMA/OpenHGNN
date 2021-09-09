@@ -52,3 +52,10 @@ MetapathConv
 .. automodule:: openhgnn.layers.MetapathConv
     :members:
     :show-inheritance:
+
+HeteroGraphConv
+----------------
+
+.. autoclass:: dgl.nn.pytorch.HeteroGraphConv
+   :members:
+   :show-inheritance:

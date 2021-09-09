@@ -70,7 +70,7 @@ We recommend the feature name set by the `"h"`.
 
 .. code:: python
 
-    >>>g.nodes['drug'].data['h'] = th.ones(3, 1)
+    >>> g.nodes['drug'].data['h'] = th.ones(3, 1)
 
 DGL provides :func:`dgl.save_graphs` and :func:`dgl.load_graphs` respectively for saving
 heterogeneous graphs in binary format and loading them from binary format.
@@ -78,7 +78,7 @@ So we can use `dgl.load_graphs <https://docs.dgl.ai/en/latest/generated/dgl.load
 
 .. code:: python
 
-    >>>dgl.save_graphs("demo_graph.bin", g)
+    >>> dgl.save_graphs("demo_graph.bin", g)
 
 **Second step: Add extra information**
 

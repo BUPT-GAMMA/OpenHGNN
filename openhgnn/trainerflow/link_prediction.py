@@ -46,11 +46,9 @@ class LinkPrediction(BaseFlow):
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
         self.preprocess_feature()
 
-
     def train(self):
         self.preprocess()
         epoch_iter = tqdm(range(self.max_epoch))
-        best_model = copy.deepcopy(self.model)
         stopper = EarlyStopping(self.args.patience, self._checkpoint)
         for epoch in tqdm(range(self.max_epoch), ncols=80):
             if self.args.mini_batch_flag:

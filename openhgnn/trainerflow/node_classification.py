@@ -52,6 +52,7 @@ class NodeClassification(BaseFlow):
                 self.hg.to('cpu'), {self.category: self.train_idx.to('cpu')}, sampler,
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
+
     def preprocess(self):
         if self.args.model == 'GTN':
             if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == True:

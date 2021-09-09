@@ -2,7 +2,7 @@ BEST_CONFIGS = {
     "node_classification": {
         'RGCN': {
             'general': {
-                'seed': 0, 'patience': 20, 'validation': True
+                'seed': 0, 'patience': 20, 'validation': True, 'metric': 'acc'
             },
             'aifb': {
                 'lr': 0.005, 'weight_decay': 0, 'max_epoch': 100,
@@ -43,7 +43,7 @@ BEST_CONFIGS = {
         },
         'CompGCN': {
             'general': {
-                'seed': 0, 'patience': 50, 'validation': True
+                'seed': 0, 'patience': 50, 'validation': True, 'metric': 'acc'
             },
             'aifb': {
                 'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
@@ -52,7 +52,7 @@ BEST_CONFIGS = {
                      },
             'mutag': {
                 'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
-                'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.5, 'comp_fn': 'sub',
+                'hidden_dim': 32, 'n_layers': 3, 'dropout': 0.5, 'comp_fn': 'sub',
                 'mini_batch_flag': False, 'validation': True
             },
             'bgs': {

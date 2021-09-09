@@ -33,8 +33,7 @@ class RGCN(BaseModel):
 
     Attributes
     -----------
-    RelGraphConvLayer: nn.Module
-        `Link <openhgnn.models.RGCN.RelGraphConvLayer>`_
+    RelGraphConvLayer: RelGraphConvLayer
 
     """
     @classmethod

@@ -15,11 +15,33 @@ RGCN
 -----------------------------
 
 .. automodule:: openhgnn.models.RGCN
+
+
+Model
+~~~~~~
+
+.. autoclass:: openhgnn.models.RGCN.RGCN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Layer
+~~~~~~
+
+.. autoclass:: openhgnn.models.RGCN.RelGraphConvLayer
    :members:
    :undoc-members:
    :show-inheritance:
 
 HAN
+--------------------------
+
+.. automodule:: openhgnn.models.HAN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+KGCN
 --------------------------
 
 .. automodule:: openhgnn.models.HAN
@@ -109,6 +131,14 @@ HPN
 -----------------------------
 
 .. automodule:: openhgnn.models.HPN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+RHGNN
+-----------------------------
+
+.. automodule:: openhgnn.models.RHGNN
    :members:
    :undoc-members:
    :show-inheritance:
