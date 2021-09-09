@@ -559,11 +559,6 @@ def mini_mp_instance_sampler(seed_nodes, mp_instances, num_samples):
                 dst_nodes, dst_counts = np.unique(_mp_inst[:, -1], return_counts=True)
 
                 # the method of computing sampling probabilities originates from author's codes
-
-                # p = []
-                # for count in dst_counts:
-                #     p += [(count ** (3 / 4)) / count] * count
-                # p = np.array(p)
                 p = np.repeat((dst_counts ** (3 / 4)) / dst_counts, dst_counts)
                 p = p / p.sum()
 
