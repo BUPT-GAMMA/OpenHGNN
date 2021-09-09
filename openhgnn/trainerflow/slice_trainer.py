@@ -103,7 +103,7 @@ class SLiCETrainer(BaseFlow):
         #sample walks
         sampler=SLiCESampler(self.g,num_walks_per_node=self.args.n_pred,beam_width=self.args.beam_width,
                             max_num_edges=self.args.max_length,walk_type=self.args.walk_type,
-                            path_option=self.args.path_option,save_path=self.pretrain_path)#full graph
+                            path_option=self.args.path_option,save_path=self.out_dir)#full graph
         #get dataloader for pretrain and finetune evaluation on link prediction
         g=self.g
         #pretrain
@@ -124,10 +124,9 @@ class SLiCETrainer(BaseFlow):
         self.node_subgraphs['test']=node_walks[train_size+valid_size:]
         #finetune
         src,dst=g.edges()
-        edges=self.edges
-        edges['train']=list()
-        edges['valid']=list(zip(g.find_edges(self.valid_idx)))
-        edges['test']=list(zip(g.find_edges(self.test_idx)))
+        self.edges['train']=list(zip(g.find_edges(self.train_idx)))
+        self.edges['valid']=list(zip(g.find_edges(self.valid_idx)))
+        self.edges['test']=list(zip(g.find_edges(self.test_idx)))
         edges_label=self.edges_label
         edges_label['train']=list()
         edges_label['valid']=self.labels[self.valid_idx]
@@ -136,9 +135,9 @@ class SLiCETrainer(BaseFlow):
         train_file=os.path.join(self.finetune_path,'train_edges.pickle')
         if os.path.exists(train_file):
             with open(train_file,'rb') as f:
-                edges['train'],edges_label['train']=pickle.load(f)
+                self.edges['train'],edges_label['train']=pickle.load(f)
         else:
-            edges['train'],edges_label['train']=sampler.generate_false_edges2(edges['train'],train_file)
+            self.edges['train'],edges_label['train']=sampler.generate_false_edges2(self.edges['train'],train_file)
         #generate finetune subgraph
         finetune_input=self.finetune_path+'finetune_input.pickle'
         if os.path.exists(finetune_input):
@@ -146,7 +145,7 @@ class SLiCETrainer(BaseFlow):
                 self.edge_subgraphs=pickle.load(f)
         else:
             for task in ['train','valid','test']:
-                self.edge_subgraphs[task]=sampler.get_edge_subgraph(edges[task])
+                self.edge_subgraphs[task]=sampler.get_edge_subgraph(self.edges[task])
             pickle.dump(self.edge_subgraphs,open(finetune_input,'wb'))
 
     def train(self):

@@ -295,7 +295,7 @@ class SLiCESampler(object):
 
         # generate false edges for every positive example
         false_edges = []
-        for source, target in positive_edge_list:
+        for source, target in list(zip(positive_edge_list)):
             # generate false edges of type (source, relation, false_target) for every
             # (source, relation, target) in positive_edge_list
             source=int(source)
