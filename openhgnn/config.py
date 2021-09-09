@@ -22,6 +22,8 @@ class Config(object):
             print("failed!")
         # training dataset path
         self.seed = 0
+        self.patience = 1
+        self.max_epoch = 1
         self.task = task
         self.model = model
         self.dataset = dataset
@@ -234,7 +236,6 @@ class Config(object):
             self.residual = conf.getboolean("RHGNN", "residual")
             self.batch_size = conf.getint("RHGNN", "batch_size")
             self.node_neighbors_min_num = conf.getint("RHGNN", "node_neighbors_min_num")
-            #self.optimizer = conf.get
             self.weight_decay = conf.getfloat("RHGNN", "weight_decay")
             self.max_epoch = conf.getint("RHGNN", "max_epoch")
             self.patience = conf.getint("RHGNN", "patience")
@@ -315,6 +316,35 @@ class Config(object):
             self.patience = conf.getint('HPN', 'patience')
             self.max_epoch = conf.getint('HPN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("HPN", "mini_batch_flag")
+        elif model == 'KGCN':
+            self.weight_decay = conf.getfloat("KGCN", "weight_decay")
+            self.batch_size = conf.getint("KGCN", "batch_size")
+            self.in_dim = conf.getint('KGCN', 'in_dim')
+            self.out_dim = conf.getint('KGCN', 'out_dim')
+            self.lr = conf.getfloat("KGCN", "lr")
+            self.n_neighbor = conf.getint("KGCN", "n_neighbor")
+            self.n_relation = conf.getint("KGCN", "n_relation")
+            self.aggregate = conf.get("KGCN", "aggregate")
+            self.n_item = conf.getint("KGCN", "n_relation")
+            self.n_user = conf.getint("KGCN", "n_user")
+            self.epoch_iter = conf.getint("KGCN", "epoch_iter")
+        elif model == 'HGSL':
+            self.seed = conf.getint("HGSL", "seed")
+            self.mini_batch_flag = conf.getboolean("HGSL", "mini_batch_flag")
+            self.max_epoch = conf.getint("HGSL", "max_epoch")
+            self.patience = conf.getint("HGSL", "patience")
+            self.lr = conf.getfloat("HGSL", "learning_rate")
+            self.weight_decay = conf.getfloat("HGSL", "weight_decay")
+            self.adaptive_lr_flag = conf.getboolean("HGSL", "adaptive_lr_flag")
+
+            self.hidden_dim = conf.getint("HGSL", "hidden_dim")
+            self.num_heads = conf.getint("HGSL", "num_heads")
+            self.fs_eps = conf.getfloat("HGSL", "fs_eps")
+            self.fp_eps = conf.getfloat("HGSL", "fp_eps")
+            self.mp_eps = conf.getfloat("HGSL", "mp_eps")
+            self.gnn_emd_dim = conf.getint("HGSL", "gnn_emd_dim")
+            self.gnn_dropout = conf.getfloat("HGSL", "gnn_dropout")
+            self.undirected_relations = conf.get("HGSL", "undirected_relations")
 
     def __repr__(self):
         return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset

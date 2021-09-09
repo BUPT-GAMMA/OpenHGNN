@@ -4,28 +4,22 @@ from dgl.data import DGLDataset
 from dgl.data.utils import load_graphs
 
 
-class AcademicDataset(DGLDataset):
+class MultiGraphDataset(DGLDataset):
 
     _prefix = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/'
     _urls = {
-        'academic4HetGNN': 'dataset/academic4HetGNN.zip',
-        'acm4GTN': 'dataset/acm4GTN.zip',
-        'acm4NSHE': 'dataset/acm4NSHE.zip',
-        'acm4NARS': 'dataset/acm4NARS.zip',
-        'imdb4MAGNN': 'dataset/imdb4MAGNN.zip',
-        'imdb4GTN': 'dataset/imdb4GTN.zip',
-        'dblp4MAGNN': 'dataset/dblp4MAGNN.zip',
-        'yelp4rec': 'dataset/yelp4rec.zip'
+
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
-        assert name in ['acm4GTN', 'acm4NSHE', 'academic4HetGNN', 'imdb4MAGNN',
-                        'imdb4GTN', 'dblp4MAGNN', 'acm4NARS', 'yelp4rec']
-        self.data_path = './openhgnn/' + self._urls[name]
-        self.g_path = './openhgnn/dataset/' + name + '/graph.bin'
+        assert name in ['LastFM4KGCN']
+        # HGBn means node classification
+        # HGBl means link prediction
+        self.data_path = './openhgnn/dataset/{}.zip'.format(name)
+        self.g_path = './openhgnn/dataset/{}/graph.bin'.format(name)
         raw_dir = './openhgnn/dataset'
-        url = self._prefix + self._urls[name]
-        super(AcademicDataset, self).__init__(name=name,
+        url = self._prefix + 'dataset/{}.zip'.format(name)
+        super(MultiGraphDataset, self).__init__(name=name,
                                         url=url,
                                         raw_dir=raw_dir,
                                         force_reload=force_reload,
@@ -45,12 +39,11 @@ class AcademicDataset(DGLDataset):
     def process(self):
         # process raw data to graphs, labels, splitting masks
         g, _ = load_graphs(self.g_path)
-        self._g = g[0]
+        self._g = g
 
     def __getitem__(self, idx):
         # get one example by index
-        assert idx == 0, "This dataset has only one graph"
-        return self._g
+        return self._g[idx]
 
     def __len__(self):
         # number of data examples

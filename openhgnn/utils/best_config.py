@@ -1,23 +1,67 @@
 BEST_CONFIGS = {
     "node_classification": {
-        'CompGCN': {
+        'RGCN': {
             'general': {
-                'seed': 0, 'patience': 50, 'validation': True
+                'seed': 0, 'patience': 20, 'validation': True, 'metric': 'acc'
             },
             'aifb': {
-                'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100, 'in_dim': 32,
+                'lr': 0.005, 'weight_decay': 0, 'max_epoch': 100,
+                'hidden_dim': 32, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'dropout': 0,
+                'mini_batch_flag': False, 'validation': True
+            },
+            'mutag': {
+                'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50,
+                'hidden_dim': 32, 'n_bases': 30, 'n_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0.5,
+                'mini_batch_flag': False, 'validation': True
+            },
+            'bgs': {
+                'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50,
+                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 3, 'batch_size': 126, 'fanout': 4, 'dropout': 0.1,
+                'mini_batch_flag': True, 'validation': True
+            },
+            'am': {
+                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 50,
+                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'mini_batch_flag': True, 'validation': True
+            },
+            'ogbn-mag': {
+                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 10,
+                'hidden_dim': 16, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'mini_batch_flag': True, 'validation': True
+            },
+            'HGBn-ACM': {
+
+            },
+            'HGBn-DBLP': {
+                'n_layers': 2, 'hidden_dim': 16, 'dropout': 0.5
+            },
+            'HGBn-Freebase': {
+                'n_layers': 5, 'hidden_dim': 16, 'dropout': 0.5
+            },
+            'HGBn-IMDB': {
+            }
+        },
+        'CompGCN': {
+            'general': {
+                'seed': 0, 'patience': 50, 'validation': True, 'metric': 'acc'
+            },
+            'aifb': {
+                'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
                 'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
                 'mini_batch_flag': False, 'validation': True
                      },
             'mutag': {
-                'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100, 'in_dim': 32,
-                'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub',
+                'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
+                'hidden_dim': 32, 'n_layers': 3, 'dropout': 0.5, 'comp_fn': 'sub',
                 'mini_batch_flag': False, 'validation': True
             },
             'bgs': {
 
             },
             'am': {
+                'lr': 0.001, 'weight_decay': 0.0001, 'max_epoch': 100, 'fanout': 4,
+                'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
+                'mini_batch_flag': True, 'validation': True
             },
         },
         'GTN': {
@@ -105,35 +149,19 @@ BEST_CONFIGS = {
                          'max_epoch': 500, 'patience': 10,
                          }
         },
-        'RGCN': {
+        'DMGI': {
             'general': {
-                'seed': 0, 'patience': 20, 'validation': True
+
+                'seed': 0,  'sc': 3, 'learning_rate' : 0.0005
             },
-            'aifb': {
-                'lr': 0.01, 'weight_decay': 0, 'max_epoch': 100, 'in_dim': 16,
-                'hidden_dim': 16, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'dropout': 0,
-                'mini_batch_flag': False, 'validation': False
-                     },
-            'mutag': {
-                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 50, 'in_dim': 8,
-                'hidden_dim': 16, 'n_bases': 30, 'n_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0.05,
-                'mini_batch_flag': True, 'validation': False
+            'acm_han_raw': {'l2_coef': 0.0001, 'dropout': 0.5,'reg_coef': 0.001,
+                            'patience': 20,'sup_coef': 0.1, 'hid_unit': 64,
+                            'isSemi': False,'isBias': False,'isAttn': False
             },
-            'bgs': {
-                'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50, 'in_dim': 32,
-                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 3, 'batch_size': 126, 'fanout': 4, 'dropout': 0.1,
-                'mini_batch_flag': False, 'validation': False
-            },
-            'am': {
-                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 100, 'in_dim': 16,
-                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
-                'mini_batch_flag': True, 'validation': False
-            },
-            'ogbn-mag': {
-                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 10,
-                'hidden_dim': 16, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
-                'mini_batch_flag': True, 'validation': True
-            },
+            'imdb4GTN': {'l2_coef': 0.0001, 'dropout': 0.5,'reg_coef': 0.1,
+                         'patience': 50,'sup_coef': 0.1, 'hid_unit': 64,
+                         'isSemi': False,'isBias': False,'isAttn': False
+            }
         },
         'RSHN': {
             'general': {},
@@ -150,13 +178,15 @@ BEST_CONFIGS = {
             },
             'am': {'hidden_dim': 16, 'num_node_layer': 2, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
                    },
+        },
+        'HGSL': {
+            'general': {},
+            'acm4HGSL': {
+                'undirected_relations': 'author-paper,paper-subject', 'gnn_dropout': 0, 'fs_eps': 0.8,
+                'fp_eps': 0.2, 'mp_eps': 0.6,
+            }
         }
 
-    },
-    "entity_classification": {
-        "deepwalk": {
-            "general": {},
-        },
     },
     "link_prediction": {
         'general': {'max_epoch': 500, 'patience': 10, 'mini_batch_flag': True},
@@ -164,5 +194,14 @@ BEST_CONFIGS = {
             'lr': 0.01, 'weight_decay': 0.0001, 'dim': 128, 'batch_size': 64, 'window_size': 5,
             'batches_per_epoch': 50, 'rw_length': 50, 'rw_walks': 10, 'rwr_prob': 0.5,
         }
-    }
+    },
+    "recommendation": {
+        'KGCN': {
+            "general": {},
+            'LastFM4KGCN': {
+                'in_dim': 16, 'hidden_dim': 16, 'n_relation': 60,
+                'batch_size': 128, 'lr' : 0.0005
+            },
+        }
+    },
 }

@@ -1,13 +1,9 @@
 # OpenHGNN
 This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl). We integrate SOTA models of heterogeneous graph.
 
-[Test Version]For now, we just release some models for some researchers to run the experiments.
-
-[Release Plan]We want to release version0.1 in September.
-
 ## Key Features
 
-- Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and datasets using [optuna](https://optuna.org/) which is a hyperparameter optimization framework.
+- Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and dataset. Besides, we also integrate [optuna](https://optuna.org/) to get hyperparameter optimization.
 - Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
 - Efficiency: The backend dgl provides efficient APIs.
 
@@ -28,7 +24,7 @@ conda create -n openhgnn python=3.7
 source activate openhgnn
 ```
 
-**2. Pytorch:** Install [PyTorch](https://pytorch.org/). We have verified GraphGym under PyTorch 1.8.0. For example:
+**2. Pytorch:** Install [PyTorch](https://pytorch.org/). For example:
 
 ```bash
 # CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
@@ -70,7 +66,7 @@ usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
 
 ​	--gpu GPU, -g GPU	controls which gpu you will use. If you do not have gpu, set -g -1.
 
-​	--use_best_config	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. 
+​	--use_best_config	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. The best_config will override the parameter in config.ini.
 
 ​	--use_hpo Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
 
@@ -84,22 +80,32 @@ It is under development, and we release it in a nightly build version. For now, 
 
 **Note**: If you are interested in some model, you can refer to the below models list.
 
+Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get more basic and depth usage.
+
 ## [Models](./openhgnn/models/#Model)
 
-### Supported Models
+### Supported Models with specific task
 
-- [RGCN](./openhgnn/output/RGCN)[ESWC 2018] for entity classification
-- [HAN](./openhgnn/output/HAN)[WWW 2019] for node classification
-- [HetGNN](./openhgnn/output/HetGNN)[KDD 2019] for node classification and link prediction
-- [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
-- [RSHN](./openhgnn/output/RSHN)[ICDM 2019] for entity classification
-- [DGMI](./openhgnn/output/DMGI)[AAAI 2020] for node classification
-- [MAGNN](./openhgnn/output/MAGNN)[WWW 2020] for node classification
-- [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020] for entity classification
-- [NSHE](./openhgnn/output/NSHE)[IJCAI 2020] for node classification
-- [NARS](./openhgnn/output/NARS) for node classification
-- [MHNF](./openhgnn/output/MHNF) for node classification
-- [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021] for node classification
+The link will give some basic usage.
+
+| Model                                           | Node classification | Link prediction    | Recommendation     |
+| ----------------------------------------------- | ------------------- | ------------------ | ------------------ |
+| [RGCN](./openhgnn/output/RGCN)[ESWC 2018]       | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [HAN](./openhgnn/output/HAN)[WWW 2019]          | :heavy_check_mark:  |                    |                    |
+| [KGCN](./openhgnn/output/KGCN)[WWW 2019]        |                     |                    | :heavy_check_mark: |
+| [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]    | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [GTN](./openhgnn/output/GTN)[NeurIPS 2019]      | :heavy_check_mark:  |                    |                    |
+| [RSHN](./openhgnn/output/RSHN)[ICDM 2019]       | :heavy_check_mark:  |                    |                    |
+| [DGMI](./openhgnn/output/DMGI)[AAAI 2020]       | :heavy_check_mark:  |                    |                    |
+| [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]      | :heavy_check_mark:  |                    |                    |
+| [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020] | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]      | :heavy_check_mark:  |                    |                    |
+| [NARS](./openhgnn/output/NARS)                  | :heavy_check_mark:  |                    |                    |
+| [MHNF](./openhgnn/output/MHNF)                  | :heavy_check_mark:  |                    |                    |
+| [HGSL](./openhgnn/output/HGSL)[AAAI 2021]       | :heavy_check_mark:  |                    |                    |
+| [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]  | :heavy_check_mark:  |                    |                    |
+| [HPN](./openhgnn/output/HPN)[TKDE 2021]         | :heavy_check_mark:  |                    |                    |
+| [RHGNN](./openhgnn/output/RHGNN)                | :heavy_check_mark:  |                    |                    |
 
 ### To be supported models
 
@@ -109,45 +115,8 @@ It is under development, and we release it in a nightly build version. For now, 
 
 - Heterogeneous Graph Attention Networks for Semi-supervised Short Text Classification[EMNLP 2019]
 - Heterogeneous Graph Structure Learning for Graph Neural Networks[AAAI 2021]
-- [Heterogeneous Graph Neural Network via Attribute Completion[WWW 2021]](https://dl.acm.org/doi/10.1145/3442381.3449914)
-- [Heterogeneous Graph Propagation Network[TKDE 2021]](https://ieeexplore.ieee.org/abstract/document/9428609)
 - [Self-supervised Heterogeneous Graph Neural Network with Co-contrastive Learning[KDD 2021]](https://arxiv.org/abs/2105.09111)
-- Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]
-
-
-
-## Why OpenHGNN
-
-### Relation with [DGL](https://github.com/dmlc/dgl)
-
-OpenHGNN is a high-level package built on top of DGL; it will not cover efficient implementation of low-level components in C++.
-
-### Relation with [OpenHINE](https://github.com/BUPT-GAMMA/OpenHINE)
-
-| Package  | Heterograph structure | Models                            | Efficiency  | Others                                     |
-| -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
-| OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
-| OpenHGNN | heterograph           | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
-
-We aim to build more embedding methods(implemented in OpenHINE) in OpenHGNN.
-
-To avoid reinventing the wheel, we use the DGL as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
-
-![image](./docs/source/_static/image-001.jpg)
-
-
-
-## A Pipeline of OpenHGNN
-
-###### We define three components: [TrainerFlow](./openhgnn/trainerflow/#Trainerflow), [Model](./openhgnn/models/#Model), [Task](./openhgnn/tasks/#Task).
-
-- For a given paper,
-  - For unsupervised model, the model and the trainerflow are specific cause the loss calculation is fixed.So given a model name, we can identify the model and trainerflow, user need also specify the task name.
-  - For other model, the model is fixed and the trainerflow is changeable according to task.
-    User must specify the model and the task, and the trainerflow will be determined by the task.
-    For example, RGCN on the node classification task will use the entity classification flow and RGCN on the link prediction task will use the dist_mult flow.
-
-![image-20210622151239030](./docs/source/_static/pipeline_img.png)
+- [Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]](https://ieeexplore.ieee.org/document/9483653)
 
 ## Contributors
 

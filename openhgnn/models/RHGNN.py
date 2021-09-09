@@ -31,20 +31,43 @@ class RHGNN(BaseModel):
                      n_heads: int = 4,
                      dropout: float = 0.2, negative_slope: float = 0.2,
                      residual: bool = True, norm: bool = True):
+
+        r"""
+
+        Description
+        -----------
+        This is the main method of model RHGNN
+
+        Parameters
+        ----------
+        graph: dgl.DGLHeteroGraph
+            a heterogeneous graph
+        input_dim_dict: dict
+            node input dimension dictionary
+        hidden_dim: int
+            node hidden dimension
+        relation_input_dim: int
+            relation input dimension
+        relation_hidden_dim: int
+            relation hidden dimension
+        num_layers: int
+            number of stacked layers
+        n_heads: int
+            number of attention heads
+        dropout: float
+            dropout rate
+        negative_slope: float
+            negative slope
+        residual: boolean
+            residual connections or not
+        norm: boolean
+            layer normalization or not
+
+
+
         """
 
-        :param graph: a heterogeneous graph
-        :param input_dim_dict: node input dimension dictionary
-        :param hidden_dim: int, node hidden dimension
-        :param relation_input_dim: int, relation input dimension
-        :param relation_hidden_dim: int, relation hidden dimension
-        :param num_layers: int, number of stacked layers
-        :param n_heads: int, number of attention heads
-        :param dropout: float, dropout rate
-        :param negative_slope: float, negative slope
-        :param residual: boolean, residual connections or not
-        :param norm: boolean, layer normalization or not
-        """
+
         super(RHGNN, self).__init__()
 
         self.category = category
@@ -60,12 +83,6 @@ class RHGNN(BaseModel):
         self.out_dim = out_dim
         self.norm = norm
 
-        # input_features = {}
-        # for stype, etype, dtype in graph.canonical_etypes:
-        #     input_features[(stype, etype, dtype)] = graph.srcnodes[dtype].data.get('h').to(torch.float32)
-        # self.input_features = input_features
-        # ntypes = ['actor', 'director', 'movie']
-        # etypes = ['actor-movie', 'director-movie', 'movie-actor', 'movie-director']
         print(graph.etypes)
         # relation embedding dictionary
         self.relation_embedding = nn.ParameterDict({
@@ -121,19 +138,25 @@ class RHGNN(BaseModel):
             nn.init.xavier_normal_(self.relation_transformation_weight[etype], gain=gain)
 
     def forward(self, blocks: list, relation_target_node_features=None, relation_embedding: dict = None):
-        """
 
-        :param blocks: list of sampled dgl.DGLHeteroGraph
-        :param relation_target_node_features: target node features under each relation, dict, {(srctype, etype, dsttype): features}
-        :param relation_embedding: embedding for each relation, dict, {etype: feature} or None
-        :return:
+
+        r"""
+
+        Parameters
+        ----------
+        blocks: list
+            list of sampled dgl.DGLHeteroGraph
+        relation_target_node_features: dict
+            target node features under each relation, e.g {(srctype, etype, dsttype): features}
+        relation_embedding: dict
+            embedding for each relation, e.g {etype: feature} or None
+
         """
         relation_target_node_features = {}
         for stype, etype, dtype in blocks[0].canonical_etypes:
             relation_target_node_features[(stype, etype, dtype)] = blocks[0].srcnodes[dtype].data.get('h').to(torch.float32)
+
         # target relation feature projection
-
-
         for stype, reltype, dtype in relation_target_node_features:
             relation_target_node_features[(stype, reltype, dtype)] = self.projection_layer[dtype](
                 relation_target_node_features[(stype, reltype, dtype)])
@@ -178,14 +201,25 @@ class RHGNN(BaseModel):
 
     def inference(self, graph: dgl.DGLHeteroGraph, relation_target_node_features: dict, relation_embedding: dict = None,
                   device: str = 'cuda:0'):
-        """
+        r"""
+
+        Description
+        -----------
         mini-batch inference of final representation over all node types. Outer loop: Interate the layers, Inner loop: Interate the batches
 
-        :param graph: The whole relational graphs
-        :param relation_target_node_features: target node features under each relation, dict, {(srctype, etype, dsttype): features}
-        :param relation_embedding: embedding for each relation, dict, {etype: feature} or None
-        :param device: device str
+        Parameters
+        ----------
+        graph: dgl.DGLHeteroGraph
+            The whole relational graphs
+        relation_target_node_features:  dict
+            target node features under each relation, e.g {(srctype, etype, dsttype): features}
+        relation_embedding: dict
+            embedding for each relation, e.g {etype: feature} or None
+        device: str
+            device
+
         """
+
         with torch.no_grad():
 
             if relation_embedding is None:
@@ -279,7 +313,13 @@ class RHGNN(BaseModel):
 
 # hetetoConv
 class HeteroGraphConv(nn.Module):
-    r"""A generic module for computing convolution on heterogeneous graphs.
+
+
+    r"""
+
+    Description
+    -----------
+    A generic module for computing convolution on heterogeneous graphs.
 
     The heterograph convolution applies sub-modules on their associating
     relation graphs, which reads the features from source nodes and writes the
@@ -294,27 +334,37 @@ class HeteroGraphConv(nn.Module):
         Modules associated with every edge types.
     """
 
+
     def __init__(self, mods: dict):
         super(HeteroGraphConv, self).__init__()
         self.mods = nn.ModuleDict(mods)
 
     def forward(self, graph: dgl.DGLHeteroGraph, input_src: dict, input_dst: dict, relation_embedding: dict,
                 node_transformation_weight: nn.ParameterDict, relation_transformation_weight: nn.ParameterDict):
-        """
+        r"""
+        Description
+        -----------
         call the forward function with each module.
 
         Parameters
         ----------
-        graph: DGLHeteroGraph, The Heterogeneous Graph.
-        input_src: dict[tuple, Tensor], Input source node features {relation_type: features, }
-        input_dst: dict[tuple, Tensor], Input destination node features {relation_type: features, }
-        relation_embedding: dict[etype, Tensor], Input relation features {etype: feature}
-        node_transformation_weight: nn.ParameterDict, weights {ntype, (inp_dim, hidden_dim)}
-        relation_transformation_weight: nn.ParameterDict, weights {etype, (n_heads, 2 * hidden_dim)}
+        graph: DGLHeteroGraph
+            The Heterogeneous Graph.
+        input_src: dict[tuple, Tensor]
+            Input source node features {relation_type: features, }
+        input_dst: dict[tuple, Tensor]
+            Input destination node features {relation_type: features, }
+        relation_embedding: dict[etype, Tensor]
+            Input relation features {etype: feature}
+        node_transformation_weight: nn.ParameterDict
+            weights {ntype, (inp_dim, hidden_dim)}
+        relation_transformation_weight: nn.ParameterDict
+            weights {etype, (n_heads, 2 * hidden_dim)}
 
         Returns
         -------
-        outputs, dict[tuple, Tensor]  Output representations for every relation -> {(stype, etype, dtype): features}.
+        outputs: dict[tuple, Tensor]
+            Output representations for every relation -> {(stype, etype, dtype): features}.
         """
 
         # find reverse relation dict
@@ -351,15 +401,24 @@ class HeteroGraphConv(nn.Module):
 class RelationCrossing(nn.Module):
 
     def __init__(self, in_feats: int, out_feats: int, num_heads: int, dropout: float = 0.0, negative_slope: float = 0.2):
-        """
+        r"""
+
+        Description
+        ----------
         Relation crossing layer
+
         Parameters
         ----------
-        in_feats : pair of ints, input feature size
-        out_feats : int, output feature size
-        num_heads : int, number of heads in Multi-Head Attention
-        dropout : float, optional, dropout rate, defaults: 0.0
-        negative_slope : float, optional, negative slope rate, defaults: 0.2
+        in_feats : pair of ints
+            input feature size
+        out_feats : int
+            output feature size
+        num_heads : int
+            number of heads in Multi-Head Attention
+        dropout : float
+            optional, dropout rate, defaults: 0.0
+        negative_slope : float
+            optional, negative slope rate, defaults: 0.2
         """
         super(RelationCrossing, self).__init__()
         self._in_feats = in_feats
@@ -370,10 +429,17 @@ class RelationCrossing(nn.Module):
         self.leaky_relu = nn.LeakyReLU(negative_slope)
 
     def forward(self, dsttype_node_features: torch.Tensor, relations_crossing_attention_weight: nn.Parameter):
-        """
-        :param dsttype_node_features: a tensor of (dsttype_node_relations_num, num_dst_nodes, n_heads * hidden_dim)
-        :param relations_crossing_attention_weight: Parameter the shape is (n_heads, hidden_dim)
-        :return: output_features: a Tensor
+        r"""
+        Parameters
+        ----------
+        dsttype_node_features:
+            a tensor of (dsttype_node_relations_num, num_dst_nodes, n_heads * hidden_dim)
+        relations_crossing_attention_weight:
+            Parameter the shape is (n_heads, hidden_dim)
+        Returns:
+        ----------
+        output_features: Tensor
+
         """
         if len(dsttype_node_features) == 1:
             # (num_dst_nodes, n_heads * hidden_dim)
@@ -397,13 +463,20 @@ class RelationFusing(nn.Module):
 
     def __init__(self, node_hidden_dim: int, relation_hidden_dim: int, num_heads: int, dropout: float = 0.0,
                  negative_slope: float = 0.2):
-        """
+        r"""
 
-        :param node_hidden_dim: int, node hidden feature size
-        :param relation_hidden_dim: int,relation hidden feature size
-        :param num_heads: int, number of heads in Multi-Head Attention
-        :param dropout: float, dropout rate, defaults: 0.0
-        :param negative_slope: float, negative slope, defaults: 0.2
+        Parameters
+        ----------
+        node_hidden_dim: int
+            node hidden feature size
+        relation_hidden_dim: int
+            relation hidden feature size
+        num_heads: int
+            number of heads in Multi-Head Attention
+        dropout: float
+            dropout rate, defaults: 0.0
+        negative_slope: float
+            negative slope, defaults: 0.2
         """
         super(RelationFusing, self).__init__()
         self.node_hidden_dim = node_hidden_dim
@@ -416,12 +489,22 @@ class RelationFusing(nn.Module):
     def forward(self, dst_node_features: list, dst_relation_embeddings: list,
                 dst_node_feature_transformation_weight: list,
                 dst_relation_embedding_transformation_weight: list):
-        """
-        :param dst_node_features: list, [each shape is (num_dst_nodes, n_heads * node_hidden_dim)]
-        :param dst_relation_embeddings: list, [each shape is (n_heads * relation_hidden_dim)]
-        :param dst_node_feature_transformation_weight: list, [each shape is (n_heads, node_hidden_dim, node_hidden_dim)]
-        :param dst_relation_embedding_transformation_weight:  list, [each shape is (n_heads, relation_hidden_dim, relation_hidden_dim)]
-        :return: dst_node_relation_fusion_feature: Tensor of the target node representation after relation-aware representations fusion
+        r"""
+        Parameters
+        ----------
+        dst_node_features: list
+            e.g [each shape is (num_dst_nodes, n_heads * node_hidden_dim)]
+        dst_relation_embeddings: list
+            e.g [each shape is (n_heads * relation_hidden_dim)]
+        dst_node_feature_transformation_weight: list
+            e.g [each shape is (n_heads, node_hidden_dim, node_hidden_dim)]
+        dst_relation_embedding_transformation_weight:  list
+            e.g [each shape is (n_heads, relation_hidden_dim, relation_hidden_dim)]
+
+        Returns
+        ----------
+        dst_node_relation_fusion_feature: Tensor
+            the target node representation after relation-aware representations fusion
         """
         if len(dst_node_features) == 1:
             # (num_dst_nodes, n_heads * hidden_dim)
@@ -468,15 +551,23 @@ class RelationFusing(nn.Module):
 class RelationGraphConv(nn.Module):
 
     def __init__(self, in_feats: tuple, out_feats: int, num_heads: int, dropout: float = 0.0, negative_slope: float = 0.2):
-        """
+        r"""
+        Description
+        ----------
         Relation graph convolution layer
+
         Parameters
         ----------
-        in_feats : pair of ints, input feature size
-        out_feats : int, output feature size
-        num_heads : int, number of heads in Multi-Head Attention
-        dropout : float, optional, dropout rate, defaults: 0
-        negative_slope : float, optional, negative slope rate, defaults: 0.2
+        in_feats : pair of ints
+            input feature size
+        out_feats : int
+            output feature size
+        num_heads : int
+            number of heads in Multi-Head Attention
+        dropout : float
+            optional, dropout rate, defaults: 0
+        negative_slope : float
+            optional, negative slope rate, defaults: 0.2
         """
         super(RelationGraphConv, self).__init__()
         self._in_src_feats, self._in_dst_feats = in_feats[0], in_feats[1]
@@ -496,15 +587,20 @@ class RelationGraphConv(nn.Module):
         ----------
         graph : specific relational DGLHeteroGraph
         feat : pair of torch.Tensor
-            The pair contains two tensors of shape (N_{in}, D_{in_{src}})` and (N_{out}, D_{in_{dst}}).
-        dst_node_transformation_weight: Parameter (input_dst_dim, n_heads * hidden_dim)
-        src_node_transformation_weight: Parameter (input_src_dim, n_heads * hidden_dim)
-        relation_embedding: torch.Tensor, (relation_input_dim)
-        relation_transformation_weight: Parameter (relation_input_dim, n_heads * 2 * hidden_dim)
+            e.g The pair contains two tensors of shape (N_{in}, D_{in_{src}})` and (N_{out}, D_{in_{dst}}).
+        dst_node_transformation_weight:
+            e.g Parameter (input_dst_dim, n_heads * hidden_dim)
+        src_node_transformation_weight:
+            e.g Parameter (input_src_dim, n_heads * hidden_dim)
+        relation_embedding: torch.Tensor
+            e.g (relation_input_dim)
+        relation_transformation_weight:
+            e,g Parameter (relation_input_dim, n_heads * 2 * hidden_dim)
 
         Returns
         -------
-        torch.Tensor, shape (N, H, D_out)` where H is the number of heads, and D_out is size of output feature.
+        dst_features: torch.Tensor
+            shape (N, H, D_out)` where H is the number of heads, and D_out is size of output feature.
         """
         graph = graph.local_var()
         # Tensor, (N_src, input_src_dim)
@@ -548,24 +644,32 @@ class RelationGraphConv(nn.Module):
 
 
 class R_HGNN_Layer(nn.Module):
-    # def __init__(self, graph: dgl.DGLHeteroGraph, input_dim: int, hidden_dim: int, relation_input_dim: int,
-    #              relation_hidden_dim: int, n_heads: int = 8, dropout: float = 0.2, negative_slope: float = 0.2,
-    #              residual: bool = True, norm: bool = False):
     def __init__(self, graph, input_dim: int, hidden_dim: int, relation_input_dim: int,
                  relation_hidden_dim: int, n_heads: int = 8, dropout: float = 0.2, negative_slope: float = 0.2,
                  residual: bool = True, norm: bool = False):
         """
-
-        :param graph: a heterogeneous graph
-        :param input_dim: int, node input dimension
-        :param hidden_dim: int, node hidden dimension
-        :param relation_input_dim: int, relation input dimension
-        :param relation_hidden_dim: int, relation hidden dimension
-        :param n_heads: int, number of attention heads
-        :param dropout: float, dropout rate
-        :param negative_slope: float, negative slope
-        :param residual: boolean, residual connections or not
-        :param norm: boolean, layer normalization or not
+        Parameters
+        ----------
+        graph:
+            a heterogeneous graph
+        input_dim: int
+            node input dimension
+        hidden_dim: int
+            node hidden dimension
+        relation_input_dim: int
+            relation input dimension
+        relation_hidden_dim: int
+            relation hidden dimension
+        n_heads: int
+            number of attention heads
+        dropout: float
+            dropout rate
+        negative_slope: float
+            negative slope
+        residual: boolean
+            residual connections or not
+        norm: boolean
+            layer normalization or not
         """
         super(R_HGNN_Layer, self).__init__()
         self.input_dim = input_dim

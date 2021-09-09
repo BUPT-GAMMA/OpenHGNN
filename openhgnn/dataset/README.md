@@ -2,9 +2,7 @@ Dataset
 
 A dataset is related to a task, so it is a part of task.
 
-So dataset should load not only a heterograph[DGLGraph], but also some index involving training, validation and testing. The node/edge feature is not necessary, but most models need node feature. So we will build node feature with [*HeteroEmbedLayer*](../layers/EmbedLayer.py) in general, and we build it in the trainerflow when dataset has no feature.
-
-For now, we have two downstream tasks, which are node classification and link prediction.
+So dataset should load not only a heterograph[DGLGraph], but also some index involving training, validation and testing. In OpenHGNN, we preprocess the feature of dataset outside of model. Specifically, we use a linear layer with bias for each node type to map all node features to a shared feature space. And for no feature nodes, we give a embedding as its feature. Refer to [HeteroFeature](https://openhgnn.readthedocs.io/en/latest/api/layer.html#heterofeature).
 
 #### NodeClassificationDataset
 
@@ -46,7 +44,11 @@ For now, we have two downstream tasks, which are node classification and link pr
     | imdb4GTN   | 4,661 | 5,841 | 2,270    | 13,983      | 4,661          | 300   | 300  | 2,339 |
     | imdb4MAGNN | 4,278 | 5,257 | 2,081    | 12,828      | 4,278          | 400   | 400  | 3,478 |
 
-- ##### OGB_NodeCLassification
+- **HGB_NodeClassification**
+
+  - 
+  
+- ##### OGB_NodeClassification
 
   - ###### [ogbn-mag](https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)
 
@@ -60,6 +62,10 @@ For now, we have two downstream tasks, which are node classification and link pr
 
   - ###### academic4HetGNN
 
+- **HGBl-LinkPrediction**
+
+  - 
+  
 - ##### KG_LinkPrediction
 
   - 'wn18', 'FB15k', 'FB15k-237'
@@ -90,6 +96,7 @@ For now, we have two downstream tasks, which are node classification and link pr
     | user   | 1892   | 0                 |
     | artist | 17632  | 0                 |
     | tag    | 1088   | 0                 |
+
 
     edge information:
 
@@ -126,10 +133,9 @@ For now, we have two downstream tasks, which are node classification and link pr
     | 3_to_3 | 798          | 0           |
 
     
-
 #### RecommendationDataset
 
-- **Amzon**
+- **Amazon**
 
   (Containing rating and timestamp information)
 
@@ -147,10 +153,14 @@ For now, we have two downstream tasks, which are node classification and link pr
   |        | User  | Item  | View  | Category | Brand | User-Item | Item-View | Item-Category | Item-Brand | Test(20%)<br />User-Item |
   | ------ | ----- | ----- | ----- | -------- | ----- | --------- | --------- | ------------- | ---------- | ------------------------ |
   | Amazon | 6,170 | 2,753 | 3,857 | 22       | 334   | 195,791   | 5,694     | 5,508         | 2,753      | 39,159                   |
-  
-  
+
+
+  **yelp4rec**
+
 
 ### How to build a new dataset
+
+#### Overview
 
 We use [dgl.heterograph](https://docs.dgl.ai/en/latest/guide/graph-heterogeneous.html#guide-graph-heterogeneous) as our graph data structure.
 
@@ -162,3 +172,5 @@ The API [dgl.save_graphs](https://docs.dgl.ai/en/latest/generated/dgl.save_graph
 2. Store as *graph.bin*. Compress as *dataset_name4model_name.zip*
 3. Upload the zip file to s3.
 4. If the dataset is Heterogeneous Information Network, you can modify the [AcademicDataset](./academic_graph.py) directly. Or you can refer to it building a new *Class Dataset*.
+
+We give a [demo](https://openhgnn.readthedocs.io/en/latest/install/usage.html#evaluate-a-new-dataset) to build a new dataset.

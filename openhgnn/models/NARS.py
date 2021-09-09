@@ -4,19 +4,20 @@ import torch.nn as nn
 from . import BaseModel, register_model
 import dgl.function as fn
 
+
 @register_model('NARS')
 class NARS(BaseModel):
     r"""
 
         Description
         -----------
-        NARS from paper `SCALABLE GRAPH NEURAL NETWORKS FOR HETEROGENEOUS GRAPHS
-        <https://arxiv.org/pdf/2011.09679.pdf>`__.
+        `SCALABLE GRAPH NEURAL NETWORKS FOR HETEROGENEOUS GRAPHS <https://arxiv.org/pdf/2011.09679.pdf>`_.
 
-        Given a heterogeneous graph :math:`G` and its edge relation type set :math:`\mathcal{R}`, our proposed method first samples
-        :math:`K` unique subsets from :math:`\mathcal{R}`. Then for each sampled subset :math:`R_i \subseteq \mathcal{R}`, we generate a relation subgraph
-        :math:`G_i` from :math:`G` in which only edges whose type belongs to :math:`R_i` are kept. We treat :math:`G_i` as a homogeneous
-        graph, and perform neighbor aggregation to generate :math:`L`-hop neighbor features for each node.
+        Given a heterogeneous graph :math:`G` and its edge relation type set :math:`\mathcal{R}`,
+        our proposed method first samples :math:`K` unique subsets from :math:`\mathcal{R}`.
+        Then for each sampled subset :math:`R_i \subseteq \mathcal{R}`, we generate a relation subgraph
+        :math:`G_i` from :math:`G` in which only edges whose type belongs to :math:`R_i` are kept.
+        We treat :math:`G_i` as a homogeneous graph or a bipartite graph, and perform neighbor aggregation to generate :math:`L`-hop neighbor features for each node.
         Let :math:`H_{v,0}` be the input features (of dimension :math:`D`) for node :math:`v`. For each subgraph :math:`G_i`
         , the :math:`l`-th hop
         features :math:`H_{v,l}^{i}` are computed as
@@ -28,7 +29,7 @@ class NARS(BaseModel):
         where :math:`N_i(v)` is the set of neighbors of node :math:`v` in :math:`G_i`.
 
 
-         AGGREGATING SIGN FEATURES FROM SAMPLED SUBGRAPHS
+        AGGREGATING SIGN FEATURES FROM SAMPLED SUBGRAPHS
         --------------------------------------------------
 
         For each layer :math:`l`, we let the model adaptively learn which relation-subgraph features to use by aggregating
@@ -45,36 +46,21 @@ class NARS(BaseModel):
 
         Parameters
         ----------
-        num_hops :
+        num_hops : int
             Number of hops.
-        category :
+        category : str
             Type of predicted nodes.
-        hidden_dim :
+        hidden_dim : int
             The dimention of hidden layer.
-        num_feats :
+        num_feats : int
             The number of relation subsets.
-
-
-
 
         Note
         ----
-
-            You can set the parameters in utils/best_config.py.
-
-            HGB-Freebase does not have the features of nodes, and NARS requires nodes to
-         have features, so the NARS model does not support HGB-Freebase.
-
-            use_best_config parameter must be added.
-
-        Example
-        -------
-        .. code:: python
-
-            python main.py -m NARS -t node_classification -d HGBn-ACM -g 4 --use_best_config
+        We do not support the dataset without feature, (e.g. HGBn-Freebase
+        because the model performs neighbor aggregation to generate :math:`L`-hop neighbor features at once.
 
         """
-
 
     @classmethod
     def build_model_from_args(cls, args, hg):
@@ -135,7 +121,7 @@ def preprocess_features(g, mps, args, device, predict):
         pre-process heterogeneous graph g to generate neighbor-averaged features
         for each relation subsets
 
-        Input
+        Parameters
         ------
         g :
             heterogeneous graph
@@ -146,7 +132,7 @@ def preprocess_features(g, mps, args, device, predict):
         device :
             device
 
-        Output
+        Return
         ------
             new features of each relation subsets
 
@@ -179,7 +165,7 @@ def gen_rel_subset_feature(g, rel_subset, args, device, predict):
         Build relation subgraph given relation subset and generate multi-hop
         neighbor-averaged feature on this subgraph
 
-        Input
+
         ------
         g :
             Heterogeneous graph
@@ -190,7 +176,7 @@ def gen_rel_subset_feature(g, rel_subset, args, device, predict):
         device :
             device
 
-        Output
+        Returns
         ------
         new features of a relation subsets
     """
@@ -299,8 +285,8 @@ class SIGN(nn.Module):
 
         The SIGN model.
 
-        Input
-        ------
+        Parameters
+        ------------
         in_feats :
             input feature dimention
         hidden :
@@ -350,8 +336,8 @@ class WeightedAggregator(nn.Module):
 
         Get new features by multiplying the old features by the weight matrix.
 
-        Input
-        -------
+        Parameters
+        -------------
         num_feats :
             number of subsets
         in_feats :

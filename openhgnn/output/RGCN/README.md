@@ -11,18 +11,18 @@
 - Clone the Openhgnn-DGL
 
   ```bash
-  python main.py -m RGCN -t node_classification -d aifb -g 0
+  python main.py -m RGCN -t node_classification -d aifb -g 0 --use_best_config
   ```
 
   If you do not have gpu, set -gpu -1.
 
-  Supported Dataset: [RDFDataset](../../dataset/#RDF_NodeCLassification)
+  -d means dataset, candidate dataset: aifb/mutag/bgs/am. Refer to [RDFDataset](../../dataset/#RDF_NodeCLassification) to get more infos.
 
 ## Performance: Node classification
 
 | Method               | AIFB  | MUTAG | BGS   | AM    |
 | -------------------- | ----- | ----- | ----- | ----- |
-| **RGCN(dgl)**（best) | 97.22 | 72.05 | 93.10 | 89.90 |
+| **RGCN(dgl)**（best) | 97.22 | 72.06 | 96.55 | 88.89 |
 
 ## TrainerFlow: [entity classification flow](../../trainerflow/#Entity_classification_flow)
 
@@ -33,16 +33,9 @@
 
 ## Hyper-parameter specific to the model
 
-You can modify the parameters in openhgnn/config.ini
+You can modify the parameters[RGCN] in openhgnn/config.ini. 
 
-#### Description
-
-```python
-hidden_dim
-batch_size
-```
-
-Best config can be found in [best_config](../../utils/best_config.py)
+Best config can be found in [best_config](../../utils/best_config.py). 
 
 ## More
 

@@ -7,6 +7,9 @@ from dgl.nn.pytorch import GraphConv, EdgeWeightNorm
 from ..utils import transform_relation_graph_list
 from . import BaseModel, register_model
 from .GTN_sparse import GTConv
+import sys
+sys.path.append("..")
+
 
 @register_model('MHNF')
 class MHNF(BaseModel):
