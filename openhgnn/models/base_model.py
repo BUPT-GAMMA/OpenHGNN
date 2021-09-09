@@ -45,3 +45,11 @@ class BaseModel(nn.Module, metaclass=ABCMeta):
         th.Tensor
         """
         raise NotImplementedError
+
+    def h2dict(self, h, hdict):
+        pre = 0
+        out_dict = {}
+        for i, value in hdict.items():
+            out_dict[i] = h[pre:value.shape[0]+pre]
+            pre += value.shape[0]
+        return out_dict

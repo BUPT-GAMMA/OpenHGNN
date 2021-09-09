@@ -236,7 +236,6 @@ class Config(object):
             self.residual = conf.getboolean("RHGNN", "residual")
             self.batch_size = conf.getint("RHGNN", "batch_size")
             self.node_neighbors_min_num = conf.getint("RHGNN", "node_neighbors_min_num")
-            #self.optimizer = conf.get
             self.weight_decay = conf.getfloat("RHGNN", "weight_decay")
             self.max_epoch = conf.getint("RHGNN", "max_epoch")
             self.patience = conf.getint("RHGNN", "patience")

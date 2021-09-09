@@ -62,7 +62,7 @@ def build_dataset(dataset, task):
         _dataset = 'kg_link_prediction'
     elif dataset in ['LastFM4KGCN']:
         _dataset = 'kgcn_recommendation'
-    elif dataset in ['yelp']:
+    elif dataset in ['yelp4rec']:
         _dataset = 'hin_' + task
     elif dataset == 'demo':
         _dataset = 'demo_' + task

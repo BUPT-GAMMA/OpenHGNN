@@ -3,17 +3,11 @@ import dgl
 import numpy as np
 import torch as th
 from tqdm import tqdm
-import torch.nn as nn
-import torch
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
-from ..tasks import build_task
-from ..utils import extract_embed, get_nodes_dict
-from collections.abc import Mapping
+from ..utils import extract_embed
 from ..models import build_model
-from ..layers.EmbedLayer import HeteroEmbedLayer
-from ..layers.HeteroLinear import HeteroFeature
-from ..sampler.negative_sampler import Uniform_exclusive
+
 
 @register_flow("recommendation")
 class Recommendation(BaseFlow):
@@ -27,6 +21,8 @@ class Recommendation(BaseFlow):
         self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
+        self.args.out_node_type = self.task.dataset.out_ntypes
+        self.args.out_dim = self.args.hidden_dim
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
@@ -58,7 +54,7 @@ class Recommendation(BaseFlow):
             else:
                 loss = self._full_train_setp()
             if epoch % 2 == 0:
-                metric = self._test_step()
+                metric = self._test_step("val")
                 epoch_iter.set_description(
                     f"Epoch: {epoch:03d}, NDCG: {metric:.4f}, Loss:{loss:.4f}"
                 )
@@ -132,8 +128,11 @@ class Recommendation(BaseFlow):
         with th.no_grad():
             h_dict = self.input_feature()
             embedding = self.model(self.train_hg, h_dict)
-
-            p_score = self.ScorePredictor(self.pos_test_graph, embedding).unsqueeze(0)
+            if split == 'val':
+                pos_graph = self.val_hg
+            elif split == 'test':
+                pos_graph = self.test_hg
+            p_score = self.ScorePredictor(pos_graph, embedding).unsqueeze(0)
             n_score = self.ScorePredictor(self.neg_test_graph, embedding)
             n_score = th.reshape(n_score, (99, -1))
             matrix = th.cat((p_score, n_score), 0).t().cpu().numpy()

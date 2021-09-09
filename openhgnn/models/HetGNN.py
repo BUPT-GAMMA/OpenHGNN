@@ -10,8 +10,7 @@ from . import BaseModel, register_model
 class HetGNN(BaseModel):
     r"""
     HetGNN[KDD2019]-
-    Heterogeneous Graph Neural Network
-    `Heterogeneous Graph Neural Network <https://dl.acm.org/doi/abs/10.1145/3292500.3330961>'_
+    `Heterogeneous Graph Neural Network <https://dl.acm.org/doi/abs/10.1145/3292500.3330961>`_
     `Source Code Link <https://github.com/chuxuzhang/KDD2019_HetGNN>`_
 
     The author of the paper only gives the academic dataset.

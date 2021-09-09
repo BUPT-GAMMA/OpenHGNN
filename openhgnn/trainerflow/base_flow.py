@@ -57,7 +57,10 @@ class BaseFlow(ABC):
         # train with a mini_batch seed nodes graph
         raise NotImplementedError
 
-    def _test_step(self):
+    def _full_test_step(self):
+        raise NotImplementedError
+
+    def _mini_test_step(self):
         raise NotImplementedError
 
     def load_from_pretrained(self):

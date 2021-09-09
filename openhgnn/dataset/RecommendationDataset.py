@@ -4,7 +4,8 @@ import torch as th
 from . import BaseDataset, register_dataset
 from dgl.data.utils import load_graphs
 from .multigraph import MultiGraphDataset
-from openhgnn.sampler.negative_sampler import Uniform_exclusive
+from ..sampler.negative_sampler import Uniform_exclusive
+from . import AcademicDataset
 
 
 @register_dataset('recommendation')
@@ -51,9 +52,11 @@ class HINRecommendation(RecommendationDataset):
         self.dataset_name = dataset_name
         self.num_neg = 20
         #self.neg_dir = os.path.join(self.raw_dir, dataset_name, 'neg_{}.bin'.format(self.num_neg))
-        self.g = self.load_HIN('./openhgnn/dataset/yelp.bin')
+        dataset = AcademicDataset(name='yelp4rec', raw_dir='')
+        self.g = dataset[0].long()
         self.target_link = 'user-item'
         self.target_link_r = 'item-user'
+        self.out_ntypes = ['user', 'item']
         self.has_feature = False
 
     def load_HIN(self, dataset_name):
@@ -92,7 +95,7 @@ class HINRecommendation(RecommendationDataset):
         return train_graph, val_graph, test_graph
 
     def construct_negative_graph(self, train_g):
-        fname = './openhgnn/dataset/yelp/neg_graph_99.bin'
+        fname = './openhgnn/dataset/yelp4rec/neg_graph_99.bin'
         if os.path.exists(fname):
             g, _ = load_graphs(fname)
             return g[0]

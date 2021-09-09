@@ -86,22 +86,26 @@ It is under development, and we release it in a nightly build version. For now, 
 
 ## [Models](./openhgnn/models/#Model)
 
-### Supported Models
+### Supported Models with specific task
 
-- [RGCN](./openhgnn/output/RGCN)[ESWC 2018] for entity classification
-- [HAN](./openhgnn/output/HAN)[WWW 2019] for node classification
-- [HetGNN](./openhgnn/output/HetGNN)[KDD 2019] for node classification and link prediction
-- [GTN](./openhgnn/output/GTN)[NeurIPS 2019] for node classification
-- [RSHN](./openhgnn/output/RSHN)[ICDM 2019] for entity classification
-- [DGMI](./openhgnn/output/DMGI)[AAAI 2020] for node classification
-- [MAGNN](./openhgnn/output/MAGNN)[WWW 2020] for node classification
-- [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020] for entity classification
-- [NSHE](./openhgnn/output/NSHE)[IJCAI 2020] for node classification
-- [NARS](./openhgnn/output/NARS) for node classification
-- [MHNF](./openhgnn/output/MHNF) for node classification
-- [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021] for node classification
-- [HPN](./openhgnn/output/HPN)[TKDE 2021] for node classification
-- [RHGNN](./openhgnn/output/RHGNN) for node classification
+| Model                                           | Node classification | Link prediction    | Recommendation     |
+| ----------------------------------------------- | ------------------- | ------------------ | ------------------ |
+| [RGCN](./openhgnn/output/RGCN)[ESWC 2018]       | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [HAN](./openhgnn/output/HAN)[WWW 2019]          | :heavy_check_mark:  |                    |                    |
+| [KGCN](./openhgnn/output/KGCN)[WWW 2019]        |                     |                    | :heavy_check_mark: |
+| [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]    | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [GTN](./openhgnn/output/GTN)[NeurIPS 2019]      | :heavy_check_mark:  |                    |                    |
+| [RSHN](./openhgnn/output/RSHN)[ICDM 2019]       | :heavy_check_mark:  |                    |                    |
+| [DGMI](./openhgnn/output/DMGI)[AAAI 2020]       | :heavy_check_mark:  |                    |                    |
+| [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]      | :heavy_check_mark:  |                    |                    |
+| [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020] | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]      | :heavy_check_mark:  |                    |                    |
+| [NARS](./openhgnn/output/NARS)                  | :heavy_check_mark:  |                    |                    |
+| [MHNF](./openhgnn/output/MHNF)                  | :heavy_check_mark:  |                    |                    |
+| [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]  | :heavy_check_mark:  |                    |                    |
+| [HPN](./openhgnn/output/HPN)[TKDE 2021]         | :heavy_check_mark:  |                    |                    |
+| [RHGNN](./openhgnn/output/RHGNN)                | :heavy_check_mark:  |                    |                    |
+|                                                 |                     |                    |                    |
 
 ### To be supported models
 
