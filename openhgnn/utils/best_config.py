@@ -178,13 +178,15 @@ BEST_CONFIGS = {
             },
             'am': {'hidden_dim': 16, 'num_node_layer': 2, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
                    },
+        },
+        'HGSL': {
+            'general': {},
+            'acm4HGSL': {
+                'undirected_relations': 'author-paper,paper-subject', 'gnn_dropout': 0, 'fs_eps': 0.8,
+                'fp_eps': 0.2, 'mp_eps': 0.6,
+            }
         }
 
-    },
-    "entity_classification": {
-        "deepwalk": {
-            "general": {},
-        },
     },
     "link_prediction": {
         'general': {'max_epoch': 500, 'patience': 10, 'mini_batch_flag': True},

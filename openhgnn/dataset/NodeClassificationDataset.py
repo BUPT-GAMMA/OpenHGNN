@@ -154,7 +154,7 @@ class HIN_NodeClassification(NodeClassificationDataset):
 
     def load_HIN(self, name_dataset):
         if name_dataset == 'demo_graph':
-            data_path = './openhgnn/dataset/demo_graph.bin'
+            data_path = './openhgnn/dataset/acm4GTN/graph.bin'
             category = 'author'
             num_classes = 4
             g, _ = load_graphs(data_path)

@@ -96,8 +96,7 @@ class HINRecommendation(RecommendationDataset):
         train_graph = dgl.remove_edges(self.g, th.cat((val_index, test_index)), self.target_link)
         train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), self.target_link_r)
 
-        train_neg_graph = self.construct_negative_graph(train_graph)
-        return train_graph, train_neg_graph, val_graph, test_graph
+        return train_graph, val_graph, test_graph
 
     def construct_negative_graph(self, train_g):
         fname = f'./openhgnn/dataset/{self.dataset_name}/neg_graph_{self.num_neg}.bin'

@@ -9,7 +9,7 @@ Running an existing baseline model on an existing benchmark api_dataset_
 
     >>>python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
     usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
-               [--gpu GPU] [--use_best_config]
+               [--gpu GPU] [--use_best_config] [--use_hpo]
 
 *optional arguments*:
     - --model MODEL,	-m MODEL	name of models
@@ -28,6 +28,23 @@ e.g.:
 
 **Note**: If you are interested in some model,
 you can refer to the below `models list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_.
+
+hyper-parameter optimization
+-------------------------------
+Running an experiment with optuna
+
+.. code:: bash
+
+    >>>python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --use_hpo
+
+The config in OpenHGNN is that:
+
+1. It will read the parameters in ``./openhgnn/config.ini.``
+2. It will load the parameters in ``./openhgnn/utils/best_config.py`` and overwrite the former parameters if we set ``use_best_config``.
+3. It will sample some parameters through *func_search* in ``./openhgnn/auto/hpo,py`` and overwrite the former parameters if we set ``use_hpo``.
+
+You could specify parameters you want to search or sampling algorithms in ``./openhgnn/auto/hpo,py``.
+We give more `infos <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_.
 
 Evaluate a new dataset
 =======================
@@ -102,50 +119,75 @@ If you have another dataset name, you should also modify the `build_dataset <htt
 
 Apply a new model
 ====================
-In this section, we will create a model,
-which is a very simple graph embedding algorithm.
-
-First we import necessary library like numpy, scipy, networkx, sklearn,
-we also import API like ‘BaseModel’ and ‘register_model’ from cogl/models/ to build our new model:
-
+In this section, we will create a model named RGAT,
+which is not in our openhgnn.models.
 
 How to build a new model
 --------------------------
-**First step**
+**First step: Register model**
 
-We should create a class your_model that inherits
-the :ref:`Base Model <api-model>` .
+We should create a class your_model that inherits the :ref:`Base Model <api-model>` .
 and register the model with @register_model(str).
 
 .. code-block:: python
 
     from openhgnn.models import BaseModel, register_model
-    @register_model('demo_model')
-    class Demo(BaseModel):
+    @register_model('RGAT')
+    class RGAT(BaseModel):
         ...
 
-**Second step**
+
+**Second step: Implement functions**
 
 We must implement the classmethod build_model_from_args , other functions like __init__(), forward() and so on.
 
 .. code-block:: python
 
     ...
-    class Demo(BaseModel):
+    class RGAT(BaseModel):
         @classmethod
         def build_model_from_args(cls, args, hg):
-            ...
-            return cls(...)
-        def __init__():
+            return cls(in_dim=args.hidden_dim,
+                       out_dim=args.hidden_dim,
+                       h_dim=args.out_dim,
+                       etypes=hg.etypes,
+                       num_heads=args.num_heads,
+                       dropout=args.dropout)
+
+        def __init__(self, in_dim, out_dim, h_dim, etypes, num_heads, dropout):
+            super(RGAT, self).__init__()
+            self.rel_names = list(set(etypes))
+            self.layers = nn.ModuleList()
+            self.layers.append(RGATLayer(
+                in_dim, h_dim, num_heads, self.rel_names, activation=F.relu, dropout=dropout))
+            self.layers.append(RGATLayer(
+                h_dim, out_dim, num_heads, self.rel_names, activation=None))
             return
-        def forward(hg, h_dict=None):
+
+        def forward(self, hg, h_dict=None):
+            if hasattr(hg, 'ntypes'):
+                # full graph training,
+                for layer in self.layers:
+                    h_dict = layer(hg, h_dict)
+            else:
+                # minibatch training, block
+                for layer, block in zip(self.layers, hg):
+                    h_dict = layer(block, h_dict)
             return h_dict
 
-**Finally**
+Here we do not give the implement the RGATLayer, you can get more from `RGATLayer <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/RGAT.py>`_.
+
+Note
+-----
+In OpenHGNN, we preprocess the feature of dataset outside of model.
+Specifically, we use a linear layer with bias for each node type to map all node features to a shared feature space.
+So the parameter *h_dict* of *forward()* in model is not original, and your model need not feature preprocessing.
+
+**Third step: Fill the dict**
 
 We should fill the dict SUPPORTED_MODELS in `models/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/__init__.py>`_
 
-Apply a existing model to a new scenario
+Apply a new scenario
 ==============================================
 
 
