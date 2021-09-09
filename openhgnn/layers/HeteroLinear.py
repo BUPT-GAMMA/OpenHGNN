@@ -73,6 +73,7 @@ class HeteroLinearLayer(nn.Module):
 
     Examples
     ----------
+
     >>>import torch as th
     >>>linear_dict = {}
     >>>linear_dict['author'] = [110, 64]
@@ -82,6 +83,7 @@ class HeteroLinearLayer(nn.Module):
     >>>h_dict['paper'] = th.tensor(5, 128)
     >>>layer = HeteroLinearLayer(linear_dict)
     >>>out_dict = layer(h_dict)
+
     """
     def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, **kwargs):
         super(HeteroLinearLayer, self).__init__()

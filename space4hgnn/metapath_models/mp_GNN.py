@@ -20,7 +20,7 @@ class mp_GNN(BaseModel):
         super(mp_GNN, self).__init__()
         self.category = args.category
         if args.meta_paths is None:
-            extract_metapaths(self.category, hg.canonical_etypes)
+            self.meta_paths = extract_metapaths(self.category, hg.canonical_etypes)
         else:
             self.meta_paths = args.meta_paths
         if args.layers_pre_mp - 1 > 0:

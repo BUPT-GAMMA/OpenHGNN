@@ -24,13 +24,13 @@ class LinkPrediction(BaseFlow):
         self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
-
         self.args.out_node_type = self.task.dataset.ntypes
+        self.args.out_dim = self.args.hidden_dim
+
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
         self.evaluator = self.task.get_evaluator('mrr')
-
         self.optimizer = (
             th.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         )
@@ -69,7 +69,6 @@ class LinkPrediction(BaseFlow):
         print(f"Valid_score_ = {stopper.best_score: .4f}")
         stopper.load_model(self.model)
 
-
         ############ TEST SCORE #########
         if self.args.dataset[:4] == 'HGBl':
             self.model.eval()
@@ -77,7 +76,7 @@ class LinkPrediction(BaseFlow):
                 h_dict = self.input_feature()
                 embedding = self.model(self.hg, h_dict)
                 score = th.sigmoid(self.ScorePredictor(self.test_hg, embedding))
-                self.task.dataset.save_results(logits=score, file_path=self.args.HGB_results_path)
+                self.task.dataset.save_results(hg=self.test_hg, score=score, file_path=self.args.HGB_results_path)
             return
         test_mrr = self._test_step(split="test")
         val_mrr = self._test_step(split="val")

@@ -5,14 +5,11 @@ import torch.nn.functional as F
 
 class HeteroEmbedLayer(nn.Module):
     r"""
-    Description
-    ------------
     Embedding layer for featureless heterograph.
-
 
     Parameters
     -----------
-    n_nodes_dict : dict
+    n_nodes_dict : dict[str, int]
         Key of dict means node type,
         value of dict means number of nodes.
     embed_size : int
@@ -46,22 +43,11 @@ class HeteroEmbedLayer(nn.Module):
             nn.init.xavier_uniform_(embed, gain=nn.init.calculate_gain('relu'))
             self.embeds[ntype] = embed
 
-    def forward(self, block=None):
+    def forward(self, ):
         r"""
-        Description
-        ------------
-        Forward computation
-
-        Parameters
-        ----------
-        block : DGLHeteroGraph, optional
-            If not specified, directly return the full graph with embeddings stored in
-            :attr:`embed_name`. Otherwise, extract and store the embeddings to the block
-            graph and return.
         Returns
         -------
-        DGLHeteroGraph
-            The block graph fed with embeddings.
+        The output embeddings.
         """
         out_feature = {}
         for key, embed in self.embeds.items():
@@ -69,6 +55,18 @@ class HeteroEmbedLayer(nn.Module):
         return out_feature
 
     def forward_nodes(self, nodes_dict):
+        r"""
+
+        Parameters
+        ----------
+        nodes_dict : dict[str, th.Tensor]
+            Key of dict means node type, value of dict means idx of nodes.
+
+        Returns
+        -------
+        out_feature : dict[str, th.Tensor]
+            Output feature.
+        """
         out_feature = {}
         for key, nid in nodes_dict.items():
             out_feature[key] = self.embeds[key][nid]
@@ -99,6 +97,7 @@ class multi_2Linear(nn.Module):
         for linear in linear_list:
             self.hidden_layer[linear[0]] = nn.Linear(in_features=linear[1], out_features=hidden_dim, bias=bias)
             self.output_layer[linear[0]] = nn.Linear(in_features=hidden_dim, out_features=linear[2], bias=bias)
+
     def forward(self, name_linear, h):
         h = F.relu(self.hidden_layer[name_linear](h))
         h = self.output_layer[name_linear](h)

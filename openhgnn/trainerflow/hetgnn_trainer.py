@@ -26,25 +26,14 @@ class HetGNNTrainer(BaseFlow):
     def __init__(self, args):
         super(HetGNNTrainer, self).__init__(args)
 
-        self.args = args
-        self.model_name = args.model
-        self.device = args.device
-        self.task = build_task(args)
-
-        self.hg = self.task.get_graph().to(self.device)
-
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+        self.category = self.task.dataset.category
+        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
 
         self.optimizer = (
             th.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         )
 
-        self.model = self.model.to(self.device)
-        self.patience = args.patience
-        self.max_epoch = args.max_epoch
-
     def preprocess(self):
-        self.category = self.task.dataset.category
 
         if self.args.mini_batch_flag:
             if self.args.model == 'HetGNN':
@@ -144,23 +133,6 @@ class HetGNNTrainer(BaseFlow):
             elif self.args.task == 'link_prediction':
                 metric = self.task.evaluate(logits, 'academic_lp')
                 return metric
-
-    # def metapath2vec(self, ):
-    #     self.model.train()
-    #     all_loss = 0
-    #     for batch_id in range(self.args.batches_per_epoch):
-    #         positive_graph, negative_graph, seeds = next(self.dataloader_it)
-    #         blocks = [b.to(self.device) for b in blocks]
-    #         positive_graph = positive_graph.to(self.device)
-    #         negative_graph = negative_graph.to(self.device)
-    #         # we need extract multi-feature
-    #         x = self.model(blocks[0])
-    #         loss = self.loss_fn(self.ScorePredictor(positive_graph, x), self.ScorePredictor(negative_graph, x))
-    #         all_loss += loss.item()
-    #         self.optimizer.zero_grad()
-    #         loss.backward()
-    #         self.optimizer.step()
-    #     return all_loss/self.args.batches_per_epoch
 
 
 

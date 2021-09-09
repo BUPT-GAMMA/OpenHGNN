@@ -70,7 +70,7 @@ usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
 
 ​	--gpu GPU, -g GPU	controls which gpu you will use. If you do not have gpu, set -g -1.
 
-​	--use_best_config	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. 
+​	--use_best_config	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. The best_config will override the parameter in config.ini.
 
 ​	--use_hpo Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
 
@@ -100,6 +100,8 @@ It is under development, and we release it in a nightly build version. For now, 
 - [NARS](./openhgnn/output/NARS) for node classification
 - [MHNF](./openhgnn/output/MHNF) for node classification
 - [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021] for node classification
+- [HPN](./openhgnn/output/HPN)[TKDE 2021] for node classification
+- [RHGNN](./openhgnn/output/RHGNN) for node classification
 
 ### To be supported models
 
@@ -109,10 +111,8 @@ It is under development, and we release it in a nightly build version. For now, 
 
 - Heterogeneous Graph Attention Networks for Semi-supervised Short Text Classification[EMNLP 2019]
 - Heterogeneous Graph Structure Learning for Graph Neural Networks[AAAI 2021]
-- [Heterogeneous Graph Neural Network via Attribute Completion[WWW 2021]](https://dl.acm.org/doi/10.1145/3442381.3449914)
-- [Heterogeneous Graph Propagation Network[TKDE 2021]](https://ieeexplore.ieee.org/abstract/document/9428609)
 - [Self-supervised Heterogeneous Graph Neural Network with Co-contrastive Learning[KDD 2021]](https://arxiv.org/abs/2105.09111)
-- Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]
+- [Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]](https://ieeexplore.ieee.org/document/9483653)
 
 
 

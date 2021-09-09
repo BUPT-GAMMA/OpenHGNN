@@ -1,23 +1,67 @@
 BEST_CONFIGS = {
     "node_classification": {
+        'RGCN': {
+            'general': {
+                'seed': 0, 'patience': 20, 'validation': True
+            },
+            'aifb': {
+                'lr': 0.005, 'weight_decay': 0, 'max_epoch': 100,
+                'hidden_dim': 32, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'dropout': 0,
+                'mini_batch_flag': False, 'validation': True
+            },
+            'mutag': {
+                'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50,
+                'hidden_dim': 32, 'n_bases': 30, 'n_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0.5,
+                'mini_batch_flag': False, 'validation': True
+            },
+            'bgs': {
+                'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50,
+                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 3, 'batch_size': 126, 'fanout': 4, 'dropout': 0.1,
+                'mini_batch_flag': True, 'validation': True
+            },
+            'am': {
+                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 50,
+                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'mini_batch_flag': True, 'validation': True
+            },
+            'ogbn-mag': {
+                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 10,
+                'hidden_dim': 16, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'mini_batch_flag': True, 'validation': True
+            },
+            'HGBn-ACM': {
+
+            },
+            'HGBn-DBLP': {
+                'n_layers': 2, 'hidden_dim': 16, 'dropout': 0.5
+            },
+            'HGBn-Freebase': {
+                'n_layers': 5, 'hidden_dim': 16, 'dropout': 0.5
+            },
+            'HGBn-IMDB': {
+            }
+        },
         'CompGCN': {
             'general': {
                 'seed': 0, 'patience': 50, 'validation': True
             },
             'aifb': {
-                'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100, 'in_dim': 32,
+                'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
                 'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
                 'mini_batch_flag': False, 'validation': True
                      },
             'mutag': {
-                'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100, 'in_dim': 32,
-                'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub',
+                'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
+                'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.5, 'comp_fn': 'sub',
                 'mini_batch_flag': False, 'validation': True
             },
             'bgs': {
 
             },
             'am': {
+                'lr': 0.001, 'weight_decay': 0.0001, 'max_epoch': 100, 'fanout': 4,
+                'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
+                'mini_batch_flag': True, 'validation': True
             },
         },
         'GTN': {
@@ -119,36 +163,6 @@ BEST_CONFIGS = {
                          'isSemi': False,'isBias': False,'isAttn': False
             }
         },
-        'RGCN': {
-            'general': {
-                'seed': 0, 'patience': 20, 'validation': True
-            },
-            'aifb': {
-                'lr': 0.005, 'weight_decay': 0, 'max_epoch': 100,
-                'hidden_dim': 32, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'dropout': 0.1,
-                'mini_batch_flag': False, 'validation': True
-                     },
-            'mutag': {
-                'lr': 0.001, 'weight_decay': 0.0005, 'max_epoch': 50,
-                'hidden_dim': 32, 'n_bases': 30, 'n_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0.05,
-                'mini_batch_flag': False, 'validation': True
-            },
-            'bgs': {
-                'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50,
-                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 3, 'batch_size': 126, 'fanout': 4, 'dropout': 0.1,
-                'mini_batch_flag': True, 'validation': True
-            },
-            'am': {
-                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 50,
-                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
-                'mini_batch_flag': True, 'validation': True
-            },
-            'ogbn-mag': {
-                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 10,
-                'hidden_dim': 16, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
-                'mini_batch_flag': True, 'validation': True
-            },
-        },
         'RSHN': {
             'general': {},
             'aifb': {
@@ -182,9 +196,9 @@ BEST_CONFIGS = {
     "recommendation": {
         'KGCN': {
             "general": {},
-            'lastfmKGCN': {
-                'in_dim': 16, 'hidden_dim': 16,'n_relation' : 60,
-                'batch_size': 128,'lr' : 0.0005
+            'LastFM4KGCN': {
+                'in_dim': 16, 'hidden_dim': 16, 'n_relation': 60,
+                'batch_size': 128, 'lr' : 0.0005
             },
         }
     },

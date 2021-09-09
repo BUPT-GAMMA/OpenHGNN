@@ -24,7 +24,7 @@ def load_act(act):
 
 def read_config(args):
     fileNamePath = os.path.split(os.path.realpath(__file__))[0]
-    yamlPath = os.path.join(fileNamePath, './config/{}_{}.yaml'.format(args.aggregation, args.times))
+    yamlPath = os.path.join(fileNamePath, 'config/{}_{}/{}_{}.yaml'.format(args.key, args.value, args.aggregation, args.times))
     print(yamlPath)
     with open(yamlPath, 'r', encoding='utf-8') as f:
         cont = f.read()

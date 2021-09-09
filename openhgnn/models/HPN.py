@@ -3,6 +3,9 @@ import torch
 import torch.nn as nn
 from . import BaseModel, register_model
 from dgl.nn.pytorch.conv import APPNPConv
+from ..layers.MetapathConv import MetapathConv
+from openhgnn.utils.utils import extract_metapaths
+from .macro_layer.SemanticConv import SemanticAttention
 
 
 @register_model('HPN')
@@ -30,7 +33,8 @@ class HPN(BaseModel):
         \mathbf{Z}^{\Phi, k}=g_{\Phi}\left(\mathbf{Z}^{\Phi, k-1}\right)=(1-\gamma) \cdot \mathbf{M}^{\Phi} \cdot \mathbf{Z}^{\Phi, k-1}+\gamma \cdot \mathbf{H}^{\Phi}
 
     where :math:`\mathbf{Z}^{\Phi,k}` denotes node embedding learned by k-th layer semantic propagation mechanism. :math:`\gamma` is a weight scalar which indicates the
-    importance of characteristic of node in aggregating process
+    importance of characteristic of node in aggregating process.
+    We use MetapathConv to finish Semantic Propagation and Semantic Fusion.
 
 
 
@@ -47,11 +51,11 @@ class HPN(BaseModel):
     dropout : float
         Dropout probability.
     out_embedsizes : int
-        Dimension of the final embedding Z
+        Dimension of the final embedding Z.
     k_layer : int
-        propagation times
+        propagation times.
     alpha : float
-        Value of restart probability
+        Value of restart probability.
     edge_drop : float, optional
         The dropout rate on edges that controls the
         messages received by each node. Default: ``0``.
@@ -60,15 +64,12 @@ class HPN(BaseModel):
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
-        etypes = hg.canonical_etypes
-        mps = []
-        for etype in etypes:
-            if etype[0] == args.category:
-                for dst_e in etypes:
-                    if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
-                        mps.append([etype, dst_e])
+        if args.meta_paths is None:
+            meta_paths = extract_metapaths(args.category, hg.canonical_etypes)
+        else:
+            meta_paths = args.meta_paths
 
-        return cls(meta_paths=mps, category=args.category,
+        return cls(meta_paths=meta_paths, category=args.category,
                     in_size=args.hidden_dim,
                     out_size=args.out_dim,
                     dropout=args.dropout,
@@ -94,43 +95,27 @@ class HPN(BaseModel):
 
         return {self.category: self.linear(h)}
 
-class SemanticFusion(nn.Module):
-    def __init__(self, in_size=64, hidden_size=128):
-        super(SemanticFusion, self).__init__()
-
-        self.project = nn.Sequential(
-            nn.Linear(in_size, hidden_size),
-            nn.Tanh(),
-            nn.Linear(hidden_size, 1, bias=False)
-        )
-
-    def forward(self, z):
-        w = self.project(z).mean(0)
-        beta = torch.softmax(w, dim=0)
-        beta = beta.expand((z.shape[0],) + beta.shape)
-
-        return (beta * z).sum(1)
-
 
 class HPNLayer(nn.Module):
 
-    def __init__(self, meta_paths, in_size, dropout,k_layer, alpha, edge_drop, out_embedsize):
+    def __init__(self, meta_paths, in_size, dropout, k_layer, alpha, edge_drop, out_embedsize):
         super(HPNLayer, self).__init__()
 
         # semantic projection function fΦ projects node into semantic space
 
         self.hidden = nn.Sequential(
-            #nn.Linear(in_features=in_size, out_features=out_embedsize, bias=True),
+            nn.Linear(in_features=in_size, out_features=out_embedsize, bias=True),
             nn.ReLU()
         )
+        self.meta_paths = meta_paths
 
-
-        # One Propagation layer for each meta path
-        self.propagation_layers = nn.ModuleList()
-        for i in range(len(meta_paths)):
-            self.propagation_layers.append(APPNPConv(k_layer, alpha, edge_drop))
-        self.semantic_fusion = SemanticFusion()
-        self.meta_paths = list(tuple(meta_path) for meta_path in meta_paths)
+        semantic_attention = SemanticAttention(in_size=in_size)
+        self.model = MetapathConv(
+            meta_paths,
+            [APPNPConv(k_layer, alpha, edge_drop)
+             for _ in meta_paths],
+            semantic_attention
+        )
         self._cached_graph = None
         self._cached_coalesced_graph = {}
 
@@ -148,7 +133,6 @@ class HPNLayer(nn.Module):
         h : tensor
             The output features
         """
-        semantic_embeddings = []
         h = self.hidden(h)
         if self._cached_graph is None or self._cached_graph is not g:
             self._cached_graph = g
@@ -157,11 +141,7 @@ class HPNLayer(nn.Module):
                 self._cached_coalesced_graph[meta_path] = dgl.metapath_reachable_graph(
                         g, meta_path)
 
-        for i, meta_path in enumerate(self.meta_paths):
+        h = self.model(self._cached_coalesced_graph, h)
+        return h
 
-            new_g = self._cached_coalesced_graph[meta_path]
-            semantic_embeddings.append(self.propagation_layers[i](new_g, h).flatten(1))
-        semantic_embeddings = torch.stack(semantic_embeddings, dim=1)
-
-        return self.semantic_fusion(semantic_embeddings)
 

@@ -8,7 +8,6 @@ from ..utils import get_nodes_dict
 
 
 class BaseFlow(ABC):
-
     def __init__(self, args):
         super(BaseFlow, self).__init__()
         self.evaluator = None
@@ -23,8 +22,9 @@ class BaseFlow(ABC):
                                                 f"{args.model}_{args.dataset}.pt")
             else:
                 self._checkpoint = None
-        # if args.dataset[:3] == 'HGB':
-        #     args.HGB_results_path = os.path.join("./openhgnn/output/{}/{}.txt".format(args.model, args.dataset[5:]))
+
+        if not hasattr(args, 'HGB_results_path') and args.dataset[:3] == 'HGB':
+            args.HGB_results_path = os.path.join("./openhgnn/output/{}/{}_{}.txt".format(args.model, args.dataset[5:], args.seed))
 
         self.args = args
         self.model_name = args.model
@@ -43,6 +43,7 @@ class BaseFlow(ABC):
         elif isinstance(self.hg.ndata['h'], torch.Tensor):
             self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
         self.optimizer.add_param_group({'params': self.input_feature.parameters()})
+        self.model.add_module('feature', self.input_feature)
 
     @abstractmethod
     def train(self):

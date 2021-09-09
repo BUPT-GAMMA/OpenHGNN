@@ -264,12 +264,15 @@ def print_dict(d, end_string='\n\n'):
     print(end_string, end='')
 
 
-def extract_metapaths(category, canonical_etypes):
+def extract_metapaths(category, canonical_etypes, self_loop=False):
     meta_paths = []
     for etype in canonical_etypes:
         if etype[0] == category:
             for dst_e in canonical_etypes:
                 if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
-                    if etype[0] != etype[2]:
+                    if self_loop:
                         meta_paths.append((etype, dst_e))
+                    else:
+                        if etype[0] != etype[2]:
+                            meta_paths.append((etype, dst_e))
     return meta_paths

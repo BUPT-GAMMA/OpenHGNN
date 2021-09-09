@@ -46,7 +46,11 @@ For now, we have two downstream tasks, which are node classification and link pr
     | imdb4GTN   | 4,661 | 5,841 | 2,270    | 13,983      | 4,661          | 300   | 300  | 2,339 |
     | imdb4MAGNN | 4,278 | 5,257 | 2,081    | 12,828      | 4,278          | 400   | 400  | 3,478 |
 
-- ##### OGB_NodeCLassification
+- **HGB_NodeClassification**
+
+  - 
+  
+- ##### OGB_NodeClassification
 
   - ###### [ogbn-mag](https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)
   
@@ -60,6 +64,10 @@ For now, we have two downstream tasks, which are node classification and link pr
 
   - ###### academic4HetGNN
 
+- **HGBl-LinkPrediction**
+
+  - 
+  
 - ##### KG_LinkPrediction
 
   - 'wn18', 'FB15k', 'FB15k-237'

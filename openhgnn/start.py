@@ -27,14 +27,14 @@ def OpenHGNN(args):
 def get_trainerflow(model, task):
     if model == 'demo':
         if task in ['node_classification']:
-            return 'entity_classification'
+            return 'node_classification'
         elif task in ['link_prediction']:
             return 'link_prediction'
         elif task == 'demo':
             return 'demo'
     elif model in ['RGCN', 'CompGCN', 'RSHN']:
         if task in ['node_classification']:
-            return 'entity_classification'
+            return 'node_classification'
         if task in ['link_prediction']:
             return 'link_prediction'
     elif model in ['HetGNN']:

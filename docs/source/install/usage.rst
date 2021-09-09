@@ -29,11 +29,79 @@ e.g.:
 **Note**: If you are interested in some model,
 you can refer to the below `models list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_.
 
-Evaluate a new dataset in an existing model
-==============================================
+Evaluate a new dataset
+=======================
+When the existing dataset can not meet your needs, you can custom your dataset.
+In this section, we will create a new dataset HGBn-ACM, which is used in *node classification* task.
 
-Apply a new model in a
-==============================================
+How to build a new dataset
+---------------------------
+
+**First step: Process dataset**
+
+We give a `demo <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/debug/HGBn-ACM2dgl.py>`_ to process the HGBn-ACM.
+First, download the HGBn-ACM from the `Link <https://www.biendata.xyz/hgb/#/datasets>`_.
+After that, we process it as a `dgl.heterograph <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/dataset#Dataset>`_.
+
+The following code snippet is an example for creating a heterogeneous graph in DGL.
+
+.. code:: python
+
+    >>> import dgl
+    >>> import torch as th
+
+    >>> # Create a heterograph with 3 node types and 3 edges types.
+    >>> graph_data = {
+    ...    ('drug', 'interacts', 'drug'): (th.tensor([0, 1]), th.tensor([1, 2])),
+    ...    ('drug', 'interacts', 'gene'): (th.tensor([0, 1]), th.tensor([2, 3])),
+    ...    ('drug', 'treats', 'disease'): (th.tensor([1]), th.tensor([2]))
+    ... }
+    >>> g = dgl.heterograph(graph_data)
+    >>> g.ntypes
+    ['disease', 'drug', 'gene']
+    >>> g.etypes
+    ['interacts', 'interacts', 'treats']
+    >>> g.canonical_etypes
+    [('drug', 'interacts', 'drug'),
+     ('drug', 'interacts', 'gene'),
+     ('drug', 'treats', 'disease')]
+
+We recommend the feature name set by the `"h"`.
+
+.. code:: python
+
+    >>>g.nodes['drug'].data['h'] = th.ones(3, 1)
+
+DGL provides :func:`dgl.save_graphs` and :func:`dgl.load_graphs` respectively for saving
+heterogeneous graphs in binary format and loading them from binary format.
+So we can use `dgl.load_graphs <https://docs.dgl.ai/en/latest/generated/dgl.load_graphs.html#>`_ to store graph into the local.
+
+.. code:: python
+
+    >>>dgl.save_graphs("demo_graph.bin", g)
+
+**Second step: Add extra information**
+
+We can get a binary format named *demo_graph.bin* after first step, and we should move it into the directory *openhgnn/dataset/*.
+But for now, it is not a complete dataset.
+We should specify some important information in the `NodeClassificationDataset.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/NodeClassificationDataset.py#L145>`_
+
+For example, we should set the *category*, *num_classes* and *multi_label*(if necessary) with ``"paper"``, ``3``, ``True``.
+More infos, refer to :ref:`Base Node Classification Dataset <api-base-node-dataset>`.
+
+**Third step: optional**
+
+We can use demo_graph as our dataset name to evaluate a existing model.
+
+.. code:: bash
+
+    python main.py -m GTN -d demo_graph -t node_classification -g 0 --use_best_config
+
+
+If you have another dataset name, you should also modify the `build_dataset <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/__init__.py>`_.
+
+Apply a new model
+====================
 In this section, we will create a model,
 which is a very simple graph embedding algorithm.
 

@@ -11,10 +11,15 @@ class HetGNN(BaseModel):
     r"""
     HetGNN[KDD2019]-
     Heterogeneous Graph Neural Network
-    `Paper Link <https://dl.acm.org/doi/abs/10.1145/3292500.3330961>'
-    `Code Link <https://github.com/chuxuzhang/KDD2019_HetGNN>`
+    `Heterogeneous Graph Neural Network <https://dl.acm.org/doi/abs/10.1145/3292500.3330961>'_
+    `Source Code Link <https://github.com/chuxuzhang/KDD2019_HetGNN>`_
 
     The author of the paper only gives the academic dataset.
+
+    Attributes
+    -----------
+    Het_Aggrate : nn.Module
+        Het_Aggregate
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
@@ -22,17 +27,16 @@ class HetGNN(BaseModel):
 
     def __init__(self, hg, args):
         super(HetGNN, self).__init__()
-        self.Het_Aggrate = Het_Aggregate(hg.ntypes, args.dim)
+        self.Het_Aggregate = Het_Aggregate(hg.ntypes, args.dim)
         self.ntypes = hg.ntypes
         self.device = args.device
 
         self.loss_fn = HetGNN.compute_loss
-        #self.pred = ScorePredictor()
 
     def forward(self, hg, h=None):
         if h is None:
             h = self.extract_feature(hg, self.ntypes)
-        x = self.Het_Aggrate(hg, h)
+        x = self.Het_Aggregate(hg, h)
         return x
 
     def evaluator(self):
@@ -98,14 +102,28 @@ class ScorePredictor(nn.Module):
                     dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
             return edge_subgraph.edata['score']
 
+
 class Het_Aggregate(nn.Module):
+    r"""
+    The whole model of HetGNN
+
+    Attributes
+    -----------
+    content_rnn : nn.Module
+        het_content_encoder
+    neigh_rnn : nn.Module
+        aggregate_het_neigh
+    atten_w : nn.ModuleDict[str, nn.Module]
+
+
+    """
     def __init__(self, ntypes, dim):
         super(Het_Aggregate, self).__init__()
         # ntypes means nodes type name
         self.ntypes =ntypes
         self.dim = dim
 
-        self.content_rnn = encoder_het_content(ntypes, dim)
+        self.content_rnn = het_content_encoder(dim)
         self.neigh_rnn = aggregate_het_neigh(ntypes, dim)
 
         self.atten_w = nn.ModuleDict({})
@@ -120,7 +138,10 @@ class Het_Aggregate(nn.Module):
 
     def forward(self, hg, h_dict):
         with hg.local_scope():
-            content_h = self.content_rnn(hg, h_dict)
+            content_h = {}
+            for ntype, h in h_dict.items():
+                content_h[ntype] = self.content_rnn(h)
+
             neigh_h = self.neigh_rnn(hg, content_h)
             # the content feature of the dst nodes
             dst_h = {k: v[:hg.number_of_dst_nodes(k)] for k, v in content_h.items()}
@@ -149,6 +170,50 @@ class Het_Aggregate(nn.Module):
             return out_h
 
 
+class het_content_encoder(nn.Module):
+    r"""
+    The Encoding Heterogeneous Contents(C2) in the paper
+    For a specific node type, encoder different content features with a LSTM.
+
+    In paper, it is (b) NN-1: node heterogeneous contents encoder in figure 2.
+
+    Parameters
+    ------------
+    dim : int
+        input dimension
+
+    Attributes
+    ------------
+    content_rnn : nn.Module
+        nn.LSTM encode different content feature
+    """
+    def __init__(self, dim):
+        super(het_content_encoder, self).__init__()
+        self.content_rnn = nn.LSTM(dim, int(dim / 2), 1, batch_first=True, bidirectional=True)
+        self.content_rnn.flatten_parameters()
+        self.dim = dim
+
+    def forward(self, h_dict):
+        r"""
+
+        Parameters
+        ----------
+        h_dict: dict[str, th.Tensor]
+            key means different content feature
+
+        Returns
+        -------
+        content_h : th.tensor
+        """
+        concate_embed = []
+        for _, h in h_dict.items():
+            concate_embed.append(h)
+        concate_embed = th.cat(concate_embed, 1)
+        concate_embed = concate_embed.view(concate_embed.shape[0], -1, self.dim)
+        all_state, last_state = self.content_rnn(concate_embed)
+        out_h = th.mean(all_state, 1).squeeze()
+        return out_h
+
 
 class aggregate_het_neigh(nn.Module):
     r"""
@@ -156,8 +221,8 @@ class aggregate_het_neigh(nn.Module):
     --------------
     It is a Aggregating Heterogeneous Neighbors(C3)
     Same Type Neighbors Aggregation
-    """
 
+    """
     def __init__(self, ntypes, dim):
         super(aggregate_het_neigh, self).__init__()
         self.neigh_rnn = nn.ModuleDict({})
@@ -202,9 +267,10 @@ class aggregate_het_neigh(nn.Module):
 
 
 class lstm_aggr(nn.Module):
-    '''
+    r"""
     Aggregate the same neighbors with LSTM
-    '''
+    """
+
     def __init__(self, dim):
         super(lstm_aggr, self).__init__()
         self.lstm = nn.LSTM(dim, int(dim / 2), 1, batch_first=True, bidirectional=True)
@@ -232,39 +298,6 @@ class lstm_aggr(nn.Module):
                 g.update_all(fn.copy_u('h', 'm'), self._lstm_reducer)
                 h_neigh = g.dstdata['neigh']
             return h_neigh
-
-
-class encoder_het_content(nn.Module):
-    '''
-    The Encoding Heterogeneous Contents(C2) in the paper
-    For each node type, encoder all content features with the LSTM
-    '''
-    def __init__(self, ntypes, dim):
-        super(encoder_het_content, self).__init__()
-        self.content_rnn = nn.ModuleDict({})
-        for n in ntypes:
-            self.content_rnn[n] = nn.LSTM(dim, int(dim / 2), 1, batch_first=True, bidirectional=True)
-            self.content_rnn[n].flatten_parameters()
-        self.ntypes = ntypes
-        self.dim = dim
-
-    def forward(self, hg, h_dict):
-        # conten_h is output dict whose key is the name of node types.
-        with hg.local_scope():
-            content_h = {}
-            for ntype in self.ntypes:
-                h = h_dict[ntype]
-                for i, n_h in enumerate(h):
-                    if i == 0:
-                        concate_embed = h[n_h]
-                    else:
-                        concate_embed = th.cat((concate_embed, h[n_h]), 1)
-                concate_embed = concate_embed.view(concate_embed.shape[0], -1, self.dim)
-                all_state, last_state = self.content_rnn[ntype](concate_embed)
-                out_h = th.mean(all_state, 1).squeeze()
-                content_h[ntype] = out_h
-            return content_h
-
 
 
 # from openhgnn.models.micro_layer.LSTM_conv import LSTMConv

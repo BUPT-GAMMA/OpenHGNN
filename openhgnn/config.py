@@ -351,6 +351,7 @@ class Config(object):
             self.out_dim = conf.getint('KGCN', 'out_dim')
             self.lr = conf.getfloat("KGCN", "lr")
             self.n_neighbor = conf.getint("KGCN", "n_neighbor")
+            self.n_relation = conf.getint("KGCN", "n_relation")
             self.aggregate = conf.get("KGCN", "aggregate")
             self.n_item = conf.getint("KGCN", "n_relation")
             self.n_user = conf.getint("KGCN", "n_user")

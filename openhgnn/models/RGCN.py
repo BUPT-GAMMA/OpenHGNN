@@ -8,12 +8,9 @@ from . import BaseModel, register_model
 @register_model('RGCN')
 class RGCN(BaseModel):
     """
-    **Title:** Modeling Relational Data with Graph Convolutional Networks
+    **Title:** `Modeling Relational Data with Graph Convolutional Networks <https://arxiv.org/abs/1703.06103>`_
 
     **Authors:** Michael Schlichtkrull, Thomas N. Kipf, Peter Bloem, Rianne van den Berg, Ivan Titov, Max Welling
-
-    RGCN was introduced in `[paper] <https://arxiv.org/abs/1703.06103>`_
-    and parameters are defined as follows:
 
     Parameters
     ----------
@@ -33,6 +30,12 @@ class RGCN(BaseModel):
         Dropout rate. Default: 0.0
     use_self_loop : bool, optional
         True to include self loop message. Default: False
+
+    Attributes
+    -----------
+    RelGraphConvLayer: nn.Module
+        `Link <openhgnn.models.RGCN.RelGraphConvLayer>`_
+
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
@@ -45,7 +48,7 @@ class RGCN(BaseModel):
                    dropout=args.dropout)
 
     def __init__(self, in_dim,
-                 h_dim,
+                 hidden_dim,
                  out_dim,
                  etypes,
                  num_bases,
@@ -54,7 +57,7 @@ class RGCN(BaseModel):
                  use_self_loop=False):
         super(RGCN, self).__init__()
         self.in_dim = in_dim
-        self.h_dim = h_dim
+        self.h_dim = hidden_dim
         self.out_dim = out_dim
         self.rel_names = list(set(etypes))
         self.rel_names.sort()
@@ -85,6 +88,20 @@ class RGCN(BaseModel):
             self_loop=self.use_self_loop))
 
     def forward(self, hg, h):
+        r"""
+        Support full-batch and mini-batch training.
+
+        Parameters
+        ----------
+        hg: dgl.HeteroGraph or dgl.blocks
+            Input graph
+        h: dict[str, th.Tensor]
+            Input feature
+        Returns
+        -------
+        h: dict[str, th.Tensor]
+            output feature
+        """
         if hasattr(hg, 'ntypes'):
             # full graph training,
             for layer in self.layers:
@@ -102,6 +119,8 @@ class RGCN(BaseModel):
 
 class RelGraphConvLayer(nn.Module):
     r"""Relational graph convolution layer.
+
+    We use `HeteroGraphConv <https://docs.dgl.ai/api/python/nn.pytorch.html#heterographconv>`_ to implement the model.
 
     Parameters
     ----------
