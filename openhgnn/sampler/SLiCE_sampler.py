@@ -44,7 +44,7 @@ class SLiCESampler(object):
         Params:
         seed_nodes: the tensor of seed nodes for each subgraph
         Return:
-        return a list of walks which is the context graphs of the nodes(node list)
+        return a list of sampled node subgraph
         """
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
@@ -69,11 +69,12 @@ class SLiCESampler(object):
                 # if no subgraph
                 if len(node_context)==0:
                     node_context=self.last_context
-                all_contexts.append(node_context)
-                node_contexts.append(node_context)
-                self.last_context=node_context
+                node_subgraph=dgl.node_subgraph(self.g,node_context)
+                all_contexts.append(node_subgraph)
+                node_contexts.append(node_subgraph)
+                self.last_context=node_subgraph
             self.node_context_dict[source]=node_contexts
-        return all_contexts
+        return all_contexts#list of subgraph
     def get_edge_subgraph(self,seed_edges) -> list:
         """
         Parameters:
