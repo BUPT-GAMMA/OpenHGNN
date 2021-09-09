@@ -1,15 +1,10 @@
-import copy
 import dgl
-import numpy as np
 import torch as th
 from tqdm import tqdm
-import torch.nn as nn
 import torch
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
-from ..tasks import build_task
 from ..models import build_model
-from ..layers.HeteroLinear import HeteroFeature
 from dgl.dataloading.negative_sampler import Uniform
 from ..utils import extract_embed, EarlyStopping, get_nodes_dict
 
@@ -24,7 +19,8 @@ class LinkPrediction(BaseFlow):
         self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
         self.args.has_feature = self.task.dataset.has_feature
-        self.args.out_node_type = self.task.dataset.ntypes
+
+        self.args.out_node_type = self.task.dataset.out_ntypes
         self.args.out_dim = self.args.hidden_dim
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
