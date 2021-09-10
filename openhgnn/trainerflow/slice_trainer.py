@@ -85,6 +85,10 @@ class SLiCETrainer(BaseFlow):
         #     ndata=['feature'],
         #     edata=['train_mask','valid_mask','test_mask','label'])
         self.graphs['train']=copy.deepcopy(self.g)
+        if not os.path.exists(self.pretrain_path):
+            os.makedirs(self.pretrain_path)
+        if not os.path.exists(self.finetune_path):
+            os.makedirs(self.finetune_path)
         for task in ['train','valid','test']:
             mask=self.g.edata[task+'_mask']
             index = torch.nonzero(mask.squeeze()).squeeze()
@@ -137,6 +141,7 @@ class SLiCETrainer(BaseFlow):
             with open(train_file,'rb') as f:
                 self.edges['train'],edges_label['train']=pickle.load(f)
         else:
+            
             self.edges['train'],edges_label['train']=sampler.generate_false_edges2(self.edges['train'],train_file)
         #generate finetune subgraph
         finetune_input=self.finetune_path+'finetune_input.pickle'

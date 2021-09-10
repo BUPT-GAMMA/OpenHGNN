@@ -283,6 +283,7 @@ class SLiCESampler(object):
         returns : random.shuffle(true_edges + false_edges)
         """
         # collect nodes of different types
+        
         g=self.g
         node_type_to_ids = dict()
         for node_id in g.nodes():
@@ -295,7 +296,7 @@ class SLiCESampler(object):
 
         # generate false edges for every positive example
         false_edges = []
-        for source, target in list(zip(positive_edge_list)):
+        for source, target in list(zip(positive_edge_list[0][0],positive_edge_list[1][0])):
             # generate false edges of type (source, relation, false_target) for every
             # (source, relation, target) in positive_edge_list
             source=int(source)
@@ -323,9 +324,11 @@ class SLiCESampler(object):
 
         # generate false edges of type (false_source, relation, target) for every
         
-        final_edges = list(set(positive_edge_list + false_edges))
-        random.shuffle(final_edges)
+        final_edges = positive_edge_list + false_edges
+        final_edges_tuple=list(zip(final_edges,[1]*len(positive_edge_list)+[0]*len(false_edges)))
+        random.shuffle(final_edges_tuple)
         print("Number of positive and negative edges in total",len(final_edges))
+        (res_edge,res_label)=zip(*final_edges_tuple)
         with open(save_path,'wb') as f:
-            pickle.dump(final_edges,f)
-        return final_edges
+            pickle.dump((res_edge,res_label),f)
+        return (res_edge,res_label)
