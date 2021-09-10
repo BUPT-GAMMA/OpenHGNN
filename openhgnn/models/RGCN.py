@@ -86,7 +86,7 @@ class RGCN(BaseModel):
             self.num_bases, activation=None,
             self_loop=self.use_self_loop))
 
-    def forward(self, hg, h):
+    def forward(self, hg, h_dict):
         r"""
         Support full-batch and mini-batch training.
 
@@ -94,7 +94,7 @@ class RGCN(BaseModel):
         ----------
         hg: dgl.HeteroGraph or dgl.blocks
             Input graph
-        h: dict[str, th.Tensor]
+        h_dict: dict[str, th.Tensor]
             Input feature
         Returns
         -------
@@ -104,12 +104,12 @@ class RGCN(BaseModel):
         if hasattr(hg, 'ntypes'):
             # full graph training,
             for layer in self.layers:
-                h = layer(hg, h)
+                h_dict = layer(hg, h_dict)
         else:
             # minibatch training, block
             for layer, block in zip(self.layers, hg):
-                h = layer(block, h)
-        return h
+                h_dict = layer(block, h_dict)
+        return h_dict
 
     def l2_penalty(self):
         loss = 0.0005 * th.norm(self.layers[0].weight, p=2, dim=1)

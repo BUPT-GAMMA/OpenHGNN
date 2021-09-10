@@ -1,10 +1,8 @@
-# Dataset
+Dataset
 
 A dataset is related to a task, so it is a part of task.
 
-So dataset should load not only a heterograph[DGLGraph], but also some index involving training, validation and testing. The node/edge feature is not necessary, but most models need node feature. So we will build node feature with [*HeteroEmbedLayer*](../layers/EmbedLayer.py) in general, and we build it in the trainerflow when dataset has no feature.
-
-For now, we have two downstream tasks, which are node classification and link prediction.
+So dataset should load not only a heterograph[DGLGraph], but also some index involving training, validation and testing. In OpenHGNN, we preprocess the feature of dataset outside of model. Specifically, we use a linear layer with bias for each node type to map all node features to a shared feature space. And for no feature nodes, we give a embedding as its feature. Refer to [HeteroFeature](https://openhgnn.readthedocs.io/en/latest/api/layer.html#heterofeature).
 
 #### NodeClassificationDataset
 
@@ -53,7 +51,7 @@ For now, we have two downstream tasks, which are node classification and link pr
 - ##### OGB_NodeClassification
 
   - ###### [ogbn-mag](https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)
-  
+
     - Train 629,571 predict venue labels of all papers published before 2018
     - Validation: 64879 papers published in 2018
     - Test: 41939 papers published since 2019
@@ -71,12 +69,73 @@ For now, we have two downstream tasks, which are node classification and link pr
 - ##### KG_LinkPrediction
 
   - 'wn18', 'FB15k', 'FB15k-237'
+  
+- **HGB_LinkPrediction**    
+
+  - HGBl-amazon
+
+    node information:
+
+    | type    | number | feature dimension |
+    | ------- | ------ | ----------------- |
+    | product | 10099  | 1156              |
+
+    edge information:
+
+    | type             | train number | test number |
+    | ---------------- | ------------ | ----------- |
+    | product-product0 | 69315        | 7609        |
+    | product-product1 | 64598        | 7137        |
+
+  - HGBl-LastFM
+
+    node information:
+
+    | type   | number | feature dimension |
+    | ------ | ------ | ----------------- |
+    | user   | 1892   | 0                 |
+    | artist | 17632  | 0                 |
+    | tag    | 1088   | 0                 |
 
 
+    edge information:
 
+    | type        | train number | test number |
+    | ----------- | ------------ | ----------- |
+    | user-artist | 74267        | 18567       |
+    | user-user   | 25434        | 0           |
+    | artist-tag  | 23253        | 0           |
+
+  - HGBl-PubMed
+
+    node information:
+
+    | type | number | feature dimension |
+    | ---- | ------ | ----------------- |
+    | 0    | 13168  | 200               |
+    | 1    | 19507  | 200               |
+    | 2    | 25691  | 200               |
+    | 3    | 2783   | 200               |
+
+    edge information:
+
+    | type   | train number | test number |
+    | ------ | ------------ | ----------- |
+    | 0_to_0 | 16105        | 0           |
+    | 0_to_1 | 25962        | 0           |
+    | 1_to_1 | 34109        | 8528        |
+    | 2_to_0 | 31277        | 0           |
+    | 2_to_1 | 51323        | 0           |
+    | 2_to_2 | 62187        | 0           |
+    | 2_to_3 | 6297         | 0           |
+    | 3_to_0 | 3155         | 0           |
+    | 3_to_1 | 5245         | 0           |
+    | 3_to_3 | 798          | 0           |
+
+    
 #### RecommendationDataset
 
-- **Amzon**
+- **Amazon**
 
   (Containing rating and timestamp information)
 
@@ -89,13 +148,19 @@ For now, we have two downstream tasks, which are node classification and link pr
   - rating prediction (e.g. on a scale of 1 to 5 stars), and
   - item prediction from positive-only feedback.
 
-- |        | User  | Item  | View  | Category | Brand | User-Item | Item-View | Item-Category | Item-Brand | Test(20%)<br />User-Item |
+- 
+  
+  |        | User  | Item  | View  | Category | Brand | User-Item | Item-View | Item-Category | Item-Brand | Test(20%)<br />User-Item |
   | ------ | ----- | ----- | ----- | -------- | ----- | --------- | --------- | ------------- | ---------- | ------------------------ |
   | Amazon | 6,170 | 2,753 | 3,857 | 22       | 334   | 195,791   | 5,694     | 5,508         | 2,753      | 39,159                   |
 
-  
+
+  **yelp4rec**
+
 
 ### How to build a new dataset
+
+#### Overview
 
 We use [dgl.heterograph](https://docs.dgl.ai/en/latest/guide/graph-heterogeneous.html#guide-graph-heterogeneous) as our graph data structure.
 
@@ -107,3 +172,5 @@ The API [dgl.save_graphs](https://docs.dgl.ai/en/latest/generated/dgl.save_graph
 2. Store as *graph.bin*. Compress as *dataset_name4model_name.zip*
 3. Upload the zip file to s3.
 4. If the dataset is Heterogeneous Information Network, you can modify the [AcademicDataset](./academic_graph.py) directly. Or you can refer to it building a new *Class Dataset*.
+
+We give a [demo](https://openhgnn.readthedocs.io/en/latest/install/usage.html#evaluate-a-new-dataset) to build a new dataset.

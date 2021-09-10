@@ -13,7 +13,10 @@ def OpenHGNN(args):
         path = './prediction/{}_{}_{}'.format(args.model, args.aggregation, args.times)
         if not os.path.exists(path):
             os.makedirs(path)
-        args.HGB_results_path = './prediction/{}_{}_{}/{}_{}.txt'.format(args.model, args.aggregation, args.times, args.dataset[5:], str(i+1))
+        if 'HGB' in args.dataset:
+            args.HGB_results_path = './prediction/{}_{}_{}/{}_{}.txt'.format(args.model, args.aggregation, args.times, args.dataset[5:], str(i+1))
+        else:
+            args.results_path = './prediction/{}_{}_{}/{}_{}.txt'.format(args.model, args.aggregation, args.times, args.dataset, str(i+1))
         print(args)
         flow = build_flow(args, args.task)
         flow.train()

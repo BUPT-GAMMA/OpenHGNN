@@ -1,13 +1,9 @@
 # OpenHGNN
 This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl). We integrate SOTA models of heterogeneous graph.
 
-[Test Version]For now, we just release some models for some researchers to run the experiments.
-
-[Release Plan]We want to release version0.1 in September.
-
 ## Key Features
 
-- Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and datasets using [optuna](https://optuna.org/) which is a hyperparameter optimization framework.
+- Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and dataset. Besides, we also integrate [optuna](https://optuna.org/) to get hyperparameter optimization.
 - Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
 - Efficiency: The backend dgl provides efficient APIs.
 
@@ -28,7 +24,7 @@ conda create -n openhgnn python=3.7
 source activate openhgnn
 ```
 
-**2. Pytorch:** Install [PyTorch](https://pytorch.org/). We have verified GraphGym under PyTorch 1.8.0. For example:
+**2. Pytorch:** Install [PyTorch](https://pytorch.org/). For example:
 
 ```bash
 # CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
@@ -84,9 +80,13 @@ It is under development, and we release it in a nightly build version. For now, 
 
 **Note**: If you are interested in some model, you can refer to the below models list.
 
+Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get more basic and depth usage.
+
 ## [Models](./openhgnn/models/#Model)
 
 ### Supported Models with specific task
+
+The link will give some basic usage.
 
 | Model                                           | Node classification | Link prediction    | Recommendation     |
 | ----------------------------------------------- | ------------------- | ------------------ | ------------------ |
@@ -102,10 +102,10 @@ It is under development, and we release it in a nightly build version. For now, 
 | [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]      | :heavy_check_mark:  |                    |                    |
 | [NARS](./openhgnn/output/NARS)                  | :heavy_check_mark:  |                    |                    |
 | [MHNF](./openhgnn/output/MHNF)                  | :heavy_check_mark:  |                    |                    |
+| [HGSL](./openhgnn/output/HGSL)[AAAI 2021]       | :heavy_check_mark:  |                    |                    |
 | [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]  | :heavy_check_mark:  |                    |                    |
 | [HPN](./openhgnn/output/HPN)[TKDE 2021]         | :heavy_check_mark:  |                    |                    |
 | [RHGNN](./openhgnn/output/RHGNN)                | :heavy_check_mark:  |                    |                    |
-|                                                 |                     |                    |                    |
 
 ### To be supported models
 
@@ -117,41 +117,6 @@ It is under development, and we release it in a nightly build version. For now, 
 - Heterogeneous Graph Structure Learning for Graph Neural Networks[AAAI 2021]
 - [Self-supervised Heterogeneous Graph Neural Network with Co-contrastive Learning[KDD 2021]](https://arxiv.org/abs/2105.09111)
 - [Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]](https://ieeexplore.ieee.org/document/9483653)
-
-
-
-## Why OpenHGNN
-
-### Relation with [DGL](https://github.com/dmlc/dgl)
-
-OpenHGNN is a high-level package built on top of DGL; it will not cover efficient implementation of low-level components in C++.
-
-### Relation with [OpenHINE](https://github.com/BUPT-GAMMA/OpenHINE)
-
-| Package  | Heterograph structure | Models                            | Efficiency  | Others                                     |
-| -------- | --------------------- | --------------------------------- | ----------- | ------------------------------------------ |
-| OpenHINE | write by our own      | Most embedding methods            | Inefficient | ---                                        |
-| OpenHGNN | heterograph           | Most graph neural network methods | Efficient   | Better Extensibility, Better Encapsulation |
-
-We aim to build more embedding methods(implemented in OpenHINE) in OpenHGNN.
-
-To avoid reinventing the wheel, we use the DGL as our backend. So we build the new toolkit OpenHGNN and more models will be integrated into it. OpenHINE will not be updated.
-
-![image](./docs/source/_static/image-001.jpg)
-
-
-
-## A Pipeline of OpenHGNN
-
-###### We define three components: [TrainerFlow](./openhgnn/trainerflow/#Trainerflow), [Model](./openhgnn/models/#Model), [Task](./openhgnn/tasks/#Task).
-
-- For a given paper,
-  - For unsupervised model, the model and the trainerflow are specific cause the loss calculation is fixed.So given a model name, we can identify the model and trainerflow, user need also specify the task name.
-  - For other model, the model is fixed and the trainerflow is changeable according to task.
-    User must specify the model and the task, and the trainerflow will be determined by the task.
-    For example, RGCN on the node classification task will use the entity classification flow and RGCN on the link prediction task will use the dist_mult flow.
-
-![image-20210622151239030](./docs/source/_static/pipeline_img.png)
 
 ## Contributors
 

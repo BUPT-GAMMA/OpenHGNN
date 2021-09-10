@@ -6,15 +6,31 @@ Task
 BaseTask
 ---------
 
-.. automodule:: tasks.base_task
+.. automodule:: openhgnn.tasks.base_task
     :members:
     :undoc-members:
     :show-inheritance:
 
 Node classification Task
+--------------------------
+
+.. autoclass:: openhgnn.tasks.node_classification.NodeClassification
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Link prediction Task
 ---------------------
 
-.. autoclass:: tasks.node_classification.NodeClassification
+.. autoclass:: openhgnn.tasks.link_prediction.LinkPrediction
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Recommendation Task
+---------------------
+
+.. autoclass:: openhgnn.tasks.recommendation.Recommendation
     :members:
     :undoc-members:
     :show-inheritance:
