@@ -19,14 +19,6 @@ node classification flow
    :undoc-members:
    :show-inheritance:
 
-entity classification flow
---------------------------------------------------
-
-.. automodule:: openhgnn.trainerflow.entity_classification
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 link prediction flow
 --------------------------------------------
 
