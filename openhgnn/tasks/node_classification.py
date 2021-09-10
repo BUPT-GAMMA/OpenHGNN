@@ -38,7 +38,7 @@ class NodeClassification(BaseTask):
 
     def evaluate(self, logits, name, mask=None):
         if name == 'acc':
-            return self.evaluator.cal_acc(logits, self.labels[mask])
+            return self.evaluator.cal_acc(self.labels[mask], logits)
         elif name == 'acc-ogbn-mag':
             from ogb.nodeproppred import Evaluator
             evaluator = Evaluator(name='ogbn-mag')
