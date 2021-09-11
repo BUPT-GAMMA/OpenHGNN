@@ -344,7 +344,7 @@ class Config(object):
             self.mp_eps = conf.getfloat("HGSL", "mp_eps")
             self.gnn_emd_dim = conf.getint("HGSL", "gnn_emd_dim")
             self.gnn_dropout = conf.getfloat("HGSL", "gnn_dropout")
-            self.undirected_relations = conf.get("HGSL", "undirected_relations")
+            # self.undirected_relations = conf.get("HGSL", "undirected_relations")
 
     def __repr__(self):
         return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset

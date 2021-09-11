@@ -7,7 +7,25 @@ from ..utils import Evaluator
 
 @register_task("node_classification")
 class NodeClassification(BaseTask):
-    r"""Node classification tasks."""
+    r"""
+    Node classification tasks.
+
+    Attributes
+    -----------
+    dataset : NodeClassificationDataset
+        Task-related dataset
+
+    evaluator : Evaluator
+        offer evaluation metric
+
+
+    Methods
+    ---------
+    get_graph :
+        return a graph
+    get_loss_fn :
+        return a loss function
+    """
     def __init__(self, args):
         super(NodeClassification, self).__init__()
         self.dataset = build_dataset(args.dataset, 'node_classification')

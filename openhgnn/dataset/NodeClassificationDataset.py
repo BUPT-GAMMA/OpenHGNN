@@ -178,7 +178,7 @@ class HIN_NodeClassification(NodeClassificationDataset):
             category = 'M'
             g = dataset[0].long()
             num_classes = 3
-            self.in_dim = g.ndata['feat'][category].shape[1]
+            self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset == 'imdb4GTN':
             dataset = AcademicDataset(name='imdb4GTN', raw_dir='')
             category = 'movie'
@@ -351,8 +351,8 @@ class HGB_NodeClassification(NodeClassificationDataset):
             train_idx = th.tensor(train.indices)
             test_idx = th.tensor(test.indices)
             if validation:
-                valid_idx = train_idx[:len(train_idx) // 10]
-                train_idx = train_idx[len(train_idx) // 10:]
+                valid_idx = train_idx[:len(train_idx) // 5]
+                train_idx = train_idx[len(train_idx) // 5:]
             else:
                 valid_idx = train_idx
                 train_idx = train_idx
