@@ -23,8 +23,9 @@ class DMGI(BaseModel):
     DMGI was introduced in `[paper] <https://ojs.aaai.org//index.php/AAAI/article/view/5985>`_
     and parameters are defined as follows:
 
-    Parameters
-    ----------
+    Input
+    ------
+
         meta_paths : dict
             Extract metapaths from graph
         sc : int
@@ -49,10 +50,22 @@ class DMGI(BaseModel):
             If True, add isSemi's loss to calculate loss
 
 
-    Attributes
+    Parameters
     ----------
         H : torch.FloatTensor
             The learnable weight tensor.
+
+        gcn : The encoder is a single-layer GCN:
+
+            .. math::
+              \begin{equation}
+                \mathbf{H}^{(r)}=g_{r}\left(\mathbf{X}, \mathbf{A}^{(r)} \mid \mathbf{W}^{(r)}\right)=\sigma\left(\hat{\mathbf{D}}_{r}^{-\frac{1}{2}} \hat{\mathbf{A}}^{(r)} \hat{\mathbf{D}}_{r}^{-\frac{1}{2}} \mathbf{X} \mathbf{W}^{(r)}\right)
+              \end{equation}
+
+            where :math:`\hat{\mathbf{A}}^{(r)}=\mathbf{A}^{(r)}+w \mathbf{I}_{n}` ,
+            :math:`\hat{D}_{i i}=\sum_{j} \hat{A}_{i j}`
+
+
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
@@ -84,17 +97,6 @@ class DMGI(BaseModel):
         self.isAttn = isAttn
         self.isSemi = isSemi
         self.sc = sc
-        r"""
-            The encoder is a single-layer GCN:
-
-            .. math::
-              \begin{equation}
-                \mathbf{H}^{(r)}=g_{r}\left(\mathbf{X}, \mathbf{A}^{(r)} \mid \mathbf{W}^{(r)}\right)=\sigma\left(\hat{\mathbf{D}}_{r}^{-\frac{1}{2}} \hat{\mathbf{A}}^{(r)} \hat{\mathbf{D}}_{r}^{-\frac{1}{2}} \mathbf{X} \mathbf{W}^{(r)}\right)
-              \end{equation}
-
-            where :math:`\hat{\mathbf{A}}^{(r)}=\mathbf{A}^{(r)}+w \mathbf{I}_{n}` ,
-            :math:`\hat{D}_{i i}=\sum_{j} \hat{A}_{i j}`
-            """
         self.gcn = nn.ModuleList([dglnn.GraphConv(in_feats=in_size,
                                                   out_feats=hid_unit,
                                                   activation=nn.ReLU(),
@@ -127,6 +129,18 @@ class DMGI(BaseModel):
 
     def forward(self, hg, samp_bias1=None, samp_bias2=None):
         r"""
+
+        The forward part of DMGI
+        Parameters
+        ----------
+        hg : object
+            the dgl heterogeneous graph
+
+        Returns
+        -------
+        dict
+            The predicted logit, and reg_loss and semi_loss
+
         The formula to compute the relation-type specific cross entropy :math:`\mathcal{L}^{(r)}`
 
         .. math::
@@ -138,6 +152,10 @@ class DMGI(BaseModel):
         :math:`s^{(r)}` is :math:`\mathbf{s}^{(r)}=\operatorname{Readout}\left(\mathbf{H}^{(r)}\right)=\sigma\left(\frac{1}{n} \sum_{i=1}^{n} \mathbf{h}_{i}^{(r)}\right)` .
         :math:`\mathcal{D}` is a discriminator that scores patchsummary representation pairs
         :math:`\tilde{\mathbf{h}}_{j}^{(r)}` corrupt the original attribute matrix by shuffling it.
+
+
+
+
         """
         h_1_all = [];h_2_all = [];c_all = [];logits = []
         result = {}
