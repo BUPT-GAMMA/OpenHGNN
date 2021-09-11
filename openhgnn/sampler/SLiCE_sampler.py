@@ -90,10 +90,10 @@ class SLiCESampler(object):
         print("Generating finetune subgraphs")
         g=self.g
         walks_by_task_dict = dict()
-        g_networkx=g.to_networkx(edge_attrs=['label'])
+        g_networkx=dgl.to_networkx(g,edge_attrs=['label'])
         all_context=[]
-        srcs,dsts=g.find_edges(seed_edges)
-        for src,dst in zip(srcs,dsts):
+        for ii,edge in enumerate(seed_edges):
+            src,dst=edge
             if (src,dst) in self.edge_context_dict:
                 context=self.edge_context_dict[(src,dst)]
                 if isinstance(context[0],list):
@@ -101,7 +101,9 @@ class SLiCESampler(object):
                 else:
                     all_context.append(context)
             else:
-                context=self.get_selective_context(src,dst)
+                context=self.get_selective_context(g_networkx,src,dst)
+                if len(context) == 0:
+                    context = [src,dst]
                 self.edge_context_dict[(src,dst)]=context
                 if isinstance(context[0],list):
                     all_context.extend(context)
@@ -196,7 +198,7 @@ class SLiCESampler(object):
             source = nbr
         return path
     def get_selective_context(
-        self, source, target, valid_patterns=None
+        self, G, source, target, valid_patterns=None
     ):  # FIXME - removed dangerous default list init in valid_patterns
         """
         option = 1) all  2) pattern  3)shortest
@@ -211,7 +213,6 @@ class SLiCESampler(object):
         beam_width=self.beam_width
         max_seq_len=self.max_num_edges
         option=self.path_option
-        G=self.g.to_networkx(edge_attrs=['label'])
         paths = []
         if option == "shortest":
             try:
@@ -283,7 +284,7 @@ class SLiCESampler(object):
         returns : random.shuffle(true_edges + false_edges)
         """
         # collect nodes of different types
-        
+        print("Generating false edges...")
         g=self.g
         node_type_to_ids = dict()
         for node_id in g.nodes():
@@ -296,7 +297,8 @@ class SLiCESampler(object):
 
         # generate false edges for every positive example
         false_edges = []
-        for source, target in list(zip(positive_edge_list[0][0],positive_edge_list[1][0])):
+        positive_edge_list=list(zip(positive_edge_list[0][0].tolist(),positive_edge_list[1][0].tolist()))
+        for source, target in positive_edge_list:
             # generate false edges of type (source, relation, false_target) for every
             # (source, relation, target) in positive_edge_list
             source=int(source)
@@ -304,26 +306,16 @@ class SLiCESampler(object):
             
             target_type = self.node_types[target]
             false_target = random.sample(node_type_to_ids[target_type], 1)[0]
-            all_source_nbrs = dgl.sampling.sample_neighbors(g,torch.tensor([source]),-1,
-                                                            edge_dir='out').edges(order='eid')[1].tolist()
-            all_source_nbrs.append(dgl.sampling.sample_neighbors(g,torch.tensor([source]),-1,
-                                                            edge_dir='in').edges(order='eid')[0].tolist())
-            if false_target not in all_source_nbrs:
+            if not g.has_edges_between(source,false_target):
                 false_edges.append((source, false_target))
-
             # generate false edges of type (false_source, relation, target) for every
             # (source, relation, target) in positive_edge_list
             source_type = self.node_types[source]
             false_source = random.sample(node_type_to_ids[source_type], 1)[0]
-            all_target_nbrs = dgl.sampling.sample_neighbors(g,torch.tensor([target]),-1,
-                                                            edge_dir='out').edges(order='eid')[0].tolist()
-            all_target_nbrs.append(dgl.sampling.sample_neighbors(g,torch.tensor([target]),-1,
-                                                            edge_dir='in').edges(order='eid')[0].tolist())
-            if false_source not in all_target_nbrs:
+            if not g.has_edges_between(false_source,target):
                 false_edges.append((false_source, target))
 
         # generate false edges of type (false_source, relation, target) for every
-        
         final_edges = positive_edge_list + false_edges
         final_edges_tuple=list(zip(final_edges,[1]*len(positive_edge_list)+[0]*len(false_edges)))
         random.shuffle(final_edges_tuple)

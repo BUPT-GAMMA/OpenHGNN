@@ -100,10 +100,10 @@ class GCNGraphEncoder(torch.nn.Module):
         for ii,subgraph in enumerate(subgraphs_list):
             #node_id_map = batch_id_maps[ii][0]
             #edge_type_map = batch_id_maps[ii][1]
-            masked_set = masked_nodes[ii].cpu().numpy().tolist()
+            masked_set = masked_nodes[ii]
             for node in subgraph.nodes():
-                node_id=subgraph.ndata[dgl.NID]
-                if node not in masked_set:  # used to ignore the masked nodes
+                node_id=subgraph.ndata[dgl.NID][int(node)]
+                if node_id not in masked_set:  # used to ignore the masked nodes
                     node_emb[ii][node] = self.node_embedding(int(node_id))
 
         # get embeddings for special tokens
@@ -119,14 +119,15 @@ class GCNGraphEncoder(torch.nn.Module):
 
         return node_emb
 
-def get_attn_pad_mask(seq_q, seq_k, pad_id):                                                                                                                                                                                                                                                                                                                                                                                                                    
-    batch_size, len_q = len(seq_q), len(seq_q[0])
-    batch_size, len_k = len(seq_k), len(seq_k[0])
+def get_attn_pad_mask(subgraph_list, pad_id):         
+    #seq_q and seq_k are both all_nodes, which is list(list(subgraph_nodes))                                                                                                                                                                                                                                                                                                                                                                                                           
+    batch_size = len(subgraph_list)
+    len_q=subgraph_list[0].num_nodes()
     # print(batch_size, len_q, len_k)
     pad_attn_mask = []
-    for itm in seq_k:
+    for itm in subgraph_list:
         tmp_mask = []
-        for sub in itm:
+        for sub in itm.ndata[dgl.NID]:
             if sub == pad_id:
                 tmp_mask.append(True)
             else:
@@ -137,7 +138,7 @@ def get_attn_pad_mask(seq_q, seq_k, pad_id):
     pad_attn_mask = Variable(torch.ByteTensor(pad_attn_mask)).unsqueeze(1)
     pad_attn_mask = pad_attn_mask.cuda()
 
-    return pad_attn_mask.expand(batch_size, len_q, len_k)  # batch_size x len_q x len_k
+    return pad_attn_mask.expand(batch_size, len_q, len_q)  # batch_size x len_q x len_k
 
 
 def gelu(x):
@@ -254,6 +255,7 @@ class SLiCE(BaseModel):
 
         super().__init__()
         #initialize
+        self.g=G
         self.n_layers = n_layers
         self.d_model = d_model
         self.max_length = max_length
@@ -297,7 +299,7 @@ class SLiCE(BaseModel):
             masked_nodes.append(subgraph_masked_nodes)
             masked_position.append(subgraph_masked_position)
 
-        return masked_nodes, masked_position
+        return torch.tensor(masked_nodes), torch.tensor(masked_position)
     def forward(self, subgraph_list):
         #subgraph list is a list of node subgraphs sampled by slice_sampler
         masked_nodes,masked_pos=self.GCN_MaskGeneration(subgraph_list)
@@ -305,7 +307,7 @@ class SLiCE(BaseModel):
         # context generation
         node_emb = self.gcn_graph_encoder(subgraph_list, masked_nodes)
         output = node_emb.cuda()
-        enc_self_attn_mask = get_attn_pad_mask(self.no_nodes)
+        enc_self_attn_mask = get_attn_pad_mask(subgraph_list,self.no_nodes)
         # contextual translation
         for layer in self.layers:
             output, enc_self_attn = layer(output, enc_self_attn_mask)
@@ -329,7 +331,7 @@ class SLiCE(BaseModel):
             # print(output.size(), layer_output.size(), att_output.size())
             return output, layer_output, att_output
         else:
-            masked_pos = masked_pos[:, :, None].expand(
+            masked_pos = masked_pos[:,:,None].expand(
                 -1, -1, output.size(-1)
             )  # [batch_size, maxlen, d_model]
             h_masked = torch.gather(
@@ -338,7 +340,7 @@ class SLiCE(BaseModel):
             h_masked = self.norm(gelu(self.linear(h_masked)))
             pred_score = self.decoder(h_masked)  # [batch_size, maxlen, n_vocab]
             # print('check====', pred_score.size())
-
+            
             if self.get_embeddings:
                 return pred_score, masked_nodes, output
             else:

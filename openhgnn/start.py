@@ -62,5 +62,5 @@ SpecificTrainerflow = {
     'NSHE': 'nshetrainer',
     'DMGI': 'DMGI_trainer',
     'KGCN': 'kgcntrainer',
-    'SliCE':'slicetrainer'
+    'SLiCE':'slicetrainer'
 }

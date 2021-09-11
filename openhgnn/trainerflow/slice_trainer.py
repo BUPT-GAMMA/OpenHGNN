@@ -127,10 +127,12 @@ class SLiCETrainer(BaseFlow):
         self.node_subgraphs['valid']=node_walks[train_size:train_size+valid_size]
         self.node_subgraphs['test']=node_walks[train_size+valid_size:]
         #finetune
-        src,dst=g.edges()
-        self.edges['train']=list(zip(g.find_edges(self.train_idx)))
-        self.edges['valid']=list(zip(g.find_edges(self.valid_idx)))
-        self.edges['test']=list(zip(g.find_edges(self.test_idx)))
+        src,dst=g.find_edges(self.train_idx)
+        self.edges['train']=list(zip(src.tolist(),dst.tolist()))
+        src,dst=g.find_edges(self.valid_idx)
+        self.edges['valid']=list(zip(src.tolist(),dst.tolist()))
+        src,dst=g.find_edges(self.test_idx)
+        self.edges['test']=list(zip(src.tolist(),dst.tolist()))
         edges_label=self.edges_label
         edges_label['train']=list()
         edges_label['valid']=self.labels[self.valid_idx]
@@ -141,7 +143,6 @@ class SLiCETrainer(BaseFlow):
             with open(train_file,'rb') as f:
                 self.edges['train'],edges_label['train']=pickle.load(f)
         else:
-            
             self.edges['train'],edges_label['train']=sampler.generate_false_edges2(self.edges['train'],train_file)
         #generate finetune subgraph
         finetune_input=self.finetune_path+'finetune_input.pickle'
@@ -151,7 +152,8 @@ class SLiCETrainer(BaseFlow):
         else:
             for task in ['train','valid','test']:
                 self.edge_subgraphs[task]=sampler.get_edge_subgraph(self.edges[task])
-            pickle.dump(self.edge_subgraphs,open(finetune_input,'wb'))
+            with open(finetune_input,'wb') as f:
+                pickle.dump(self.edge_subgraphs,f)
 
     def train(self):
         self.preprocess()
@@ -176,12 +178,12 @@ class SLiCETrainer(BaseFlow):
                 else:
                     subgraph_list=self.node_subgraphs['train'][i:]
                 pred_data,true_data=self.model['pretrain'](subgraph_list)
-                loss=self.loss_fn(pred_data,true_data)
+                loss=self.loss_fn(pred_data.transpose(1,2).cuda(),true_data.cuda())
                 self.optimizer['pretrain'].zero_grad()
                 loss.backward()
                 self.optimizer['pretrain'].step()
                 i+=batch_size
-                bar.set_description("Batch {} Loss: {}".format(batch,loss))
+                bar.set_description("Batch {} Loss: {:.3f}".format(batch,loss))
             torch.save(self.model['pretrain'],self.pretrain_path+'model_'+str(epoch)+'SLiCE.pt')
             early_stop=stopper.loss_step(loss,self.model['pretrain'])
         print("Evaluating for pretraining...")
