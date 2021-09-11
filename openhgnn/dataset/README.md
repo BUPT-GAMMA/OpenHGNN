@@ -86,75 +86,31 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 
 - **HGBl-LinkPrediction**
 
-  - 
+  [Source data](https://www.biendata.xyz/hgb/#/datasets)
+
+  The test dataset has been splited.
+
+  - HGBl-amazon
+
+    |             | product | features | product-product0 | product-product1 | test : product-product0 | test : product-product1 |
+    | ----------- | ------- | -------- | ---------------- | ---------------- | ----------------------- | ----------------------- |
+    | HGBl-amazon | 10099   | 1156     | 76924            | 71735            | 7609                    | 7137                    |
+
+  - HGBl-LastFM
+
+    |             | user | artist | tag  | feature | user-artist | user-user | artist-tag | test:user-artist |
+    | ----------- | ---- | ------ | ---- | ------- | ----------- | --------- | ---------- | ---------------- |
+    | HGBL-LastFM | 1892 | 17632  | 1088 | 0       | 92834       | 25434     | 23253      | 18567            |
+
+  - HGBl-PubMed
+
+    |             | node0 | node1 | node2 | node3 | feature | node0- node0 | node0-node1 | node1-node1 | node2-node0 | node2-node1 | node2-node2 | node2-node3 | node3-node0 | node3-node1 | node3-node2 | test:node1-node1 |
+    | ----------- | ----- | ----- | ----- | ----- | ------- | ------------ | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ---------------- |
+    | HGBL-LastFM | 13168 | 19507 | 25691 | 2783  | 200     | 16105        | 25962       | 42637       | 31277       | 51323       | 62187       | 6297        | 3155        | 5245        | 798         | 8528             |
 
 - ##### KG_LinkPrediction
 
   - 'wn18', 'FB15k', 'FB15k-237'
-
-- **HGB_LinkPrediction**    
-
-  - HGBl-amazon
-
-    node information:
-
-    | type    | number | feature dimension |
-    | ------- | ------ | ----------------- |
-    | product | 10099  | 1156              |
-
-    edge information:
-
-    | type             | train number | test number |
-    | ---------------- | ------------ | ----------- |
-    | product-product0 | 69315        | 7609        |
-    | product-product1 | 64598        | 7137        |
-
-  - HGBl-LastFM
-
-    node information:
-
-    | type   | number | feature dimension |
-    | ------ | ------ | ----------------- |
-    | user   | 1892   | 0                 |
-    | artist | 17632  | 0                 |
-    | tag    | 1088   | 0                 |
-
-
-    edge information:
-    
-    | type        | train number | test number |
-    | ----------- | ------------ | ----------- |
-    | user-artist | 74267        | 18567       |
-    | user-user   | 25434        | 0           |
-    | artist-tag  | 23253        | 0           |
-
-  - HGBl-PubMed
-
-    node information:
-
-    | type | number | feature dimension |
-    | ---- | ------ | ----------------- |
-    | 0    | 13168  | 200               |
-    | 1    | 19507  | 200               |
-    | 2    | 25691  | 200               |
-    | 3    | 2783   | 200               |
-
-    edge information:
-
-    | type   | train number | test number |
-    | ------ | ------------ | ----------- |
-    | 0_to_0 | 16105        | 0           |
-    | 0_to_1 | 25962        | 0           |
-    | 1_to_1 | 34109        | 8528        |
-    | 2_to_0 | 31277        | 0           |
-    | 2_to_1 | 51323        | 0           |
-    | 2_to_2 | 62187        | 0           |
-    | 2_to_3 | 6297         | 0           |
-    | 3_to_0 | 3155         | 0           |
-    | 3_to_1 | 5245         | 0           |
-    | 3_to_3 | 798          | 0           |
-
-    
 
 #### RecommendationDataset
 

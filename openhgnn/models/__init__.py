@@ -54,6 +54,7 @@ SUPPORTED_MODELS = {
     "CompGCN": "openhgnn.models.CompGCN",
     "HetGNN": "openhgnn.models.HetGNN",
     'RGCN': 'openhgnn.models.RGCN',
+    "RGAT": 'openhgnn.models.RGAT',
     'RSHN': 'openhgnn.models.RSHN',
     'Metapath2vec': 'openhgnn.models.Metapath2vec',
     'HAN': 'openhgnn.models.HAN',

@@ -12,12 +12,12 @@ Running an existing baseline model on an existing benchmark :ref:`task <api_data
                [--gpu GPU] [--use_best_config] [--use_hpo]
 
 *optional arguments*:
-    - --model MODEL,	-m MODEL	name of models
-    - --task TASK,	-t TASK	name of task
-    - --dataset DATASET,	-d DATASET	name of datasets
-    - --gpu GPU, -g GPU	controls which gpu you will use. If you do not have gpu, set -g -1.
-    - --use_best_config	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually.
-    - --use_hpo Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
+    - ``--model MODEL``,``-m MODEL``name of models
+    - ``--task TASK``,``-t TASK``name of task
+    - ``--dataset DATASET``,	``-d DATASET``	name of datasets
+    - ``--gpu GPU``, ``-g GPU``	controls which gpu you will use. If you do not have gpu, set -g -1.
+    - ``--use_best_config``	use_best_config means you can use the best config OpeHGNN has found in the dataset with the model.If you want to set the different hyper-parameter, modify the `openhgnn.config.ini <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ manually.
+    - ``--use_hpo`` Besides use_best_config, we use hyper-parameter optimization from optuna. And refer them to the section below for details.
 
 e.g.:
 
@@ -37,19 +37,19 @@ Running an experiment with optuna
 
     >>> python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --use_hpo
 
-The config in OpenHGNN is that:
+OpenHGNN will determine hyperparameters in the following order:
 
-1. It will read the parameters in ``./openhgnn/config.ini.``
-2. It will load the parameters in ``./openhgnn/utils/best_config.py`` and overwrite the former parameters if we set ``use_best_config``.
-3. It will sample some parameters through *func_search* in ``./openhgnn/auto/hpo.py`` and overwrite the former parameters if we set ``use_hpo``.
+- If --use_hpo is enabled, search for the best hyperparameter by optuna. This is controlled by the function func_search in ./openhgnn/auto/hpo.py.
+    Please refer `here <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_ for more details.
+- Otherwise, if --use_best_config is enabled, load the best hyperparameters built within OpenHGNN. The configurations are in ./openhgnn/utils/best_config.py.
+- Otherwise, load the hyperparameters in ./openhgnn/config.ini.
 
 You could specify parameters you want to search or sampling algorithms in ``./openhgnn/auto/hpo.py``.
 We give more infos `here <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_.
 
 Evaluate a new dataset
 =======================
-When the existing dataset can not meet your needs, you can custom your dataset.
-In this section, we will create a new dataset HGBn-ACM, which is used in *node classification* task.
+You can specify your own dataset if necessary. In this section we use HGBn-ACM as an example for node classification dataset.
 
 How to build a new dataset
 ---------------------------
@@ -58,7 +58,7 @@ How to build a new dataset
 
 We give a `demo <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/debug/HGBn-ACM2dgl.py>`_ to process the HGBn-ACM.
 First, download the HGBn-ACM from the `Link <https://www.biendata.xyz/hgb/#/datasets>`_.
-After that, we process it as a `dgl.heterograph <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/dataset#Dataset>`_.
+After that, we process it as a `dgl.heterograph <https://docs.dgl.ai/en/latest/guide/graph-heterogeneous.html#guide-graph-heterogeneous>`_.
 
 The following code snippet is an example for creating a heterogeneous graph in DGL.
 
@@ -91,7 +91,7 @@ We recommend the feature name set by the ``'h'``.
 
 DGL provides :func:`dgl.save_graphs` and :func:`dgl.load_graphs` respectively for saving
 heterogeneous graphs in binary format and loading them from binary format.
-So we can use `dgl.save_graphs <https://docs.dgl.ai/en/latest/generated/dgl.save_graphs.html#>`_ to store graph into the local.
+So we can use `dgl.save_graphs <https://docs.dgl.ai/en/latest/generated/dgl.save_graphs.html#>`_ to store graph into the disk.
 
 .. code:: python
 
