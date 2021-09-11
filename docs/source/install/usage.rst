@@ -3,11 +3,11 @@ Basic Usage
 
 Run experiments
 ------------------
-Running an existing baseline model on an existing benchmark api_dataset_
+Running an existing baseline model on an existing benchmark :ref:`task <api_dataset>`
 
 .. code:: bash
 
-    >>>python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
+    >>> python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
     usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
                [--gpu GPU] [--use_best_config] [--use_hpo]
 
@@ -27,24 +27,24 @@ e.g.:
 
 
 **Note**: If you are interested in some model,
-you can refer to the below `models list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_.
+you can refer to the `models list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_.
 
-hyper-parameter optimization
+Hyper-parameter optimization
 -------------------------------
 Running an experiment with optuna
 
 .. code:: bash
 
-    >>>python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --use_hpo
+    >>> python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --use_hpo
 
 The config in OpenHGNN is that:
 
 1. It will read the parameters in ``./openhgnn/config.ini.``
 2. It will load the parameters in ``./openhgnn/utils/best_config.py`` and overwrite the former parameters if we set ``use_best_config``.
-3. It will sample some parameters through *func_search* in ``./openhgnn/auto/hpo,py`` and overwrite the former parameters if we set ``use_hpo``.
+3. It will sample some parameters through *func_search* in ``./openhgnn/auto/hpo.py`` and overwrite the former parameters if we set ``use_hpo``.
 
-You could specify parameters you want to search or sampling algorithms in ``./openhgnn/auto/hpo,py``.
-We give more `infos <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_.
+You could specify parameters you want to search or sampling algorithms in ``./openhgnn/auto/hpo.py``.
+We give more infos `here <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_.
 
 Evaluate a new dataset
 =======================
@@ -83,7 +83,7 @@ The following code snippet is an example for creating a heterogeneous graph in D
      ('drug', 'interacts', 'gene'),
      ('drug', 'treats', 'disease')]
 
-We recommend the feature name set by the `"h"`.
+We recommend the feature name set by the ``'h'``.
 
 .. code:: python
 
@@ -91,7 +91,7 @@ We recommend the feature name set by the `"h"`.
 
 DGL provides :func:`dgl.save_graphs` and :func:`dgl.load_graphs` respectively for saving
 heterogeneous graphs in binary format and loading them from binary format.
-So we can use `dgl.load_graphs <https://docs.dgl.ai/en/latest/generated/dgl.load_graphs.html#>`_ to store graph into the local.
+So we can use `dgl.save_graphs <https://docs.dgl.ai/en/latest/generated/dgl.save_graphs.html#>`_ to store graph into the local.
 
 .. code:: python
 
@@ -103,7 +103,7 @@ We can get a binary format named *demo_graph.bin* after first step, and we shoul
 But for now, it is not a complete dataset.
 We should specify some important information in the `NodeClassificationDataset.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/NodeClassificationDataset.py#L145>`_
 
-For example, we should set the *category*, *num_classes* and *multi_label*(if necessary) with ``"paper"``, ``3``, ``True``.
+For example, we should set the *category*, *num_classes* and *multi_label* (if necessary) with ``"paper"``, ``3``, ``True``.
 More infos, refer to :ref:`Base Node Classification Dataset <api-base-node-dataset>`.
 
 **Third step: optional**
@@ -177,17 +177,115 @@ We must implement the classmethod build_model_from_args , other functions like _
 
 Here we do not give the implement the RGATLayer, you can get more from `RGATLayer <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/RGAT.py>`_.
 
-Note
------
-In OpenHGNN, we preprocess the feature of dataset outside of model.
-Specifically, we use a linear layer with bias for each node type to map all node features to a shared feature space.
-So the parameter *h_dict* of *forward()* in model is not original, and your model need not feature preprocessing.
+.. note::
+
+    In OpenHGNN, we preprocess the feature of dataset outside of model.
+    Specifically, we use a linear layer with bias for each node type to map all node features to a shared feature space.
+    So the parameter *h_dict* of *forward()* in model is not original, and your model need not feature preprocessing.
 
 **Third step: Fill the dict**
 
 We should fill the dict SUPPORTED_MODELS in `models/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/__init__.py>`_
 
 Apply a new scenario
-==============================================
+======================
+In this section, we will apply a recommendation scenario, which involves task and trainerflow.
+
+How to build a new task
+---------------------------------
+**First step: Register task**
+
+We should create a class our_task that inherits
+the :ref:`BaseTask <api-task>`
+and register the model with @register_task(str).
+We give the task recommendation as an example.
+
+.. code-block:: python
+
+    from openhgnn.tasks import BaseTask, register_task
+    @register_task('recommendation')
+    class Recommendation(BaseTask):
+        ...
+
+**Second step: Implement methods**
+
+We should implement some methods involved with evaluation metric.
+
+.. code-block:: python
+
+    class Recommendation(BaseTask):
+        """Recommendation tasks."""
+        def __init__(self, args):
+            super(Recommendation, self).__init__()
+            self.n_dataset = args.dataset
+            self.dataset = build_dataset(args.dataset, 'recommendation')
+            self.train_hg, self.train_neg_hg, self.val_hg, self.test_hg = self.dataset.get_idx()
+            self.evaluator = Evaluator(args.seed)
+
+        def get_loss_fn(self):
+            return F.binary_cross_entropy_with_logits
+
+        def evaluate(self, y_true, y_score, name):
+            if name == 'ndcg':
+                return self.evaluator.ndcg(y_true, y_score)
 
 
+**Finally**
+
+We should fill the dict SUPPORTED_TASKS in `task/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/tasks/__init__.py>`_
+
+How to build a new trainerflow
+-------------------------------
+**First step: Register trainerflow**
+
+We should create a class your_trainerflow that inherits the :ref:`BaseFlow <api-trainerflow>`
+and register the trainerflow with @register_trainer(str).
+
+.. code-block:: python
+
+    from openhgnn.trainerflow import BaseFlow, register_flow
+    @register_flow('demo_trainer')
+    class DemoTrainer(BaseFlow):
+        ...
+
+**Second step: Implement methods**
+
+We decorate the func train() with @abstractmethod. So the train() must be overridden, or the trainerflow cannot be instantiated.
+Besides train(), the init() and _test_step() should both be implemented.
+One of the _full_train_step() and _mini_train_step() must be implemented at least.
+
+
+.. code-block:: python
+
+    ...
+    class Recommendation(BaseFlow):
+         def __init__(self, args=None):
+        super(Recommendation, self).__init__(args)
+            self.target_link = self.task.dataset.target_link
+            self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+            self.evaluator = self.task.get_evaluator(self.metric)
+
+        def train(self,):
+            for epoch in epoch_iter:
+                self._full_train_step()
+                self._full_test_step()
+
+        def _full_train_step(self,):
+            self.model.train()
+            logits = self.model(self.hg)[self.category]
+            loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+            return loss.item()
+
+        def _full_test_step(self, mode=None, logits=None):
+            self.model.eval()
+            with torch.no_grad():
+                loss = self.loss_fn(logits[mask], self.labels[mask]).item()
+                metric = self.task.evaluate(pred, name=self.metric, mask=mask)
+                return metric, loss
+
+**Finally**
+
+We should fill the dict SUPPORTED_FLOWS in `trainerflow/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/trainerflow/__init__.py>`_

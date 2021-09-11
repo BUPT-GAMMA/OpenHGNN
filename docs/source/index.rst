@@ -41,9 +41,8 @@ Welcome to OpenHGNN's documentation!
    api/trainerflow
 
 
-This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on `DGL [Deep Graph Library] <https://github.com/dmlc/dgl>`_. We integrate SOTA models of heterogeneous graph.
-[Test Version]For now, we just release some models for some researchers to run the experiments.
-[Release Plan]We want to release version0.1 in September.
+This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on `DGL [Deep Graph Library] <https://github.com/dmlc/dgl>`_.
+We integrate SOTA models of heterogeneous graph.
 
 Key Features
 --------------
@@ -58,16 +57,16 @@ Getting Started
 Requirements and Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Python >= 3.6
+* `Python <https://www.python.org/>`_ >= 3.6
 * `PyTorch <https://pytorch.org/get-started/locally/>`_ >= 1.7.1
-* `DGL <https://github.com/dmlc/dgl>`_ >= 0.6.1
+* `DGL <https://github.com/dmlc/dgl>`_ >= 0.7
 
 Running an existing baseline model on an existing benchmark `dataset <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/#Dataset>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
-   python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
+   >>> python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 
 -g controls which gpu you will use. If you do not have gpu, set -g -1.
 
@@ -79,6 +78,6 @@ e.g.:
 
 .. code:: bash
 
-   python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
+   >>> python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.

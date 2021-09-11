@@ -1,13 +1,13 @@
-import scipy.io as scio
 import numpy as np
 import torch as th
 from sklearn.cluster import KMeans
 from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score
-from sklearn.metrics import f1_score, accuracy_score, ndcg_score
+from sklearn.metrics import f1_score, accuracy_score, ndcg_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 import sklearn.metrics as Metric
 from ogb.nodeproppred import Evaluator
+
 
 class Evaluator():
     def __init__(self, seed):
@@ -37,6 +37,9 @@ class Evaluator():
 
     def cal_acc(self, y_true, y_pred):
         return accuracy_score(y_true, y_pred)
+
+    def cal_roc_auc(self, y_true, y_pred):
+        return roc_auc_score(y_true, y_pred)
 
     def mrr_(self, embedding, w, train_triplets, valid_triplets, test_triplets, hits=[], eval_bz=100, eval_p="filtered"):
         if eval_p == "filtered":
