@@ -181,7 +181,7 @@ BEST_CONFIGS = {
         },
         'HGSL': {
             'general': {},
-            'acm4HGSL': {
+            'acm4GTN': {
                 'undirected_relations': 'author-paper,paper-subject', 'gnn_dropout': 0, 'fs_eps': 0.8,
                 'fp_eps': 0.2, 'mp_eps': 0.6,
             }
@@ -189,11 +189,17 @@ BEST_CONFIGS = {
 
     },
     "link_prediction": {
-        'general': {'max_epoch': 500, 'patience': 10, 'mini_batch_flag': True},
-        'academic4HetGNN': {
-            'lr': 0.01, 'weight_decay': 0.0001, 'dim': 128, 'batch_size': 64, 'window_size': 5,
-            'batches_per_epoch': 50, 'rw_length': 50, 'rw_walks': 10, 'rwr_prob': 0.5,
+        'NARS': {
+            'general': {'num_hops': 3},
+        },
+        'HetGNN':{
+            'general': {'max_epoch': 500, 'patience': 10, 'mini_batch_flag': True},
+            'academic4HetGNN': {
+                'lr': 0.01, 'weight_decay': 0.0001, 'dim': 128, 'batch_size': 64, 'window_size': 5,
+                'batches_per_epoch': 50, 'rw_length': 50, 'rw_walks': 10, 'rwr_prob': 0.5,
+            }
         }
+
     },
     "recommendation": {
         'KGCN': {

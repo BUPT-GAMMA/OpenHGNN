@@ -10,18 +10,24 @@ from dgl import function as fn
 from dgl.utils import expand_as_pair
 from dgl.nn.functional import edge_softmax
 from . import BaseModel, register_model
-from ..layers.EmbedLayer import HeteroEmbedLayer
 from ..sampler.RSHN_sampler import coarsened_line_graph
-from ..utils import get_nodes_dict
 
 
 @register_model('RSHN')
 class RSHN(BaseModel):
-    '''
-    Note that
-    The four KG dataset in dgl(AIFB, MUTAG, BGS, AM) do not have nodes/edges feature.
-    So we should initialize the feature use nn.Parameter, dimension is the hyper-parameter.
-    '''
+    r"""
+    Relation structure-aware heterogeneous graph neural network (RSHN) builds coarsened line graph to obtain edge features first,
+    then uses a novel Message Passing Neural Network (MPNN) to propagate node and edge features.
+
+    We implement a API build a coarsened line graph.
+
+    Attributes
+    -----------
+    edge_layers : AGNNConv
+        Applied in Edge Layer.
+    coarsened line graph : dgl.DGLGraph
+        Propagate edge features.
+    """
 
     @classmethod
     def build_model_from_args(cls, args, hg):
@@ -61,7 +67,10 @@ class RSHN(BaseModel):
         return
 
     def forward(self, hg, n_feats, *args, **kwargs):
-
+        r"""
+        First, apply edge_layer in cl_graph to get edge embedding.
+        Then, propagate node and edge features through GraphConv.
+        """
         # For full graph training, directly use the graph
         # Forward of n layers of CompGraphConv
         h = self.cl_graph.ndata['h']
@@ -75,7 +84,7 @@ class RSHN(BaseModel):
         for i, e in enumerate(hg.canonical_etypes):
             edge_weight[e] = h[i].expand(hg.num_edges(e), -1)
         if hasattr(hg, 'ntypes'):
-            #edge_weight = F.embedding(hg.edata[dgl.ETYPE].long(), h)
+            # edge_weight = F.embedding(hg.edata[dgl.ETYPE].long(), h)
 
             # full graph training
             for layer in self.node_layers:
@@ -127,6 +136,7 @@ class AGNNConv(nn.Module):
             rst = graph.dstdata.pop('h')
             rst = (1 + self.eps) * feat + rst
             return rst
+
 
 class GraphConv(nn.Module):
     def __init__(self,
@@ -182,11 +192,6 @@ class GraphConv(nn.Module):
                     norm[dtype].add_(degs)
 
             def _apply(ntype, h, norm):
-                # norm_ = 1.0 / norm[ntype]
-                #
-                # shp = norm_.shape + (1,)
-                # norm_ = th.reshape(norm_, shp)
-                # h = h * norm_
                 h = th.matmul(h+feat[ntype], self.weight1)
 
                 if self.activation:

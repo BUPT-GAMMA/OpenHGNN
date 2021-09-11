@@ -15,13 +15,13 @@ print(link_info)
 print(node_info)
 
 
-#read nodes
+# read nodes
 nodes = pd.read_csv('ACM/node.dat',sep="\t",header=None)
 edges = pd.read_csv('ACM/link.dat',sep="\t",header=None)
 label_train = pd.read_csv('ACM/label.dat',sep="\t",header=None)
 label_test = pd.read_csv('ACM/label.dat.test',sep="\t",header=None)
 
-# 加入节点特征
+# add node features
 paper_feature = []
 author_feature = []
 subject_feature = []
@@ -45,7 +45,7 @@ for i in range(8):
 
 g = dgl.heterograph(meta_graphs)
 
-# 节点特征赋值
+# assign node featuer
 
 g.nodes['paper'].data['h'] = torch.FloatTensor(paper_feature)
 
@@ -53,21 +53,21 @@ g.nodes['author'].data['h'] = torch.FloatTensor(author_feature)
 
 g.nodes['subject'].data['h'] = torch.FloatTensor(subject_feature)
 
-# 获取用于训练的节点id
+# get idx for train
 train_paper_id = torch.LongTensor(label_train.iloc[:,0].values)
-# 获取用于测试的节点id
+# get idx for test
 test_paper_id = torch.LongTensor(label_test.iloc[:,0].values)
 
-# 分别获取train、test集中paper的label
+# get labels in graph for train and test
 train_paper_label_value = torch.FloatTensor(label_train.iloc[:,3].values)
 test_paper_label_value = torch.FloatTensor(label_test.iloc[:,3].values)
 
 train_paper_mask_value = torch.full((1,len(train_paper_id)),True).bool()
 test_paper_mask_value = torch.full((1,len(test_paper_id)),True).bool()
-# 初始化train，test集中mask tensor的值
+
 train_paper_mask = torch.full((len(paper_feature), ), False).bool()
 test_paper_mask = torch.full((len(paper_feature), ), False).bool()
-#初始化paper_label为-1
+
 paper_label = torch.full((len(paper_feature),),-1.)
 
 paper_label[train_paper_id] = train_paper_label_value
@@ -79,7 +79,7 @@ test_paper_mask[test_paper_id] = test_paper_mask_value
 g.nodes['paper'].data['label'] = paper_label
 g.nodes['paper'].data['train_mask'] = train_paper_mask
 g.nodes['paper'].data['test_mask'] = test_paper_mask
-# 保存图
+# save graph
 dgl.save_graphs("./acm.bin", g)
 
 print(g)

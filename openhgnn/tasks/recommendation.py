@@ -1,5 +1,4 @@
 import torch.nn.functional as F
-
 from . import BaseTask, register_task
 from ..dataset import build_dataset
 from ..utils import Evaluator
@@ -21,14 +20,6 @@ class Recommendation(BaseTask):
 
     def get_loss_fn(self):
         return F.binary_cross_entropy_with_logits
-
-    def get_evaluator(self, name):
-        if name == 'acc':
-            return self.evaluator.author_link_prediction
-        elif name == 'mrr':
-            return self.evaluator.mrr_
-        elif name == 'academic_lp':
-            return self.evaluator.author_link_prediction
 
     def evaluate(self, y_true, y_score, name):
         if name == 'ndcg':

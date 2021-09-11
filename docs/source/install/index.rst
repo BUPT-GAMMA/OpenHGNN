@@ -16,7 +16,7 @@ Install
 
 Python environment requirments
 
-- Python  >= 3.6
+* `Python <https://www.python.org/>`_ >= 3.6
 - `PyTorch <https://pytorch.org/get-started/locally/>`_  >= 1.7.1
 - `DGL <https://github.com/dmlc/dgl>`_ >= 0.7.0
 

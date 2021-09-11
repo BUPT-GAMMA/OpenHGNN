@@ -1,4 +1,4 @@
-Dataset
+## Dataset
 
 A dataset is related to a task, so it is a part of task.
 
@@ -46,8 +46,30 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 
 - **HGB_NodeClassification**
 
-  - 
-  
+  - HGBn-ACM
+
+  | paper | author | subject | term | paper-author | paper-paper | paper-subject | paper-term | Train | Val  | Test |
+  | ----- | ------ | ------- | ---- | ------------ | ----------- | ------------- | ---------- | ----- | ---- | ---- |
+  | 3025  | 5959   | 56      | 1902 | 9949         | 5543        | 3025          | 255619     | 726   | 907  | 2118 |
+
+  - HGBn-IMDB
+
+  | movie | actor | director | keyword | actor-movie | director-movie | keyword-movie | train | test |
+  | ----- | ----- | -------- | ------- | ----------- | -------------- | ------------- | ----- | ---- |
+  | 4932  | 6124  | 2393     | 7971    | 14779       | 4932           | 23610         | 1371  | 3202 |
+
+  - HGBn-Freebase: no feature
+
+  | BOOK  | BUSINESS | FILM  | LOCATION | MUSIC | ORGANIZATION | PEOPLE | SPORTS | train | test |
+  | ----- | -------- | ----- | -------- | ----- | ------------ | ------ | ------ | ----- | ---- |
+  | 40402 | 7153     | 19427 | 9368     | 82351 | 2731         | 17641  | 1025   | 2386  | 5568 |
+
+  - HGBn-DBLP
+
+  | author | paper | term | venue | author-paper | paper-term | paper-venue | train | test |
+  | ------ | ----- | ---- | ----- | ------------ | ---------- | ----------- | ----- | ---- |
+  | 4057   | 14328 | 7723 | 20    | 19645        | 85810      | 14328       | 1217  | 2840 |
+
 - ##### OGB_NodeClassification
 
   - ###### [ogbn-mag](https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)
@@ -65,11 +87,11 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 - **HGBl-LinkPrediction**
 
   - 
-  
+
 - ##### KG_LinkPrediction
 
   - 'wn18', 'FB15k', 'FB15k-237'
-  
+
 - **HGB_LinkPrediction**    
 
   - HGBl-amazon
@@ -99,7 +121,7 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 
 
     edge information:
-
+    
     | type        | train number | test number |
     | ----------- | ------------ | ----------- |
     | user-artist | 74267        | 18567       |
@@ -133,6 +155,7 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
     | 3_to_3 | 798          | 0           |
 
     
+
 #### RecommendationDataset
 
 - **Amazon**
@@ -149,7 +172,7 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
   - item prediction from positive-only feedback.
 
 - 
-  
+
   |        | User  | Item  | View  | Category | Brand | User-Item | Item-View | Item-Category | Item-Brand | Test(20%)<br />User-Item |
   | ------ | ----- | ----- | ----- | -------- | ----- | --------- | --------- | ------------- | ---------- | ------------------------ |
   | Amazon | 6,170 | 2,753 | 3,857 | 22       | 334   | 195,791   | 5,694     | 5,508         | 2,753      | 39,159                   |

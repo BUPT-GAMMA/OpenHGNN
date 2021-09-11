@@ -160,19 +160,19 @@ class MAGNN(BaseModel):
             The embeddings before the output projection. e.g dict['M'] contains embeddings of every node of M type.
         """
         if feat_dict is None:
-            feat_dict = g.ndata['feat']
+            feat_dict = g.ndata['h']
         with g.local_scope():
 
             # input projection
             for ntype in self.input_projection.keys():
-                g.nodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
+                g.nodes[ntype].data['h'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
 
             # hidden layer
             for i in range(self.num_layers - 1):
                 h, _ = self.layers[i](g, self.metapath_idx_dict)
                 for key in h.keys():
                     h[key] = self.activation(h[key])
-                g.ndata['feat'] = h
+                g.ndata['h'] = h
 
             # output layer
             h_output, embedding = self.layers[-1](g, self.metapath_idx_dict)
