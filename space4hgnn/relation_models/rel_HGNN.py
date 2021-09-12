@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from .layers import HeteroGeneralLayer
 from openhgnn.models import BaseModel, register_model
 from space4hgnn.models.MLP import HGNNPostMP, HGNNPreMP
-from openhgnn.utils import get_nodes_dict
 ########### Layer ############
 
 def HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm, **kwargs):

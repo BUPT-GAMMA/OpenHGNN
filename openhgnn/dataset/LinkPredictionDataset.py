@@ -135,6 +135,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.node_type = ['user', 'artist', 'tag']
             self.test_edge_type = {'user-artist': 0}
 
+
         elif dataset_name == 'HGBl-PubMed':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()

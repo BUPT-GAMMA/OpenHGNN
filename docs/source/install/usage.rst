@@ -12,9 +12,9 @@ Running an existing baseline model on an existing benchmark :ref:`task <api_data
                [--gpu GPU] [--use_best_config] [--use_hpo]
 
 *optional arguments*:
-    - ``--model MODEL``,``-m MODEL``name of models
-    - ``--task TASK``,``-t TASK``name of task
-    - ``--dataset DATASET``,	``-d DATASET``	name of datasets
+    - ``--model MODEL``, ``-m MODEL`` name of models
+    - ``--task TASK``, ``-t TASK`` name of task
+    - ``--dataset DATASET``, ``-d DATASET``	name of datasets
     - ``--gpu GPU``, ``-g GPU``	controls which gpu you will use. If you do not have gpu, set -g -1.
     - ``--use_best_config``	use_best_config means you can use the best config OpeHGNN has found in the dataset with the model.If you want to set the different hyper-parameter, modify the `openhgnn.config.ini <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ manually.
     - ``--use_hpo`` Besides use_best_config, we use hyper-parameter optimization from optuna. And refer them to the section below for details.
@@ -25,9 +25,9 @@ e.g.:
 
     python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
+.. note::
 
-**Note**: If you are interested in some model,
-you can refer to the `models list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_.
+If you are interested in some model, please refer to the `models list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_.
 
 Hyper-parameter optimization
 -------------------------------
@@ -39,13 +39,10 @@ Running an experiment with optuna
 
 OpenHGNN will determine hyperparameters in the following order:
 
-- If --use_hpo is enabled, search for the best hyperparameter by optuna. This is controlled by the function func_search in ./openhgnn/auto/hpo.py.
-    Please refer `here <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_ for more details.
+- If ``--use_hpo`` is enabled, search for the best hyperparameter by optuna. This is controlled by :func:``func_search`` in ./openhgnn/auto/hpo.py.
+Please refer `here <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_ for more details.
 - Otherwise, if --use_best_config is enabled, load the best hyperparameters built within OpenHGNN. The configurations are in ./openhgnn/utils/best_config.py.
 - Otherwise, load the hyperparameters in ./openhgnn/config.ini.
-
-You could specify parameters you want to search or sampling algorithms in ``./openhgnn/auto/hpo.py``.
-We give more infos `here <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_.
 
 Evaluate a new dataset
 =======================
@@ -105,6 +102,16 @@ We should specify some important information in the `NodeClassificationDataset.p
 
 For example, we should set the *category*, *num_classes* and *multi_label* (if necessary) with ``"paper"``, ``3``, ``True``.
 More infos, refer to :ref:`Base Node Classification Dataset <api-base-node-dataset>`.
+
+.. code:: python
+
+    if name_dataset == 'demo_graph':
+        data_path = './openhgnn/dataset/demo_graph.bin'
+        g, _ = load_graphs(data_path)
+        g = g[0].long()
+        self.category = 'author'
+        self.num_classes = 4
+        self.multi_label = False
 
 **Third step: optional**
 

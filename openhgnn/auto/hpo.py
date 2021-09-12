@@ -5,7 +5,8 @@ import optuna
 def func_search(trial):
     return {
         "lr": trial.suggest_categorical("lr", [1e-3, 5e-3, 1e-2]),
-        "hidden_size": trial.suggest_categorical("hidden_size", [8, 16, 32]),
+        "hidden_dim": trial.suggest_categorical("hidden_dim", [32, 64]),
+        "num_heads": trial.suggest_categorical("num_heads",[1, 2, 4]),
         "dropout": trial.suggest_uniform("dropout", 0.0, 0.5),
         'n_layers': trial.suggest_int('n_layers', 2, 3)
     }
@@ -44,7 +45,9 @@ class AutoML(object):
         for key, value in cur_params.items():
             args.__setattr__(key, value)
         flow = build_flow(args, self.trainerflow)
-        result = flow.train()['Acc']
+        result = flow.train()['Test_score']
+        if isinstance(result, tuple):
+            result = (result[0] + result[1]) / 2
         if self.best_result is None or result > self.best_result:
             self.best_result = result
             self.best_params = cur_params
