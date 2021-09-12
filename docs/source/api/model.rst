@@ -155,13 +155,18 @@ HMAELayer
    :undoc-members:
    :show-inheritance:
 
+HGSL
+-----------------------------
+
+.. automodule:: openhgnn.models.HGSL
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 HGNN_AC
 -----------------------------
 
 .. automodule:: openhgnn.models.HGNN_AC
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 HGNN_AC Model
 ~~~~~~~~~~~~~~

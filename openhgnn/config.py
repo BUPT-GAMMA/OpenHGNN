@@ -23,7 +23,7 @@ class Config(object):
         # training dataset path
         self.seed = 0
         self.patience = 1
-        self.max_epoch = 1
+        self.max_epoch = 100
         self.task = task
         self.model = model
         self.dataset = dataset
@@ -371,6 +371,16 @@ class Config(object):
             self.mp_eps = conf.getfloat("HGSL", "mp_eps")
             self.gnn_emd_dim = conf.getint("HGSL", "gnn_emd_dim")
             self.gnn_dropout = conf.getfloat("HGSL", "gnn_dropout")
+            # self.undirected_relations = conf.get("HGSL", "undirected_relations")
+        elif model == 'RGAT':
+            self.lr = conf.getfloat("RGAT", "learning_rate")
+            self.weight_decay = conf.getfloat("RGAT", "weight_decay")
+            self.mini_batch_flag = conf.getboolean("HGSL", "mini_batch_flag")
+
+            self.dropout = conf.getfloat("RGAT", "dropout")
+            self.hidden_dim = conf.getint("RGAT", "hidden_dim")
+            self.num_heads = conf.getint("RGAT", "num_heads")
+            self.dropout = conf.getfloat("RGAT", "dropout")
             # self.undirected_relations = conf.get("HGSL", "undirected_relations")
 
     def __repr__(self):

@@ -5,8 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import dgl.function as fn
 from dgl.nn.functional import edge_softmax
-from . import BaseModel, register_model, HeteroEmbedLayer
-from ..utils import get_nodes_dict
+from . import BaseModel, register_model
 
 
 @register_model('HGT')
@@ -20,33 +19,26 @@ class HGT(BaseModel):
         for etype in hg.etypes:
             edge_dict[etype] = len(edge_dict)
             hg.edges[etype].data['id'] = th.ones(hg.number_of_edges(etype), dtype=th.long).to(args.device) * edge_dict[etype]
-        in_dim = hg.nodes['paper'].data['h'].shape[1]
-        return cls(node_dict, edge_dict, get_nodes_dict(hg), in_dim, args.hidden_dim, args.out_dim, args.n_layers, args.num_heads, args.dropout)
+        return cls(node_dict, edge_dict, args.hidden_dim, args.out_dim, args.n_layers, args.num_heads, args.dropout)
 
-    def __init__(self, node_dict, edge_dict, n_nodes, in_dim, hidden_dim, out_dim, n_layers, n_heads, dropout, use_norm=True):
+    def __init__(self, node_dict, edge_dict, hidden_dim, out_dim, n_layers, n_heads, dropout, use_norm=True):
         super(HGT, self).__init__()
         self.node_dict = node_dict
         self.edge_dict = edge_dict
-       # self.h_n_dict = HeteroEmbedLayer(n_nodes, in_dim)
 
         self.gcs = nn.ModuleList()
-        self.in_dim = in_dim
         self.hidden_dim = hidden_dim
         self.out_dim = out_dim
         self.n_layers = n_layers
         self.adapt_ws = nn.ModuleList()
-        for t in range(len(node_dict)):
-            self.adapt_ws.append(nn.Linear(in_dim, hidden_dim))
         for _ in range(n_layers):
             self.gcs.append(HGTLayer(hidden_dim, hidden_dim, node_dict, edge_dict, n_heads, dropout, use_norm = use_norm))
         self.out = nn.Linear(hidden_dim, out_dim)
 
     def forward(self, G, h_in=None):
-        #h_in = self.h_n_dict.forward()
         h = {}
         for ntype in G.ntypes:
-            n_id = self.node_dict[ntype]
-            h[ntype] = F.gelu(self.adapt_ws[n_id](h_in[ntype]))
+            h[ntype] = F.gelu(h_in[ntype])
         for i in range(self.n_layers):
             h = self.gcs[i](G, h)
         return {'paper': self.out(h['paper'])}

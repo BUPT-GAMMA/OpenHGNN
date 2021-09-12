@@ -141,7 +141,7 @@ class NodeClassification(BaseFlow):
 
         printMetric(self.metric, val_score, 'validation')
         printMetric(self.metric, test_score, 'test')
-        return dict(Acc=test_score, ValAcc=val_score)
+        return dict(Test_score=test_score, ValAcc=val_score)
 
     def _full_train_step(self):
         self.model.train()

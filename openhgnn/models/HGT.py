@@ -17,6 +17,7 @@ class HGT(BaseModel):
     def build_model_from_args(cls, args, hg):
         node_dict = {}
         edge_dict = {}
+
         for ntype in hg.ntypes:
             node_dict[ntype] = len(node_dict)
         for etype in hg.etypes:
