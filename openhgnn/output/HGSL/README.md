@@ -32,22 +32,22 @@ The model is trained in semi-supervisied node classification.
 
 - [GraphGenerator](../../models/HGSL.py)
   - Contain MetricCalcLayer.
-  - Generate graph according to two feature matrices.
+  - Generate a graph according to two feature matrices.
 - [MetricCalcLayer](../../models/HGSL.py)
-  - Calculate metric.
+  - Calculate the metric.
 - [GraphChannelAttLayer](../../models/HGSL.py)
   - Perform the channel attention operation on several similarity graphs. 
 - [GCN](../../models/HGSL.py)
-  - Contain GraphConvolution.
-  - Downstream GNN.
+  - Contain the GraphConvolution.
+  - The downstream GNN.
 - [GraphConvolution](../../models/HGSL.py)
-  - Graph convolution layer of GCN.
+  - The graph convolution layer of GCN.
 
 ### Dataset
 
 Supported dataset: acm4HGSL
 
-We process the [acm4GTN](../../dataset/#ACM) dataset with adding the metapath2vec embeddings from the dataset in the repository of author's code. It saved as dgl.hetrograph and can be loaded by pickle.load.
+We process the [acm4GTN](../../dataset/#ACM) dataset with adding the metapath2vec embeddings obtained from the dataset of the author's code.
 
 Requirements for datasets
 - The graph should be an undirected heterogeneous graph.
@@ -61,7 +61,7 @@ hidden_dim = 16
 num_heads = 2
 gnn_emd_dim = 64
 ```
-Best config for each dataset can be found in [best_config](../../utils/best_config.py)
+The best config for each dataset can be found in [best_config](../../utils/best_config.py).
 
 ### Related API in DGL
 
@@ -69,8 +69,8 @@ Best config for each dataset can be found in [best_config](../../utils/best_conf
 
 ## Note
 This model under the best config has some slight differences compared with the code given by the paper author，which seems having little impact on performance:
-1. The regularization item in loss is on all parameters of the model, while in the author's code, it is only on the generated adjacent matrix. If you want to implement the latter, a new task is needed.
-2. The normalization of input adjacent matrix is separately on different adjacent matrices of different relations, while in the author's code, it is on the entire adjacent matrix composed of all relations.
+1. The regularization item in loss is on all parameters of the model, while in the author's code, it is only on the generated adjacent matrix. If you want to implement the latter, a new task of OpenHGNN is needed.
+2. The normalization of input adjacent matrix is separately on different adjacent matrices of different relations, while in the author's code, it is on the entire adjacent matrix composed of adjacent matrices of all relations.
 
 ## More
 

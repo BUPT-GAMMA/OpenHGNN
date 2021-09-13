@@ -9,61 +9,61 @@ from . import BaseModel, register_model
 @register_model('HGSL')
 class HGSL(BaseModel):
     r"""
-
     Description
     -----------
-    HGSL, Heterogeneous Graph Structure Learning model from paper <http://www.shichuan.org/doc/100.pdf>.
+    HGSL, Heterogeneous Graph Structure Learning from paper <http://www.shichuan.org/doc/100.pdf>.
 
     Parameters
     ----------
     feat_dims : dict
         The feature dimensions of different node types.
     undirected_relations : str
-        The HGSL model can only handle undirected heterographs, while in the format dgl.heterograph, directed edges are
+        The HGSL model can only handle undirected heterographs, while in the dgl.heterograph format, directed edges are
         stored in two different edge types, separately and symmetrically, to represent undirected edge. Hence you have
-        to specify which relations are those distinct undirected relations. Each undirected relation is separated with
-        a comma. For example, in a hetrograph with 2 undirected relations: paper-author and paper-subject, there are 4
-        type of edges stored in the dgl.heterograph: paper-author, author-paper, paper-subject, subject-paper. Then this
-        parameter can be "paper-author,paper-subject", "author-paper,paper-subject", "paper-author,subject-paper" or
-        "author-paper,subject-paper".
+        to specify which relations are those distinct undirected relations. In this parameter, each undirected relation
+        is separated with a comma. For example, in a heterograph with 2 undirected relations: paper-author and
+        paper-subject, there are 4 type of edges stored in the dgl.heterograph: paper-author, author-paper,
+        paper-subject, subject-paper. Then this parameter can be "paper-author,paper-subject",
+        "author-paper,paper-subject", "paper-author,subject-paper" or "author-paper,subject-paper".
     device: str
-        The GPU device selected, like 'cuda:0'
+        The GPU device to select, like 'cuda:0'.
     metapaths : list
-        The metapath names list.
+        The metapath name list.
     mp_emb_dim : int
-        The dimension of metapath embeddings from metapath2vec
+        The dimension of metapath embeddings from metapath2vec.
     hidden_dim : int
-        The dimension of mapped features in graph generating procedure.
+        The dimension of mapped features in the graph generating procedure.
     num_heads: int
         Number of heads in the K-head weighted cosine similarity function.
     fs_eps : float
-        Threshold of feature similarity graph.
+        Threshold of feature similarity graph :math:`\epsilon^{FS}`.
     fp_eps : float
-        Threshold of feature propagation graph.
+        Threshold of feature propagation graph :math:`\epsilon^{FP}`.
     mp_eps : float
-        Threshold of semantic graph.
+        Threshold of semantic graph :math:`\epsilon^{MP}`.
     gnn_emd_dim : int
         The dimension of hidden layers of the downstream GNN.
     gnn_dropout : float
-        The dropout ratio of feature in the downstream GNN.
+        The dropout ratio of features in the downstream GNN.
     category : str
         The target node type which the model will predict on.
     out_dim : int
-        number of classes for the target node type.
+        number of classes of the target node type.
 
     Attributes
     -----------
     fgg_direct : nn.ModuleDict
-        Feature similarity graph generator dict in equation 2 of paper, in which keys are undirected relation strs.
+        Feature similarity graph generator(:math:`S_r^{FS}`) dict in equation 2 of paper, in which keys are
+        undirected-relation strs.
     fgg_left: nn.ModuleDict
-        Feature propagation graph generator dict which generates the graphs in the right side of equation 5 in paper.
+        Feature propagation graph generator(:math:`S_r^{FH}`) dict which generates the graphs in equation 5 of paper.
     fgg_right: nn.ModuleDict
-        Feature propagation graph generator dict which generates the graphs in the right side of equation 6 in paper.
+        Feature propagation graph generator(:math:`S_r^{FT}`) dict which generates the graphs in equation 6 of paper.
     fg_agg : nn.ModuleDict
-        A channel attention layer, in which a layer fuses one feature similarity graph and two feature propagation graphs
-        generated, in equation 7 of paper.
+        A channel attention layer, in which a layer fuses one feature similarity graph and two feature propagation
+        graphs generated, in equation 7 of paper.
     sgg_gen : nn.ModuleDict
-        Semantic subgraph generator dict, in equation 8 of paper.
+        Semantic subgraph generator(:math:`S_{r,m}^{MP}`) dict, in equation 8 of paper.
     sg_agg : nn.ModuleDict
         The channel attention layer which fuses semantic subgraphs, in equation 9 of paper.
     overall_g_agg : nn.ModuleDict
@@ -73,12 +73,15 @@ class HGSL(BaseModel):
 
     Note
     ----
-    This model under the best config has some slight differences compared with the code written by the paper author，
+    This model under the best config has some slight differences compared with the code given by the paper author,
     which seems having little impact on performance:
+
     1. The regularization item in loss is on all parameters of the model, while in the author's code, it is only on the
-        generated adjacent matrix. If you want to implement the latter, a new task is needed.
+       generated adjacent matrix. If you want to implement the latter, a new task of OpenHGNN is needed.
+
     2. The normalization of input adjacent matrix is separately on different adjacent matrices of different
-        relations, while in the author's code, it is on the entire adjacent matrix composed of all relations.
+       relations, while in the author's code, it is on the entire adjacent matrix composed of adjacent matrices of all
+       relations.
     """
 
     @classmethod
@@ -122,7 +125,6 @@ class HGSL(BaseModel):
         self.category = category
         self.metapaths = metapaths
 
-        # ! Graph Structure Learning
         nnmd = nn.ModuleDict
         self.fgg_direct, self.fgg_left, self.fgg_right, self.fg_agg, self.sgg_gen, self.sg_agg, self.overall_g_agg = \
             nnmd({}), nnmd({}), nnmd({}), nnmd({}), nnmd({}), nnmd({}), nnmd({})
@@ -132,7 +134,7 @@ class HGSL(BaseModel):
 
         for canonical_etype in undirected_relations:
             undirected_relation = canonical_etype[1]
-            # ! Feature Graph Generator
+            # Feature Graph Generator
             self.fgg_direct[undirected_relation] = GraphGenerator(hidden_dim, num_heads, fs_eps, self.device)
             self.fgg_left[undirected_relation] = GraphGenerator(feat_dims[canonical_etype[0]], num_heads, fp_eps,
                                                                 self.device)
@@ -140,15 +142,15 @@ class HGSL(BaseModel):
                                                                  self.device)
             self.fg_agg[undirected_relation] = GraphChannelAttLayer(3)
 
-            # ! Semantic Graph Generator
+            # Semantic Graph Generator
             self.sgg_gen[undirected_relation] = nnmd(dict(
                 zip(metapaths, [GraphGenerator(mp_emb_dim, num_heads, mp_eps, self.device) for _ in metapaths])))
             self.sg_agg[undirected_relation] = GraphChannelAttLayer(len(metapaths))
 
-            # ! Overall Graph Generator
+            # Overall Graph Generator
             self.overall_g_agg[undirected_relation] = GraphChannelAttLayer(3)
 
-        # ! Graph Convolution
+        # Graph Convolution
         if len(set(feat_dims.values())) == 1:
             self.GCN = GCN(list(self.feat_dims.values())[0], gnn_emd_dim, num_class, gnn_dropout)
         else:
@@ -157,19 +159,22 @@ class HGSL(BaseModel):
 
     def forward(self, hg, h_features):
         r"""
-
         Parameters
         ----------
-        hg : DGLHeteroGraph
+        hg : dgl.DGlHeteroGraph
             All input data is stored in this graph.
             The graph should be an undirected heterogeneous graph.
             Every node type in graph should have its feature named 'h' and the same feature dimension.
             Every node type in graph should have its metapath2vec embedding feature named 'xxx_m2v_emb'
             and the same feature dimension.
         h_features : dict
-            Not used in this version.
-        """
+            Not used.
 
+        Returns
+        --------
+        result : dict
+            The target node type and the corresponding node embeddings.
+        """
         def generate_node_indexes(hg):
             indexes = dict()
             index = 0
@@ -179,7 +184,7 @@ class HGSL(BaseModel):
 
             return indexes
 
-        def construct_homo_adj(new_adjs, hg, node_indexes, device):  # TODO
+        def construct_homo_adj(new_adjs, hg, node_indexes, device):
             new_homo_adj = torch.zeros(size=(hg.num_nodes(), hg.num_nodes())).to(device)
 
             for canonical_etype, new_adj in new_adjs.items():
@@ -199,60 +204,77 @@ class HGSL(BaseModel):
             homo_feature = torch.cat(homo_feature, dim=0).to(device)
             return homo_feature
 
-        # ! Heterogeneous Feature Mapping
+        # Heterogeneous Feature Mapping
         mapped_feats = dict()
         for ntype in self.node_types:
             mapped_feats[ntype] = self.non_linear(self.encoder[ntype](hg.nodes[ntype].data['h']))
 
-        # ! Heterogeneous Graph Generation
-        # new_adj = torch.zeros(size=(hg.num_nodes(), hg.num_nodes())).to(self.dev)
+        # Heterogeneous Graph Generation
         new_adjs = dict()
         for canonical_etype in self.ud_rels:
             undirected_relation = canonical_etype[1]
             ori_g = F.normalize(hg.adj(etype=canonical_etype).to_dense().to(self.device), dim=1, p=2)
 
-            # ! Feature Graph Generation
+            # Feature Graph Generation
             fg_direct = self.fgg_direct[undirected_relation](mapped_feats[canonical_etype[0]],
                                                              mapped_feats[canonical_etype[2]])
 
             fmat_l, fmat_r = hg.nodes[canonical_etype[0]].data['h'], hg.nodes[canonical_etype[2]].data['h']
             sim_l, sim_r = self.fgg_left[undirected_relation](fmat_l, fmat_l), self.fgg_right[undirected_relation](
                 fmat_r, fmat_r)
-            fg_left, fg_right = sim_l.mm(ori_g), sim_r.mm(ori_g.t()).t()  # equivalent~?
+            fg_left, fg_right = sim_l.mm(ori_g), sim_r.mm(ori_g.t()).t()
 
             feat_g = self.fg_agg[undirected_relation]([fg_direct, fg_left, fg_right])
 
-            # ! Semantic Graph Generation
+            # Semantic Graph Generation
             sem_g_list = [self.sgg_gen[undirected_relation][mp](hg.nodes[canonical_etype[0]].data[mp],
                                                                 hg.nodes[canonical_etype[2]].data[mp]) for mp in
                           self.metapaths]
             sem_g = self.sg_agg[undirected_relation](sem_g_list)
 
-            # ! Overall Graph
+            # Overall Graph
             new_adjs[canonical_etype] = self.overall_g_agg[undirected_relation]([feat_g, sem_g, ori_g])
 
         node_indexes = generate_node_indexes(hg)
         new_homo_adj = construct_homo_adj(new_adjs, hg, node_indexes, self.device)
         homo_feature = construct_homo_feature(hg, self.device)
         x = self.GCN(homo_feature, new_homo_adj)
-        return {self.category: x[node_indexes[self.category][0]:node_indexes[self.category][1], :]}
+        result = {self.category: x[node_indexes[self.category][0]:node_indexes[self.category][1], :]}
+        return result
 
 
 class MetricCalcLayer(nn.Module):
+    r"""
+    Description
+    -----------
+    Calculate metric in equation 3 of paper.
+
+    Parameters
+    ----------
+    nhid : int
+        The dimension of mapped features in the graph generating procedure.
+    """
     def __init__(self, nhid):
         super().__init__()
         self.weight = nn.Parameter(torch.FloatTensor(1, nhid))
         nn.init.xavier_uniform_(self.weight)
 
     def forward(self, h):
+        r"""
+        Parameters
+        ----------
+        h : tensor
+            The result of the Hadamard product in equation 3 of paper.
+        """
         return h * self.weight
 
 
 class GraphGenerator(nn.Module):
+    r"""
+    Description
+    -----------
+    Generate a graph using similarity.
     """
-    Generate graph using similarity.
-    """
-
     def __init__(self, dim, num_head=2, threshold=0.1, dev=None):
         super(GraphGenerator, self).__init__()
         self.threshold = threshold
@@ -263,19 +285,15 @@ class GraphGenerator(nn.Module):
         self.dev = dev
 
     def forward(self, left_h, right_h):
+        r"""
+        Parameters
+        ----------
+        left_h : tensor
+            The first input embedding matrix.
+        right_h : tensor
+            The second input embedding matrix.
         """
-
-        Args:
-            left_h: left_node_num * hidden_dim/feat_dim
-            right_h: right_node_num * hidden_dim/feat_dim
-        Returns:
-
-        """
-
         def cos_sim(a, b, eps=1e-8):
-            """
-            calculate cosine similarity between matrix a and b
-            """
             a_n, b_n = a.norm(dim=1)[:, None], b.norm(dim=1)[:, None]
             a_norm = a / torch.max(a_n, eps * torch.ones_like(a_n))
             b_norm = b / torch.max(b_n, eps * torch.ones_like(b_n))
@@ -286,7 +304,7 @@ class GraphGenerator(nn.Module):
             return torch.zeros((left_h.shape[0], right_h.shape[0])).to(self.dev)
         s = torch.zeros((left_h.shape[0], right_h.shape[0])).to(self.dev)
         zero_lines = torch.nonzero(torch.sum(left_h, 1) == 0)
-        # The ReLU function will generate zero lines, which lead to the nan (devided by zero) problem.
+        # The ReLU function will generate zero lines, which lead to the nan (divided by zero) problem.
         if len(zero_lines) > 0:
             left_h[zero_lines, :] += 1e-8
         for i in range(self.num_head):
@@ -298,28 +316,24 @@ class GraphGenerator(nn.Module):
         return s
 
 
-class GCN(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout):
-        super(GCN, self).__init__()
-        self.gc1 = GraphConvolution(nfeat, nhid)
-        self.gc2 = GraphConvolution(nhid, nclass)
-        self.dropout = dropout
-
-    def forward(self, x, adj):
-        x = F.relu(self.gc1(x, adj))
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = self.gc2(x, adj)
-        return x
-
-
 class GraphChannelAttLayer(nn.Module):
-
+    r"""
+    Description
+    -----------
+    The graph channel attention layer in equation 7, 9 and 10 of paper.
+    """
     def __init__(self, num_channel):
         super(GraphChannelAttLayer, self).__init__()
         self.weight = nn.Parameter(torch.Tensor(num_channel, 1, 1))
         nn.init.constant_(self.weight, 0.1)  # equal weight
 
     def forward(self, adj_list):
+        r"""
+        Parameters
+        ----------
+        adj_list : list
+            The list of adjacent matrices.
+        """
         adj_list = torch.stack(adj_list)
         # Row normalization of all graphs generated
         adj_list = F.normalize(adj_list, dim=1, p=1)
@@ -327,8 +341,47 @@ class GraphChannelAttLayer(nn.Module):
         return torch.sum(adj_list * F.softmax(self.weight, dim=0), dim=0)
 
 
-class GraphConvolution(nn.Module):  # GCN AHW
+class GCN(nn.Module):
+    r"""
+    Description
+    -----------
+    The downstream GCN model.
+    """
+    def __init__(self, nfeat, nhid, nclass, dropout):
+        super(GCN, self).__init__()
+        self.gc1 = GraphConvolution(nfeat, nhid)
+        self.gc2 = GraphConvolution(nhid, nclass)
+        self.dropout = dropout
+
+    def forward(self, x, adj):
+        r"""
+        Parameters
+        ----------
+        x : tensor
+            The feature matrix.
+        adj : tensor
+            The adjacent matrix.
+        """
+        x = F.relu(self.gc1(x, adj))
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = self.gc2(x, adj)
+        return x
+
+
+class GraphConvolution(nn.Module):
+    r"""
+    Description
+    -----------
+    The downstream GCN layer.
+    """
     def __init__(self, in_features, out_features, bias=True):
+
+        def reset_parameters(self):
+            stdv = 1. / math.sqrt(self.weight.size(1))
+            self.weight.data.uniform_(-stdv, stdv)
+            if self.bias is not None:
+                self.bias.data.uniform_(-stdv, stdv)
+
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -337,15 +390,17 @@ class GraphConvolution(nn.Module):  # GCN AHW
             self.bias = Parameter(torch.FloatTensor(out_features))
         else:
             self.register_parameter('bias', None)
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        stdv = 1. / math.sqrt(self.weight.size(1))
-        self.weight.data.uniform_(-stdv, stdv)
-        if self.bias is not None:
-            self.bias.data.uniform_(-stdv, stdv)
+        reset_parameters(self)
 
     def forward(self, inputs, adj):
+        r"""
+        Parameters
+        ----------
+        inputs : tensor
+            The feature matrix.
+        adj : tensor
+            The adjacent matrix.
+        """
         support = torch.mm(inputs, self.weight)  # HW in GCN
         output = torch.mm(adj, support)  # AHW
         if self.bias is not None:
