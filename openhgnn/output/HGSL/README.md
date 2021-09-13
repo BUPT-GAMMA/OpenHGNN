@@ -61,7 +61,7 @@ hidden_dim = 16
 num_heads = 2
 gnn_emd_dim = 64
 ```
-The best config for each dataset can be found in [best_config](../../utils/best_config.py)
+The best config for each dataset can be found in [best_config](../../utils/best_config.py).
 
 ### Related API in DGL
 
