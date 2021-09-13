@@ -5,7 +5,6 @@ import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv, EdgeWeightNorm
 from ..utils import transform_relation_graph_list
 from . import BaseModel, register_model
-from openhgnn.models.GTN_sparse import GTConv
 
 
 @register_model('MHNF')
@@ -294,3 +293,42 @@ class HMAELayer(nn.Module):
             g = dgl.adj_product_graph(result_A[i], result_B[i], 'w_sum')
             H.append(g)
         return H, W, result_A
+
+
+class GTConv(nn.Module):
+    r"""
+        Description
+        -----------
+
+        We conv each sub adjacency matrix :math:`A_{R_{i}}` to a combination adjacency matrix :math:`A_{1}`:
+
+        .. math::
+            A_{1} = conv\left(A ; W_{c}\right)=\sum_{R_{i} \in R} w_{R_{i}} A_{R_{i}}
+
+        where :math:`R_i \subseteq \mathcal{R}` and :math:`W_{c}` is the weight of each relation matrix
+    """
+
+    def __init__(self, in_channels, out_channels, softmax_flag=True):
+        super(GTConv, self).__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.weight = nn.Parameter(th.Tensor(out_channels, in_channels))
+        self.softmax_flag = softmax_flag
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.normal_(self.weight, std=0.01)
+
+    def forward(self, A):
+        if self.softmax_flag:
+            Filter = F.softmax(self.weight, dim=1)
+        else:
+            Filter = self.weight
+        num_channels = Filter.shape[0]
+        results = []
+        for i in range(num_channels):
+            for j, g in enumerate(A):
+                A[j].edata['w_sum'] = g.edata['w'] * Filter[i][j]
+            sum_g = dgl.adj_sum_graph(A, 'w_sum')
+            results.append(sum_g)
+        return results

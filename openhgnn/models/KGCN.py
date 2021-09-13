@@ -1,12 +1,8 @@
-
-import dgl
 import numpy as np
 import torch as th
 import torch.nn as nn
 import dgl.function as fn
-import torch.nn.functional as F
 from . import BaseModel, register_model
-from dgl.nn.functional import edge_softmax
 import torch.nn.functional as F
 
 @register_model('KGCN')
@@ -39,7 +35,7 @@ class KGCN(BaseModel):
 
         :math:`\text { agg }_{\text {neighbor }}=\sigma\left(\mathrm{W} \cdot \mathrm{v}_{\mathcal{S}(v)}^{u}+\mathrm{b}\right)`
 
-        In the above equations, :math:`\sigma\left` is the nonlinear function and
+        In the above equations, :math:`\sigma` is the nonlinear function and
         :math:`\mathrm{W}` and :math:`\mathrm{b}` are transformation weight and bias.
         the representation of an item is bound up with its neighbors by aggregation
 

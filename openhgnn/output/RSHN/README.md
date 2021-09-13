@@ -24,7 +24,7 @@
 
 The experiments in RSHN have serious problems according to the official code. First, it does not use validation set, and just tune hyperparameters on test set. Second, it reports the accuracy at the epoch with best accuracy on test set in the paper. And in this setting, we give our performance.
 
-## TrainerFlow: [entity classification flow](../../trainerflow/#Entity classification flow)
+## TrainerFlow: [node classification flow](../../trainerflow/#Node classification flow)
 
 ### Model
 

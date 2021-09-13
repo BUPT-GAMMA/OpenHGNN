@@ -37,9 +37,7 @@ class HGT(BaseModel):
         self.out = nn.Linear(hidden_dim, out_dim)
 
     def forward(self, G, h_in=None):
-        h = {}
-        for ntype in G.ntypes:
-            h[ntype] = F.gelu(h_in[ntype])
+        h = h_in
         for i in range(self.n_layers):
             h = self.gcs[i](G, h)
         return {self.category: self.out(h[self.category])}

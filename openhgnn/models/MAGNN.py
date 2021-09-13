@@ -37,7 +37,7 @@ class MAGNN(BaseModel):
 
         mp_instances = mp_instance_sampler(hg, metapath_list)
         return cls(ntypes=ntypes,
-                   h_feats=args.hidden_dim,
+                   h_feats=args.h_dim,
                    inter_attn_feats=args.inter_attn_feats,
                    num_heads=args.num_heads,
                    num_classes=args.out_dim,

@@ -15,8 +15,8 @@ Running an existing baseline model on an existing benchmark :ref:`task <api_data
     - ``--model MODEL``, ``-m MODEL`` name of models
     - ``--task TASK``, ``-t TASK`` name of task
     - ``--dataset DATASET``, ``-d DATASET``	name of datasets
-    - ``--gpu GPU``, ``-g GPU``	controls which gpu you will use. If you do not have gpu, set -g -1.
-    - ``--use_best_config``	use_best_config means you can use the best config OpeHGNN has found in the dataset with the model.If you want to set the different hyper-parameter, modify the `openhgnn.config.ini <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ manually.
+    - ``--gpu GPU``, ``-g GPU``	controls which GPU you will use. If you do not have GPU, set -g -1.
+    - ``--use_best_config``	use_best_config means you can use the best config OpeHGNN has found in the dataset with the model. If you want to set the different hyper-parameter, modify the `openhgnn.config.ini <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ manually.
     - ``--use_hpo`` Besides use_best_config, we use hyper-parameter optimization from optuna. And refer them to the section below for details.
 
 e.g.:
@@ -27,7 +27,7 @@ e.g.:
 
 .. note::
 
-If you are interested in some model, please refer to the `models list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_.
+If you are interested in some model, please refer to the `model list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_.
 
 Hyper-parameter optimization
 -------------------------------
@@ -46,7 +46,7 @@ Please refer `here <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/au
 
 Evaluate a new dataset
 =======================
-You can specify your own dataset if necessary. In this section we use HGBn-ACM as an example for node classification dataset.
+You can specify your dataset if necessary. In this section we use HGBn-ACM as an example for the node classification dataset.
 
 How to build a new dataset
 ---------------------------
@@ -54,10 +54,11 @@ How to build a new dataset
 **First step: Process dataset**
 
 We give a `demo <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/debug/HGBn-ACM2dgl.py>`_ to process the HGBn-ACM.
+It's a node classification dataset, the dataset for different dataset
 First, download the HGBn-ACM from the `Link <https://www.biendata.xyz/hgb/#/datasets>`_.
 After that, we process it as a `dgl.heterograph <https://docs.dgl.ai/en/latest/guide/graph-heterogeneous.html#guide-graph-heterogeneous>`_.
 
-The following code snippet is an example for creating a heterogeneous graph in DGL.
+The following code snippet is an example of creating a heterogeneous graph in DGL.
 
 .. code:: python
 
@@ -88,7 +89,7 @@ We recommend the feature name set by the ``'h'``.
 
 DGL provides :func:`dgl.save_graphs` and :func:`dgl.load_graphs` respectively for saving
 heterogeneous graphs in binary format and loading them from binary format.
-So we can use `dgl.save_graphs <https://docs.dgl.ai/en/latest/generated/dgl.save_graphs.html#>`_ to store graph into the disk.
+So we can use `dgl.save_graphs <https://docs.dgl.ai/en/latest/generated/dgl.save_graphs.html#>`_ to store graphs into the disk.
 
 .. code:: python
 
@@ -96,7 +97,7 @@ So we can use `dgl.save_graphs <https://docs.dgl.ai/en/latest/generated/dgl.save
 
 **Second step: Add extra information**
 
-We can get a binary format named *demo_graph.bin* after first step, and we should move it into the directory *openhgnn/dataset/*.
+We can get a binary format named *demo_graph.bin* after the first step, and we should move it into the directory *openhgnn/dataset/*.
 But for now, it is not a complete dataset.
 We should specify some important information in the `NodeClassificationDataset.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/NodeClassificationDataset.py#L145>`_
 
@@ -115,7 +116,7 @@ More infos, refer to :ref:`Base Node Classification Dataset <api-base-node-datas
 
 **Third step: optional**
 
-We can use demo_graph as our dataset name to evaluate a existing model.
+We can use demo_graph as our dataset name to evaluate an existing model.
 
 .. code:: bash
 
@@ -133,8 +134,7 @@ How to build a new model
 --------------------------
 **First step: Register model**
 
-We should create a class your_model that inherits the :ref:`Base Model <api-model>` .
-and register the model with @register_model(str).
+We should create a class your_model that inherits the :ref:`Base Model <api-model>` and register the model with @register_model(str).
 
 .. code-block:: python
 
@@ -182,13 +182,14 @@ We must implement the classmethod build_model_from_args , other functions like _
                     h_dict = layer(block, h_dict)
             return h_dict
 
-Here we do not give the implement the RGATLayer, you can get more from `RGATLayer <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/RGAT.py>`_.
+Here we do not give the implement of the RGATLayer.
+For more reading, check out: `RGATLayer <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/RGAT.py>`_.
 
 .. note::
 
-    In OpenHGNN, we preprocess the feature of dataset outside of model.
+    In OpenHGNN, we preprocess the feature of the dataset outside of the model.
     Specifically, we use a linear layer with bias for each node type to map all node features to a shared feature space.
-    So the parameter *h_dict* of *forward()* in model is not original, and your model need not feature preprocessing.
+    So the parameter *h_dict* of *forward()* in the model is not original, and your model need not feature preprocessing.
 
 **Third step: Fill the dict**
 
@@ -203,8 +204,7 @@ How to build a new task
 **First step: Register task**
 
 We should create a class our_task that inherits
-the :ref:`BaseTask <api-task>`
-and register the model with @register_task(str).
+the :ref:`BaseTask <api-task>` and register the task with @register_task(str).
 We give the task recommendation as an example.
 
 .. code-block:: python
@@ -216,7 +216,7 @@ We give the task recommendation as an example.
 
 **Second step: Implement methods**
 
-We should implement some methods involved with evaluation metric.
+We should implement some methods involved with evaluation metrics.
 
 .. code-block:: python
 
@@ -251,8 +251,8 @@ and register the trainerflow with @register_trainer(str).
 .. code-block:: python
 
     from openhgnn.trainerflow import BaseFlow, register_flow
-    @register_flow('demo_trainer')
-    class DemoTrainer(BaseFlow):
+    @register_flow('Recommendation')
+    class Recommendation(BaseFlow):
         ...
 
 **Second step: Implement methods**

@@ -38,6 +38,16 @@ class BaseFlow(ABC):
         self.loss_fn = self.task.get_loss_fn()
 
     def preprocess_feature(self):
+        r"""
+        Every trainerflow should run the preprocess_feature if you want to get a feature preprocessing.
+        The Parameters in input_feature will be added into optimizer and input_feature will be added into the model.
+
+        Attributes
+        -----------
+        input_feature : HeteroFeature
+            It will return the processed feature if call it.
+
+        """
         if hasattr(self.args, 'activation'):
             act = self.args.activation
         else:
@@ -54,17 +64,27 @@ class BaseFlow(ABC):
         pass
 
     def _full_train_step(self):
-        # train with a full_batch graph
+        r"""
+        Train with a full_batch graph
+        """
         raise NotImplementedError
 
     def _mini_train_step(self):
-        # train with a mini_batch seed nodes graph
+        r"""
+        Train with a mini_batch seed nodes graph
+        """
         raise NotImplementedError
 
     def _full_test_step(self):
+        r"""
+        Test with a full_batch graph
+        """
         raise NotImplementedError
 
     def _mini_test_step(self):
+        r"""
+        Test with a mini_batch seed nodes graph
+        """
         raise NotImplementedError
 
     def load_from_pretrained(self):

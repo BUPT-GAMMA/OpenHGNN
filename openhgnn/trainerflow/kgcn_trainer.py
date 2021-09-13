@@ -76,6 +76,7 @@ class KGCNTrainer(BaseFlow):
         pass
 
     def _mini_train_step(self,):
+        # random.shuffle(self.trainIndex)
         self.preprocess(self.trainIndex)
         L = 0
         import time

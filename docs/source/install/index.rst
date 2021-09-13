@@ -9,7 +9,7 @@ OpenHGNN works with the following operating systems:
 * macOS X
 * Windows 10
 
-OpenHGNN requires Python version 3.6, 3.7, 3.8 or 3.9.
+OpenHGNN requires Python version 3.6, 3.7, 3.8, or 3.9.
 
 Install
 -------------------------

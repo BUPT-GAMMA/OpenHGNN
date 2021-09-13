@@ -216,7 +216,7 @@ class Config(object):
             self.dropout = conf.getfloat("MAGNN", "dropout")
 
             self.inter_attn_feats = conf.getint("MAGNN", "inter_attn_feats")
-            self.hidden_dim = conf.getint('MAGNN', 'hidden_dim')
+            self.h_dim = conf.getint('MAGNN', 'h_dim')
             self.out_dim = conf.getint('MAGNN', 'out_dim')
             self.num_heads = conf.getint('MAGNN', 'num_heads')
             self.num_layers = conf.getint("MAGNN", "num_layers")
@@ -225,7 +225,7 @@ class Config(object):
             self.max_epoch = conf.getint('MAGNN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
             self.encoder_type = conf.get('MAGNN', 'encoder_type')
-            self.hidden_dim = self.hidden_dim * self.num_heads
+            self.hidden_dim = self.h_dim * self.num_heads
         
         elif model == 'RHGNN':
             self.lr = conf.getfloat("RHGNN", "learning_rate")
