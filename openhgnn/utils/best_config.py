@@ -206,7 +206,7 @@ BEST_CONFIGS = {
             "general": {},
             'LastFM4KGCN': {
                 'in_dim': 16, 'hidden_dim': 16, 'n_relation': 60,
-                'batch_size': 128, 'lr' : 0.0005
+                'batch_size': 128, 'lr' : 0.002
             },
         }
     },
