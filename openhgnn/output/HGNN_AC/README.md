@@ -84,6 +84,8 @@ attn_vec_dim = 64 # the dimesions of vector in the Attention Layer
 feats_opt = 110 # the type of nodes that needs to get the new features
 loss_lambda = 0.2 # the weighted coefficient to balance the two parts.
 src_node_type = 2 # the type of nodes that has the raw attributes
+dropout = 0.1 # the drop rate used in Drop some Attributes
+num_heads = 8 # the num of heads used in muti-head attention mechanism
 HIN = MAGNN # the type of model used in Combination with the HIN Model.
 ```
 
