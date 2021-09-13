@@ -7,7 +7,25 @@ from ..utils import Evaluator
 
 @register_task("node_classification")
 class NodeClassification(BaseTask):
-    r"""Node classification tasks."""
+    r"""
+    Node classification tasks.
+
+    Attributes
+    -----------
+    dataset : NodeClassificationDataset
+        Task-related dataset
+
+    evaluator : Evaluator
+        offer evaluation metric
+
+
+    Methods
+    ---------
+    get_graph :
+        return a graph
+    get_loss_fn :
+        return a loss function
+    """
     def __init__(self, args):
         super(NodeClassification, self).__init__()
         self.dataset = build_dataset(args.dataset, 'node_classification')
@@ -38,7 +56,7 @@ class NodeClassification(BaseTask):
 
     def evaluate(self, logits, name, mask=None):
         if name == 'acc':
-            return self.evaluator.cal_acc(logits, self.labels[mask])
+            return self.evaluator.cal_acc(self.labels[mask], logits)
         elif name == 'acc-ogbn-mag':
             from ogb.nodeproppred import Evaluator
             evaluator = Evaluator(name='ogbn-mag')

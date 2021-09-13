@@ -38,10 +38,14 @@ class BaseFlow(ABC):
         self.loss_fn = self.task.get_loss_fn()
 
     def preprocess_feature(self):
+        if hasattr(self.args, 'activation'):
+            act = self.args.activation
+        else:
+            act = None
         if isinstance(self.hg.ndata['h'], dict):
-            self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+            self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim, act=act).to(self.device)
         elif isinstance(self.hg.ndata['h'], torch.Tensor):
-            self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim).to(self.device)
+            self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim, act=act).to(self.device)
         self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         self.model.add_module('feature', self.input_feature)
 

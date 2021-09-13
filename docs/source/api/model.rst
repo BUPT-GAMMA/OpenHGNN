@@ -17,16 +17,16 @@ RGCN
 .. automodule:: openhgnn.models.RGCN
 
 
-Model
-~~~~~~
+RGCN Model
+~~~~~~~~~~~~~
 
 .. autoclass:: openhgnn.models.RGCN.RGCN
    :members:
    :undoc-members:
    :show-inheritance:
 
-Layer
-~~~~~~
+RelGraphConvLayer
+~~~~~~~~~~~~~~~~~
 
 .. autoclass:: openhgnn.models.RGCN.RelGraphConvLayer
    :members:
@@ -37,6 +37,19 @@ HAN
 --------------------------
 
 .. automodule:: openhgnn.models.HAN
+
+HAN Model
+~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.HAN.HAN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+HANLayer
+~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.HAN.HANLayer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -44,7 +57,7 @@ HAN
 KGCN
 --------------------------
 
-.. automodule:: openhgnn.models.HAN
+.. automodule:: openhgnn.models.KGCN
    :members:
    :undoc-members:
    :show-inheritance:
@@ -117,12 +130,56 @@ MHNF
 -----------------------------
 
 .. automodule:: openhgnn.models.MHNF
-   :members: openhgnn.models.MHNF.HSAF, openhgnn.models.MHNF.HLHIA, openhgnn.models.MHNF.HMAELayer, openhgnn.models.GTN.GTConv
+
+HSAF
+~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.MHNF.HSAF
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+HLHIA
+~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.MHNF.HLHIA
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+HMAELayer
+~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.MHNF.HMAELayer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+HGSL
+-----------------------------
+
+.. automodule:: openhgnn.models.HGSL
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 HGNN_AC
 -----------------------------
 
 .. automodule:: openhgnn.models.HGNN_AC
+
+HGNN_AC Model
+~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.HGNN_AC.HGNN_AC
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Attention_layer
+~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.HGNN_AC.AttentionLayer
    :members:
    :undoc-members:
    :show-inheritance:

@@ -6,7 +6,24 @@ from ..utils import Evaluator
 
 @register_task("link_prediction")
 class LinkPrediction(BaseTask):
-    """Node classification tasks."""
+    r"""
+    Link prediction tasks.
+
+    Attributes
+    -----------
+    dataset : NodeClassificationDataset
+        Task-related dataset
+
+    evaluator : Evaluator
+        offer evaluation metric
+
+    Methods
+    ---------
+    get_graph :
+        return a graph
+    get_loss_fn :
+        return a loss function
+    """
     def __init__(self, args):
         super(LinkPrediction, self).__init__()
         self.n_dataset = args.dataset
@@ -28,8 +45,22 @@ class LinkPrediction(BaseTask):
             return self.evaluator.mrr_
         elif name == 'academic_lp':
             return self.evaluator.author_link_prediction
+        elif name == 'roc_auc':
+            return self.evaluator.cal_roc_auc
 
-    def evaluate(self, logits, name):
+    def evaluate(self, name, logits):
+        r"""
+
+        Parameters
+        ----------
+        logits : th.Tensor
+            the prediction of specific
+        name
+
+        Returns
+        -------
+
+        """
         if name == 'acc':
             return self.evaluator.author_link_prediction
         elif name == 'mrr':

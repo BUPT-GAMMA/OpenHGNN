@@ -123,6 +123,9 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.link = [0, 1]
             self.node_type = ["product"]
             self.test_edge_type = {'product-product-0': 0, 'product-product-1': 1}
+            self.meta_paths = [(('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')),
+                               (('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')),
+                               ]
 
         elif dataset_name == 'HGBl-LastFM':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
@@ -131,6 +134,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.target_link = [('user', 'user-artist', 'artist')]
             self.node_type = ['user', 'artist', 'tag']
             self.test_edge_type = {'user-artist': 0}
+
 
         elif dataset_name == 'HGBl-PubMed':
             dataset = HGBDataset(name=dataset_name, raw_dir='')

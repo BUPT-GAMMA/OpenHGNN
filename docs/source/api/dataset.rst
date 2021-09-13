@@ -66,6 +66,6 @@ Recommendation Dataset
 KGCN Recommendation Dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: openhgnn.dataset.LinkPredictionDataset.KGCN_Recommendation
+.. autoclass:: openhgnn.dataset.RecommendationDataset.KGCN_Recommendation
     :members:
     :show-inheritance:
