@@ -10,7 +10,7 @@ https://github.com/Andy-Border/HGSL
 Clone the Openhgnn-DGL
 
 ```bash
-python main.py -m HGSL -d acm4HGSL -t node_classification -g 0 --use_best_config
+python main.py -m HGSL -d acm4GTN -t node_classification -g 0 --use_best_config
 ```
 
 If you do not have gpu, set -gpu -1.

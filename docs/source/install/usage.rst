@@ -39,7 +39,7 @@ Running an experiment with optuna
 
 OpenHGNN will determine hyperparameters in the following order:
 
-- If ``--use_hpo`` is enabled, search for the best hyperparameter by optuna. This is controlled by :func:``func_search`` in ./openhgnn/auto/hpo.py.
+- If ``--use_hpo`` is enabled, search for the best hyperparameter by optuna. This is controlled by :func:`func_search` in ./openhgnn/auto/hpo.py.
 Please refer `here <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_ for more details.
 - Otherwise, if --use_best_config is enabled, load the best hyperparameters built within OpenHGNN. The configurations are in ./openhgnn/utils/best_config.py.
 - Otherwise, load the hyperparameters in ./openhgnn/config.ini.
