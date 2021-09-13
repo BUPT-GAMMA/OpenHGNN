@@ -23,22 +23,21 @@ model
 class MAGNN(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
+        ntypes = hg.ntypes
         if args.dataset == 'imdb4MAGNN':
             # build model
             metapath_list = ['MDM', 'MAM', 'DMD', 'DMAMD', 'AMA', 'AMDMA']
             edge_type_list = ['A-M', 'M-A', 'D-M', 'M-D']
-            # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
-            in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
+
 
         elif args.dataset == 'dblp4MAGNN':
             # build model
             metapath_list = ['APA', 'APTPA', 'APVPA']
             edge_type_list = ['A-P', 'P-A', 'P-T', 'T-P', 'P-V', 'V-P']
-            # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
-            in_feats = {'A': 334, 'P': 14328, 'T': 7723, 'V': 20}
+ 
         mp_instances = mp_instance_sampler(hg, metapath_list)
-        return cls(in_feats=in_feats,
-                   h_feats=args.hidden_dim,
+        return cls(ntypes = ntypes,
+                   h_feats=args.h_dim,
                    inter_attn_feats=args.inter_attn_feats,
                    num_heads=args.num_heads,
                    num_classes=args.out_dim,
@@ -49,7 +48,7 @@ class MAGNN(BaseModel):
                    encoder_type=args.encoder_type,
                    mp_instances=mp_instances)
 
-    def __init__(self, in_feats, h_feats, inter_attn_feats, num_heads, num_classes, num_layers,
+    def __init__(self, ntypes, h_feats, inter_attn_feats, num_heads, num_classes, num_layers,
                  metapath_list, edge_type_list, dropout_rate, mp_instances, encoder_type='RotateE', activation=F.elu):
         r"""
 
@@ -59,8 +58,8 @@ class MAGNN(BaseModel):
 
         Parameters
         ----------
-        in_feats: dict,
-            e.g in_feats['M']: the input dimension of movies, in_feats['D']: the input dimension of directors
+        ntypes: list
+            the nodes' types of the dataset
         h_feats: int
             hidden dimension
         inter_attn_feats: int
@@ -96,7 +95,7 @@ class MAGNN(BaseModel):
         super(MAGNN, self).__init__()
 
         self.encoder_type = encoder_type
-        self.in_feats = in_feats
+        self.ntypes = ntypes
         self.h_feats = h_feats
         self.inter_attn_feats = inter_attn_feats
         self.num_heads = num_heads
@@ -107,13 +106,13 @@ class MAGNN(BaseModel):
         self.activation = activation
 
         # input projection
-        self.ntypes = in_feats.keys()
-        self.input_projection = nn.ModuleDict()
-        for ntype in self.ntypes:
-            self.input_projection[ntype] = nn.Linear(in_features=in_feats[ntype], out_features=h_feats * num_heads)
+        # self.ntypes = in_feats.keys()
+        # self.input_projection = nn.ModuleDict()
+        # for ntype in self.ntypes:
+        #     self.input_projection[ntype] = nn.Linear(in_features=in_feats[ntype], out_features=h_feats * num_heads)
 
-        for layer in self.input_projection.values():
-            nn.init.xavier_normal_(layer.weight, gain=1.414)
+        # for layer in self.input_projection.values():
+        #     nn.init.xavier_normal_(layer.weight, gain=1.414)
 
         # dropout
         self.feat_drop = nn.Dropout(p=dropout_rate)
@@ -159,20 +158,23 @@ class MAGNN(BaseModel):
         dict
             The embeddings before the output projection. e.g dict['M'] contains embeddings of every node of M type.
         """
-        if feat_dict is None:
-            feat_dict = g.ndata['feat']
+        # if feat_dict is None:
+        #     feat_dict = g.ndata['h']
         with g.local_scope():
 
             # input projection
-            for ntype in self.input_projection.keys():
-                g.nodes[ntype].data['feat'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
+            # for ntype in self.input_projection.keys():
+            #     g.nodes[ntype].data['h'] = self.feat_drop(self.input_projection[ntype](feat_dict[ntype]))
+            for ntype in self.ntypes:
+                g.nodes[ntype].data['h'] = feat_dict[ntype]
+            #     print(g.nodes[ntype].data['h'].shape)
 
             # hidden layer
             for i in range(self.num_layers - 1):
                 h, _ = self.layers[i](g, self.metapath_idx_dict)
                 for key in h.keys():
                     h[key] = self.activation(h[key])
-                g.ndata['feat'] = h
+                g.ndata['h'] = h
 
             # output layer
             h_output, embedding = self.layers[-1](g, self.metapath_idx_dict)
@@ -269,7 +271,7 @@ class MAGNN_layer(nn.Module):
 
         # aggregate metapath instances into metapath using ATTENTION
         feat_attn = \
-            self.intra_attn_layers[metapath](g, [intra_metapath_feat, g.nodes[metapath[0]].data['feat']],
+            self.intra_attn_layers[metapath](g, [intra_metapath_feat, g.nodes[metapath[0]].data['h']],
                                              metapath, metapath_idx)
 
         g.nodes[metapath[0]].data['{}'.format(metapath) + '_feat_attn'] = feat_attn
@@ -302,15 +304,15 @@ class MAGNN_layer(nn.Module):
                 g.nodes[ntype].data['feat_'] = \
                     th.stack([meta_b[i] * meta_feat[i] for i in range(len(meta_b))], dim=0).sum(dim=0)
             else:
-                g.nodes[ntype].data['feat_'] = g.nodes[ntype].data['feat']
+                g.nodes[ntype].data['feat_'] = g.nodes[ntype].data['h']
 
     def encoder(self, g, metapath, metapath_idx):
 
-        device = g.nodes[metapath[0]].data['feat'].device
-        feat = th.zeros((len(metapath), metapath_idx.shape[0], g.nodes[metapath[0]].data['feat'].shape[1]),
+        device = g.nodes[metapath[0]].data['h'].device
+        feat = th.zeros((len(metapath), metapath_idx.shape[0], g.nodes[metapath[0]].data['h'].shape[1]),
                         device=device)
         for i, ntype in zip(range(len(metapath)), metapath):
-            feat[i] = g.nodes[ntype].data['feat'][metapath_idx[:, i]]
+            feat[i] = g.nodes[ntype].data['h'][metapath_idx[:, i]]
         feat = feat.reshape(feat.shape[0], feat.shape[1], feat.shape[2] // 2, 2)
 
         if self.encoder_type == 'RotateE':
@@ -320,7 +322,7 @@ class MAGNN_layer(nn.Module):
             for i in range(1, len(metapath), 1):
                 edge_type = '{}-{}'.format(metapath[i-1], metapath[i])
                 temp_r_vec[i] = self.complex_hada(temp_r_vec[i-1], self.r_vec_dict[edge_type])
-                feat[i] = self.complex_hada(feat[i], temp_r_vec[i], opt = 'feat')
+                feat[i] = self.complex_hada(feat[i], temp_r_vec[i], opt = 'h')
 
             feat = feat.reshape(feat.shape[0], feat.shape[1], -1)
             return th.mean(feat, dim=0)
@@ -405,9 +407,9 @@ class MAGNN_attn_intra(nn.Module):
             g_meta.edata['a'] = self.attn_drop(edge_softmax(g_meta, e))
 
             # message passing, there's only one edge type
-            g_meta.update_all(message_func=fn.u_mul_e('feat_src', 'a', 'm'), reduce_func=fn.sum('m', 'feat'))
+            g_meta.update_all(message_func=fn.u_mul_e('feat_src', 'a', 'm'), reduce_func=fn.sum('m', 'h'))
 
-            feat = self.activation(g_meta.dstdata['feat'])
+            feat = self.activation(g_meta.dstdata['h'])
 
             # return dst nodes' features after attention
             return feat.flatten(1)
