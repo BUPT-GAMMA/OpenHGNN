@@ -2,13 +2,13 @@ import numpy as np
 import torch as th
 import torch.nn as nn
 import dgl.function as fn
+import torch.nn.functional as F
 from . import BaseModel, register_model
 import torch.nn.functional as F
 
 @register_model('KGCN')
 class KGCN(BaseModel):
     r"""
-
     Description
     -----------
     This module KGCN was introduced in `KGCN <https://dl.acm.org/doi/10.1145/3308558.3313417>`__.
@@ -67,10 +67,7 @@ class KGCN(BaseModel):
         self.relation_emb_matrix = nn.Parameter(th.FloatTensor(args.n_relation, self.in_dim))
         self.user_emb_matrix = nn.Parameter(th.FloatTensor(args.n_user, self.in_dim))
 
-        if self.args.aggregate == 'CONCAT':
-            self.agg = nn.Linear(self.in_dim*2, self.out_dim)
-        else:
-            self.agg = nn.Linear(self.in_dim, self.out_dim)
+        self.Aggregate = KGCN_Aggregate(args)
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -78,39 +75,6 @@ class KGCN(BaseModel):
         nn.init.uniform_(self.relation_emb_matrix, -1, 1)
         nn.init.uniform_(self.user_emb_matrix, -1, 1)
 
-    def aggregate(self):
-        r"""
-
-        Description
-        -----------
-            Aggregate the entity representation and its neighborhood representation
-
-        Returns
-        -------
-
-        """
-        self.sub_g.update_all(fn.u_mul_e('embedding', 'weight', 'm'),fn.sum('m', 'ft'))
-        
-        self.userList = []
-        self.labelList = []
-        embeddingList = []
-        for i in range(len(self.data)):
-            weightIndex = np.where(self.itemlist==int(self.sub_g.dstdata['_ID'][i]))
-            if self.args.aggregate == 'SUM':
-                embeddingList.append(self.sub_g.dstdata['embedding'][i] + self.sub_g.dstdata['ft'][i][weightIndex]) 
-            elif self.args.aggregate == 'CONCAT':
-                embeddingList.append(th.cat([self.sub_g.dstdata['embedding'][i], self.sub_g.dstdata['ft'][i][weightIndex].squeeze(0)],dim=-1)) 
-            elif self.args.aggregate == 'NEIGHBOR':
-                embeddingList.append(self.sub_g.dstdata['embedding'][i])
-            self.userList.append(int(self.user_indices[weightIndex]))
-            self.labelList.append(int(self.labels[weightIndex]))
-
-        self.sub_g.dstdata['embedding'] = th.stack(embeddingList).squeeze(1)
-        output = F.dropout(self.sub_g.dstdata['embedding'],p=0)
-        if self.layer+1 == len(self.blocks):
-            self.item_embeddings = th.tanh(self.agg(output))
-        else:
-            self.item_embeddings = th.relu(self.agg(output))
     
     def get_score(self):
         r"""
@@ -149,21 +113,84 @@ class KGCN(BaseModel):
                 the label between users and entities
             scores : torch.Tensor
                 Probability of users clicking on entitys
-
-
         """
         self.data = inputdata
         self.blocks = blocks
         self.user_indices = self.data[:,0]
         self.itemlist = self.data[:,1]
+        self.labels = self.data[:,2]
+        self.item_embeddings, self.userList,self.labelList = self.Aggregate(blocks, inputdata)
+        self.get_score()
+        self.labels = th.tensor(self.labelList).to(self.args.device)
 
+        return self.labels, self.scores
+
+
+class KGCN_Aggregate(nn.Module):
+    def __init__(self, args):
+        super(KGCN_Aggregate, self).__init__()
+        self.args = args
+        self.in_dim = args.in_dim
+        self.out_dim = args.out_dim
+        if self.args.aggregate == 'CONCAT':
+            self.agg = nn.Linear(self.in_dim*2, self.out_dim)
+        else:
+            self.agg = nn.Linear(self.in_dim, self.out_dim)
+
+    def aggregate(self):
+        self.sub_g.update_all(fn.u_mul_e('embedding', 'weight', 'm'),fn.sum('m', 'ft'))
+        self.userList = []
+        self.labelList = []
+        embeddingList = []
+        for i in range(len(self.data)):
+            weightIndex = np.where(self.itemlist==int(self.sub_g.dstdata['_ID'][i]))
+            if self.args.aggregate == 'SUM':
+                embeddingList.append(self.sub_g.dstdata['embedding'][i] + self.sub_g.dstdata['ft'][i][weightIndex]) 
+            elif self.args.aggregate == 'CONCAT':
+                embeddingList.append(th.cat([self.sub_g.dstdata['embedding'][i], self.sub_g.dstdata['ft'][i][weightIndex].squeeze(0)],dim=-1)) 
+            elif self.args.aggregate == 'NEIGHBOR':
+                embeddingList.append(self.sub_g.dstdata['embedding'][i])
+            self.userList.append(int(self.user_indices[weightIndex]))
+            self.labelList.append(int(self.labels[weightIndex]))
+
+        self.sub_g.dstdata['embedding'] = th.stack(embeddingList).squeeze(1)
+        output = F.dropout(self.sub_g.dstdata['embedding'],p=0)
+        if self.layer+1 == len(self.blocks):
+            self.item_embeddings = th.tanh(self.agg(output))
+        else:
+            self.item_embeddings = th.relu(self.agg(output))
+        
+    def forward(self,blocks,inputdata):
+        r"""
+
+        Description
+        -----------
+            Aggregate the entity representation and its neighborhood representation
+
+        Parameters
+        ----------
+            blocks : list
+                Blocks saves the information of neighbor nodes in each layer
+            inputdata : numpy.ndarray
+                Inputdata contains the relationship between the user and the entity
+
+        Returns
+        -------
+            item_embeddings : torch.Tensor
+                items' embeddings after aggregated
+            userList : list
+                Users corresponding to items
+            labelList : list
+                Labels corresponding to items
+        """
+        self.data = inputdata
+        self.blocks = blocks
+        self.user_indices = self.data[:,0]
+        self.itemlist = self.data[:,1]
         self.labels = self.data[:,2]
         for self.layer in range(len(blocks)):
             self.sub_g = blocks[self.layer]
             self.aggregate()
 
-        self.get_score()
-        self.labels = th.tensor(self.labelList).to(self.args.device)
-        #loss = self.loss_calculation()
+        return self.item_embeddings, self.userList, self.labelList
 
-        return self.labels, self.scores
