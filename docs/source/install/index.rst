@@ -37,7 +37,7 @@ Python environment requirments
     pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
 
-**3. DGL:** Install `DGL <https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html>`_,
+**3. DGL:** Install `DGL <https://github.com/dmlc/dgl>`_,
 follow their instructions. For example:
 
 .. code:: bash
