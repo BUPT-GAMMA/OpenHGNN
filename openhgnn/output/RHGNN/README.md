@@ -29,7 +29,7 @@ Node classification
 
 | |accuracy|
 |----|----|
-|imdb4GTN|xxx|
+|imdb4GTN|0.5883|
 
 
 ## TrainerFlow: node_classification

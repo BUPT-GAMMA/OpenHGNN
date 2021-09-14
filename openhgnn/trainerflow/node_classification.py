@@ -13,9 +13,9 @@ class NodeClassification(BaseFlow):
     r"""
     Node classification flow means
 
-    The task is to classify the nodes of HIN(Heterogeneous Information Network).
+    The task is to classify the nodes of Heterogeneous graph.
     
-    Note: If the output dim is not equal the number of classes, a MLP will follow the gnn model.
+    Note: If the output dim is not equal the number of classes, we will modify the output dim with the number of classes.
     """
 
     def __init__(self, args):
@@ -53,6 +53,12 @@ class NodeClassification(BaseFlow):
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
     def preprocess(self):
+        r"""
+        Preprocess for different models, e.g.: different optimizer for GTN.
+        And prepare the dataloader foe train validation and test.
+        Last, we will call preprocess_feature.
+
+        """
         if self.args.model == 'GTN':
             if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == True:
                 self.optimizer = torch.optim.Adam([{'params': self.model.gcn.parameters()},
