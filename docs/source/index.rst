@@ -51,33 +51,6 @@ Key Features
 * Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
 * Efficiency: The backend dgl provides efficient APIs.
 
-Getting Started
----------------
-
-Requirements and Installation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* `Python <https://www.python.org/>`_ >= 3.6
-* `PyTorch <https://pytorch.org/get-started/locally/>`_ >= 1.7.1
-* `DGL <https://github.com/dmlc/dgl>`_ >= 0.7
-
-Running an existing baseline model on an existing benchmark `dataset <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/#Dataset>`_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code:: bash
-
-   >>> python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
-
--g controls which gpu you will use. If you do not have gpu, set -g -1.
-
---use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the `openhgnn.config.ini <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ manually.
-
---use_hpo Besides use_best_config, we give a hyper-parameter `example <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/auto>`_ to search the best hyper-parameter automatically.
-
-e.g.:
-
-.. code:: bash
-
-   >>> python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
-
-It is under development, and we release it in a nightly build version. For now, we just give some new models, such as HetGNN, NSHE, GTN, MAGNN, RSHN.
+Contract Us
+-------------
+If you have any question, please submit issues or contract us: tyzhao@bupt.edu.cn

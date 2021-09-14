@@ -36,11 +36,6 @@ Once we select the model and the task, the func *[get_trainerflow](../start.py)*
   - The flow is the most common in the GNNs cause most GNNs model are involved in the task semi-supervised node classification. Here the task is to classify the nodes of HIN(Heterogeneous Information Network).
   - Note: we will set the args.out_dim with num_classes if they are not equivalent.
   
-- ##### Entity_classification_flow
-  
-  - The same with node classification except that it is used for knowledge graph.
-  - Supported Model: RGCN/CompGCN/RSHN
-  - Supported Task: node classification
 - ##### Dist Mult
   
   - The same with entity classification except that it is used for link prediction.

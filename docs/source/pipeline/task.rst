@@ -22,7 +22,7 @@ and additional dataset-specific information.
 Method:
 -------
 
-* get_graph()
+* ..func:``get_graph()``
 
    * return the DGLGraph
 * get_loss_fn()
@@ -34,6 +34,7 @@ Method:
 * get_labels()
 
    * return labels
+&
 
 Supported task
 ------------------

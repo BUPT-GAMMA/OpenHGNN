@@ -123,15 +123,24 @@ class HeteroMLPLayer(nn.Module):
         Key of dict can be node type(node name), value of dict is a list contains input, hidden and output dimension.
 
     """
-    def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, **kwargs):
+    def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, final_act=True, **kwargs):
         super(HeteroMLPLayer, self).__init__()
         self.layers = nn.ModuleDict({})
         for name, linear_dim in linear_dict.items():
             nn_list = []
-            for i in range(len(linear_dim)-1):
+            n_layer = len(linear_dim) - 1
+            for i in range(n_layer):
                 in_dim = linear_dim[i]
                 out_dim = linear_dim[i+1]
-                layer = GeneralLinear(in_features=in_dim, out_features=out_dim, act=act,
+                if i == n_layer - 1:
+                    if final_act:
+                        layer = GeneralLinear(in_features=in_dim, out_features=out_dim, act=act,
+                                              dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
+                    else:
+                        layer = GeneralLinear(in_features=in_dim, out_features=out_dim, act=None,
+                                          dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
+                else:
+                    layer = GeneralLinear(in_features=in_dim, out_features=out_dim, act=act,
                                       dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
 
                 nn_list.append(layer)
@@ -190,7 +199,7 @@ class HeteroFeature(nn.Module):
     hetero_linear : HeteroLinearLayer
         A heterogeneous linear layer to transform original feature.
     """
-    def __init__(self, h_dict, n_nodes_dict, embed_size, need_trans=True, all_feats=True):
+    def __init__(self, h_dict, n_nodes_dict, embed_size, act=None, need_trans=True, all_feats=True):
         """
 
         @param h_dict:
@@ -219,7 +228,7 @@ class HeteroFeature(nn.Module):
             else:
                 linear_dict[ntype] = [h.shape[1], self.embed_size]
         if need_trans:
-            self.hetero_linear = HeteroLinearLayer(linear_dict)
+            self.hetero_linear = HeteroLinearLayer(linear_dict, act=act)
 
     def forward(self):
         r"""

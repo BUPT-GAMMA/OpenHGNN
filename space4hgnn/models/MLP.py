@@ -10,7 +10,7 @@ def HGNNPreMP(args, node_types, num_pre_mp, in_dim, hidden_dim):
             for _ in range(num_pre_mp):
                 linear_dict[ntype].append(hidden_dim)
     return HeteroMLPLayer(linear_dict, act=args.activation, dropout=args.dropout,
-                          has_l2norm=args.has_l2norm, has_bn=args.has_bn)
+                          has_l2norm=args.has_l2norm, has_bn=args.has_bn, final_act=True)
 
 
 def HGNNPostMP(args, node_types, num_post_mp, hidden_dim, out_dim):
@@ -22,7 +22,7 @@ def HGNNPostMP(args, node_types, num_post_mp, hidden_dim, out_dim):
                 linear_dict[ntype].append(hidden_dim)
             linear_dict[ntype].append(out_dim)
     return HeteroMLPLayer(linear_dict, act=args.activation, dropout=args.dropout,
-                          has_l2norm=args.has_l2norm, has_bn=args.has_bn)
+                          has_l2norm=args.has_l2norm, has_bn=args.has_bn, final_act=False)
 
 
 def GNNPreMP(args, in_dim, hidden_dim):

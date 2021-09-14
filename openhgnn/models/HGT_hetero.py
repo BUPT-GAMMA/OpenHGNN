@@ -19,13 +19,14 @@ class HGT(BaseModel):
         for etype in hg.etypes:
             edge_dict[etype] = len(edge_dict)
             hg.edges[etype].data['id'] = th.ones(hg.number_of_edges(etype), dtype=th.long).to(args.device) * edge_dict[etype]
-        return cls(node_dict, edge_dict, args.hidden_dim, args.out_dim, args.n_layers, args.num_heads, args.dropout)
+        return cls(node_dict, edge_dict, args.hidden_dim, args.out_dim, args.n_layers, args.num_heads, args.dropout, category=args.category)
 
-    def __init__(self, node_dict, edge_dict, hidden_dim, out_dim, n_layers, n_heads, dropout, use_norm=True):
+    def __init__(self, node_dict, edge_dict, hidden_dim, out_dim, n_layers, n_heads, dropout, category, use_norm=True):
         super(HGT, self).__init__()
         self.node_dict = node_dict
         self.edge_dict = edge_dict
 
+        self.category = category
         self.gcs = nn.ModuleList()
         self.hidden_dim = hidden_dim
         self.out_dim = out_dim
@@ -36,12 +37,10 @@ class HGT(BaseModel):
         self.out = nn.Linear(hidden_dim, out_dim)
 
     def forward(self, G, h_in=None):
-        h = {}
-        for ntype in G.ntypes:
-            h[ntype] = F.gelu(h_in[ntype])
+        h = h_in
         for i in range(self.n_layers):
             h = self.gcs[i](G, h)
-        return {'paper': self.out(h['paper'])}
+        return {self.category: self.out(h[self.category])}
 
 
 class HGTLayer(nn.Module):

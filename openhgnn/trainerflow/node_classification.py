@@ -5,7 +5,7 @@ from ..utils.sampler import get_node_data_loader
 from ..models import build_model
 from . import BaseFlow, register_flow
 from ..utils.logger import printInfo, printMetric
-from ..utils import extract_embed, EarlyStopping, get_nodes_dict
+from ..utils import extract_embed, EarlyStopping
 
 
 @register_flow("node_classification")
@@ -51,7 +51,6 @@ class NodeClassification(BaseFlow):
             self.train_loader = dgl.dataloading.NodeDataLoader(
                 self.hg.to('cpu'), {self.category: self.train_idx.to('cpu')}, sampler,
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
-
 
     def preprocess(self):
         if self.args.model == 'GTN':

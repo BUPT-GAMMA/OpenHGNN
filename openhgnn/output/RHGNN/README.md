@@ -8,11 +8,11 @@ Code from author:[https://github.com/yule-BUAA/R-HGNN](https://github.com/yule-B
 
 Clone the Openhgnn-DGL
 
-```python
-python main.py -m RHGNN -t node_classification -d imdb4RHGNN -g 0 --use_best_config
-```
+    ```bash
+    python main.py -m RHGNN -t node_classification -d imdb4GTN -g 0 --use_best_config
+    ```
 
-Candidate dataset: imdb4RHGNN
+Candidate dataset: imdb4GTN/acm4GTN
 
 If you do not have gpu, set -gpu -1.
 

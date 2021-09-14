@@ -8,7 +8,7 @@
 - Clone the Openhgnn-DGL
 
   ```bash
-  python main.py -m KGCN -d lastfmKGCN -t recommendation -g 0 --use_best_config
+  python main.py -m KGCN -d LastFM4KGCN -t recommendation -g 0 --use_best_config
   ```
 
   If you do not have gpu, set -gpu -1.

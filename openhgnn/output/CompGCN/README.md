@@ -22,7 +22,7 @@ Code: https://github.com/malllabiisc/CompGCN
 | ---------------- | ----- | ----- | ---- | ---- |
 | **CompGCN(dgl)** | 91.66 |       |      |      |
 
-### TrainerFlow: [entity classification flow](../../trainerflow/#Entity classification flow)
+### TrainerFlow: [node classification flow](../../trainerflow/#Node classification flow)
 
 ### Model
 
