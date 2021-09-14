@@ -100,12 +100,12 @@ The link will give some basic usage.
 | [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]      | :heavy_check_mark:  |                    |                    |
 | [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020] | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]      | :heavy_check_mark:  |                    |                    |
-| [NARS](./openhgnn/output/NARS)                  | :heavy_check_mark:  |                    |                    |
-| [MHNF](./openhgnn/output/MHNF)                  | :heavy_check_mark:  |                    |                    |
+| [NARS](./openhgnn/output/NARS)[arxiv]           | :heavy_check_mark:  |                    |                    |
+| [MHNF](./openhgnn/output/MHNF)[arxiv]           | :heavy_check_mark:  |                    |                    |
 | [HGSL](./openhgnn/output/HGSL)[AAAI 2021]       | :heavy_check_mark:  |                    |                    |
 | [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]  | :heavy_check_mark:  |                    |                    |
 | [HPN](./openhgnn/output/HPN)[TKDE 2021]         | :heavy_check_mark:  |                    |                    |
-| [RHGNN](./openhgnn/output/RHGNN)                | :heavy_check_mark:  |                    |                    |
+| [RHGNN](./openhgnn/output/RHGNN)[arxiv]         | :heavy_check_mark:  |                    |                    |
 
 ### To be supported models
 

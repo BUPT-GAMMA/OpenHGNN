@@ -14,8 +14,8 @@ Running an existing baseline model on an existing benchmark :ref:`task <api_data
 Optional arguments are as follows:
 
     - ``--model MODEL``, ``-m MODEL`` name of models.  Please refer to the `model list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_ for supported models and their names.
-    - ``--task TASK``, ``-t TASK`` name of task.  Please refer to `todo <>`_ for the list of tasks.
-    - ``--dataset DATASET``, ``-d DATASET`` name of datasets.  Please refer to `todo <>`_ for the list of datasets.
+    - ``--task TASK``, ``-t TASK`` name of task.  Please refer to `tasks <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/tasks#Supported task>`_  for the list of tasks.
+    - ``--dataset DATASET``, ``-d DATASET`` name of datasets.  Please refer to `datasets <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/dataset#Dataset>`_ for the list of datasets.
     - ``--gpu GPU``, ``-g GPU``	controls which GPU you will use. If you do not have GPU, set ``-g -1``.
     - ``--use_best_config`` use the best config OpenHGNN has found in the dataset with the model. If you want to set the different hyper-parameter, modify the `config.ini <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ file manually.
     - ``--use_hpo`` use hyper-parameter optimization from optuna.
