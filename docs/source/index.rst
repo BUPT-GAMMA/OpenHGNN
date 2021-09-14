@@ -53,4 +53,4 @@ Key Features
 
 Contract Us
 -------------
-If you have any question, please submit issues or contract us: tyzhao@bupt.edu.cn
+If you have any question, please submit issues or contact us: tyzhao@bupt.edu.cn
