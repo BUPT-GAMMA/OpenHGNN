@@ -1,1 +1,0 @@
-from .rel_HGNN import relation_HGNN

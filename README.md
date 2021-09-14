@@ -120,9 +120,9 @@ The link will give some basic usage.
 
 ## Contributors
 
-**[GAMMA LAB](https://github.com/BUPT-GAMMA) [BUPT]**: [Tianyu Zhao](https://github.com/Theheavens), Cheng Yang, Xiao Wang, [Chuan Shi](http://shichuan.org/)
+**[GAMMA LAB](https://github.com/BUPT-GAMMA) [BUPT]**: [Tianyu Zhao](https://github.com/Theheavens), Yaoqi Liu, Fengqi Liang, Yibo Li, Yanhu Mo, Donglin Xia, Xinlong Zhai, Siyuan Zhang, Qi Zhang, [Chuan Shi](http://shichuan.org/), Cheng Yang, Xiao Wang
 
-**BUPT**: Jiahang Li
+**BUPT**: Jiahang Li, Anke Hu
 
 **DGL Team**: Quan Gan, [Jian Zhang](https://github.com/zhjwy9343)
 
