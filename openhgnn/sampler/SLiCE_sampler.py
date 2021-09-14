@@ -86,8 +86,6 @@ class SLiCESampler(object):
             os.makedirs(self.save_path)
         if not os.path.exists(self.finetune_path):
             os.makedirs(self.finetune_path)
-        #这里只生成train的？
-        print("Generating finetune subgraphs")
         g=self.g
         walks_by_task_dict = dict()
         g_networkx=dgl.to_networkx(g,edge_attrs=['label'])
@@ -104,11 +102,17 @@ class SLiCESampler(object):
                 context=self.get_selective_context(g_networkx,src,dst)
                 if len(context) == 0:
                     context = [src,dst]
-                self.edge_context_dict[(src,dst)]=context
-                if isinstance(context[0],list):
-                    all_context.extend(context)
+                this_context=[]
+                if isinstance(context[0],list):#context has many walks
+                    for each in context:
+                        edge_context=dgl.node_subgraph(self.g,each)
+                        this_context.append(edge_context)
                 else:
-                    all_context.append(context)
+                    edge_context=dgl.node_subgraph(self.g,context)
+                    this_context.append(edge_context)
+                
+                self.edge_context_dict[(src,dst)]=this_context
+                all_context.extend(this_context)
         return all_context
     
     def get_random_k_nbrs(self,nodeid,exclude_list,k):

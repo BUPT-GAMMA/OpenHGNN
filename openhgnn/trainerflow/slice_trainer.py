@@ -1,4 +1,6 @@
 import copy
+
+from dgl._ffi.base import DGLError
 from openhgnn import sampler
 
 from torch.utils.data.dataloader import DataLoader
@@ -37,28 +39,24 @@ from ..sampler.SLiCE_sampler import SLiCESampler
 class SLiCETrainer(BaseFlow):
     def __init__(self,args):
         super(SLiCETrainer, self).__init__(args)
-        self.args=args
-        self.model_name=args.model
-        self.device=args.device
-        self.task=build_task(args)
-        self.phase=['train','valid','test']
         self.g,_=dgl.load_graphs(self.task.dataset.data_path)
         self.g=dgl.to_homogeneous(self.g[0],ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
         self.model=dict()
         self.model['pretrain']=SLiCE.build_model_from_args(self.args,self.g)
         self.model['finetune']=SLiCEFinetuneLayer.build_model_from_args(args)
-        self.evaluator=self.task.get_evaluator('slice')
         #loss function
         self.loss_fn=torch.nn.CrossEntropyLoss()
         #optimizer
         self.optimizer=dict()
-        self.optimizer['pretrain']=optim.Adam(self.model['pretrain'].parameters(), args.lr)
+        self.optimizer['pretrain']=optim.Adam(self.model['pretrain'].parameters(), lr=args.lr)
         self.optimizer['finetune']=optim.Adam(self.model['finetune'].parameters(), lr=args.ft_lr)
 
         self.patience=5 #for early stopping
+        #number of epochs
         self.n_epochs=dict()
         self.n_epochs['pretrain']=args.n_epochs
         self.n_epochs['finetune']=args.ft_n_epochs
+        #batch size
         self.batch_size=dict()
         self.batch_size['pretrain']=args.batch_size
         self.batch_size['finetune']=args.ft_batch_size
@@ -78,13 +76,12 @@ class SLiCETrainer(BaseFlow):
         self.finetune_path=os.path.join(self.out_dir,'finetune/')
         self.finetune_save_path=os.path.join(self.finetune_path,'best_finetune_model.pt')
         self.graphs=dict()
+        self.best_epoch=dict()
     def preprocess(self):
-        self.labels=self.g.edata['label']
         # self.g=dgl.to_homogeneous(
         #     self.g,
         #     ndata=['feature'],
         #     edata=['train_mask','valid_mask','test_mask','label'])
-        self.graphs['train']=copy.deepcopy(self.g)
         if not os.path.exists(self.pretrain_path):
             os.makedirs(self.pretrain_path)
         if not os.path.exists(self.finetune_path):
@@ -100,25 +97,20 @@ class SLiCETrainer(BaseFlow):
                 self.test_idx=index
             self.edges[task]=self.g.find_edges(index)
             #finally, g should be a graph containing just train_edges
-            if task in ['valid','test']:
-                #self.g.remove_edges(index)
-                #built for valid and test phase(use apply_edge(u_mult_v()) to get similarity score)
-                self.graphs[task]=dgl.graph(self.edges[task])
+            self.graphs[task]=dgl.edge_subgraph(self.g,index)
         #sample walks
-        sampler=SLiCESampler(self.g,num_walks_per_node=self.args.n_pred,beam_width=self.args.beam_width,
+        sampler=SLiCESampler(self.graphs['train'],num_walks_per_node=self.args.n_pred,beam_width=self.args.beam_width,
                             max_num_edges=self.args.max_length,walk_type=self.args.walk_type,
                             path_option=self.args.path_option,save_path=self.out_dir)#full graph
         #get dataloader for pretrain and finetune evaluation on link prediction
         g=self.g
         #pretrain
-        node_walk_path=self.pretrain_path+'node_walks.pickle'
+        node_walk_path=self.pretrain_path+'node_walks.bin'
         if os.path.exists(node_walk_path):
-            with open(str(node_walk_path),'rb') as f:
-                node_walks=pickle.load(f)
+            node_walks,_=dgl.load_graphs(node_walk_path)
         else:
             node_walks=sampler.get_node_subgraph(g.nodes())
-            with open(node_walk_path,'wb') as f:
-                pickle.dump(node_walks,f)
+            dgl.save_graphs(node_walk_path,node_walks)
         random.shuffle(node_walks)
         total_len=len(node_walks)
         train_size=int(0.8*total_len)
@@ -145,32 +137,32 @@ class SLiCETrainer(BaseFlow):
         else:
             self.edges['train'],edges_label['train']=sampler.generate_false_edges2(self.edges['train'],train_file)
         #generate finetune subgraph
-        finetune_input=self.finetune_path+'finetune_input.pickle'
-        if os.path.exists(finetune_input):
-            with open(finetune_input,'rb') as f:
-                self.edge_subgraphs=pickle.load(f)
-        else:
-            for task in ['train','valid','test']:
+        for task in ['train','valid','test']:
+            finetune_input=os.path.join(self.finetune_path,'finetune_input_'+task+'.bin')
+            if os.path.exists(finetune_input):
+                self.edge_subgraphs[task],_=dgl.load_graphs(finetune_input)
+            else:
                 self.edge_subgraphs[task]=sampler.get_edge_subgraph(self.edges[task])
-            with open(finetune_input,'wb') as f:
-                pickle.dump(self.edge_subgraphs,f)
+                dgl.save_graphs(finetune_input,self.edge_subgraphs[task])
 
     def train(self):
         self.preprocess()
-        metrics_pretrain=self.pretrain()
-        metrics_finetune=self.finetune()
+        self.pretrain()
+        self.finetune()
     def pretrain(self):
         print("Start Pretraining...")
         stopper=EarlyStopping(self.patience)
-        epoch_iter = tqdm(range(self.n_epochs['pretrain']))
         batch_size=self.batch_size['pretrain']
         self.model['pretrain'].train()
-        for epoch in epoch_iter:
+        if os.path.exists(self.pretrain_save_path):
+            pass
+        for epoch in range(self.n_epochs['pretrain']):
             print("Epoch {}:".format(epoch))
             i=0
             total_len=len(self.node_subgraphs['train'])
             n_batch=int(total_len/batch_size)
             bar=tqdm(range(n_batch))
+            avg_loss=0
             for batch in bar:
                 i=batch*batch_size
                 if i+batch_size<total_len:
@@ -179,14 +171,25 @@ class SLiCETrainer(BaseFlow):
                     subgraph_list=self.node_subgraphs['train'][i:]
                 pred_data,true_data=self.model['pretrain'](subgraph_list)
                 loss=self.loss_fn(pred_data.transpose(1,2).cuda(),true_data.cuda())
+                avg_loss+=loss
                 self.optimizer['pretrain'].zero_grad()
                 loss.backward()
                 self.optimizer['pretrain'].step()
                 i+=batch_size
                 bar.set_description("Batch {} Loss: {:.3f}".format(batch,loss))
-            torch.save(self.model['pretrain'],self.pretrain_path+'model_'+str(epoch)+'SLiCE.pt')
-            early_stop=stopper.loss_step(loss,self.model['pretrain'])
+            #torch.save(self.model['pretrain'],self.pretrain_path+'model_'+str(ii)+'SLiCE.pt')
+            avg_loss=avg_loss/n_batch
+            print("AvgLoss: {:.3f}".format(avg_loss))
+            early_stop=stopper.loss_step(avg_loss,self.model['pretrain'])
+            if early_stop:
+                print('Early Stop!\tEpoch:' + str(epoch))
+                break
+        self.is_pretrained=True
+        self.best_epoch['pretrain']=epoch
+        torch.save(self.model['pretrain'],self.pretrain_save_path)
         print("Evaluating for pretraining...")
+        self.model['pretrain'].eval()
+        self.model['pretrain'].set_fine_tuning()
         val_f1,val_auc=self._test_step(split='val')
         test_f1,test_auc=self._test_step(split='test')
     def finetune(self):
@@ -228,31 +231,39 @@ class SLiCETrainer(BaseFlow):
         # self.model['finetune']=stopper.best_model
         # torch.save(self.model,self.finetune_save_path)
         #run validation to find the best epoch
+        self.is_finetuned=True
         print("Evaluating for pretraining...")
         val_f1,val_auc=self._test_step(split='val')
         test_f1,test_auc=self._test_step(split='test')
     def _test_step(self,split=None, logits=None):
         with torch.no_grad():
             if logits==None:
-                pass#get loss by forward propagation
-            print("Test for {} set...".format(split))
-            if split == "train":
-                mask = self.train_idx
-            elif split == "val":
-                mask = self.val_idx
-            elif split == "test":
-                mask = self.test_idx
-            else:
-                mask = None
-            if mask is not None:
-                loss = self.loss_fn(logits[mask], self.labels[mask]).item()
-                metric = self.evaluator(self.labels[mask].to('cpu'), logits[mask].argmax(dim=1).to('cpu'))
-                return metric, loss
-            else:
-                masks = {'train': self.train_idx, 'val': self.val_idx, 'test': self.test_idx}
-                metrics = {key: self.evaluator(self.labels[mask].to('cpu'), logits[mask].argmax(dim=1).to('cpu')) for key, mask in masks.items()}
-                losses = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}
-                return metrics, losses
+                if not self.is_pretrained:
+                    raise ValueError("Model is evaluated before pretraining")
+                self.model['pretrain'].eval()
+                total_len=len(self.edge_subgraphs['test'])
+                batch_size=self.batch_size['finetune']
+                n_batch=int(total_len/batch_size)
+                avg_loss=0
+                for batch in range(n_batch):
+                    i=batch*batch_size
+                    if i+batch_size<total_len:
+                        end=i+batch_size
+                    else:
+                        end=total_len
+                    subgraph_list=self.edge_subgraphs['test'][i:end]
+                    output,layer_output,_=self.model['pretrain'](subgraph_list)
+                    if not self.is_finetuned:
+                        loss=self.ScorePredictor(subgraph_list,output)
+                    else:
+                        #pred_score:[ft_batch_size,1]
+                        #src_embedding/dst_embedding:[ft_batch_size,1,embedding_dim]
+                        pred_score,_,_=self.model['finetune'](layer_output)
+                        loss=F.binary_cross_entropy(pred_score,self.edges_label['test'][i:end])
+                    avg_loss+=loss
+                    i+=batch_size
+                avg_loss/=len(n_batch)
+                print("Testing result for {} is: {:.3f}".format("test",avg_loss))
     def loss_calculation(self, pos_score, neg_score):
         # an example hinge loss
         loss = []
@@ -262,12 +273,17 @@ class SLiCETrainer(BaseFlow):
         loss = torch.cat(loss)
         return -loss.mean()
 
-    def ScorePredictor(self, edge_subgraph, x):
-        with edge_subgraph.local_scope():
-            for ntype in edge_subgraph.ntypes:
-                edge_subgraph.nodes[ntype].data['x'] = x[ntype]
-            edge_subgraph.apply_edges(
-                dgl.function.u_dot_v('x', 'x', 'score'))
-            score = edge_subgraph.edata['score']
-            labels = edge_subgraph.edata['label']
-            return score.squeeze(),labels.squeeze()
+    def ScorePredictor(self, edge_subgraphs, x):
+        #x:[batch_size*num_nodes*embed_dim]
+        avg_score=0
+        for ii,edge_subgraph in enumerate(edge_subgraphs):
+            with edge_subgraph.local_scope():
+                edge_subgraph.ndata['x'] = x[ii,:,:]
+                edge_subgraph.apply_edges(
+                    dgl.function.u_dot_v('x', 'x', 'score'))
+                score = edge_subgraph.edata['score']
+                labels = edge_subgraph.edata['label']
+                res=F.binary_cross_entropy(torch.sigmoid(score),labels)
+                avg_score+=res
+        avg_score/=len(edge_subgraphs)
+        return avg_score

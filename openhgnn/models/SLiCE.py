@@ -302,7 +302,10 @@ class SLiCE(BaseModel):
         return torch.tensor(masked_nodes), torch.tensor(masked_position)
     def forward(self, subgraph_list):
         #subgraph list is a list of node subgraphs sampled by slice_sampler
-        masked_nodes,masked_pos=self.GCN_MaskGeneration(subgraph_list)
+        if self.fine_tuning_layer:
+            masked_nodes=Variable(torch.LongTensor([[] for ii in range(len(subgraph_list))]))
+        else:
+            masked_nodes,masked_pos=self.GCN_MaskGeneration(subgraph_list)
         # 将节点embedding和关系的embedding初始化，并采样得到
         # context generation
         node_emb = self.gcn_graph_encoder(subgraph_list, masked_nodes)
@@ -314,7 +317,7 @@ class SLiCE(BaseModel):
             try:
                 layer_output = torch.cat((layer_output, output.unsqueeze(1)), 1)#output embedding of each layer
             except NameError:  # FIXME - replaced bare except
-                layer_output = output.unsqueeze(1)
+                layer_output = output.unsqueeze(1).cuda()
 
             if self.fine_tuning_layer:
                 try:
