@@ -9,6 +9,32 @@ from . import load_HIN, load_KG, load_OGB, BEST_CONFIGS
 import datetime
 
 
+def add_reverse_edges(hg, copy_ndata=True, copy_edata=True, ignore_one_type=True):
+    # get node cnt for each ntype
+
+    canonical_etypes = hg.canonical_etypes
+    num_nodes_dict = {ntype: hg.number_of_nodes(ntype) for ntype in hg.ntypes}
+
+    edge_dict = {}
+    for etype in canonical_etypes:
+        u, v = hg.edges(form='uv', order='eid', etype=etype)
+        edge_dict[etype] = (u, v)
+        edge_dict[(etype[2], etype[1] + '-rev', etype[0])] = (v, u)
+    new_hg = dgl.heterograph(edge_dict, num_nodes_dict=num_nodes_dict)
+
+    # handle features
+    if copy_ndata:
+        node_frames = dgl.utils.extract_node_subframes(hg, None)
+        dgl.utils.set_new_frames(new_hg, node_frames=node_frames)
+
+    if copy_edata:
+        for etype in canonical_etypes:
+            edge_frame = hg.edges[etype].data
+            for data_name, value in edge_frame.items():
+                new_hg.edges[etype].data[data_name] = value
+    return new_hg
+
+
 def set_best_config(args):
     configs = BEST_CONFIGS.get(args.task)
     if configs is None:

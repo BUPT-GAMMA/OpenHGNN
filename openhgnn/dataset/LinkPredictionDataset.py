@@ -5,6 +5,7 @@ from dgl.data.utils import load_graphs
 from dgl.data.knowledge_graph import load_data
 from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
+from ..utils import add_reverse_edges
 
 
 @register_dataset('link_prediction')
@@ -134,6 +135,14 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.target_link = [('user', 'user-artist', 'artist')]
             self.node_type = ['user', 'artist', 'tag']
             self.test_edge_type = {'user-artist': 0}
+            g = add_reverse_edges(g)
+            self.meta_paths = [
+                (('user', 'user-artist', 'artist'), ('artist', 'user-artist-rev', 'user')),
+                (('user', 'user-artist', 'artist'), ('artist', 'artist-tag', 'tag'),
+                 ('tag', 'artist-tag-rev', 'artist'), ('artist', 'user-artist-rev', 'user')),
+                (('artist', 'user-artist-rev', 'user'), ('user', 'user-artist', 'artist')),
+                (('artist', 'artist-tag', 'tag'), ('tag', 'artist-tag-rev', 'artist'))
+                ]
 
 
         elif dataset_name == 'HGBl-PubMed':
@@ -143,6 +152,8 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.target_link = [('1', '1_to_1', '1')]
             self.node_type = ['0', '1', '2', '3']
             self.test_edge_type = {'1_to_1': 2}
+            g = add_reverse_edges(g)
+
 
         self.g = g
         self.shift_dict = self.calculate_node_shift()
