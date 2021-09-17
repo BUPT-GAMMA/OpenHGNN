@@ -34,7 +34,6 @@ Method:
 * get_labels()
 
    * return labels
-&
 
 Supported task
 ------------------

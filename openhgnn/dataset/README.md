@@ -4,7 +4,7 @@ A dataset is related to a task, so it is a part of task.
 
 So dataset should load not only a heterograph[DGLGraph], but also some index involving training, validation and testing. In OpenHGNN, we preprocess the feature of dataset outside of model. Specifically, we use a linear layer with bias for each node type to map all node features to a shared feature space. And for no feature nodes, we give a embedding as its feature. Refer to [HeteroFeature](https://openhgnn.readthedocs.io/en/latest/api/layer.html#heterofeature).
 
-#### NodeClassificationDataset
+### NodeClassificationDataset
 
 - ##### RDF_NodeCLassification
 
@@ -46,6 +46,8 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 
 - **HGB_NodeClassification**
 
+  **Note**：The test data labels are randomly replaced to prevent data leakage issues, refer to [HGB](https://github.com/THUDM/HGB).
+
   - HGBn-ACM
 
   | paper | author | subject | term | paper-author | paper-paper | paper-subject | paper-term | Train | Val  | Test |
@@ -78,7 +80,7 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
     - Validation: 64879 papers published in 2018
     - Test: 41939 papers published since 2019
 
-#### LinkPredictionDataset
+### LinkPredictionDataset
 
 - ##### HIN_LinkPrediction
 
@@ -86,9 +88,7 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 
 - **HGBl-LinkPrediction**
 
-  [Source data](https://www.biendata.xyz/hgb/#/datasets)
-
-  The test dataset has been splited.
+  **Note**：The test data labels are randomly replaced to prevent data leakage issues, refer to [HGB](https://github.com/THUDM/HGB).
 
   - HGBl-amazon
 
@@ -112,7 +112,7 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 
   - 'wn18', 'FB15k', 'FB15k-237'
 
-#### RecommendationDataset
+### RecommendationDataset
 
 - **Amazon**
 
