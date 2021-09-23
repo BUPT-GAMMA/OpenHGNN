@@ -63,6 +63,7 @@ SUPPORTED_MODELS = {
     'GTN': 'openhgnn.models.GTN_sparse',
     'MHNF': 'openhgnn.models.MHNF',
     'MAGNN': 'openhgnn.models.MAGNN',
+    'HeGAN':'openhgnn.models.HeGAN',
     'NSHE': 'openhgnn.models.NSHE',
     'NARS': 'openhgnn.models.NARS',
     'RHGNN': 'openhgnn.models.RHGNN',
@@ -73,5 +74,5 @@ SUPPORTED_MODELS = {
     'GAT': 'space4hgnn.homo_models.GAT',
     'homo_GNN': 'space4hgnn.homo_models.homo_GNN',
     'relation_HGNN': 'space4hgnn.relation_models.rel_HGNN',
-    'mp_GNN': 'space4hgnn.metapath_models.mp_GNN'
+    'mp_GNN': 'space4hgnn.metapath_models.mp_GNN'    
 }
