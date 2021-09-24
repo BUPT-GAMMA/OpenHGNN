@@ -372,5 +372,20 @@ class Config(object):
             self.n_user = conf.getint("KGCN", "n_user")
             self.epoch_iter = conf.getint("KGCN", "epoch_iter")
 
+        elif model == 'HeGAN':
+            self.lr_gen = conf.getfloat('HeGAN', 'lr_gen')
+            self.lr_dis = conf.getfloat('HeGAN', 'lr_dis')
+            self.sigma = conf.getfloat('HeGAN', 'sigma')
+            self.n_sample = conf.getint('HeGAN', 'n_sample')
+            self.max_epoch = conf.getint('HeGAN', 'max_epoch')
+            self.epoch_dis = conf.getint('HeGAN', 'epoch_dis')
+            self.epoch_gen = conf.getint('HeGAN', 'epoch_gen')
+            self.wd_dis = conf.getfloat("HeGAN", 'wd_dis')
+            self.wd_gen = conf.getfloat('HeGAN', 'wd_gen')
+            self.mini_batch_flag = conf.getboolean('HeGAN', 'mini_batch_flag')
+            self.validation = conf.getboolean('HeGAN', 'validation')
+            self.emb_size = conf.getint("HeGAN", 'emb_size')
+            self.patience = conf.getint("HeGAN", 'patience')
+
     def __repr__(self):
         return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset

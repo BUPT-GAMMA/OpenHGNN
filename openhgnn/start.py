@@ -27,5 +27,6 @@ SpecificTrainerflow = {
     # 'HGT': 'hgttrainer',
     'NSHE': 'nshetrainer',
     'DMGI': 'DMGI_trainer',
-    'KGCN': 'kgcntrainer'
+    'KGCN': 'kgcntrainer',
+    'HeGAN': 'HeGAN_trainer'
 }
