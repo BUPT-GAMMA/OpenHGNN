@@ -288,7 +288,7 @@ class HGB_NodeClassification(NodeClassificationDataset):
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'paper'
-            num_classes = 4
+            num_classes = 3
             g.nodes['term'].data['h'] = th.eye(g.number_of_nodes('term'))
             self.in_dim = g.ndata['h'][category].shape[1]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
@@ -316,7 +316,7 @@ class HGB_NodeClassification(NodeClassificationDataset):
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'BOOK'
-            num_classes = 8
+            num_classes = 7
             self.has_feature = False
             g = add_reverse_edges(g)
             self.meta_paths = [(('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
