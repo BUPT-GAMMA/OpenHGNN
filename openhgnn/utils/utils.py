@@ -230,7 +230,7 @@ def transform_relation_graph_list(hg, category, identity=True):
     num_edge_type = th.max(etype).item()
     graph_list = []
     for i in range(num_edge_type + 1):
-        e_ids = th.nonzero(etype == i).squeeze()
+        e_ids = th.nonzero(etype == i).squeeze(-1)
         sg = dgl.graph((edges[0][e_ids], edges[1][e_ids]), num_nodes=g.num_nodes())
         sg.edata['w'] = th.ones(sg.num_edges(), device=ctx)
         graph_list.append(sg)
