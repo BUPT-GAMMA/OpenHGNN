@@ -119,10 +119,10 @@ class GCNGraphEncoder(torch.nn.Module):
 
         return node_emb
 
-def get_attn_pad_mask(subgraph_list, pad_id):         
+def get_attn_pad_mask(subgraph_list, pad_id, max_len):         
     #seq_q and seq_k are both all_nodes, which is list(list(subgraph_nodes))                                                                                                                                                                                                                                                                                                                                                                                                           
     batch_size = len(subgraph_list)
-    len_q=subgraph_list[0].num_nodes()
+    len_q=max_len
     # print(batch_size, len_q, len_k)
     pad_attn_mask = []
     for itm in subgraph_list:
@@ -132,6 +132,8 @@ def get_attn_pad_mask(subgraph_list, pad_id):
                 tmp_mask.append(True)
             else:
                 tmp_mask.append(False)
+        if len(tmp_mask)<max_len:
+            tmp_mask=tmp_mask+[True]*(max_len-len(tmp_mask))
         pad_attn_mask.append(tmp_mask)
         # print(tmp_mask)
     # print('mask', len(pad_attn_mask), len(pad_attn_mask[0]))
@@ -310,7 +312,7 @@ class SLiCE(BaseModel):
         # context generation
         node_emb = self.gcn_graph_encoder(subgraph_list, masked_nodes)
         output = node_emb.cuda()
-        enc_self_attn_mask = get_attn_pad_mask(subgraph_list,self.no_nodes)
+        enc_self_attn_mask = get_attn_pad_mask(subgraph_list,self.no_nodes,self.max_length+1)
         # contextual translation
         for layer in self.layers:
             output, enc_self_attn = layer(output, enc_self_attn_mask)

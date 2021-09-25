@@ -20,10 +20,12 @@ Notice:
 2. This sampler is irrelevant to train/valid/test 
 """
 class SLiCESampler(object):
-    def __init__(self,g,num_walks_per_node,
+    def __init__(self,g,g_sample,num_walks_per_node,
         beam_width,max_num_edges,walk_type,path_option,save_path) -> None:
         super().__init__()
-        self.g=g
+        self.g=g_sample
+        self.g_all=g
+        self.g_networkx=dgl.to_networkx(self.g,edge_attrs=['label'])
         self.node_types=dict()
         for node in g.nodes():
             self.node_types[int(node)]=int(g.ndata['_TYPE'][int(node)])
@@ -46,7 +48,6 @@ class SLiCESampler(object):
         Return:
         return a list of sampled node subgraph
         """
-        print("Sampling node subgraphs...")
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
         if not os.path.exists(self.pretrain_path):
@@ -81,37 +82,38 @@ class SLiCESampler(object):
         Parameters:
         seed_edges: List[(int,int)] a list of edge src and dst
         """
-        print("Sampling edge subgraphs...")
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
         if not os.path.exists(self.finetune_path):
             os.makedirs(self.finetune_path)
-        g=self.g
-        walks_by_task_dict = dict()
-        g_networkx=dgl.to_networkx(g,edge_attrs=['label'])
+        g_networkx=self.g_networkx
         all_context=[]
-        for ii,edge in enumerate(seed_edges):
+        for ii,edge in enumerate(seed_edges):#10399 (6682,51)
             src,dst=edge
+            if not self.g_all.has_edges_between(src,dst):   #a false edge
+                label=0
+            else:
+                eid=self.g_all.edge_ids(src,dst)
+                label=int(self.g_all.edata['label'][eid])
             if (src,dst) in self.edge_context_dict:
-                context=self.edge_context_dict[(src,dst)]
-                if isinstance(context[0],list):
-                    all_context.extend(context)
-                else:
-                    all_context.append(context)
+                context,pair=self.edge_context_dict[(src,dst)]
+                all_context.extend(context)
             else:
                 context=self.get_selective_context(g_networkx,src,dst)
                 if len(context) == 0:
-                    context = [src,dst]
+                    context = [src,dst]   
                 this_context=[]
+                this_pair=[]
                 if isinstance(context[0],list):#context has many walks
                     for each in context:
                         edge_context=dgl.node_subgraph(self.g,each)
                         this_context.append(edge_context)
+                        this_pair.append((src,dst,label))
                 else:
                     edge_context=dgl.node_subgraph(self.g,context)
                     this_context.append(edge_context)
-                
-                self.edge_context_dict[(src,dst)]=this_context
+                    this_pair.append((src,dst,label))
+                self.edge_context_dict[(src,dst)]=(this_context,this_pair)
                 all_context.extend(this_context)
         return all_context
     
@@ -221,7 +223,10 @@ class SLiCESampler(object):
         if option == "shortest":
             try:
                 path_node_list = nx.bidirectional_shortest_path(G, source, target)
-                paths.append(path_node_list)
+                if len(path_node_list)<=max_seq_len:
+                    paths.append([source]+[target]+path_node_list[1:-1])
+                else:
+                    paths.append([source]+[target]+path_node_list[1:max_seq_len-1])
             except NetworkXException:
                 return []
 
@@ -321,10 +326,14 @@ class SLiCESampler(object):
 
         # generate false edges of type (false_source, relation, target) for every
         final_edges = positive_edge_list + false_edges
-        final_edges_tuple=list(zip(final_edges,[1]*len(positive_edge_list)+[0]*len(false_edges)))
-        random.shuffle(final_edges_tuple)
-        print("Number of positive and negative edges in total",len(final_edges))
-        (res_edge,res_label)=zip(*final_edges_tuple)
+        labels=[1]*len(positive_edge_list)+[0]*len(false_edges)
+        (res_edge,res_label)=self.shuffle_edge_label(final_edges,labels)
         with open(save_path,'wb') as f:
             pickle.dump((res_edge,res_label),f)
+        return (res_edge,res_label)
+    def shuffle_edge_label(self,edges,labels):
+        edges_tuple=list(zip(edges,labels))
+        random.shuffle(edges_tuple)
+        (res_edge,res_label)=zip(*edges_tuple)
+        
         return (res_edge,res_label)
