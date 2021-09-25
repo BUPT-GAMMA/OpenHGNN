@@ -49,8 +49,15 @@ from ..sampler.SLiCE_sampler import SLiCESampler
 class SLiCETrainer(BaseFlow):
     def __init__(self,args):
         super(SLiCETrainer, self).__init__(args)
-        self.g,_=dgl.load_graphs(self.task.dataset.data_path)
+        self.out_dir=args.outdir
+        self.pretrain_path=os.path.join(self.out_dir,'pretrain/')
+        self.pretrain_save_path=os.path.join(self.pretrain_path,'best_pretrain_model.pt')
+        self.finetune_path=os.path.join(self.out_dir,'finetune/')
+        self.finetune_save_path=os.path.join(self.finetune_path,'best_finetune_model.pt')
+        self.g,_=dgl.load_graphs(os.path.join(self.out_dir,self.data_name,'.bin'))
         self.g=dgl.to_homogeneous(self.g[0],ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
+        # self.g=self.task.dataset.g
+        # self.g=dgl.to_homogeneous(self.g,ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
         self.model=dict()
         self.model['pretrain']=SLiCE.build_model_from_args(self.args,self.g)
         self.model['finetune']=SLiCEFinetuneLayer.build_model_from_args(args)
@@ -71,7 +78,7 @@ class SLiCETrainer(BaseFlow):
         self.batch_size['pretrain']=args.batch_size
         self.batch_size['finetune']=args.ft_batch_size
 
-        self.labels = self.task.get_labels().to(self.device)#g.edata['label']
+        self.labels = self.g.edata['label']
         self.idx=dict()
         #pretrain
         self.node_subgraphs=dict()
@@ -79,11 +86,6 @@ class SLiCETrainer(BaseFlow):
         self.edges=dict()
         self.edges_label=dict()
 
-        self.out_dir=args.outdir
-        self.pretrain_path=os.path.join(self.out_dir,'pretrain/')
-        self.pretrain_save_path=os.path.join(self.pretrain_path,'best_pretrain_model.pt')
-        self.finetune_path=os.path.join(self.out_dir,'finetune/')
-        self.finetune_save_path=os.path.join(self.finetune_path,'best_finetune_model.pt')
         self.graphs=dict()
         self.best_epoch=dict()
         self.is_pretrained=False
@@ -187,7 +189,8 @@ class SLiCETrainer(BaseFlow):
             print("Epoch {}:".format(epoch))
             i=0
             total_len=len(self.node_subgraphs['train'])
-            n_batch=math.ceil(total_len/batch_size)
+            #n_batch=math.ceil(total_len/batch_size)
+            n_batch=1
             bar=tqdm(range(n_batch))
             avg_loss=0
             for batch in bar:
@@ -232,9 +235,10 @@ class SLiCETrainer(BaseFlow):
         batch_size=self.batch_size['finetune']
         for epoch in range(self.n_epochs['finetune']):
             batch=0
-            total_len=len(self.node_subgraphs['train'])
+            total_len=len(self.edges['train'])
             print("Eopch {}:".format(epoch))
-            n_batch=math.ceil(total_len/batch_size)
+            #n_batch=math.ceil(total_len/batch_size)
+            n_batch=1
             bar=tqdm(range(n_batch))
             avg_loss=0
             for batch in bar:
@@ -256,9 +260,10 @@ class SLiCETrainer(BaseFlow):
                     _,layer_output,_=self.model['pretrain'](subgraph_list)
                 pred_scores,_,_=self.model['finetune'](layer_output)
                 loss=F.binary_cross_entropy(pred_scores,torch.tensor(self.edges_label['train'][i:end],dtype=torch.float).reshape(-1,1).cuda())
-                bar.set_description('Epoch{}: Loss:{:.4f}'.format(batch,loss))
-            torch.save(self.model['finetune'],self.finetune_path+'model_'+str(epoch)+'SLiCE.pt')
-            
+                bar.set_description('Batch {}: Loss:{:.3f}'.format(batch,loss))
+            torch.save(self.model['finetune'].state_dict(),self.finetune_path+'model_'+str(epoch)+'SLiCE.pt')
+            avg_loss=avg_loss/n_batch
+            print("AvgLoss: {:.3f}".format(avg_loss))
             early_stop=stopper.loss_step(loss,self.model['finetune'])
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))

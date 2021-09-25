@@ -2,3 +2,5 @@
 *.pickle
 *.pt
 *.bin
+*.zip
+*.json
