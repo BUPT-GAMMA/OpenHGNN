@@ -8,6 +8,7 @@ from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
 from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
+from ..utils import add_reverse_edges
 
 
 @register_dataset('node_classification')
@@ -224,8 +225,8 @@ class HIN_NodeClassification(NodeClassificationDataset):
 
     def get_idx(self, validation=True):
         if 'train_mask' not in self.g.nodes[self.category].data:
+            print("The dataset has no train mask. So split the category nodes randomly. And the ratio of train/test is 9:1.")
             num_nodes = self.g.number_of_nodes(self.category)
-
             n_test = int(num_nodes * 0.2)
             n_train = num_nodes - n_test
 
@@ -291,6 +292,7 @@ class HGB_NodeClassification(NodeClassificationDataset):
             g.nodes['term'].data['h'] = th.eye(g.number_of_nodes('term'))
             self.in_dim = g.ndata['h'][category].shape[1]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+            g = add_reverse_edges(g)
             self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')),
                                (('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper')),
                                (('paper', 'paper-term', 'term'), ('term', 'term-paper', 'paper'))]
@@ -302,6 +304,7 @@ class HGB_NodeClassification(NodeClassificationDataset):
             num_classes = 4
             g.nodes['venue'].data['h'] = th.eye(g.number_of_nodes('venue'))
             self.in_dim = g.ndata['h'][category].shape[1]
+            g = add_reverse_edges(g)
             self.meta_paths = [(('author', 'author-paper', 'paper'), ('paper', 'paper-author', 'author')),
                                (('author', 'author-paper', 'paper'), ('paper', 'paper-term', 'term'),
                                 ('term', 'term-paper', 'paper'), ('paper', 'paper-author', 'author')),
@@ -315,6 +318,7 @@ class HGB_NodeClassification(NodeClassificationDataset):
             category = 'BOOK'
             num_classes = 8
             self.has_feature = False
+            g = add_reverse_edges(g)
             self.meta_paths = [(('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
                                 ('ORGANIZATION', 'ORGANIZATION-to-MUSIC', 'MUSIC'),
                                 ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')),
@@ -331,6 +335,7 @@ class HGB_NodeClassification(NodeClassificationDataset):
             num_classes = 5
             g.nodes['keyword'].data['h'] = th.eye(g.number_of_nodes('keyword'))
             self.in_dim = g.ndata['h'][category].shape[1]
+            g = add_reverse_edges(g)
             self.meta_paths = [(('movie', 'movie->actor', 'actor'), ('actor', 'actor->movie', 'movie')),
                                (('movie', 'movie->director', 'director'), ('director', 'director->movie', 'movie')),
                                (('movie', 'movie->keyword', 'keyword'), ('keyword', 'keyword->movie', 'movie'))]
