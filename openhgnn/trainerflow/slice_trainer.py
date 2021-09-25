@@ -54,7 +54,7 @@ class SLiCETrainer(BaseFlow):
         self.pretrain_save_path=os.path.join(self.pretrain_path,'best_pretrain_model.pt')
         self.finetune_path=os.path.join(self.out_dir,'finetune/')
         self.finetune_save_path=os.path.join(self.finetune_path,'best_finetune_model.pt')
-        self.g,_=dgl.load_graphs(os.path.join(self.out_dir,self.data_name,'.bin'))
+        self.g,_=dgl.load_graphs(os.path.join(self.out_dir,self.args.data_name+'.bin'))
         self.g=dgl.to_homogeneous(self.g[0],ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
         # self.g=self.task.dataset.g
         # self.g=dgl.to_homogeneous(self.g,ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
@@ -183,14 +183,14 @@ class SLiCETrainer(BaseFlow):
         stopper=EarlyStopping(self.patience)
         batch_size=self.batch_size['pretrain']
         self.model['pretrain'].train()
+        self.is_pretrained=True
         if os.path.exists(self.pretrain_save_path):
             pass
         for epoch in range(self.n_epochs['pretrain']):
             print("Epoch {}:".format(epoch))
             i=0
             total_len=len(self.node_subgraphs['train'])
-            #n_batch=math.ceil(total_len/batch_size)
-            n_batch=1
+            n_batch=math.ceil(total_len/batch_size)
             bar=tqdm(range(n_batch))
             avg_loss=0
             for batch in bar:
@@ -214,14 +214,17 @@ class SLiCETrainer(BaseFlow):
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))
                 break
-        self.is_pretrained=True
+            self.model['pretrain'].set_fine_tuning()
+            self._test_step()
+            self.model['pretrain'].fine_tuning_layer=False
+        
         self.best_epoch['pretrain']=epoch
         torch.save(self.model['pretrain'].state_dict(),self.pretrain_save_path)
         print("Evaluating for pretraining...")
         self.model['pretrain'].eval()
-        self.model['pretrain'].set_fine_tuning()
+        
 
-        self._test_step()
+        
     def finetune(self):
         if not os.path.exists(self.pretrain_save_path):
             print("Model not pretrained!")
@@ -229,6 +232,7 @@ class SLiCETrainer(BaseFlow):
             ck_pt=torch.load(self.pretrain_save_path)
         self.model['pretrain'].load_state_dict(ck_pt)
         self.model['pretrain'].eval()
+        self.model['pretrain'].set_fine_tuning()
         self.model['finetune'].train()
         print("Start Finetuning...")
         stopper=EarlyStopping(self.patience)
@@ -237,8 +241,7 @@ class SLiCETrainer(BaseFlow):
             batch=0
             total_len=len(self.edges['train'])
             print("Eopch {}:".format(epoch))
-            #n_batch=math.ceil(total_len/batch_size)
-            n_batch=1
+            n_batch=math.ceil(total_len/batch_size)
             bar=tqdm(range(n_batch))
             avg_loss=0
             for batch in bar:

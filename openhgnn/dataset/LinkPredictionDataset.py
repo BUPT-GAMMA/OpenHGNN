@@ -97,7 +97,7 @@ class SLiCE_LinkPrediction(LinkPredictionDataset):
     def __init__(self, dataset_name):
         super(SLiCE_LinkPrediction, self).__init__()
         self.data_name=dataset_name
-        self.data_path='openhgnn/output/SLiCE/'+self.data_name+'.bin'
+        self.data_path='openhgnn/output/SLiCE/'+self.data_name+'/'+self.data_name+'.bin'
         self.g = self.load_HIN()
         self.has_feature = True
         self.edges=dict()
