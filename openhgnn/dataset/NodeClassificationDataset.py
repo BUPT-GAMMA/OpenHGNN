@@ -288,23 +288,24 @@ class HGB_NodeClassification(NodeClassificationDataset):
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'paper'
-            num_classes = 4
-            g.nodes['term'].data['h'] = th.eye(g.number_of_nodes('term'))
-            self.in_dim = g.ndata['h'][category].shape[1]
+            num_classes = 3
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
-            g = add_reverse_edges(g)
             self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')),
                                (('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper')),
+                               (('paper', 'paper-cite-paper', 'paper'), ('paper', 'paper-author', 'author'),
+                                ('author', 'author-paper', 'paper')),
+                               (('paper', 'paper-cite-paper', 'paper'), ('paper', 'paper-subject', 'subject'),
+                                ('subject', 'subject-paper', 'paper')),
+                               (('paper', 'paper-ref-paper', 'paper'), ('paper', 'paper-author', 'author'),
+                                ('author', 'author-paper', 'paper')),
+                               (('paper', 'paper-ref-paper', 'paper'), ('paper', 'paper-subject', 'subject'),
+                                ('subject', 'subject-paper', 'paper')),
                                (('paper', 'paper-term', 'term'), ('term', 'term-paper', 'paper'))]
-
         elif dataset_name == 'HGBn-DBLP':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'author'
             num_classes = 4
-            g.nodes['venue'].data['h'] = th.eye(g.number_of_nodes('venue'))
-            self.in_dim = g.ndata['h'][category].shape[1]
-            g = add_reverse_edges(g)
             self.meta_paths = [(('author', 'author-paper', 'paper'), ('paper', 'paper-author', 'author')),
                                (('author', 'author-paper', 'paper'), ('paper', 'paper-term', 'term'),
                                 ('term', 'term-paper', 'paper'), ('paper', 'paper-author', 'author')),
@@ -316,29 +317,38 @@ class HGB_NodeClassification(NodeClassificationDataset):
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'BOOK'
-            num_classes = 8
+            num_classes = 7
             self.has_feature = False
             g = add_reverse_edges(g)
-            self.meta_paths = [(('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+            self.meta_paths = [(('BOOK', 'BOOK-and-BOOK', 'BOOK'),),
+                               (('BOOK', 'BOOK-to-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')),
+                               (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                ('ORGANIZATION', 'ORGANIZATION-in-FILM-rev', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')),
+                               (('BOOK', 'BOOK-on-LOCATION', 'LOCATION'), ('LOCATION', 'MUSIC-on-LOCATION-rev', 'MUSIC'),
+                                ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')),
+                               (('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'), ('PEOPLE', 'PEOPLE-to-BOOK', 'BOOK')),
+                               (('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'), ('PEOPLE', 'PEOPLE-to-SPORTS', 'SPORTS'),
+                                ('SPORTS', 'BOOK-on-SPORTS-rev', 'BOOK')),
+                               (('BOOK', 'BUSINESS-about-BOOK-rev', 'BUSINESS'),
+                                ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK')),
+                               (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
                                 ('ORGANIZATION', 'ORGANIZATION-to-MUSIC', 'MUSIC'),
                                 ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')),
                                (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
                                 ('ORGANIZATION', 'ORGANIZATION-for-BUSINESS', 'BUSINESS'),
-                                ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK'))]
+                                ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK'))
+                               ]
 
-            #self.in_dim = g.ndata['h'][category].shape[1]
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         elif dataset_name == 'HGBn-IMDB':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'movie'
             num_classes = 5
-            g.nodes['keyword'].data['h'] = th.eye(g.number_of_nodes('keyword'))
-            self.in_dim = g.ndata['h'][category].shape[1]
-            g = add_reverse_edges(g)
             self.meta_paths = [(('movie', 'movie->actor', 'actor'), ('actor', 'actor->movie', 'movie')),
                                (('movie', 'movie->director', 'director'), ('director', 'director->movie', 'movie')),
                                (('movie', 'movie->keyword', 'keyword'), ('keyword', 'keyword->movie', 'movie'))]
+
             # RuntimeError: result type Float can't be cast to the desired output type Long
             self.multi_label = True
         else:

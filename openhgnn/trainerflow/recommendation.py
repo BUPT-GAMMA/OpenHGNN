@@ -18,20 +18,18 @@ class Recommendation(BaseFlow):
         super(Recommendation, self).__init__(args)
 
         self.target_link = self.task.dataset.target_link
-        self.args.has_feature = self.task.dataset.has_feature
-        self.has_feature = self.task.dataset.has_feature
         self.args.out_node_type = self.task.dataset.out_ntypes
         self.args.out_dim = self.args.hidden_dim
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
-        self.reg_weight = 0
+        self.reg_weight = 0.1
 
         self.metric = ['recall', 'ndcg']
         self.val_metric = 'recall'
         # self.topk_list = [5, 10, 20, 50, 100]
         self.topk = 20
-        self.evaluator = self.task.get_evaluator(self.metric)
+        #self.evaluator = self.task.get_evaluator(self.metric)
 
         self.optimizer = (
             th.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -59,10 +57,10 @@ class Recommendation(BaseFlow):
         self.negative_graph = self.train_neg_hg.to(self.device)
         self.positive_graph = self.train_hg.edge_type_subgraph([self.target_link])
         # generage complete user-item graph for evaluation
-        src, dst = th.arange(self.num_user), th.arange(self.num_item)
-        src = src.repeat_interleave(self.num_item)
-        dst = dst.repeat(self.num_user)
-        self.eval_graph = dgl.heterograph({('user', 'user-item', 'item'): (src, dst)}, {'user': self.num_user, 'item': self.num_item}).to(self.device)
+        # src, dst = th.arange(self.num_user), th.arange(self.num_item)
+        # src = src.repeat_interleave(self.num_item)
+        # dst = dst.repeat(self.num_user)
+        # self.eval_graph = dgl.heterograph({('user', 'user-item', 'item'): (src, dst)}, {'user': self.num_user, 'item': self.num_item}).to(self.device)
         self.preprocess_feature()
         return
 
@@ -147,9 +145,10 @@ class Recommendation(BaseFlow):
             h_dict = self.input_feature()
             embedding = self.model(self.hg, h_dict)
 
-            score_matrix = self.ScorePredictor(self.eval_graph, embedding)
-            score_matrix = score_matrix.detach().cpu().numpy()
-            score_matrix = np.reshape(score_matrix, (self.num_user, self.num_item))
+            # score_matrix = self.ScorePredictor(self.eval_graph, embedding)
+            # score_matrix = score_matrix.detach().cpu().numpy()
+            # score_matrix = np.reshape(score_matrix, (self.num_user, self.num_item))
+            score_matrix = (embedding['user'] @ embedding['item'].T).detach().cpu().numpy()
 
             train_u, train_i = self.positive_graph.edges(etype='user-item')[0].cpu().numpy(), self.positive_graph.edges(etype='user-item')[1].cpu().numpy()
             score_matrix[train_u, train_i] = np.NINF

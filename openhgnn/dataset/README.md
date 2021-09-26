@@ -50,9 +50,9 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 
   - HGBn-ACM
 
-  | paper | author | subject | term | paper-author | paper-paper | paper-subject | paper-term | Train | Val  | Test |
-  | ----- | ------ | ------- | ---- | ------------ | ----------- | ------------- | ---------- | ----- | ---- | ---- |
-  | 3025  | 5959   | 56      | 1902 | 9949         | 5543        | 3025          | 255619     | 726   | 907  | 2118 |
+  | paper | author | subject | term | paper-author | paper-paper | paper-subject | paper-term | Val  | Test |
+  | ----- | ------ | ------- | ---- | ------------ | ----------- | ------------- | ---------- | ---- | ---- |
+  | 3025  | 5959   | 56      | 1902 | 9949         | 5343        | 3025          | 255619     | 907  | 2118 |
 
   - HGBn-IMDB
 

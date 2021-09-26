@@ -30,7 +30,7 @@ class Config(object):
         self.path = {'output_modelfold': './output/models/',
                      'input_fold': './dataset/'+self.dataset+'/',
                      'temp_fold': './output/temp/'+self.model+'/'}
-
+        self.optimizer = 'Adam'
         if model == "NSHE":
             self.dim_size = {}
             self.dim_size['emd'] = conf.getint("NSHE", "emd_dim")

@@ -27,9 +27,8 @@ class LinkPrediction(BaseFlow):
         self.model = self.model.to(self.device)
 
         self.evaluator = self.task.get_evaluator('roc_auc')
-        self.optimizer = (
-            th.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-        )
+        self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
