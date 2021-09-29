@@ -8,6 +8,11 @@ from ..utils import get_nodes_dict
 
 
 class BaseFlow(ABC):
+    candidate_optimizer = {
+        'Adam': torch.optim.Adam,
+        'SGD': torch.optim.SGD
+    }
+
     def __init__(self, args):
         super(BaseFlow, self).__init__()
         self.evaluator = None

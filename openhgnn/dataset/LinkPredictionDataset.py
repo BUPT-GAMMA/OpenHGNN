@@ -182,6 +182,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.test_edge_type = {'user-artist': 0}
             g = add_reverse_edges(g)
             self.meta_paths = [
+                (('user', 'user-user', 'user'),),
                 (('user', 'user-artist', 'artist'), ('artist', 'user-artist-rev', 'user')),
                 (('user', 'user-artist', 'artist'), ('artist', 'artist-tag', 'tag'),
                  ('tag', 'artist-tag-rev', 'artist'), ('artist', 'user-artist-rev', 'user')),

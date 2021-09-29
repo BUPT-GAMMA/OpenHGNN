@@ -41,7 +41,7 @@ class NodeClassification(BaseFlow):
 
         self.evaluator = self.task.get_evaluator('f1')
 
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+        self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
         self.train_idx, self.valid_idx, self.test_idx = self.task.get_idx()
         self.labels = self.task.get_labels().to(self.device)
