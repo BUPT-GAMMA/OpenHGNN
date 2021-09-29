@@ -172,7 +172,7 @@ class HIN_NodeClassification(NodeClassificationDataset):
             category = 'A'
             g = dataset[0].long()
             num_classes = 4
-            self.in_dim = g.ndata['feat'][category].shape[1]
+            self.in_dim = g.ndata['h'][category].shape[1]
 
         elif name_dataset == 'imdb4MAGNN':
             dataset = AcademicDataset(name='imdb4MAGNN', raw_dir='')
@@ -204,6 +204,12 @@ class HIN_NodeClassification(NodeClassificationDataset):
             category = 'author'
             g = dataset[0].long()
             num_classes = 4
+        elif name_dataset == 'yelp4HeGAN':
+            # which is used in HeGAN
+            dataset = AcademicDataset(name='yelp4HeGAN', raw_dir='')
+            category = 'business'
+            g = dataset[0].long()
+            num_classes = 3
         elif name_dataset in ['acm_han', 'acm_han_raw']:
             if name_dataset == 'acm_han':
                 pass
@@ -225,7 +231,8 @@ class HIN_NodeClassification(NodeClassificationDataset):
 
     def get_idx(self, validation=True):
         if 'train_mask' not in self.g.nodes[self.category].data:
-            print("The dataset has no train mask. So split the category nodes randomly. And the ratio of train/test is 9:1.")
+            print("The dataset has no train mask. "
+                  "So split the category nodes randomly. And the ratio of train/test is 9:1.")
             num_nodes = self.g.number_of_nodes(self.category)
             n_test = int(num_nodes * 0.2)
             n_train = num_nodes - n_test
@@ -323,7 +330,7 @@ class HGB_NodeClassification(NodeClassificationDataset):
             self.meta_paths = [(('BOOK', 'BOOK-and-BOOK', 'BOOK'),),
                                (('BOOK', 'BOOK-to-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')),
                                (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
-                                ('ORGANIZATION', 'ORGANIZATION-in-FILM-rev', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')),
+                                ('ORGANIZATION', 'ORGANIZATION-in-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')),
                                (('BOOK', 'BOOK-on-LOCATION', 'LOCATION'), ('LOCATION', 'MUSIC-on-LOCATION-rev', 'MUSIC'),
                                 ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')),
                                (('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'), ('PEOPLE', 'PEOPLE-to-BOOK', 'BOOK')),
