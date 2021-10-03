@@ -92,7 +92,7 @@ class GraphSampler2:
                         d[et][0].append(src)
                         d[et][1].append(dst)
 
-        return dgl.heterograph(d, {nt: len(self.hg_dict[nt].keys()) for nt in self.hg.keys()})
+        return dgl.heterograph(d, {nt: len(self.hg_dict[nt].keys()) for nt in self.hg_dict.keys()})
 
 class GraphSampler:
     def __init__(self, hg, k):
@@ -153,6 +153,7 @@ class GraphSampler:
                         d[et][1].append(dst)
 
         return dgl.heterograph(d, {nt: self.hg.number_of_nodes(nt) for nt in self.hg.ntypes})
+
 
 @register_flow('HeGAN_trainer')
 class HeGANTrainer(BaseFlow):
@@ -267,8 +268,8 @@ class HeGANTrainer(BaseFlow):
         self.model.discriminator.eval()
 
         with torch.no_grad():
-            dis_emb = self.model.discriminator.d[self.category]
-            gen_emb = self.model.generator.d[self.category]
+            dis_emb = self.model.discriminator.nodes_embedding[self.category]
+            gen_emb = self.model.generator.nodes_embedding[self.category]
 
             dis_metric = self.evaluator(dis_emb.cpu(), self.labels.cpu())
             gen_metric = self.evaluator(gen_emb.cpu(), self.labels.cpu())

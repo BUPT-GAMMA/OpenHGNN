@@ -27,7 +27,7 @@ class HeGAN(BaseModel):
         super().__init__()
 
         self.generator = Generator(emb_size, hg)
-        self.nodes_embeddingiscriminator = Discriminator(emb_size, hg)
+        self.discriminator = Discriminator(emb_size, hg)
 
     def forward(self, *args):
         pass
@@ -37,6 +37,7 @@ class HeGAN(BaseModel):
 
     def extra_loss(self):
         pass
+
 
 class Generator(nn.Module):
     r"""
@@ -239,7 +240,7 @@ class Discriminator(nn.Module):
         with hg.local_scope():
             for et in hg.canonical_etypes:
                 hg.apply_edges(lambda edges: {'s': edges.src['h'].unsqueeze(1).matmul(edges.data['e']).reshape(hg.num_edges(et), 64)}, etype=et)
-                if hg.edata['f'] is None:
+                if len(hg.edata['f']) == 0:
                     hg.apply_edges(lambda edges: {'score': edges.data['s'].multiply(edges.dst['h'])}, etype=et)
                 else:
                     hg.apply_edges(lambda edges: {'score': edges.data['s'].multiply(edges.data['f'])}, etype=et)
