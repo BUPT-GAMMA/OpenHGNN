@@ -373,8 +373,9 @@ class HGB_NodeClassification(NodeClassificationDataset):
             train_idx = th.tensor(train.indices)
             test_idx = th.tensor(test.indices)
             if validation:
-                valid_idx = train_idx[:len(train_idx) // 5]
-                train_idx = train_idx[len(train_idx) // 5:]
+                random_int = th.randperm(len(train_idx))
+                valid_idx = train_idx[random_int[:len(train_idx) // 5]]
+                train_idx = train_idx[random_int[len(train_idx) // 5:]]
             else:
                 valid_idx = train_idx
                 train_idx = train_idx
@@ -389,8 +390,9 @@ class HGB_NodeClassification(NodeClassificationDataset):
                     valid_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
                     pass
                 else:
-                    valid_idx = train_idx[:len(train_idx) // 5]
-                    train_idx = train_idx[len(train_idx) // 5:]
+                    random_int = th.randperm(len(train_idx))
+                    valid_idx = train_idx[random_int[:len(train_idx) // 5]]
+                    train_idx = train_idx[random_int[len(train_idx) // 5:]]
             else:
                 valid_idx = train_idx
                 train_idx = train_idx
