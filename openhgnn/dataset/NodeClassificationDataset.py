@@ -241,8 +241,9 @@ class HIN_NodeClassification(NodeClassificationDataset):
             train_idx = th.tensor(train.indices)
             test_idx = th.tensor(test.indices)
             if validation:
-                val_idx = train_idx[:len(train_idx) // 10]
-                train_idx = train_idx[len(train_idx) // 10:]
+                random_int = th.randperm(len(train_idx))
+                val_idx = train_idx[random_int[:len(train_idx) // 10]]
+                train_idx = train_idx[random_int[len(train_idx) // 10:]]
             else:
                 val_idx = train_idx
                 train_idx = train_idx
@@ -257,8 +258,9 @@ class HIN_NodeClassification(NodeClassificationDataset):
                     val_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
                     pass
                 else:
-                    val_idx = train_idx[:len(train_idx) // 10]
-                    train_idx = train_idx[len(train_idx) // 10:]
+                    random_int = th.randperm(len(train_idx))
+                    val_idx = train_idx[random_int[:len(train_idx) // 10]]
+                    train_idx = train_idx[random_int[len(train_idx) // 10:]]
             else:
                 val_idx = train_idx
                 train_idx = train_idx
