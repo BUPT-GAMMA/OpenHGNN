@@ -123,8 +123,9 @@ class RDF_NodeClassification(NodeClassificationDataset):
         train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
         test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
         if validation:
-            val_idx = train_idx[:len(train_idx) // 5]
-            train_idx = train_idx[len(train_idx) // 5:]
+            random_int = th.randperm(len(train_idx))
+            val_idx = train_idx[random_int[:len(train_idx) // 5]]
+            train_idx = train_idx[random_int[len(train_idx) // 5:]]
         else:
             val_idx = train_idx
             train_idx = train_idx
