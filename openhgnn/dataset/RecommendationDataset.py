@@ -52,15 +52,33 @@ class HINRecommendation(RecommendationDataset):
         self.dataset_name = dataset_name
         self.num_neg = 20
         #self.neg_dir = os.path.join(self.raw_dir, dataset_name, 'neg_{}.bin'.format(self.num_neg))
-        dataset = AcademicDataset(name='yelp4rec', raw_dir='')
-        self.g = dataset[0].long()
-        self.target_link = 'user-item'
-        self.target_link_r = 'item-user'
-        self.out_ntypes = ['user', 'item']
-        self.has_feature = False
+        if dataset_name == 'yelp4rec':
+            dataset = AcademicDataset(name='yelp4rec', raw_dir='')
+            self.g = dataset[0].long()
+            self.target_link = 'user-item'
+            self.target_link_r = 'item-user'
+            self.user_name = 'user'
+            self.item_name = 'item'
+
+        elif dataset_name == 'yelp4HeGAN':
+            dataset = AcademicDataset(name='yelp4HeGAN', raw_dir='')
+            self.g = dataset[0].long()
+            self.target_link = 'usb'
+            self.target_link_r = 'bus'
+            self.user_name = 'user'
+            self.item_name = 'business'
+
+        elif dataset_name == 'DoubanMovie':
+            dataset = AcademicDataset(name='DoubanMovie', raw_dir='')
+            self.g = dataset[0].long()
+            self.target_link = 'user-item'
+            self.target_link_r = 'item-user'
+            self.user_name = 'user'
+            self.item_name = 'item'
+
+        self.out_ntypes = [self.user_name, self.item_name]
         # self.process()
         # self.neg_g = self.construct_negative_graph(self.g)
-
 
     def load_HIN(self, dataset_name):
         g, _ = dgl.load_graphs(dataset_name)
@@ -79,22 +97,27 @@ class HINRecommendation(RecommendationDataset):
     #     from dgl.data.utils import save_graphs
     #     save_graphs(f"./openhgnn/dataset/{self.dataset_name}.bin", hg)
 
-    def get_idx(self):
-        val_mask = self.g.edges[self.target_link].data['val_mask'].squeeze()
-        val_index = th.nonzero(val_mask).squeeze()
-        val_edge = self.g.find_edges(val_index, self.target_link)
-
+    def get_idx(self, validation=True):
         test_mask = self.g.edges[self.target_link].data['test_mask'].squeeze()
         test_index = th.nonzero(test_mask).squeeze()
         test_edge = self.g.find_edges(test_index, self.target_link)
 
-        val_graph = dgl.heterograph({('user', 'user-item', 'item'): val_edge},
-                                         {ntype: self.g.number_of_nodes(ntype) for ntype in ['user', 'item']})
-        test_graph = dgl.heterograph({('user', 'user-item', 'item'): test_edge},
-                                          {ntype: self.g.number_of_nodes(ntype) for ntype in ['user', 'item']})
+        test_graph = dgl.heterograph({(self.user_name, self.target_link, self.item_name): test_edge},
+                                     {ntype: self.g.number_of_nodes(ntype) for ntype in self.out_ntypes})
+        if validation:
+            val_mask = self.g.edges[self.target_link].data['val_mask'].squeeze()
+            val_index = th.nonzero(val_mask).squeeze()
+            val_edge = self.g.find_edges(val_index, self.target_link)
 
-        train_graph = dgl.remove_edges(self.g, th.cat((val_index, test_index)), self.target_link)
-        train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), self.target_link_r)
+            val_graph = dgl.heterograph({(self.user_name, self.target_link, self.item_name): val_edge},
+                                             {ntype: self.g.number_of_nodes(ntype) for ntype in self.out_ntypes})
+
+            train_graph = dgl.remove_edges(self.g, th.cat((val_index, test_index)), self.target_link)
+            train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), self.target_link_r)
+        else:
+            train_graph = dgl.remove_edges(self.g, test_index, self.target_link)
+            train_graph = dgl.remove_edges(train_graph, test_index, self.target_link_r)
+            val_graph = train_graph
 
         return train_graph, val_graph, test_graph
 
@@ -111,11 +134,9 @@ class HINRecommendation(RecommendationDataset):
             # negative_edges = negative_sampler(train_g.to('cpu'), {
             #     self.target_link: th.arange(10)})
             neg_g = dgl.heterograph(negative_edges,
-                                    {ntype: self.g.number_of_nodes(ntype) for ntype in ['user', 'item']})
+                                    {ntype: self.g.number_of_nodes(ntype) for ntype in self.out_ntypes})
             dgl.save_graphs(fname, neg_g)
             return neg_g
-
-        
 
 
 @register_dataset('test_link_prediction')
