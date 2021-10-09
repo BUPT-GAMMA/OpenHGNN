@@ -1,5 +1,3 @@
-import copy
-import json
 import dgl
 import numpy as np
 import torch as th
@@ -7,7 +5,7 @@ from tqdm import tqdm
 import torch
 from openhgnn.models import build_model
 from . import BaseFlow, register_flow
-from ..utils import extract_embed, EarlyStopping
+from ..utils import EarlyStopping
 
 
 @register_flow("recommendation")
@@ -38,15 +36,13 @@ class Recommendation(BaseFlow):
         self.max_epoch = args.max_epoch
         
         self.num_neg = self.task.dataset.num_neg
-        self.num_user = self.hg.num_nodes('user')
-        self.num_item = self.hg.num_nodes('item')
-
-
+        self.user_name = self.task.dataset.user_name
+        self.item_name = self.task.dataset.item_name
+        self.num_user = self.hg.num_nodes(self.user_name)
+        self.num_item = self.hg.num_nodes(self.user_name)
         self.train_eid_dict = {
             etype: self.hg.edges(etype=etype, form='eid')
             for etype in self.hg.canonical_etypes}
-        # self.positive_graph = self.hg
-        # self.negative_graph = self.task.dataset.neg_g.to(self.device)
 
     def preprocess(self):
         self.train_hg, self.val_hg, self.test_hg = self.task.get_idx()
@@ -88,14 +84,14 @@ class Recommendation(BaseFlow):
         print(f"Valid {self.val_metric} = {stopper.best_score: .4f}")
         stopper.load_model(self.model)
         test_metric_dic = self._test_step(split="test")
-        val_metric_dic = self._test_step(split="val")
+        #val_metric_dic = self._test_step(split="val")
         print(f"Test Recall@K = {test_metric_dic['recall']: .4f}, NDCG@K = {test_metric_dic['ndcg']: .4f}")
-        result = dict(Test_metric=test_metric_dic, Val_metric=val_metric_dic)
-        with open(self.args.results_path, 'w') as f:
-            json.dump(result, f)
-            f.write('\n')
+        # result = dict(Test_metric=test_metric_dic, Val_metric=val_metric_dic)
+        # with open(self.args.results_path, 'w') as f:
+        #     json.dump(result, f)
+        #     f.write('\n')
         # self.task.dataset.save_results(result, self.args.results_path)
-        return result
+        return test_metric_dic['recall'], test_metric_dic['ndcg'], epoch
         # return dict(Test_metric=test_metric_dic, Val_metric=val_metric_dic)
 
     def loss_calculation(self, positive_graph, negative_graph, embedding):
@@ -107,11 +103,11 @@ class Recommendation(BaseFlow):
 
     def ScorePredictor(self, edge_subgraph, x):
         with edge_subgraph.local_scope():
-            for ntype in ['user', 'item']:
+            for ntype in [self.user_name, self.item_name]:
                 edge_subgraph.nodes[ntype].data['x'] = x[ntype]
             edge_subgraph.apply_edges(
-                dgl.function.u_dot_v('x', 'x', 'score'), etype='user-item')
-            score = edge_subgraph.edges['user-item'].data['score']
+                dgl.function.u_dot_v('x', 'x', 'score'), etype=self.target_link)
+            score = edge_subgraph.edges[self.target_link].data['score']
             return score.squeeze()
 
     def regularization_loss(self, embedding):
@@ -145,12 +141,9 @@ class Recommendation(BaseFlow):
             h_dict = self.input_feature()
             embedding = self.model(self.hg, h_dict)
 
-            # score_matrix = self.ScorePredictor(self.eval_graph, embedding)
-            # score_matrix = score_matrix.detach().cpu().numpy()
-            # score_matrix = np.reshape(score_matrix, (self.num_user, self.num_item))
-            score_matrix = (embedding['user'] @ embedding['item'].T).detach().cpu().numpy()
+            score_matrix = (embedding[self.user_name] @ embedding[self.item_name].T).detach().cpu().numpy()
 
-            train_u, train_i = self.positive_graph.edges(etype='user-item')[0].cpu().numpy(), self.positive_graph.edges(etype='user-item')[1].cpu().numpy()
+            train_u, train_i = self.positive_graph.edges(etype=self.target_link)[0].cpu().numpy(), self.positive_graph.edges(etype=self.target_link)[1].cpu().numpy()
             score_matrix[train_u, train_i] = np.NINF
             ind = np.argpartition(score_matrix, -self.topk) # (num_users, num_items)
             ind = ind[:, -self.topk:] # (num_users, k), indicating non-ranked rec list 
@@ -162,75 +155,32 @@ class Recommendation(BaseFlow):
 
             for m in self.metric:
                 if m == 'recall':
-                    metric_k = recall_at_k(pred_list, test_graph, self.topk)
+                    metric_k = recall_at_k(pred_list, test_graph, self.topk, self.user_name, self.target_link)
                 elif m == 'ndcg':
-                    metric_k = ndcg_at_k(pred_list, test_graph, self.topk)
+                    metric_k = ndcg_at_k(pred_list, test_graph, self.topk, self.user_name, self.target_link)
                 else:
                     raise NotImplementedError
                 metric_dic[m] = metric_k
             
             return metric_dic
 
-            # precision_list = {k: [] for k in self.topk_list}
-            # recall_list = {k: [] for k in self.topk_list}
 
-            # all_items = set(range(self.num_item))
-            # for user in self.positive_graph.nodes(ntype='user'):
-            #     candidate_items = th.tensor(list(all_items - set(self.positive_graph.successors(user, etype='user-item'))), dtype=user.dtype).to(self.device)
-            #     users = user.repeat_interleave(len(candidate_items))
-            #     eval_graph = dgl.heterograph({('user', 'user-item', 'item'): (users, candidate_items)}, {'user': self.num_user, 'item': self.num_item}).to(self.device)
-            #     scores = self.ScorePredictor(eval_graph, embedding).cpu().numpy()
-            #     candidate_items = candidate_items.cpu().numpy()
-            #     item_score_map = {}
-            #     for i in range(len(scores)):
-            #         item_score_map[candidate_items[i]] = scores[i]
-
-            #     item_score_pair_sorted = sorted(item_score_map.items(), key=lambda x: x[1], reverse=True)
-            #     item_sorted = [i[0] for i in item_score_pair_sorted]
-            #     print(item_sorted[:10])
-
-            #     test_items = set(test_graph.successors(user, etype='user-item').cpu().numpy())
-            #     if len(test_items) > 0:
-            #         for k in self.topk_list:
-            #             hit_num = len(set(item_sorted[:k]) & test_items)
-            #             precision_list[k].append(hit_num / k)
-            #             recall_list[k].append(hit_num / len(test_items))
-            
-            # precision = [np.mean(precision_list[k]) for k in self.topk_list]
-            # recall = [np.mean(recall_list[k]) for k in self.topk_list]
-
-            # return precision, recall
-
-
-            # p_score = self.ScorePredictor(self.pos_test_graph, embedding).unsqueeze(0)
-            # n_score = self.ScorePredictor(self.neg_test_graph, embedding)
-            # n_score = th.reshape(n_score, (99, -1))
-            # matrix = th.cat((p_score, n_score), 0).t().cpu().numpy()
-            # y_true = np.zeros_like(matrix)
-            # y_true[:, 0] = 1
-            # # _, indices = torch.sort(matrix, dim=0, descending=True)
-            # # rank = th.nonzero(indices == 0, as_tuple=True)[0]
-            # from sklearn.metrics import ndcg_score
-            # metric = ndcg_score(y_true, matrix, k=10)
-
-        # return metric
-
-
-def recall_at_k(pred_list, test_graph, k):
+def recall_at_k(pred_list, test_graph, k, user_name, target_link):
     sum = 0.0
     test_users = 0
-    for user in range(test_graph.num_nodes('user')):
-        test_items_set = set(test_graph.successors(user, etype='user-item').cpu().numpy())
+    for user in range(test_graph.num_nodes(user_name)):
+        test_items_set = set(test_graph.successors(user, etype=target_link).cpu().numpy())
         pred_items_set = set(pred_list[user][:k])
         if len(test_items_set) != 0:
             sum += len(test_items_set & pred_items_set) / float(len(test_items_set))
             test_users += 1
     return sum / test_users
 
-def ndcg_at_k(pred_list, test_graph, k):
+
+def ndcg_at_k(pred_list, test_graph, k, user_name, target_link):
     ndcg = []
-    for user in range(test_graph.num_nodes('user')):
-        test_items_set = set(test_graph.successors(user, etype='user-item').cpu().numpy())
+    for user in range(test_graph.num_nodes(user_name)):
+        test_items_set = set(test_graph.successors(user, etype=target_link).cpu().numpy())
         pred_items_set = pred_list[user][:k]
         hit_list = [1 if i in pred_items_set else 0 for i in test_items_set]
         GT = len(test_items_set)
@@ -243,6 +193,7 @@ def ndcg_at_k(pred_list, test_graph, k):
         if idcg:
             ndcg.append(compute_DCG(hit_list) / idcg)
     return np.mean(ndcg)
+
 
 def compute_DCG(l):
     l = np.array(l)

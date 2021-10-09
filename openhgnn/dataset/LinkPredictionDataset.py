@@ -190,7 +190,6 @@ class HGB_LinkPrediction(LinkPredictionDataset):
                 (('artist', 'artist-tag', 'tag'), ('tag', 'artist-tag-rev', 'artist'))
                 ]
 
-
         elif dataset_name == 'HGBl-PubMed':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
