@@ -373,6 +373,7 @@ class Config(object):
             self.ft_lr=conf.getfloat('SLiCE','ft_lr')
             self.ft_n_epochs=conf.getint('SLiCE','ft_n_epochs')
             self.ft_checkpoint=conf.getint('SLiCE','ft_checkpoint')
+            self.pretrained_embeddings=conf.get('SLiCE','pretrained_embeddings')
         elif model == 'HPN':
             self.lr = conf.getfloat("HPN", "learning_rate")
             self.weight_decay = conf.getfloat("HPN", "weight_decay")

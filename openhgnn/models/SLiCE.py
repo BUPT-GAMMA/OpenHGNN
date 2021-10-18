@@ -9,6 +9,8 @@ import random
 import dgl.nn as dglnn
 from . import BaseModel, register_model
 from .CompGCN import CompGraphConvLayer
+import os
+from gensim.models import Word2Vec
 
 def get_norm_id(id_map, some_id):
     #如果不存在，返回一个id最大值
@@ -235,7 +237,30 @@ class SLiCE(BaseModel):
     def build_model_from_args(cls, args, hg):
         # if args.embed_dir:
         #     pretrained_node_embedding_tensor=load_pickle(args.embed_dir)
+        
         return cls(G=hg,pretrained_node_embedding_tensor=None,args=args)#to-do: 命令行解析
+    def load_pretrained_node2vec(self,filename, base_emb_dim):
+        """
+        loads embeddings from node2vec style file, where each line is
+        nodeid node_embedding
+        returns tensor containing node_embeddings
+        for graph nodes 0 to n-1
+        """
+        node_embeddings = torch.empty(self.g.num_nodes(), base_emb_dim)
+        with open(filename, "r") as f:
+            header = f.readline()
+            emb_dim = int(header.strip().split()[1])
+            for line in f:
+                arr = line.strip().split()
+                graph_node_id = arr[0]
+                node_emb = [float(x) for x in arr[1:]]
+                vocab_id = int(graph_node_id)
+                if vocab_id >= 0:
+                    node_embeddings[vocab_id] = torch.tensor(node_emb)
+                # print(torch.tensor(node_emb).size())
+        out = node_embeddings
+        print("node2vec tensor", out.size())
+        return out
     #参数来自原论文默认参数
     def __init__(self,
         G,  #G为DGLGraph
@@ -266,6 +291,31 @@ class SLiCE(BaseModel):
         self.fine_tuning_layer = fine_tuning_layer
         self.no_nodes = G.num_nodes()
         self.n_pred=args.n_pred
+        #pretraining use node2vec if not exist
+        if not os.path.exists(args.pretrained_embeddings):
+            print("Run Node2vec to obtain pre-trained node embeddings ...")
+            
+            walks=[]
+            for _ in range(10):
+                nodes=list(G.nodes())
+                random.shuffle(nodes)
+                walk = dgl.sampling.node2vec_random_walk(G, torch.tensor(nodes), 1, 1, walk_length=80-1).tolist()#len=walk_length+1
+                walks.extend(walk)
+            walks = [list(map(str, walk)) for walk in walks]
+            model = Word2Vec(
+                walks,
+                size=base_embedding_dim,
+                window=10,
+                min_count=0,
+                sg=1,
+                workers=8,
+                iter=1,
+            )
+            model.wv.save_word2vec_format(args.pretrained_embeddings)
+
+        pretrained_node_embedding_tensor = self.load_pretrained_node2vec(
+            args.pretrained_embeddings, base_embedding_dim
+        )
         #FIXME 暂时是用随机初始化，pretrain tensor是None
         self.gcn_graph_encoder = GCNGraphEncoder(
             G,

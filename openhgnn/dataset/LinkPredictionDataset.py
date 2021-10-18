@@ -126,11 +126,8 @@ class SLiCE_LinkPrediction(LinkPredictionDataset):
             else:
                 self.test_idx=index
             self.edges[task]=self.g.find_edges(index)
-            #finally, g should be a graph containing just train_edges
-            if task in ['valid','test']:
-                self.g.remove_edges(index)
-                #built for valid and test phase(use apply_edge(u_mult_v()) to get similarity score)
-                self.graphs[task]=dgl.graph(self.edges[task])
+            #built for valid and test phase(use apply_edge(u_mult_v()) to get similarity score)
+            self.graphs[task]=dgl.graph(self.edges[task])
         return
     def get_labels(self):
         return self.labels
