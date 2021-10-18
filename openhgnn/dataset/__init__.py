@@ -55,7 +55,7 @@ def build_dataset(dataset, task):
         _dataset = 'ogbn_' + task
     elif dataset in ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']:
         _dataset = 'HGBn_node_classification'
-    elif dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
+    elif dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed', 'SLiCE-amazon']:
         _dataset = 'HGBl_link_prediction'
     elif dataset in ['wn18', 'FB15k', 'FB15k-237']:
         assert task == 'link_prediction'
@@ -66,8 +66,8 @@ def build_dataset(dataset, task):
         _dataset = 'hin_' + task
     elif dataset == 'demo':
         _dataset = 'demo_' + task
-    elif dataset in ['amazon']:
-        _dataset = 'slice_' + task
+    # elif dataset in ['amazon']:
+    #     _dataset = 'slice_' + task
     return DATASET_REGISTRY[_dataset](dataset)
 
 

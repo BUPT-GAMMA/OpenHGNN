@@ -54,10 +54,11 @@ class SLiCETrainer(BaseFlow):
         self.pretrain_save_path=os.path.join(self.pretrain_path,'best_pretrain_model.pt')
         self.finetune_path=os.path.join(self.out_dir,'finetune/')
         self.finetune_save_path=os.path.join(self.finetune_path,'best_finetune_model.pt')
-        self.g,_=dgl.load_graphs(os.path.join(self.out_dir,self.args.data_name+'.bin'))
-        self.g=dgl.to_homogeneous(self.g[0],ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
-        # self.g=self.task.dataset.g
-        # self.g=dgl.to_homogeneous(self.g,ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
+        #self.g,_=dgl.load_graphs(os.path.join(self.out_dir,self.args.data_name+'.bin'))
+        #self.g=dgl.to_homogeneous(self.g[0],edata=['train_mask','valid_mask','test_mask','label'])
+        self.g=self.task.dataset.g
+        self.g=dgl.to_homogeneous(self.g,edata=['train_mask','valid_mask','test_mask','label'])
+
         self.model=dict()
         self.model['pretrain']=SLiCE.build_model_from_args(self.args,self.g)
         self.model['finetune']=SLiCEFinetuneLayer.build_model_from_args(args)

@@ -4,3 +4,4 @@
 *.bin
 *.zip
 *.json
+.vscode/*
