@@ -60,7 +60,7 @@ SUPPORTED_MODELS = {
     'HAN': 'openhgnn.models.HAN',
     #'HGT': 'openhgnn.models.HGT',
     'HGT': 'openhgnn.models.HGT_hetero',
-    'GTN': 'openhgnn.models.GTN',
+    'GTN': 'openhgnn.models.GTN_sparse',
     'fastGTN': 'openhgnn.models.fastGTN',
     'MHNF': 'openhgnn.models.MHNF',
     'MAGNN': 'openhgnn.models.MAGNN',

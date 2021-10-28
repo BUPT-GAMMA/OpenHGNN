@@ -62,6 +62,7 @@ class NodeClassification(BaseFlow):
         if self.args.model == 'GTN':
             if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == True:
                 self.optimizer = torch.optim.Adam([{'params': self.model.gcn.parameters()},
+                                                   {'params': self.model.params.parameters()},
                                                    {'params': self.model.linear1.parameters()},
                                                    {'params': self.model.linear2.parameters()},
                                                    {"params": self.model.layers.parameters(), "lr": 0.5}
@@ -115,7 +116,6 @@ class NodeClassification(BaseFlow):
                     val_loss = losses["val"]
 
                 printInfo(self.metric, epoch, train_score, train_loss, val_score, val_loss)
-
                 early_stop = stopper.loss_step(val_loss, self.model)
                 if early_stop:
                     print('Early Stop!\tEpoch:' + str(epoch))
@@ -136,7 +136,7 @@ class NodeClassification(BaseFlow):
                 h_dict = self.input_feature()
                 logits = self.model(self.hg, h_dict)[self.category]
                 self.task.dataset.save_results(logits=logits, file_path=self.args.HGB_results_path)
-            return
+            return val_score[0], val_score[1], epoch
         if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
             test_score, _ = self._mini_test_step(mode='test')
             val_score, val_loss = self._mini_test_step(mode='validation')
@@ -237,5 +237,5 @@ class NodeClassification(BaseFlow):
             y_trues = torch.cat(y_trues, dim=0)
             y_predicts = torch.cat(y_predicts, dim=0)
         evaluator = self.task.get_evaluator(name='f1')
-        metric = evaluator(y_trues,y_predicts.argmax(dim=1).to('cpu'))
+        metric = evaluator(y_trues, y_predicts.argmax(dim=1).to('cpu'))
         return metric, loss
