@@ -14,8 +14,10 @@ class LinkPredictionDataset(BaseDataset):
     """
     metric: Accuracy, multi-label f1 or multi-class f1. Default: `accuracy`
     """
-    def __init__(self,):
+
+    def __init__(self, ):
         super(LinkPredictionDataset, self).__init__()
+        self.meta_paths_dict = None
 
 
 @register_dataset('demo_link_prediction')
@@ -25,8 +27,9 @@ class Test_LinkPrediction(LinkPredictionDataset):
         self.g = self.load_HIN('./openhgnn/debug/data.bin')
         self.target_link = 'user-item'
         self.has_feature = False
+        self.meta_paths_dict = None
         self.preprocess()
-        #self.generate_negative()
+        # self.generate_negative()
 
     def load_HIN(self, dataset_name):
         g, _ = load_graphs(dataset_name)
@@ -36,7 +39,8 @@ class Test_LinkPrediction(LinkPredictionDataset):
         test_mask = self.g.edges[self.target_link].data['test_mask']
         index = th.nonzero(test_mask).squeeze()
         self.test_edge = self.g.find_edges(index, self.target_link)
-        self.pos_test_graph = dgl.heterograph({('user', 'user-item', 'item'): self.test_edge}, {ntype: self.g.number_of_nodes(ntype) for ntype in ['user', 'item']})
+        self.pos_test_graph = dgl.heterograph({('user', 'user-item', 'item'): self.test_edge},
+                                              {ntype: self.g.number_of_nodes(ntype) for ntype in ['user', 'item']})
         self.g.remove_edges(index, self.target_link)
         self.g.remove_edges(index, 'item-user')
         self.neg_test_graph, _ = dgl.load_graphs('./openhgnn/debug/neg.bin')
@@ -59,7 +63,8 @@ class Test_LinkPrediction(LinkPredictionDataset):
             neg_src.append(src)
             neg_dst.append(dst)
         neg_edge = (th.cat(neg_src), th.cat(neg_dst))
-        neg_graph = dgl.heterograph({('user', 'user-item', 'item'): neg_edge}, {ntype: self.g.number_of_nodes(ntype) for ntype in ['user', 'item']})
+        neg_graph = dgl.heterograph({('user', 'user-item', 'item'): neg_edge},
+                                    {ntype: self.g.number_of_nodes(ntype) for ntype in ['user', 'item']})
         dgl.save_graphs('./openhgnn/debug/neg.bin', neg_graph)
 
 
@@ -68,6 +73,46 @@ class HIN_LinkPrediction(LinkPredictionDataset):
     def __init__(self, dataset_name):
         super(HIN_LinkPrediction, self).__init__()
         self.g = self.load_HIN(dataset_name)
+
+    def get_idx(self):
+        r"""
+        Get graphs for train, valid or test.
+
+        The dataset has not validation_mask, so we split train edges randomly.
+        """
+        val_edge_dict = {}
+        test_edge_dict = {}
+        out_ntypes = []
+        train_graph = self.g
+        val_ratio = 0.1
+        for etype in self.target_link:
+            # train_mask = self.g.edges[etype].data['train_mask'].squeeze()
+            # train_index = th.nonzero(train_mask).squeeze()
+
+            val_mask = self.g.edges[etype].data['valid_mask'].squeeze()
+            val_index = th.nonzero(val_mask).squeeze()
+            val_edge = self.g.find_edges(val_index, etype)
+
+            test_mask = self.g.edges[etype].data['test_mask'].squeeze()
+            test_index = th.nonzero(test_mask).squeeze()
+            test_edge = self.g.find_edges(test_index, etype)
+
+            val_edge_dict[etype] = val_edge
+            test_edge_dict[etype] = test_edge
+            out_ntypes.append(etype[0])
+            out_ntypes.append(etype[2])
+            self.val_label = train_graph.edges[etype[1]].data['label'][val_index]
+            self.test_label = train_graph.edges[etype[1]].data['label'][test_index]
+            train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
+
+        #train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), 'item-user')
+        self.out_ntypes = set(out_ntypes)
+        val_graph = dgl.heterograph(val_edge_dict,
+                                    {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
+        test_graph = dgl.heterograph(test_edge_dict,
+                                     {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
+
+        return train_graph, val_graph, test_graph
 
     def load_link_pred(self, path):
         u_list = []
@@ -90,6 +135,11 @@ class HIN_LinkPrediction(LinkPredictionDataset):
             self.train_batch = self.load_link_pred('./openhgnn/dataset/' + dataset_name + '/a_a_list_train.txt')
             self.test_batch = self.load_link_pred('./openhgnn/dataset/' + dataset_name + '/a_a_list_test.txt')
             self.category = 'author'
+        elif dataset_name == 'Book-Crossing':
+            g, _ = dgl.load_graphs('./openhgnn/dataset/book_graph.bin')
+            g = g[0]
+            self.target_link = [('user', 'user-item', 'item')]
+            self.node_type = ['user', 'item']
         return g
 
 @register_dataset('slice_link_prediction')
@@ -153,22 +203,30 @@ class HGB_LinkPrediction(LinkPredictionDataset):
         The etypes of test link. HGBl-amazon has two etypes of test link. other has only one.
 
     """
+
     def __init__(self, dataset_name):
         super(HGB_LinkPrediction, self).__init__()
         self.dataset_name = dataset_name
-        self.has_feature = True
+        self.target_link_r = None
         if dataset_name == 'HGBl-amazon':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
-            self.has_feature = True
+            # g.ndata.pop('h')
+            self.has_feature = False
             self.target_link = [('product', 'product-product-0', 'product'),
                                 ('product', 'product-product-1', 'product')]
+            self.target_link_r = None
             self.link = [0, 1]
             self.node_type = ["product"]
             self.test_edge_type = {'product-product-0': 0, 'product-product-1': 1}
-            self.meta_paths = [(('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')),
-                               (('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')),
-                               ]
+            self.meta_paths = [
+                (('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')),
+                (('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')),
+                ]
+            self.meta_paths_dict = {
+                'P0P': [('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')],
+                'P1P': [('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')]
+            }
 
         elif dataset_name == 'HGBl-LastFM':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
@@ -178,6 +236,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.node_type = ['user', 'artist', 'tag']
             self.test_edge_type = {'user-artist': 0}
             g = add_reverse_edges(g)
+            self.target_link_r = [('artist', 'user-artist-rev', 'user')]
             self.meta_paths = [
                 (('user', 'user-user', 'user'),),
                 (('user', 'user-artist', 'artist'), ('artist', 'user-artist-rev', 'user')),
@@ -185,7 +244,15 @@ class HGB_LinkPrediction(LinkPredictionDataset):
                  ('tag', 'artist-tag-rev', 'artist'), ('artist', 'user-artist-rev', 'user')),
                 (('artist', 'user-artist-rev', 'user'), ('user', 'user-artist', 'artist')),
                 (('artist', 'artist-tag', 'tag'), ('tag', 'artist-tag-rev', 'artist'))
-                ]
+            ]
+            self.meta_paths_dict = {'UU': [('user', 'user-user', 'user')],
+                                    'UAU': [('user', 'user-artist', 'artist'), ('artist', 'user-artist-rev', 'user')],
+                                    'UATAU': [('user', 'user-artist', 'artist'), ('artist', 'artist-tag', 'tag'),
+                                              ('tag', 'artist-tag-rev', 'artist'),
+                                              ('artist', 'user-artist-rev', 'user')],
+                                    'AUA': [('artist', 'user-artist-rev', 'user'), ('user', 'user-artist', 'artist')],
+                                    'ATA': [('artist', 'artist-tag', 'tag'), ('tag', 'artist-tag-rev', 'artist')]
+                                    }
 
         elif dataset_name == 'HGBl-PubMed':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
@@ -195,6 +262,12 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.node_type = ['0', '1', '2', '3']
             self.test_edge_type = {'1_to_1': 2}
             g = add_reverse_edges(g)
+            g.ndata.pop('h')
+            self.target_link_r = [('1', '1_to_1-rev', '1')]
+            self.meta_paths_dict = {'101': [('1', '0_to_1-rev', '0'), ('0', '0_to_1', '1')],
+                                    '121': [('1', '2_to_1-rev', '2'), ('2', '2_to_1', '1')],
+                                    '131': [('1', '3_to_1-rev', '3'), ('3', '3_to_1', '1')]
+                                    }
 
 
         self.g = g
@@ -222,7 +295,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
         out_ntypes = []
         train_graph = self.g
         val_ratio = 0.1
-        for etype in self.target_link:
+        for i, etype in enumerate(self.target_link):
             train_mask = self.g.edges[etype].data['train_mask'].squeeze()
             train_index = th.nonzero(train_mask).squeeze()
             random_int = th.randperm(len(train_index))[:int(len(train_index) * val_ratio)]
@@ -239,11 +312,15 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             out_ntypes.append(etype[2])
 
             train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
+            if self.target_link_r is None:
+                pass
+            else:
+                train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), self.target_link_r[i])
         self.out_ntypes = set(out_ntypes)
         val_graph = dgl.heterograph(val_edge_dict,
-                                         {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
+                                    {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
         test_graph = dgl.heterograph(test_edge_dict,
-                                          {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
+                                     {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
 
         return train_graph, val_graph, test_graph
 
@@ -254,8 +331,8 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             edge_type_list = []
             for etype in hg.canonical_etypes:
                 edges = hg.edges(etype=etype)
-                src_id = edges[0]+self.shift_dict[etype[0]]
-                dst_id = edges[1]+self.shift_dict[etype[2]]
+                src_id = edges[0] + self.shift_dict[etype[0]]
+                dst_id = edges[1] + self.shift_dict[etype[2]]
                 src_list.append(src_id)
                 dst_list.append(dst_id)
                 edge_type_list.append(th.full((src_id.shape[0],), self.test_edge_type[etype[1]]))
@@ -264,7 +341,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             dst_list = th.cat(dst_list)
             edge_type_list = th.cat(edge_type_list)
             with open(file_path, "w") as f:
-                for l, r, edge_type, c in zip(src_list, dst_list, edge_type_list,score):
+                for l, r, edge_type, c in zip(src_list, dst_list, edge_type_list, score):
                     f.write(f"{l}\t{r}\t{edge_type}\t{c}\n")
 
 
@@ -307,8 +384,8 @@ class KG_LinkPrediction(LinkPredictionDataset):
             self.num_nodes = dataset.num_nodes
             self.homo_g = dataset[0]
             self.g = self.homo_to_hetero(dataset[0])
-            #self.g = self.build_g(dataset.train)
-            #self.dataset = dataset
+            # self.g = self.build_g(dataset.train)
+            # self.dataset = dataset
 
     def get_triples_directed(self, mask_mode):
         if mask_mode == 'train_mask':
@@ -317,10 +394,11 @@ class KG_LinkPrediction(LinkPredictionDataset):
             data = self.dataset.test
         elif mask_mode == 'test_mask':
             data = self.dataset.test
-        s = th.LongTensor(data[:,0])
-        r = th.LongTensor(data[:,1])
-        o = th.LongTensor(data[:,2])
+        s = th.LongTensor(data[:, 0])
+        r = th.LongTensor(data[:, 1])
+        o = th.LongTensor(data[:, 2])
         return th.stack([s, r, o])
+
     def get_triples(self, mask_mode):
         '''
         :param g:
@@ -339,28 +417,31 @@ class KG_LinkPrediction(LinkPredictionDataset):
         train_mask = g.edata['train_mask']
         hg = self.build_graph((edges[0][train_mask], edges[1][train_mask]), etype[train_mask])
         return hg
+
     def build_graph(self, edges, etype):
         edge_dict = {}
         for i in range(self.num_rels):
-            mask = (etype==i)
-            edge_name = (self.category , str(i), self.category )
+            mask = (etype == i)
+            edge_name = (self.category, str(i), self.category)
             edge_dict[edge_name] = (edges[0][mask], edges[1][mask])
         hg = dgl.heterograph(edge_dict, {self.category: self.num_nodes})
         return hg
+
     def build_g(self, train):
-        s = train[:,0]
-        r = train[:,1]
-        o = train[:,2]
+        s = train[:, 0]
+        r = train[:, 1]
+        o = train[:, 2]
         edge_dict = {}
         for i in range(self.num_rels):
-            mask = (r==i)
-            edge_name = (self.category, str(i), self.category )
+            mask = (r == i)
+            edge_name = (self.category, str(i), self.category)
             edge_dict[edge_name] = (th.LongTensor(s[mask]), th.LongTensor(o[mask]))
         hg = dgl.heterograph(edge_dict, {self.category: self.num_nodes})
         return hg
 
+
 class kg_sampler():
-    def __init__(self,):
+    def __init__(self, ):
         self.sampler = 'uniform'
         return
 
@@ -414,7 +495,7 @@ def sample_edge_neighborhood(adj_list, degrees, n_triplets, sample_size):
     """
     edges = np.zeros((sample_size), dtype=np.int32)
 
-    #initialize
+    # initialize
     sample_counts = np.array([d for d in degrees])
     picked = np.array([False for _ in range(n_triplets)])
     seen = np.array([False for _ in degrees])
@@ -449,6 +530,7 @@ def sample_edge_neighborhood(adj_list, degrees, n_triplets, sample_size):
         seen[other_vertex] = True
 
     return edges
+
 
 def sample_edge_uniform(adj_list, degrees, n_triplets, sample_size):
     """Sample edges uniformly from all the edges."""

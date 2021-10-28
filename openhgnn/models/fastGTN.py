@@ -5,10 +5,10 @@ import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv, EdgeWeightNorm
 from ..utils import transform_relation_graph_list
 from . import BaseModel, register_model
+import dgl.function as fn
 
-
-@register_model('GTN')
-class GTN(BaseModel):
+@register_model('fastGTN')
+class fastGTN(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
         if args.identity:
@@ -26,10 +26,9 @@ class GTN(BaseModel):
 
             Description
             -----------
-            GTN from paper `Graph Transformer Networks <https://arxiv.org/abs/1911.06455>`__
-            in NeurIPS_2019. You can also see the extension paper `Graph Transformer
-            Networks: Learning Meta-path Graphs to Improve GNNs <https://arxiv.org/abs/2106.06218.pdf>`__.
-
+            fastGTN from paper `Graph Transformer Networks: Learning Meta-path Graphs to Improve GNNs
+            <https://arxiv.org/abs/2106.06218>`__.
+            It is the extension paper  of GTN.
             `Code from author <https://github.com/seongjunyun/Graph_Transformer_Networks>`__.
 
             Given a heterogeneous graph :math:`G` and its edge relation type set :math:`\mathcal{R}`.Then we extract
@@ -59,7 +58,7 @@ class GTN(BaseModel):
                     If True, the identity matrix will be added to relation matrix set.
 
         """
-        super(GTN, self).__init__()
+        super(fastGTN, self).__init__()
         self.num_edge_type = num_edge_type
         self.num_channels = num_channels
         self.in_dim = in_dim
@@ -72,18 +71,24 @@ class GTN(BaseModel):
 
         layers = []
         for i in range(num_layers):
-            if i == 0:
-                layers.append(GTLayer(num_edge_type, num_channels, first=True))
-            else:
-                layers.append(GTLayer(num_edge_type, num_channels, first=False))
+            layers.append(GTConv(num_edge_type, num_channels))
+        self.params = nn.ParameterList()
+        for i in range(num_channels):
+            self.params.append(nn.Parameter(th.Tensor(in_dim, hidden_dim)))
         self.layers = nn.ModuleList(layers)
-        self.gcn = GraphConv(in_feats=self.in_dim, out_feats=hidden_dim, norm='none', activation=F.relu)
+        self.gcn = GCNConv()
         self.norm = EdgeWeightNorm(norm='right')
         self.linear1 = nn.Linear(self.hidden_dim * self.num_channels, self.hidden_dim)
         self.linear2 = nn.Linear(self.hidden_dim, self.num_class)
         self.category_idx = None
         self.A = None
         self.h = None
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        if self.params is not None:
+            for para in self.params:
+                nn.init.xavier_uniform_(para)
 
     def normalization(self, H):
         norm_H = []
@@ -107,80 +112,35 @@ class GTN(BaseModel):
             # X_ = self.gcn(g, self.h)
             A = self.A
             # * =============== Get new graph structure ================
+            H = []
+            for n_c in range(self.num_channels):
+                H.append(th.matmul(h, self.params[n_c]))
             for i in range(self.num_layers):
-                if i == 0:
-                    H, W = self.layers[i](A)
-                else:
-                    H, W = self.layers[i](A, H)
-                if self.is_norm == True:
-                    H = self.normalization(H)
-                # Ws.append(W)
-            # * =============== GCN Encoder ================
-            for i in range(self.num_channels):
-                g = dgl.remove_self_loop(H[i])
-                edge_weight = g.edata['w_sum']
-                g = dgl.add_self_loop(g)
-                edge_weight = th.cat((edge_weight, th.full((g.number_of_nodes(),), 1, device=g.device)))
-                edge_weight = self.norm(g, edge_weight)
-                if i == 0:
-                    X_ = self.gcn(g, h, edge_weight=edge_weight)
-                else:
-                    X_ = th.cat((X_, self.gcn(g, h, edge_weight=edge_weight)), dim=1)
-            X_ = self.linear1(X_)
+                hat_A = self.layers[i](A)
+                for n_c in range(self.num_channels):
+                    edge_weight = self.norm(hat_A[n_c], hat_A[n_c].edata['w_sum'])
+                    H[n_c] = self.gcn(hat_A[n_c], H[n_c], edge_weight=edge_weight)
+            X_ = self.linear1(th.cat(H, dim=1))
             X_ = F.relu(X_)
             y = self.linear2(X_)
             return {self.category: y[self.category_idx]}
 
 
-class GTLayer(nn.Module):
-    r"""
-        Description
-        -----------
-        CTLayer multiply each combination adjacency matrix :math:`l` times to a :math:`l-length`
-        meta-paths adjacency matrix.
+class GCNConv(nn.Module):
+    def __init__(self,):
+        super(GCNConv, self).__init__()
 
-        The method to generate :math:`l-length` meta-path adjacency matrix can be described as:
+    def forward(self, graph, feat, edge_weight=None):
+        with graph.local_scope():
+            if edge_weight is not None:
+                assert edge_weight.shape[0] == graph.number_of_edges()
+                graph.edata['_edge_weight'] = edge_weight
+                aggregate_fn = fn.u_mul_e('h', '_edge_weight', 'm')
 
-        .. math::
-            A_{(l)}=\Pi_{i=1}^{l} A_{i}
-
-        where :math:`A_{i}` is the combination adjacency matrix generated by GT conv.
-
-        Parameters
-        ----------
-            in_channels: int
-                The input dimension of GTConv which is numerically equal to the number of relations.
-            out_channels: int
-                The input dimension of GTConv which is numerically equal to the number of channel in GTN.
-            first: bool
-                If true, the first combination adjacency matrix multiply the combination adjacency matrix.
-
-    """
-    def __init__(self, in_channels, out_channels, first=True):
-        super(GTLayer, self).__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.first = first
-        if self.first:
-            self.conv1 = GTConv(in_channels, out_channels)
-            self.conv2 = GTConv(in_channels, out_channels)
-        else:
-            self.conv1 = GTConv(in_channels, out_channels)
-
-    def forward(self, A, H_=None):
-        if self.first:
-            result_A = self.conv1(A)
-            result_B = self.conv2(A)
-            W = [(F.softmax(self.conv1.weight, dim=1)).detach(), (F.softmax(self.conv2.weight, dim=1)).detach()]
-        else:
-            result_A = H_
-            result_B = self.conv1(A)
-            W = [(F.softmax(self.conv1.weight, dim=1)).detach()]
-        H = []
-        for i in range(len(result_A)):
-            g = dgl.adj_product_graph(result_A[i], result_B[i], 'w_sum')
-            H.append(g)
-        return H, W
+                graph.srcdata['h'] = feat
+                graph.update_all(aggregate_fn, fn.sum(msg='m', out='h'))
+                rst = graph.dstdata['h']
+        return rst
 
 
 class GTConv(nn.Module):

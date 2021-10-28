@@ -4,9 +4,9 @@ import torch.nn.functional as F
 import dgl
 from dgl.nn.pytorch import GATConv
 from . import BaseModel, register_model
-from .macro_layer.SemanticConv import SemanticAttention
+from ..layers.macro_layer.SemanticConv import SemanticAttention
 from ..layers.MetapathConv import MetapathConv
-from openhgnn.utils.utils import extract_metapaths
+from ..utils.utils import extract_metapaths
 
 
 @register_model('HAN')

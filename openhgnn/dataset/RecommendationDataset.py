@@ -15,6 +15,7 @@ class RecommendationDataset(BaseDataset):
     """
     def __init__(self,):
         super(RecommendationDataset, self).__init__()
+        self.meta_paths_dict = None
 
 
 @register_dataset('kgcn_recommendation')

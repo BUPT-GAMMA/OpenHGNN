@@ -41,6 +41,7 @@ class NodeClassificationDataset(BaseDataset):
         self.num_classes = None
         self.has_feature = False
         self.multi_label = False
+        self.meta_paths_dict =None
         # self.in_dim = None
 
     def get_labels(self):
@@ -82,6 +83,7 @@ class RDF_NodeClassification(NodeClassificationDataset):
     ------
     They are all have no feature.
     """
+
     def __init__(self, dataset_name):
         super(RDF_NodeClassification, self).__init__()
         self.g, self.category, self.num_classes = self.load_RDF_dgl(dataset_name)
@@ -150,6 +152,7 @@ class HIN_NodeClassification(NodeClassificationDataset):
     Dataset Name :
     acm4NSHE/ acm4GTN/ acm4NARS/ acm_han_raw/ academic4HetGNN/ dblp4MAGNN/ imdb4MAGNN/ ...
     """
+
     def __init__(self, dataset_name):
         super(HIN_NodeClassification, self).__init__()
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
@@ -290,7 +293,8 @@ class HGB_NodeClassification(NodeClassificationDataset):
     So if you want to get more information, refer to
     `HGB datasets <https://github.com/THUDM/HGB>`_
     """
-    def __init__(self, dataset_name):
+
+    def __init__(self, dataset_name, **kwargs):
         super(HGB_NodeClassification, self).__init__()
         self.dataset_name = dataset_name
         self.has_feature = True
@@ -300,28 +304,33 @@ class HGB_NodeClassification(NodeClassificationDataset):
             category = 'paper'
             num_classes = 3
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
-            self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')),
-                               (('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper')),
-                               (('paper', 'paper-cite-paper', 'paper'), ('paper', 'paper-author', 'author'),
-                                ('author', 'author-paper', 'paper')),
-                               (('paper', 'paper-cite-paper', 'paper'), ('paper', 'paper-subject', 'subject'),
-                                ('subject', 'subject-paper', 'paper')),
-                               (('paper', 'paper-ref-paper', 'paper'), ('paper', 'paper-author', 'author'),
-                                ('author', 'author-paper', 'paper')),
-                               (('paper', 'paper-ref-paper', 'paper'), ('paper', 'paper-subject', 'subject'),
-                                ('subject', 'subject-paper', 'paper')),
-                               (('paper', 'paper-term', 'term'), ('term', 'term-paper', 'paper'))]
+            self.meta_paths_dict = {'PAP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')],
+                                    'PSP': [('paper', 'paper-subject', 'subject'),
+                                            ('subject', 'subject-paper', 'paper')],
+                                    'PcPAP': [('paper', 'paper-cite-paper', 'paper'),
+                                              ('paper', 'paper-author', 'author'),
+                                              ('author', 'author-paper', 'paper')],
+                                    'PcPSP': [('paper', 'paper-cite-paper', 'paper'),
+                                              ('paper', 'paper-subject', 'subject'),
+                                              ('subject', 'subject-paper', 'paper')],
+                                    'PrPAP': [('paper', 'paper-ref-paper', 'paper'),
+                                              ('paper', 'paper-author', 'author'),
+                                              ('author', 'author-paper', 'paper')],
+                                    'PrPSP': [('paper', 'paper-ref-paper', 'paper'),
+                                              ('paper', 'paper-subject', 'subject'),
+                                              ('subject', 'subject-paper', 'paper')]
+                                    }
         elif dataset_name == 'HGBn-DBLP':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'author'
             num_classes = 4
-            self.meta_paths = [(('author', 'author-paper', 'paper'), ('paper', 'paper-author', 'author')),
-                               (('author', 'author-paper', 'paper'), ('paper', 'paper-term', 'term'),
-                                ('term', 'term-paper', 'paper'), ('paper', 'paper-author', 'author')),
-                               (('author', 'author-paper', 'paper'), ('paper', 'paper-venue', 'venue'),
-                                ('venue', 'venue-paper', 'paper'), ('paper', 'paper-author', 'author')),
-                               ]
+            self.meta_paths_dict = {'APA': [('author', 'author-paper', 'paper'), ('paper', 'paper-author', 'author')],
+                                    'APTPA': [('author', 'author-paper', 'paper'), ('paper', 'paper-term', 'term'),
+                                              ('term', 'term-paper', 'paper'), ('paper', 'paper-author', 'author')],
+                                    'APVPA': [('author', 'author-paper', 'paper'), ('paper', 'paper-venue', 'venue'),
+                                              ('venue', 'venue-paper', 'paper'), ('paper', 'paper-author', 'author')],
+                                    }
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         elif dataset_name == 'HGBn-Freebase':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
@@ -330,35 +339,45 @@ class HGB_NodeClassification(NodeClassificationDataset):
             num_classes = 7
             self.has_feature = False
             g = add_reverse_edges(g)
-            self.meta_paths = [(('BOOK', 'BOOK-and-BOOK', 'BOOK'),),
-                               (('BOOK', 'BOOK-to-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')),
-                               (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
-                                ('ORGANIZATION', 'ORGANIZATION-in-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')),
-                               (('BOOK', 'BOOK-on-LOCATION', 'LOCATION'), ('LOCATION', 'MUSIC-on-LOCATION-rev', 'MUSIC'),
-                                ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')),
-                               (('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'), ('PEOPLE', 'PEOPLE-to-BOOK', 'BOOK')),
-                               (('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'), ('PEOPLE', 'PEOPLE-to-SPORTS', 'SPORTS'),
-                                ('SPORTS', 'BOOK-on-SPORTS-rev', 'BOOK')),
-                               (('BOOK', 'BUSINESS-about-BOOK-rev', 'BUSINESS'),
-                                ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK')),
-                               (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
-                                ('ORGANIZATION', 'ORGANIZATION-to-MUSIC', 'MUSIC'),
-                                ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')),
-                               (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
-                                ('ORGANIZATION', 'ORGANIZATION-for-BUSINESS', 'BUSINESS'),
-                                ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK'))
-                               ]
-
+            self.meta_paths_dict = {'BB': [('BOOK', 'BOOK-and-BOOK', 'BOOK')],
+                                    'BFB': [('BOOK', 'BOOK-to-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')],
+                                    'BOFB': [('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                             ('ORGANIZATION', 'ORGANIZATION-in-FILM', 'FILM'),
+                                             ('FILM', 'BOOK-to-FILM-rev', 'BOOK')],
+                                    'BLMB': [('BOOK', 'BOOK-on-LOCATION', 'LOCATION'),
+                                             ('LOCATION', 'MUSIC-on-LOCATION-rev', 'MUSIC'),
+                                             ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')],
+                                    'BPB': [('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'),
+                                            ('PEOPLE', 'PEOPLE-to-BOOK', 'BOOK')],
+                                    'BPSB': [('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'),
+                                             ('PEOPLE', 'PEOPLE-to-SPORTS', 'SPORTS'),
+                                             ('SPORTS', 'BOOK-on-SPORTS-rev', 'BOOK')],
+                                    'BBuB': [('BOOK', 'BUSINESS-about-BOOK-rev', 'BUSINESS'),
+                                             ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK')],
+                                    # 'BOMB': [('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                    #          ('ORGANIZATION', 'ORGANIZATION-to-MUSIC', 'MUSIC'),
+                                    #          ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')],
+                                    # 'BOBuB': [('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                    #           ('ORGANIZATION', 'ORGANIZATION-for-BUSINESS', 'BUSINESS'),
+                                    #           ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK')]
+                                    }
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         elif dataset_name == 'HGBn-IMDB':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'movie'
             num_classes = 5
-            self.meta_paths = [(('movie', 'movie->actor', 'actor'), ('actor', 'actor->movie', 'movie')),
-                               (('movie', 'movie->director', 'director'), ('director', 'director->movie', 'movie')),
-                               (('movie', 'movie->keyword', 'keyword'), ('keyword', 'keyword->movie', 'movie'))]
-
+            self.meta_paths_dict = {
+                'MAM': [('movie', 'movie->actor', 'actor'), ('actor', 'actor->movie', 'movie')],
+                'MDM': [('movie', 'movie->director', 'director'), ('director', 'director->movie', 'movie')],
+                'MKM': [('movie', 'movie->keyword', 'keyword'), ('keyword', 'keyword->movie', 'movie')],
+                'DMD': [('director', 'director->movie', 'movie'), ('movie', 'movie->director', 'director')],
+                'DMAMD': [('director', 'director->movie', 'movie'), ('movie', 'movie->actor', 'actor'),
+                          ('actor', 'actor->movie', 'movie'), ('movie', 'movie->director', 'director')],
+                'AMA': [('actor', 'actor->movie', 'movie'), ('movie', 'movie->actor', 'actor')],
+                'AMDMA': [('actor', 'actor->movie', 'movie'), ('movie', 'movie->director', 'director'),
+                          ('director', 'director->movie', 'movie'), ('movie', 'movie->actor', 'actor')]
+            }
             # RuntimeError: result type Float can't be cast to the desired output type Long
             self.multi_label = True
         else:

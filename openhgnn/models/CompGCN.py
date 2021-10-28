@@ -3,7 +3,7 @@ import torch.nn as nn
 import dgl.nn as dglnn
 import torch.nn.functional as F
 from . import BaseModel, register_model
-from .micro_layer import CompConv
+from openhgnn.layers.micro_layer import CompConv
 from ..utils.dgl_graph import edata_in_out_mask
 from ..utils import get_nodes_dict
 

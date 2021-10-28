@@ -1,11 +1,10 @@
 import dgl
-import torch
 import torch.nn as nn
 from . import BaseModel, register_model
 from dgl.nn.pytorch.conv import APPNPConv
 from ..layers.MetapathConv import MetapathConv
 from openhgnn.utils.utils import extract_metapaths
-from .macro_layer.SemanticConv import SemanticAttention
+from openhgnn.layers.macro_layer import SemanticAttention
 
 
 @register_model('HPN')
