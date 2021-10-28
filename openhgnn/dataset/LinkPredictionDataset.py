@@ -139,6 +139,9 @@ class HIN_LinkPrediction(LinkPredictionDataset):
             g = g[0]
             self.target_link = [('user', 'user-item', 'item')]
             self.node_type = ['user', 'item']
+        elif dataset_name == 'amazon4SLICE':
+            dataset = AcademicDataset(name='amazon4SLICE', raw_dir='')
+            g = dataset[0].long()
         return g
 
 

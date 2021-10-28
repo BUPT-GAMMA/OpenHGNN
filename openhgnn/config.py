@@ -2,7 +2,7 @@ import configparser
 import os
 import numpy as np
 import torch as th
-
+from .utils.activation import act_dict
 
 class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
@@ -371,6 +371,30 @@ class Config(object):
             self.n_item = conf.getint("KGCN", "n_relation")
             self.n_user = conf.getint("KGCN", "n_user")
             self.epoch_iter = conf.getint("KGCN", "epoch_iter")
+
+        elif model == 'general_HGNN':
+            self.lr = conf.getfloat("general_HGNN", "lr")
+            self.weight_decay = conf.getfloat("general_HGNN", "weight_decay")
+            self.dropout = conf.getfloat("general_HGNN", "dropout")
+
+            self.hidden_dim = conf.getint('general_HGNN', 'hidden_dim')
+            self.num_heads = conf.getint('general_HGNN', 'num_heads')
+            self.patience = conf.getint('general_HGNN', 'patience')
+            self.max_epoch = conf.getint('general_HGNN', 'max_epoch')
+            self.mini_batch_flag = conf.getboolean("general_HGNN", "mini_batch_flag")
+            self.layers_gnn = conf.getint("general_HGNN", "layers_gnn")
+            self.layers_pre_mp = conf.getint("general_HGNN", "layers_pre_mp")
+            self.layers_post_mp = conf.getint("general_HGNN", "layers_post_mp")
+            self.stage_type = conf.get('general_HGNN', 'stage_type')
+            self.gnn_type = conf.get('general_HGNN', 'gnn_type')
+            self.activation = conf.get('general_HGNN', 'activation')
+            self.activation = act_dict[self.activation]
+            self.subgraph = conf.get('general_HGNN', 'subgraph')
+            self.feat = conf.getint('general_HGNN', 'feat')
+            self.has_bn = conf.getboolean('general_HGNN', 'has_bn')
+            self.has_l2norm = conf.getboolean('general_HGNN', 'has_l2norm')
+            self.macro_func = conf.get('general_HGNN', 'macro_func')
+
 
         elif model == 'HeGAN':
             self.lr_gen = conf.getfloat('HeGAN', 'lr_gen')
