@@ -117,20 +117,20 @@ class HGTMessage(nn.Module):
         self.mu = nn.Parameter(torch.ones(n_etypes, n_heads))
 
     def forward(self, edges):
-        phi = edges.data['etype']  # int64[E]
-        tau_s = edges.src['ntype']  # int64[E]
-        tau_t = edges.dst['ntype']  # int64[E]
+        phi = edges.data['_TYPE']  # int64[E]
+        tau_s = edges.src['_TYPE']  # int64[E]
+        #tau_t = edges.dst['_TYPE']  # int64[E]
         h_s = edges.src['h']  # float32[E, in_size]
         Q_t = edges.dst['Q']  # float32[E, n_heads, d_k]
-        dT = edges.data['dt']  # int64[E]
+        # dT = edges.data['dt']  # int64[E]
 
         # Step 1. compute relative time encoding
         # NOTE: although the figure in the paper writes something \hat{H}^{(l-1)}[s_1] which looks as
         # if it only depends on node s_1, it actually also depends on the target node t because the
         # relative time difference can be different if t differs.  This is confirmed in the original
         # HGT implementation where h_hat_s is computed inside the message function.
-        h_hat_s = self.rte(h_s, dT)  # float32[E, in_size]
-
+        # h_hat_s = self.rte(h_s, dT)  # float32[E, in_size]
+        h_hat_s = h_s
         # Step 2. compute source keys, and source messages
         # Target queries are computed in HGTConv to save memory
         K_s = self.K(h_hat_s, tau_s).view(-1, self.n_heads, self.d_k)  # float32[E, n_heads, d_k]
@@ -153,7 +153,7 @@ class HGTConv(nn.Module):
     def __init__(self, in_size, out_size, n_heads, n_etypes, n_ntypes, dropout=0.2):
         super().__init__()
 
-        assert in_size == out_size
+        # assert in_size == out_size
         self.out_size = out_size
         self.d_k = out_size // n_heads
         self.n_heads = n_heads
@@ -169,7 +169,7 @@ class HGTConv(nn.Module):
             g.ndata['h'] = h
 
             # Step 1-3
-            g.ndata['Q'] = self.Q(h, g.ndata['ntype']).view(-1, self.n_heads, self.d_k)
+            g.ndata['Q'] = self.Q(h, g.ndata['_TYPE']).view(-1, self.n_heads, self.d_k)
             g.apply_edges(self.apply_edges)
 
             # Step 4. compute attention score and do weighted average of messages
@@ -181,10 +181,10 @@ class HGTConv(nn.Module):
             # Step 5. update.
             # NOTE: the official implementation uses learnable gating rather than residual connections to combine
             # the aggregated messages and the node representation itself.
-            h_new = self.dropout(self.A(F.gelu(h_new), g.ndata['ntype']))
-            alpha = F.sigmoid(self.alpha[g.ndata['ntype']])[:, None]
-            h_out = h_new * alpha + h * (1 - alpha)
-            return h_out
+            # h_new = self.dropout(self.A(F.gelu(h_new), g.ndata['ntype']))
+            # alpha = F.sigmoid(self.alpha[g.ndata['ntype']])[:, None]
+            # h_out = h_new * alpha + h * (1 - alpha)
+            return h_new
 
 
 class IAddMM(torch.autograd.Function):

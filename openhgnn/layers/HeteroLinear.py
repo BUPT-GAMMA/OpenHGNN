@@ -123,7 +123,7 @@ class HeteroMLPLayer(nn.Module):
         Key of dict can be node type(node name), value of dict is a list contains input, hidden and output dimension.
 
     """
-    def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, final_act=True, **kwargs):
+    def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, final_act=False, **kwargs):
         super(HeteroMLPLayer, self).__init__()
         self.layers = nn.ModuleDict({})
         for name, linear_dim in linear_dict.items():
