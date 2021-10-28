@@ -17,12 +17,13 @@ class AcademicDataset(DGLDataset):
         'DoubanMovie': 'dataset/DoubanMovie.zip',
         'dblp4MAGNN': 'dataset/dblp4MAGNN.zip',
         'yelp4HeGAN': 'dataset/yelp4HeGAN.zip',
-        'yelp4rec': 'dataset/yelp4rec.zip'
+        'yelp4rec': 'dataset/yelp4rec.zip',
+        'amazon4SLICE': 'dataset/amazon4SLICE.zip'
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
         assert name in ['acm4GTN', 'acm4NSHE', 'academic4HetGNN', 'imdb4MAGNN', 'imdb4GTN',
-                        'DoubanMovie', 'dblp4MAGNN', 'acm4NARS', 'yelp4rec', 'yelp4HeGAN']
+                        'DoubanMovie', 'dblp4MAGNN', 'acm4NARS', 'yelp4rec', 'yelp4HeGAN', 'amazon4SLICE']
         self.data_path = './openhgnn/' + self._urls[name]
         self.g_path = './openhgnn/dataset/' + name + '/graph.bin'
         raw_dir = './openhgnn/dataset'

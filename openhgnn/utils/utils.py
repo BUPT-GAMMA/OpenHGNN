@@ -6,7 +6,6 @@ from scipy.sparse import coo_matrix
 import numpy as np
 import random
 from . import load_HIN, load_KG, load_OGB, BEST_CONFIGS
-import datetime
 
 
 def sum_up_params(model):
@@ -245,7 +244,6 @@ def transform_relation_graph_list(hg, category, identity=True):
     for i, ntype in enumerate(hg.ntypes):
         if ntype == category:
             category_id = i
-
     g = dgl.to_homogeneous(hg, ndata='h')
     # find out the target node ids in g
     loc = (g.ndata[dgl.NTYPE] == category_id)
@@ -257,15 +255,20 @@ def transform_relation_graph_list(hg, category, identity=True):
     ctx = g.device
     #g.edata['w'] = th.ones(g.num_edges(), device=ctx)
     num_edge_type = th.max(etype).item()
+
+    # norm = EdgeWeightNorm(norm='right')
+    # edata = norm(g.add_self_loop(), th.ones(g.num_edges() + g.num_nodes(), device=ctx))
     graph_list = []
     for i in range(num_edge_type + 1):
         e_ids = th.nonzero(etype == i).squeeze(-1)
         sg = dgl.graph((edges[0][e_ids], edges[1][e_ids]), num_nodes=g.num_nodes())
+        # sg.edata['w'] = edata[e_ids]
         sg.edata['w'] = th.ones(sg.num_edges(), device=ctx)
         graph_list.append(sg)
     if identity == True:
         x = th.arange(0, g.num_nodes(), device=ctx)
         sg = dgl.graph((x, x))
+        # sg.edata['w'] = edata[g.num_edges():]
         sg.edata['w'] = th.ones(g.num_nodes(), device=ctx)
         graph_list.append(sg)
     return graph_list, g.ndata['h'], category_idx
