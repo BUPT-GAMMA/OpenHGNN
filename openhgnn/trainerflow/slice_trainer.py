@@ -215,16 +215,11 @@ class SLiCETrainer(BaseFlow):
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))
                 break
-            self.model['pretrain'].set_fine_tuning()
-            self._test_step()
-            self.model['pretrain'].fine_tuning_layer=False
         
         self.best_epoch['pretrain']=epoch
         torch.save(self.model['pretrain'].state_dict(),self.pretrain_save_path)
         print("Evaluating for pretraining...")
         self.model['pretrain'].eval()
-        
-
         
     def finetune(self):
         if not os.path.exists(self.pretrain_save_path):

@@ -5,3 +5,4 @@
 *.zip
 *.json
 .vscode/*
+*.embed

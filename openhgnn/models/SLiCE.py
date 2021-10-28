@@ -294,7 +294,6 @@ class SLiCE(BaseModel):
         #pretraining use node2vec if not exist
         if not os.path.exists(args.pretrained_embeddings):
             print("Run Node2vec to obtain pre-trained node embeddings ...")
-            
             walks=[]
             for _ in range(10):
                 nodes=list(G.nodes())
@@ -315,7 +314,7 @@ class SLiCE(BaseModel):
 
         pretrained_node_embedding_tensor = self.load_pretrained_node2vec(
             args.pretrained_embeddings, base_embedding_dim
-        )
+        )# (n_nodes*d_model)
         #FIXME 暂时是用随机初始化，pretrain tensor是None
         self.gcn_graph_encoder = GCNGraphEncoder(
             G,

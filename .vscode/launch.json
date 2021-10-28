@@ -9,7 +9,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--model","SLiCE",
-                "--dataset","SLiCE-amazon",
+                "--dataset","amazon",
                 "--task","link_prediction"
             ]
         }
