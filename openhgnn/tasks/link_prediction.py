@@ -29,7 +29,7 @@ class LinkPrediction(BaseTask):
         self.n_dataset = args.dataset
         self.dataset = build_dataset(args.dataset, 'link_prediction')
         # self.evaluator = Evaluator()
-        self.train_hg, self.val_hg, self.test_hg = self.dataset.get_idx()
+        #self.train_hg, self.val_hg, self.test_hg = self.dataset.get_idx()
         self.evaluator = Evaluator(args.seed)
 
     def get_graph(self):

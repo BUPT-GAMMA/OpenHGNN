@@ -2,7 +2,7 @@ import configparser
 import os
 import numpy as np
 import torch as th
-from .utils.activation import act_dict
+#from .utils.activation import act_dict
 
 class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
