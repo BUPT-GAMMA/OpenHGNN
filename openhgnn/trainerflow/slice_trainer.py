@@ -200,7 +200,7 @@ class SLiCETrainer(BaseFlow):
                     subgraph_list=self.node_subgraphs['train'][i:]
                 pred_data,true_data=self.model['pretrain'](subgraph_list)
                 loss=self.loss_fn(pred_data.transpose(1,2).cuda(),true_data.cuda())
-                avg_loss+=loss
+                avg_loss+=float(loss)
                 self.optimizer['pretrain'].zero_grad()
                 loss.backward()
                 self.optimizer['pretrain'].step()
@@ -258,7 +258,7 @@ class SLiCETrainer(BaseFlow):
                 pred_scores,_,_=self.model['finetune'](layer_output)
                 loss=F.binary_cross_entropy(pred_scores,torch.tensor(self.edges_label['train'][i:end],dtype=torch.float).reshape(-1,1).cuda())
                 bar.set_description('Batch {}: Loss:{:.3f}'.format(batch,loss))
-                avg_loss+=loss
+                avg_loss+=float(loss)
             torch.save(self.model['finetune'].state_dict(),self.finetune_path+'model_'+str(epoch)+'SLiCE.pt')
             avg_loss=avg_loss/n_batch
             print("AvgLoss: {:.3f}".format(avg_loss))
