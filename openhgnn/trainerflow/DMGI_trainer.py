@@ -64,7 +64,6 @@ class DMGI_trainer(BaseFlow):
         pass
 
     def train(self):
-
         stopper = EarlyStopping(self.patience)
         model = self.model
         epoch_iter = tqdm(range(self.max_epoch))
@@ -79,6 +78,7 @@ class DMGI_trainer(BaseFlow):
                 break
 
         # Evaluation
+        stopper.load_model(self.model)
         model.eval()
         self.evaluate(model.H.data.detach(),)
 
