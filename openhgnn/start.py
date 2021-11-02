@@ -26,6 +26,7 @@ SpecificTrainerflow = {
     'HGNN_AC': 'node_classification_ac',
     # 'HGT': 'hgttrainer',
     'NSHE': 'nshetrainer',
+    'HeCo': 'HeCo_trainer',
     'DMGI': 'DMGI_trainer',
     'KGCN': 'kgcntrainer',
     'HeGAN': 'HeGAN_trainer'

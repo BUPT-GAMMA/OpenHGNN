@@ -59,6 +59,7 @@ SUPPORTED_MODELS = {
     'Metapath2vec': 'openhgnn.models.Metapath2vec',
     'HAN': 'openhgnn.models.HAN',
     #'HGT': 'openhgnn.models.HGT',
+    'HeCo': 'openhgnn.models.HeCo',
     'HGT': 'openhgnn.models.HGT_hetero',
     'GTN': 'openhgnn.models.GTN_sparse',
     'fastGTN': 'openhgnn.models.fastGTN',
