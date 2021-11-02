@@ -217,7 +217,7 @@ class SLiCETrainer(BaseFlow):
         self.best_epoch['pretrain']=epoch
         torch.save(self.model['pretrain'].state_dict(),self.pretrain_save_path)
         print("Evaluating for pretraining...")
-        self.model['pretrain'].eval()
+        
         
     def finetune(self):
         if not os.path.exists(self.pretrain_save_path):
@@ -259,6 +259,9 @@ class SLiCETrainer(BaseFlow):
                 loss=F.binary_cross_entropy(pred_scores,torch.tensor(self.edges_label['train'][i:end],dtype=torch.float).reshape(-1,1).cuda())
                 bar.set_description('Batch {}: Loss:{:.3f}'.format(batch,loss))
                 avg_loss+=float(loss)
+                self.optimizer['finetune'].zero_grad()
+                loss.backward()
+                self.optimizer['finetune'].step()
             torch.save(self.model['finetune'].state_dict(),self.finetune_path+'model_'+str(epoch)+'SLiCE.pt')
             avg_loss=avg_loss/n_batch
             print("AvgLoss: {:.3f}".format(avg_loss))
