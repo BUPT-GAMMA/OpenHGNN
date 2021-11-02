@@ -62,7 +62,6 @@ class NodeClassification(BaseFlow):
         if self.args.model == 'GTN':
             if hasattr(self.args, 'adaptive_lr_flag') and self.args.adaptive_lr_flag == True:
                 self.optimizer = torch.optim.Adam([{'params': self.model.gcn.parameters()},
-                                                   {'params': self.model.params.parameters()},
                                                    {'params': self.model.linear1.parameters()},
                                                    {'params': self.model.linear2.parameters()},
                                                    {"params": self.model.layers.parameters(), "lr": 0.5}
