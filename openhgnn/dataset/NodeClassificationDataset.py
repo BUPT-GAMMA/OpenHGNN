@@ -4,10 +4,12 @@ import torch as th
 import numpy as np
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
+import scipy.sparse as sp
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
 from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
+from .utils import sparse_mx_to_torch_sparse_tensor
 from ..utils import add_reverse_edges
 
 
@@ -202,6 +204,13 @@ class HIN_NodeClassification(NodeClassificationDataset):
             num_classes = 3
             # g, labels, num_classes, train_nid, val_nid, test_nid = load_acm_nars()
             category = 'paper'
+        elif name_dataset == 'acm4HeCo':
+            dataset = AcademicDataset(name='acm4HeCo', raw_dir='')
+            pos = sp.load_npz("./openhgnn/dataset/acm4HeCo/pos.npz")
+            self.pos = sparse_mx_to_torch_sparse_tensor(pos)
+            g = dataset[0].long()
+            num_classes = 3
+            category = 'paper'
         elif name_dataset == 'academic4HetGNN':
             # which is used in HetGNN
             dataset = AcademicDataset(name='academic4HetGNN', raw_dir='')
@@ -214,6 +223,18 @@ class HIN_NodeClassification(NodeClassificationDataset):
             category = 'business'
             g = dataset[0].long()
             num_classes = 3
+        elif name_dataset == 'HNE-PubMed':
+            # which is used in HeGAN
+            dataset = AcademicDataset(name='HNE-PubMed', raw_dir='')
+            category = 'DISEASE'
+            g = dataset[0].long()
+            num_classes = 8
+            g = add_reverse_edges(g)
+            self.meta_paths_dict = {'DCD': [('DISEASE', 'CHEMICAL-in-DISEASE-rev', 'CHEMICAL'), ('CHEMICAL', 'CHEMICAL-in-DISEASE', 'DISEASE')],
+                                    'DDD': [('DISEASE', 'DISEASE-and-DISEASE', 'DISEASE'), ('DISEASE', 'DISEASE-and-DISEASE-rev', 'DISEASE')],
+                                    'DGD': [('DISEASE', 'GENE-causing-DISEASE-rev', 'GENE'), ('GENE', 'GENE-causing-DISEASE', 'DISEASE')],
+                                    'DSD': [('DISEASE', 'SPECIES-with-DISEASE-rev', 'SPECIES'), ('SPECIES', 'SPECIES-with-DISEASE', 'DISEASE')]
+                                    }
         elif name_dataset in ['acm_han', 'acm_han_raw']:
             if name_dataset == 'acm_han':
                 pass
@@ -252,15 +273,14 @@ class HIN_NodeClassification(NodeClassificationDataset):
                 val_idx = train_idx
                 train_idx = train_idx
         else:
-            train_mask = self.g.nodes[self.category].data.pop('train_mask')
-            test_mask = self.g.nodes[self.category].data.pop('test_mask')
+            train_mask = self.g.nodes[self.category].data.pop('train_mask').squeeze()
+            test_mask = self.g.nodes[self.category].data.pop('test_mask').squeeze()
             train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
             test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
             if validation:
                 if 'val_mask' in self.g.nodes[self.category].data:
-                    val_mask = self.g.nodes[self.category].data.pop('val_mask')
+                    val_mask = self.g.nodes[self.category].data.pop('val_mask').squeeze()
                     val_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
-                    pass
                 else:
                     random_int = th.randperm(len(train_idx))
                     val_idx = train_idx[random_int[:len(train_idx) // 10]]
