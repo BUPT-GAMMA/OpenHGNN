@@ -265,7 +265,7 @@ class SLiCETrainer(BaseFlow):
             torch.save(self.model['finetune'].state_dict(),self.finetune_path+'model_'+str(epoch)+'SLiCE.pt')
             avg_loss=avg_loss/n_batch
             print("AvgLoss: {:.3f}".format(avg_loss))
-            early_stop=stopper.loss_step(loss,self.model['finetune'])
+            early_stop=stopper.loss_step(avg_loss,self.model['finetune'])
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))
                 break

@@ -145,48 +145,6 @@ class HIN_LinkPrediction(LinkPredictionDataset):
             g = dataset[0].long()
         return g
 
-@register_dataset('slice_link_prediction')
-class SLiCE_LinkPrediction(LinkPredictionDataset):
-    def __init__(self, dataset_name):
-        super(SLiCE_LinkPrediction, self).__init__()
-        self.data_name=dataset_name
-        self.data_path='openhgnn/output/SLiCE/'+self.data_name+'/'+self.data_name+'.bin'
-        self.g = self.load_HIN()
-        self.has_feature = True
-        self.edges=dict()
-        self.graphs=dict()
-        self.train_idx=[]
-        self.valid_idx=[]
-        self.test_idx=[]
-        self.preprocess()
-        #self.generate_negative()
-
-    def load_HIN(self):
-        #use homogeneous api
-        g, _ = dgl.load_graphs(self.data_path)
-        g=dgl.to_homogeneous(g[0],ndata=['feature'],edata=['train_mask','valid_mask','test_mask','label'])
-        return g
-
-    def preprocess(self):
-        self.labels=self.g.edata['label']
-        for task in ['train','valid','test']:
-            mask=self.g.edata[task+'_mask']
-            index = th.nonzero(mask.squeeze()).squeeze()#index of nonzero
-            if task=='train':
-                self.train_idx=index
-            elif task=='valid':
-                self.valid_idx=index
-            else:
-                self.test_idx=index
-            self.edges[task]=self.g.find_edges(index)
-            #built for valid and test phase(use apply_edge(u_mult_v()) to get similarity score)
-            self.graphs[task]=dgl.graph(self.edges[task])
-        return
-    def get_labels(self):
-        return self.labels
-    def get_idx(self):
-        return self.train_idx,self.valid_idx,self.test_idx
-
 @register_dataset('HGBl_link_prediction')
 class HGB_LinkPrediction(LinkPredictionDataset):
     r"""
