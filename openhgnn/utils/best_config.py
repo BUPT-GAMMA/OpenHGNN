@@ -149,6 +149,15 @@ BEST_CONFIGS = {
                          'max_epoch': 500, 'patience': 10,
                          }
         },
+        'HeCo': {
+            'general': {
+                'hidden_dim': 64, 'max_epoch' : 10000, 'mini_batch_flag' : False
+            },
+            'acm4HeCo': {'seed': 84,  'eva_lr': 0.05, 'eva_wd': 0, 'patience': 5, 'learning_rate': 0.0008,
+                         'weight_decay': 0, 'tau': 0.8, 'feat_drop': 0.3, 'attn_drop': 0.5,
+                         'sample_rate': {'author': 7, "subject": 3}, 'lam': 0.5
+            }
+        },
         'DMGI': {
             'general': {
 

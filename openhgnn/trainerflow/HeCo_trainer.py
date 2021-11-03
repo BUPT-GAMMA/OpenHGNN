@@ -64,14 +64,14 @@ class HeCoTrainer(BaseFlow):
         # Evaluation
         model = stopper.load_model(self.model)
         model.eval()
-        h_dict = self.input_feature()
+        h_dict = self.model.input_feature()
         embeds = model.get_embeds(self.hg, h_dict=h_dict)
         self.evaluate(embeds,)
 
     def _full_train_step(self):
         self.model.train()
         self.optimizer.zero_grad()
-        h_dict = self.input_feature()
+        h_dict = self.model.input_feature()
         loss = self.model(self.hg, h_dict, self.pos)
         loss.backward()
         self.optimizer.step()

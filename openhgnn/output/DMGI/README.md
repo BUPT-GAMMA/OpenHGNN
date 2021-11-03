@@ -66,7 +66,7 @@ Best config can be found in  [best_config](../../utils/best_config.py)
 
 #### Contirbutor
 
-Tianyu Zhao, Siyuan Zhang[GAMMA LAB]
+Siyuan Zhang, Tianyu Zhao[GAMMA LAB]
 
 #### If you have any questions,
 
