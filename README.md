@@ -104,6 +104,7 @@ The link will give some basic usage.
 | [MHNF](./openhgnn/output/MHNF)[arxiv]           | :heavy_check_mark:  |                    |                    |
 | [HGSL](./openhgnn/output/HGSL)[AAAI 2021]       | :heavy_check_mark:  |                    |                    |
 | [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]  | :heavy_check_mark:  |                    |                    |
+| [HeCo](./openhgnn/output/HeCo)[KDD 2021]        | :heavy_check_mark:  |                    |                    |
 | [HPN](./openhgnn/output/HPN)[TKDE 2021]         | :heavy_check_mark:  |                    |                    |
 | [RHGNN](./openhgnn/output/RHGNN)[arxiv]         | :heavy_check_mark:  |                    |                    |
 
@@ -114,8 +115,6 @@ The link will give some basic usage.
 ### Candidate models
 
 - Heterogeneous Graph Attention Networks for Semi-supervised Short Text Classification[EMNLP 2019]
-- Heterogeneous Graph Structure Learning for Graph Neural Networks[AAAI 2021]
-- [Self-supervised Heterogeneous Graph Neural Network with Co-contrastive Learning[KDD 2021]](https://arxiv.org/abs/2105.09111)
 - [Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]](https://ieeexplore.ieee.org/document/9483653)
 
 ## Contributors
