@@ -86,6 +86,14 @@ RSHN
    :undoc-members:
    :show-inheritance:
 
+HeCo
+-----------------------------
+
+.. automodule:: openhgnn.models.HeCo
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 DMGI
 -----------------------------
 
