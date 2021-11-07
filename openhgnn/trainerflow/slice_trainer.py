@@ -91,10 +91,6 @@ class SLiCETrainer(BaseFlow):
         self.is_finetuned=False
         self.threshold=None
     def preprocess(self):
-        # self.g=dgl.to_homogeneous(
-        #     self.g,
-        #     ndata=['feature'],
-        #     edata=['train_mask','valid_mask','test_mask','label'])
         if not os.path.exists(self.pretrain_path):
             os.makedirs(self.pretrain_path)
         if not os.path.exists(self.finetune_path):
@@ -218,7 +214,6 @@ class SLiCETrainer(BaseFlow):
         torch.save(self.model['pretrain'].state_dict(),self.pretrain_save_path)
         print("Evaluating for pretraining...")
         
-        
     def finetune(self):
         if not os.path.exists(self.pretrain_save_path):
             print("Model not pretrained!")
@@ -269,8 +264,8 @@ class SLiCETrainer(BaseFlow):
             if early_stop:
                 print('Early Stop!\tEpoch:' + str(epoch))
                 break
-        # self.model['finetune']=stopper.best_model
-        # torch.save(self.model,self.finetune_save_path)
+        self.model['finetune']=stopper.best_model
+        torch.save(self.model,self.finetune_save_path)
         #run validation to find the best epoch
         self.is_finetuned=True
         print("Evaluating for pretraining...")
@@ -280,8 +275,6 @@ class SLiCETrainer(BaseFlow):
             #validation and find best threshold
             pred_data={'train':[],'valid':[],'test':[]}
             true_data={'train':[],'valid':[],'test':[]}
-            if not self.is_pretrained:
-                raise ValueError("Model is evaluated before pretraining")
             self.model['pretrain'].eval()
             for task in ['valid','test']:
                 
