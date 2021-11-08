@@ -50,7 +50,7 @@ class HetGNNTrainer(BaseFlow):
                     num_workers=self.args.num_workers)
                 self.dataloader_it = iter(dataloader)
                 self.hg = self.hg.to(self.args.device)
-                self.het_graph = self.het_graph#.to(self.args.device)
+                self.het_graph = self.het_graph.to(self.args.device)
             # elif self.args.model == 'Metapath2vec':
             #     batch_sampler = SkipGramBatchSampler(self.hg, self.args.batch_size, self.args.window_size, self.args.rw_length)
             #     collator = MP2vecCollator(self.hg.ntypes, batch_sampler.num_nodes)
