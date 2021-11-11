@@ -71,6 +71,7 @@ SUPPORTED_MODELS = {
     'RHGNN': 'openhgnn.models.RHGNN',
     'HPN': 'openhgnn.models.HPN',
     'KGCN': 'openhgnn.models.KGCN',
+    'SLiCE':'openhgnn.models.SLiCE',
     'HGSL': 'openhgnn.models.HGSL',
     'GCN': 'space4hgnn.homo_models.GCN',
     'GAT': 'space4hgnn.homo_models.GAT',

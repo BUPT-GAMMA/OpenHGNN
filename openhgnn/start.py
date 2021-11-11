@@ -21,6 +21,7 @@ def OpenHGNN(args):
         return result
 
 
+
 SpecificTrainerflow = {
     'HetGNN': 'hetgnntrainer',
     'HGNN_AC': 'node_classification_ac',
@@ -29,5 +30,6 @@ SpecificTrainerflow = {
     'HeCo': 'HeCo_trainer',
     'DMGI': 'DMGI_trainer',
     'KGCN': 'kgcntrainer',
-    'HeGAN': 'HeGAN_trainer'
+    'SLiCE':'slicetrainer',
+    'HeGAN': 'HeGAN_trainer',
 }

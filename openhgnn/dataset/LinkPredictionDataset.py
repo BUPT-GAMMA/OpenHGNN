@@ -5,6 +5,7 @@ from dgl.data.utils import load_graphs
 from dgl.data.knowledge_graph import load_data
 from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
+import os
 from ..utils import add_reverse_edges
 
 
@@ -143,7 +144,6 @@ class HIN_LinkPrediction(LinkPredictionDataset):
             dataset = AcademicDataset(name='amazon4SLICE', raw_dir='')
             g = dataset[0].long()
         return g
-
 
 @register_dataset('HGBl_link_prediction')
 class HGB_LinkPrediction(LinkPredictionDataset):
