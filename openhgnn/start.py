@@ -21,39 +21,6 @@ def OpenHGNN(args):
         return result
 
 
-def get_trainerflow(model, task):
-    if model == 'demo':
-        if task in ['node_classification']:
-            return 'node_classification'
-        elif task in ['link_prediction']:
-            return 'link_prediction'
-        elif task == 'demo':
-            return 'demo'
-    elif model in ['RGCN', 'CompGCN', 'RSHN', 'HAN', 'MAGNN', 'GTN', 'NARS', 'MHNF', 'RHGNN', 'HPN']:
-        return task
-    elif model in ['HetGNN']:
-        return 'hetgnntrainer'
-    elif model in ['MAGNN_AC']:
-        return 'node_classification_ac'
-    elif model in ['HGT', 'HGT_hetero']:
-        return 'hgttrainer'
-    elif model in ['NSHE']:
-        return 'nshetrainer'
-    elif model == 'DMGI':
-        return 'DMGI_trainer'
-    elif model in ['KGCN']:
-        return 'kgcntrainer'
-    elif model in ['SLiCE']:
-        return 'slicetrainer'
-
-
-def trans_feature(hg, het_gnn):
-    for i in hg.ntypes:
-        ndata = hg.nodes[i].data
-        for j in ndata:
-            het_gnn.nodes[i].data[j] = ndata[j]
-    return het_gnn
-
 
 SpecificTrainerflow = {
     'HetGNN': 'hetgnntrainer',
