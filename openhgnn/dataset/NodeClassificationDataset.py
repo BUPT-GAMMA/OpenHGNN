@@ -82,6 +82,7 @@ class RDF_NodeClassification(NodeClassificationDataset):
     ------
     They are all have no feature.
     """
+
     def __init__(self, dataset_name):
         super(RDF_NodeClassification, self).__init__()
         self.g, self.category, self.num_classes = self.load_RDF_dgl(dataset_name)
@@ -150,6 +151,7 @@ class HIN_NodeClassification(NodeClassificationDataset):
     Dataset Name :
     acm4NSHE/ acm4GTN/ acm4NARS/ acm_han_raw/ academic4HetGNN/ dblp4MAGNN/ imdb4MAGNN/ ...
     """
+
     def __init__(self, dataset_name):
         super(HIN_NodeClassification, self).__init__()
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
@@ -192,6 +194,8 @@ class HIN_NodeClassification(NodeClassificationDataset):
             category = 'paper'
             g = dataset[0].long()
             num_classes = 3
+            self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
+                                ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper'))]
             self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset == 'acm4NARS':
             dataset = AcademicDataset(name='acm4NARS', raw_dir='')
@@ -290,6 +294,7 @@ class HGB_NodeClassification(NodeClassificationDataset):
     So if you want to get more information, refer to
     `HGB datasets <https://github.com/THUDM/HGB>`_
     """
+
     def __init__(self, dataset_name):
         super(HGB_NodeClassification, self).__init__()
         self.dataset_name = dataset_name
