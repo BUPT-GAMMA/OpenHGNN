@@ -29,7 +29,7 @@ class Metapath2VecTrainer(BaseFlow):
         metapath = self.task.dataset.meta_paths[0]
         start_ntype = metapath[0][0]
         metapath_edges = [elem[1] for elem in metapath]
-        self.mp2vec_sampler = mp2vec_sampler.Metapath2VecSampler(hg=self.hg, metapath=metapath_edges,
+        self.mp2vec_sampler = mp2vec_sampler.Metapath2VecSampler(hg=self.hg.to('cpu'), metapath=metapath_edges,
                                                                  start_ntype=start_ntype, rw_length=self.args.rw_length,
                                                                  rw_walks=self.args.rw_walks,
                                                                  window_size=self.args.window_size,
