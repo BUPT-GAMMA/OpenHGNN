@@ -79,7 +79,7 @@ class Evaluator():
         self.link_prediction(train_X, train_Y, test_X, test_Y)
     ''''''
     # Given embedding and labels, train_idx and test_idx, training a LR.
-    def nc_with_LR(slef, emd, labels, train_idx, test_idx):
+    def nc_with_LR(self, emd, labels, train_idx, test_idx):
         Y_train = labels[train_idx]
         Y_test = labels[test_idx]
         LR = LogisticRegression(max_iter=10000)
