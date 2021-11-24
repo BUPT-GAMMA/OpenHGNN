@@ -29,5 +29,6 @@ SpecificTrainerflow = {
     'DMGI': 'DMGI_trainer',
     'KGCN': 'kgcntrainer',
     'Metapath2vec': 'mp2vec_trainer',
+    'SLiCE':'slicetrainer',
     'HeGAN': 'HeGAN_trainer',
 }
