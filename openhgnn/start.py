@@ -28,6 +28,6 @@ SpecificTrainerflow = {
     'NSHE': 'nshetrainer',
     'DMGI': 'DMGI_trainer',
     'KGCN': 'kgcntrainer',
+    'Metapath2vec': 'mp2vec_trainer',
     'HeGAN': 'HeGAN_trainer',
-    'Metapath2vec': 'mp2vec_trainer'
 }
