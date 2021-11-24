@@ -2,7 +2,7 @@ import configparser
 import os
 import numpy as np
 import torch as th
-
+#from .utils.activation import act_dict
 
 class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
@@ -312,8 +312,7 @@ class Config(object):
                 self.mini_batch_flag = conf.getboolean("MHNF", "mini_batch_flag")
                 self.dropout = 0.2
                 self.num_heads = 8
-                
-        
+
         elif model == 'HGT':
             self.lr = conf.getfloat("HGT", "learning_rate")
             self.weight_decay = conf.getfloat("HGT", "weight_decay")
@@ -330,6 +329,28 @@ class Config(object):
             self.mini_batch_flag = conf.getboolean("HGT", "mini_batch_flag")
             self.n_layers = conf.getint("HGT", "n_layers")
             self.num_heads = conf.getint("HGT", "num_heads")
+        elif model == 'HeCo':
+            self.lr = conf.getfloat("HeCo", "learning_rate")
+            self.weight_decay = conf.getfloat("HeCo", "weight_decay")
+            self.seed = conf.getint("HeCo", "seed")
+
+            self.hidden_dim = conf.getint('HeCo', 'hidden_dim')
+            self.patience = conf.getint('HeCo', 'patience')
+            self.max_epoch = conf.getint('HeCo', 'max_epoch')
+            self.mini_batch_flag = conf.getboolean("HeCo", "mini_batch_flag")
+
+            self.feat_drop = conf.getfloat("HeCo", "feat_drop")
+            self.attn_drop = conf.getfloat("HeCo", "attn_drop")
+            self.eva_lr = conf.getfloat("HeCo", "eva_lr")
+            self.eva_wd = conf.getfloat("HeCo", "eva_wd")
+            sample_rate = conf.get('HeCo', 'sample_rate').split('_')
+            #self.sample_rate = [int(i) for i in sample_rate]
+            self.sample_rate = {}
+            for i in sample_rate:
+                one = i.split('-')
+                self.sample_rate[one[0]] = int(one[1])
+            self.tau = conf.getfloat("HeCo", "tau")
+            self.lam = conf.getfloat("HeCo", "lam")
 
         elif model == 'DMGI':
             self.lr = conf.getfloat("DMGI", "learning_rate")
@@ -347,6 +368,34 @@ class Config(object):
             self.isSemi = conf.getboolean("DMGI", "isSemi")
             self.isBias = conf.getboolean("DMGI", "isBias")
             self.isAttn = conf.getboolean("DMGI", "isAttn")
+            
+        elif model == 'SLiCE':
+            self.data_name = conf.get('SLiCE','data_name')
+            self.num_walks_per_node=conf.getint('SLiCE','num_walks_per_node')
+            self.beam_width=conf.getint('SLiCE','beam_width')
+            self.max_length=conf.getint('SLiCE','max_length')
+            self.walk_type=conf.get("SLiCE",'walk_type')
+            self.batch_size=conf.getint('SLiCE','batch_size')
+            self.outdir=conf.get('SLiCE','outdir')
+            self.n_pred=conf.getint('SLiCE','n_pred')
+            self.max_pred=conf.getint('SLiCE','max_pred')
+            self.lr=conf.getfloat('SLiCE','lr')
+            self.n_epochs=conf.getint('SLiCE','n_epochs')
+            self.get_bert_encoder_embeddings=conf.getboolean('SLiCE','get_bert_encoder_embeddings')
+            self.checkpoint=conf.getint('SLiCE','checkpoint')
+            self.path_option = conf.get("SLiCE",'path_option')
+            self.ft_batch_size=conf.getint('SLiCE','ft_batch_size')
+            #self.embed_dir=conf.get('SLiCE','embed_dir')
+            self.d_model=conf.getint('SLiCE','d_model')
+            self.ft_d_ff=conf.getint('SLiCE','ft_d_ff')
+            self.ft_layer=conf.get('SLiCE','ft_layer')
+            self.ft_drop_rate=conf.getfloat('SLiCE','ft_drop_rate')
+            self.ft_input_option=conf.get('SLiCE','ft_input_option')
+            self.n_layers=conf.getint('SLiCE','n_layers')
+            self.ft_lr=conf.getfloat('SLiCE','ft_lr')
+            self.ft_n_epochs=conf.getint('SLiCE','ft_n_epochs')
+            self.ft_checkpoint=conf.getint('SLiCE','ft_checkpoint')
+            self.pretrained_embeddings=conf.get('SLiCE','pretrained_embeddings')
         elif model == 'HPN':
             self.lr = conf.getfloat("HPN", "learning_rate")
             self.weight_decay = conf.getfloat("HPN", "weight_decay")
@@ -373,6 +422,50 @@ class Config(object):
             self.n_user = conf.getint("KGCN", "n_user")
             self.epoch_iter = conf.getint("KGCN", "epoch_iter")
 
+        elif model == 'general_HGNN':
+            self.lr = conf.getfloat("general_HGNN", "lr")
+            self.weight_decay = conf.getfloat("general_HGNN", "weight_decay")
+            self.dropout = conf.getfloat("general_HGNN", "dropout")
+
+            self.hidden_dim = conf.getint('general_HGNN', 'hidden_dim')
+            self.num_heads = conf.getint('general_HGNN', 'num_heads')
+            self.patience = conf.getint('general_HGNN', 'patience')
+            self.max_epoch = conf.getint('general_HGNN', 'max_epoch')
+            self.mini_batch_flag = conf.getboolean("general_HGNN", "mini_batch_flag")
+            self.layers_gnn = conf.getint("general_HGNN", "layers_gnn")
+            self.layers_pre_mp = conf.getint("general_HGNN", "layers_pre_mp")
+            self.layers_post_mp = conf.getint("general_HGNN", "layers_post_mp")
+            self.stage_type = conf.get('general_HGNN', 'stage_type')
+            self.gnn_type = conf.get('general_HGNN', 'gnn_type')
+            self.activation = conf.get('general_HGNN', 'activation')
+            self.activation = act_dict[self.activation]
+            self.subgraph = conf.get('general_HGNN', 'subgraph')
+            self.feat = conf.getint('general_HGNN', 'feat')
+            self.has_bn = conf.getboolean('general_HGNN', 'has_bn')
+            self.has_l2norm = conf.getboolean('general_HGNN', 'has_l2norm')
+            self.macro_func = conf.get('general_HGNN', 'macro_func')
+
+        elif model == 'homo_GNN':
+            self.lr = conf.getfloat("homo_GNN", "lr")
+            self.weight_decay = conf.getfloat("homo_GNN", "weight_decay")
+            self.dropout = conf.getfloat("homo_GNN", "dropout")
+
+            self.hidden_dim = conf.getint('homo_GNN', 'hidden_dim')
+            self.num_heads = conf.getint('homo_GNN', 'num_heads')
+            self.patience = conf.getint('homo_GNN', 'patience')
+            self.max_epoch = conf.getint('homo_GNN', 'max_epoch')
+            self.mini_batch_flag = conf.getboolean("homo_GNN", "mini_batch_flag")
+            self.layers_gnn = conf.getint("homo_GNN", "layers_gnn")
+            self.layers_pre_mp = conf.getint("homo_GNN", "layers_pre_mp")
+            self.layers_post_mp = conf.getint("homo_GNN", "layers_post_mp")
+            self.stage_type = conf.get('homo_GNN', 'stage_type')
+            self.gnn_type = conf.get('homo_GNN', 'gnn_type')
+            self.activation = conf.get('homo_GNN', 'activation')
+            self.activation = act_dict[self.activation]
+            self.subgraph = conf.get('homo_GNN', 'subgraph')
+            self.feat = conf.getint('homo_GNN', 'feat')
+            self.has_bn = conf.getboolean('homo_GNN', 'has_bn')
+            self.has_l2norm = conf.getboolean('homo_GNN', 'has_l2norm')
         elif model == 'HeGAN':
             self.lr_gen = conf.getfloat('HeGAN', 'lr_gen')
             self.lr_dis = conf.getfloat('HeGAN', 'lr_dis')

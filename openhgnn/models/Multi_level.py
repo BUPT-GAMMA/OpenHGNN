@@ -36,7 +36,7 @@ conv = dglnn.HeteroGraphConv({
     aggregate='sum')
 
 
-from openhgnn.models.micro_layer.LSTM_conv import LSTMConv
+from openhgnn.layers.micro_layer import LSTMConv
 class HGConvLayer(nn.Module):
     def __init__(self, graph: dgl.DGLHeteroGraph, input_dim: int, hidden_dim: int, n_heads: int = 4,
                  dropout: float = 0.2, residual: bool = True):

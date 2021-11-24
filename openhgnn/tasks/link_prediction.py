@@ -67,6 +67,8 @@ class LinkPrediction(BaseTask):
             return self.evaluator.mrr_
         elif name == 'academic_lp':
             return self.evaluator.author_link_prediction(logits, self.dataset.train_batch, self.dataset.test_batch)
+        else:
+            return self.evaluator.link_prediction
 
     def get_batch(self):
         return self.dataset.train_batch, self.dataset.test_batch

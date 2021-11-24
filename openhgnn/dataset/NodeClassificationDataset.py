@@ -4,10 +4,12 @@ import torch as th
 import numpy as np
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
+import scipy.sparse as sp
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
 from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
+from .utils import sparse_mx_to_torch_sparse_tensor
 from ..utils import add_reverse_edges
 
 
@@ -41,6 +43,7 @@ class NodeClassificationDataset(BaseDataset):
         self.num_classes = None
         self.has_feature = False
         self.multi_label = False
+        self.meta_paths_dict =None
         # self.in_dim = None
 
     def get_labels(self):
@@ -203,6 +206,13 @@ class HIN_NodeClassification(NodeClassificationDataset):
             num_classes = 3
             # g, labels, num_classes, train_nid, val_nid, test_nid = load_acm_nars()
             category = 'paper'
+        elif name_dataset == 'acm4HeCo':
+            dataset = AcademicDataset(name='acm4HeCo', raw_dir='')
+            pos = sp.load_npz("./openhgnn/dataset/acm4HeCo/pos.npz")
+            self.pos = sparse_mx_to_torch_sparse_tensor(pos)
+            g = dataset[0].long()
+            num_classes = 3
+            category = 'paper'
         elif name_dataset == 'academic4HetGNN':
             # which is used in HetGNN
             dataset = AcademicDataset(name='academic4HetGNN', raw_dir='')
@@ -215,6 +225,18 @@ class HIN_NodeClassification(NodeClassificationDataset):
             category = 'business'
             g = dataset[0].long()
             num_classes = 3
+        elif name_dataset == 'HNE-PubMed':
+            # which is used in HeGAN
+            dataset = AcademicDataset(name='HNE-PubMed', raw_dir='')
+            category = 'DISEASE'
+            g = dataset[0].long()
+            num_classes = 8
+            g = add_reverse_edges(g)
+            self.meta_paths_dict = {'DCD': [('DISEASE', 'CHEMICAL-in-DISEASE-rev', 'CHEMICAL'), ('CHEMICAL', 'CHEMICAL-in-DISEASE', 'DISEASE')],
+                                    'DDD': [('DISEASE', 'DISEASE-and-DISEASE', 'DISEASE'), ('DISEASE', 'DISEASE-and-DISEASE-rev', 'DISEASE')],
+                                    'DGD': [('DISEASE', 'GENE-causing-DISEASE-rev', 'GENE'), ('GENE', 'GENE-causing-DISEASE', 'DISEASE')],
+                                    'DSD': [('DISEASE', 'SPECIES-with-DISEASE-rev', 'SPECIES'), ('SPECIES', 'SPECIES-with-DISEASE', 'DISEASE')]
+                                    }
         elif name_dataset in ['acm_han', 'acm_han_raw']:
             if name_dataset == 'acm_han':
                 pass
@@ -253,15 +275,14 @@ class HIN_NodeClassification(NodeClassificationDataset):
                 val_idx = train_idx
                 train_idx = train_idx
         else:
-            train_mask = self.g.nodes[self.category].data.pop('train_mask')
-            test_mask = self.g.nodes[self.category].data.pop('test_mask')
+            train_mask = self.g.nodes[self.category].data.pop('train_mask').squeeze()
+            test_mask = self.g.nodes[self.category].data.pop('test_mask').squeeze()
             train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
             test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
             if validation:
                 if 'val_mask' in self.g.nodes[self.category].data:
-                    val_mask = self.g.nodes[self.category].data.pop('val_mask')
+                    val_mask = self.g.nodes[self.category].data.pop('val_mask').squeeze()
                     val_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
-                    pass
                 else:
                     random_int = th.randperm(len(train_idx))
                     val_idx = train_idx[random_int[:len(train_idx) // 10]]
@@ -295,7 +316,8 @@ class HGB_NodeClassification(NodeClassificationDataset):
     `HGB datasets <https://github.com/THUDM/HGB>`_
     """
 
-    def __init__(self, dataset_name):
+
+    def __init__(self, dataset_name, **kwargs):
         super(HGB_NodeClassification, self).__init__()
         self.dataset_name = dataset_name
         self.has_feature = True
@@ -305,28 +327,33 @@ class HGB_NodeClassification(NodeClassificationDataset):
             category = 'paper'
             num_classes = 3
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
-            self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')),
-                               (('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper')),
-                               (('paper', 'paper-cite-paper', 'paper'), ('paper', 'paper-author', 'author'),
-                                ('author', 'author-paper', 'paper')),
-                               (('paper', 'paper-cite-paper', 'paper'), ('paper', 'paper-subject', 'subject'),
-                                ('subject', 'subject-paper', 'paper')),
-                               (('paper', 'paper-ref-paper', 'paper'), ('paper', 'paper-author', 'author'),
-                                ('author', 'author-paper', 'paper')),
-                               (('paper', 'paper-ref-paper', 'paper'), ('paper', 'paper-subject', 'subject'),
-                                ('subject', 'subject-paper', 'paper')),
-                               (('paper', 'paper-term', 'term'), ('term', 'term-paper', 'paper'))]
+            self.meta_paths_dict = {'PAP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')],
+                                    'PSP': [('paper', 'paper-subject', 'subject'),
+                                            ('subject', 'subject-paper', 'paper')],
+                                    'PcPAP': [('paper', 'paper-cite-paper', 'paper'),
+                                              ('paper', 'paper-author', 'author'),
+                                              ('author', 'author-paper', 'paper')],
+                                    'PcPSP': [('paper', 'paper-cite-paper', 'paper'),
+                                              ('paper', 'paper-subject', 'subject'),
+                                              ('subject', 'subject-paper', 'paper')],
+                                    'PrPAP': [('paper', 'paper-ref-paper', 'paper'),
+                                              ('paper', 'paper-author', 'author'),
+                                              ('author', 'author-paper', 'paper')],
+                                    'PrPSP': [('paper', 'paper-ref-paper', 'paper'),
+                                              ('paper', 'paper-subject', 'subject'),
+                                              ('subject', 'subject-paper', 'paper')]
+                                    }
         elif dataset_name == 'HGBn-DBLP':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'author'
             num_classes = 4
-            self.meta_paths = [(('author', 'author-paper', 'paper'), ('paper', 'paper-author', 'author')),
-                               (('author', 'author-paper', 'paper'), ('paper', 'paper-term', 'term'),
-                                ('term', 'term-paper', 'paper'), ('paper', 'paper-author', 'author')),
-                               (('author', 'author-paper', 'paper'), ('paper', 'paper-venue', 'venue'),
-                                ('venue', 'venue-paper', 'paper'), ('paper', 'paper-author', 'author')),
-                               ]
+            self.meta_paths_dict = {'APA': [('author', 'author-paper', 'paper'), ('paper', 'paper-author', 'author')],
+                                    'APTPA': [('author', 'author-paper', 'paper'), ('paper', 'paper-term', 'term'),
+                                              ('term', 'term-paper', 'paper'), ('paper', 'paper-author', 'author')],
+                                    'APVPA': [('author', 'author-paper', 'paper'), ('paper', 'paper-venue', 'venue'),
+                                              ('venue', 'venue-paper', 'paper'), ('paper', 'paper-author', 'author')],
+                                    }
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         elif dataset_name == 'HGBn-Freebase':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
@@ -335,35 +362,45 @@ class HGB_NodeClassification(NodeClassificationDataset):
             num_classes = 7
             self.has_feature = False
             g = add_reverse_edges(g)
-            self.meta_paths = [(('BOOK', 'BOOK-and-BOOK', 'BOOK'),),
-                               (('BOOK', 'BOOK-to-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')),
-                               (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
-                                ('ORGANIZATION', 'ORGANIZATION-in-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')),
-                               (('BOOK', 'BOOK-on-LOCATION', 'LOCATION'), ('LOCATION', 'MUSIC-on-LOCATION-rev', 'MUSIC'),
-                                ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')),
-                               (('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'), ('PEOPLE', 'PEOPLE-to-BOOK', 'BOOK')),
-                               (('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'), ('PEOPLE', 'PEOPLE-to-SPORTS', 'SPORTS'),
-                                ('SPORTS', 'BOOK-on-SPORTS-rev', 'BOOK')),
-                               (('BOOK', 'BUSINESS-about-BOOK-rev', 'BUSINESS'),
-                                ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK')),
-                               (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
-                                ('ORGANIZATION', 'ORGANIZATION-to-MUSIC', 'MUSIC'),
-                                ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')),
-                               (('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
-                                ('ORGANIZATION', 'ORGANIZATION-for-BUSINESS', 'BUSINESS'),
-                                ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK'))
-                               ]
-
+            self.meta_paths_dict = {'BB': [('BOOK', 'BOOK-and-BOOK', 'BOOK')],
+                                    'BFB': [('BOOK', 'BOOK-to-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')],
+                                    'BOFB': [('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                             ('ORGANIZATION', 'ORGANIZATION-in-FILM', 'FILM'),
+                                             ('FILM', 'BOOK-to-FILM-rev', 'BOOK')],
+                                    'BLMB': [('BOOK', 'BOOK-on-LOCATION', 'LOCATION'),
+                                             ('LOCATION', 'MUSIC-on-LOCATION-rev', 'MUSIC'),
+                                             ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')],
+                                    'BPB': [('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'),
+                                            ('PEOPLE', 'PEOPLE-to-BOOK', 'BOOK')],
+                                    'BPSB': [('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'),
+                                             ('PEOPLE', 'PEOPLE-to-SPORTS', 'SPORTS'),
+                                             ('SPORTS', 'BOOK-on-SPORTS-rev', 'BOOK')],
+                                    'BBuB': [('BOOK', 'BUSINESS-about-BOOK-rev', 'BUSINESS'),
+                                             ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK')],
+                                    # 'BOMB': [('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                    #          ('ORGANIZATION', 'ORGANIZATION-to-MUSIC', 'MUSIC'),
+                                    #          ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')],
+                                    # 'BOBuB': [('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                    #           ('ORGANIZATION', 'ORGANIZATION-for-BUSINESS', 'BUSINESS'),
+                                    #           ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK')]
+                                    }
             # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         elif dataset_name == 'HGBn-IMDB':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
             category = 'movie'
             num_classes = 5
-            self.meta_paths = [(('movie', 'movie->actor', 'actor'), ('actor', 'actor->movie', 'movie')),
-                               (('movie', 'movie->director', 'director'), ('director', 'director->movie', 'movie')),
-                               (('movie', 'movie->keyword', 'keyword'), ('keyword', 'keyword->movie', 'movie'))]
-
+            self.meta_paths_dict = {
+                'MAM': [('movie', 'movie->actor', 'actor'), ('actor', 'actor->movie', 'movie')],
+                'MDM': [('movie', 'movie->director', 'director'), ('director', 'director->movie', 'movie')],
+                'MKM': [('movie', 'movie->keyword', 'keyword'), ('keyword', 'keyword->movie', 'movie')],
+                'DMD': [('director', 'director->movie', 'movie'), ('movie', 'movie->director', 'director')],
+                'DMAMD': [('director', 'director->movie', 'movie'), ('movie', 'movie->actor', 'actor'),
+                          ('actor', 'actor->movie', 'movie'), ('movie', 'movie->director', 'director')],
+                'AMA': [('actor', 'actor->movie', 'movie'), ('movie', 'movie->actor', 'actor')],
+                'AMDMA': [('actor', 'actor->movie', 'movie'), ('movie', 'movie->director', 'director'),
+                          ('director', 'director->movie', 'movie'), ('movie', 'movie->actor', 'actor')]
+            }
             # RuntimeError: result type Float can't be cast to the desired output type Long
             self.multi_label = True
         else:

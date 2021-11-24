@@ -12,17 +12,20 @@ class AcademicDataset(DGLDataset):
         'acm4GTN': 'dataset/acm4GTN.zip',
         'acm4NSHE': 'dataset/acm4NSHE.zip',
         'acm4NARS': 'dataset/acm4NARS.zip',
+        'acm4HeCo': 'dataset/acm4HeCo.zip',
         'imdb4MAGNN': 'dataset/imdb4MAGNN.zip',
         'imdb4GTN': 'dataset/imdb4GTN.zip',
         'DoubanMovie': 'dataset/DoubanMovie.zip',
         'dblp4MAGNN': 'dataset/dblp4MAGNN.zip',
         'yelp4HeGAN': 'dataset/yelp4HeGAN.zip',
-        'yelp4rec': 'dataset/yelp4rec.zip'
+        'yelp4rec': 'dataset/yelp4rec.zip',
+        'HNE-PubMed': 'dataset/HNE-PubMed.zip',
+        'amazon4SLICE': 'dataset/amazon4SLICE.zip'
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
-        assert name in ['acm4GTN', 'acm4NSHE', 'academic4HetGNN', 'imdb4MAGNN', 'imdb4GTN',
-                        'DoubanMovie', 'dblp4MAGNN', 'acm4NARS', 'yelp4rec', 'yelp4HeGAN']
+        assert name in ['acm4GTN', 'acm4NSHE', 'academic4HetGNN', 'imdb4MAGNN', 'imdb4GTN', 'HNE-PubMed',
+                        'DoubanMovie', 'dblp4MAGNN', 'acm4NARS', 'acm4HeCo', 'yelp4rec', 'yelp4HeGAN', 'amazon4SLICE']
         self.data_path = './openhgnn/' + self._urls[name]
         self.g_path = './openhgnn/dataset/' + name + '/graph.bin'
         raw_dir = './openhgnn/dataset'
