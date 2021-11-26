@@ -1,13 +1,10 @@
-import copy
 import dgl
 import torch as th
-import numpy as np
 from tqdm import tqdm
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from ..models import build_model
 from . import BaseFlow, register_flow
-from ..tasks import build_task
 from ..sampler.HetGNN_sampler import SkipGramBatchSampler, HetGNNCollator, NeighborSampler, hetgnn_graph
 from ..utils import EarlyStopping
 
@@ -51,11 +48,6 @@ class HetGNNTrainer(BaseFlow):
                 self.dataloader_it = iter(dataloader)
                 self.hg = self.hg.to(self.args.device)
                 self.het_graph = self.het_graph.to(self.args.device)
-            # elif self.args.model == 'Metapath2vec':
-            #     batch_sampler = SkipGramBatchSampler(self.hg, self.args.batch_size, self.args.window_size, self.args.rw_length)
-            #     collator = MP2vecCollator(self.hg.ntypes, batch_sampler.num_nodes)
-            #     dataloader = DataLoader(batch_sampler, collate_fn=collator.collate_train, num_workers=self.args.num_workers)
-            #     self.dataloader_it = iter(dataloader)
 
         return
 
