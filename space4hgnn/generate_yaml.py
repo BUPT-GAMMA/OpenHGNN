@@ -24,10 +24,10 @@ num_heads = [1, 2, 4, 8]
 featn = [0, 1, 2]
 featl = [0, 2]
 loss_fn = ['distmult', 'dot-product']
-aggr = ['gcnconv', 'gatconv', 'ginconv', 'sageconv']
+gnn_type = ['gcnconv', 'gatconv', 'ginconv', 'sageconv']
 
 
-def makeDict(aggr, type):
+def makeDict(gnn_type, type):
     dict = {
         'hidden_dim': choice(hidden_dim),
         'layers_pre_mp': choice(layers_pre_mp),
@@ -48,11 +48,11 @@ def makeDict(aggr, type):
         'optimizer': choice(optimizer),
         'num_heads': choice(num_heads),
         'loss_fn': choice(loss_fn) if type == 'link' else None,
-        'gnn_type': aggr,
+        'gnn_type': gnn_type,
     }
     return dict
 
-def generate(aggr, i, key, configfile):
+def generate(gnn_type, i, key, configfile):
     datasets_node = ['HGBn-ACM', 'HGBn-IMDB', 'HGBn-DBLP', 'HGBn-Freebase', 'HNE-PubMed']
     datasets_link = ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB']
     datasets_rec = ['yelp4HeGAN', 'DoubanMovie']
@@ -61,13 +61,13 @@ def generate(aggr, i, key, configfile):
     dicts3 = {}
 
     for a in datasets_node:
-        dict = makeDict(aggr, 'node')
+        dict = makeDict(gnn_type, 'node')
         dicts[a] = dict
     for a in datasets_link:
-        dict = makeDict(aggr, 'link')
+        dict = makeDict(gnn_type, 'link')
         dicts2[a] = dict
     for a in datasets_rec:
-        dict = makeDict(aggr, 'rec')
+        dict = makeDict(gnn_type, 'rec')
         dicts3[a] = dict
 
     aproject = {'node_classification': dicts,
@@ -82,19 +82,20 @@ def generate(aggr, i, key, configfile):
     path = '{}/{}'.format(path, key)
     if not os.path.exists(path):
         os.makedirs(path)
-    name = aggr + '_' + i + '.yaml'
+    name = gnn_type + '_' + i + '.yaml'
     yamlPath = os.path.join(path, name)
 
     with open(yamlPath, 'w') as f:
-        print(yaml.dump(aproject, f))
+        yaml.dump(aproject, f)
+        print('Generate yaml file successfully!')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--aggr', '-a', default='gcnconv', type=str, help='gnn type')
+    parser.add_argument('--gnn_type', '-a', default='gcnconv', type=str, help='gnn type')
     parser.add_argument('--times', '-s', default='1', type=str, help='times')
-    parser.add_argument('--key', '-k', default='hidden_dim', type=str, help='attribute')
-    parser.add_argument('--configfile', '-c', default='config', type=str, help='config file path')
+    parser.add_argument('--key', '-k', default='has_bn', type=str, help='attribute')
+    parser.add_argument('--configfile', '-c', default='test', type=str, help='config file path')
 
     args = parser.parse_args()
-    generate(args.aggr, args.times, args.key, args.configfile)
+    generate(args.gnn_type, args.times, args.key, args.configfile)

@@ -16,7 +16,7 @@ def Space4HGNN(args):
     for i in range(args.repeat):
         args.seed = i
         set_random_seed(args.seed)
-        path = './space4hgnn/prediction/txt/{}/{}_{}/{}_{}_{}'.format(args.predictfile, args.key, args.value, args.subgraph, args.gnn_type, args.times)
+        path = './space4hgnn/prediction/txt/{}/{}_{}/{}_{}_{}'.format(args.predictfile, args.key, args.value, args.subgraph_extraction, args.gnn_type, args.times)
         if not os.path.exists(path):
             os.makedirs(path)
         args.HGB_results_path = '{}/{}_{}.txt'.format(path, args.dataset[5:], str(i+1))
@@ -33,7 +33,7 @@ def Space4HGNN(args):
         'value': [args.value],
         'dataset': [args.dataset],
         'model': [args.model],
-        'subgraph': [args.subgraph],
+        'subgraph_extraction': [args.subgraph_extraction],
         'gnn_type': [args.gnn_type],
         'times': [args.times],
         'hidden_dim': [args.hidden_dim],
@@ -68,21 +68,21 @@ def Space4HGNN(args):
     path = 'space4hgnn/prediction/excel/{}/{}_{}'.format(args.predictfile, args.key, args.value)
     if not os.path.exists(path):
         os.makedirs(path)
-    df.to_csv('{}/{}_{}_{}_{}.csv'.format(path, args.subgraph, args.gnn_type, args.times, args.dataset))
+    df.to_csv('{}/{}_{}_{}_{}.csv'.format(path, args.subgraph_extraction, args.gnn_type, args.times, args.dataset))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', default='homo_GNN', type=str, help='name of models')
-    parser.add_argument('--subgraph', '-u', default='metapath', type=str, help='subgraph of models')
+    parser.add_argument('--subgraph_extraction', '-u', default='metapath', type=str, help='subgraph_extraction of models')
     parser.add_argument('--task', '-t', default='link_prediction', type=str, help='name of task')
     parser.add_argument('--dataset', '-d', default='HGBl-PubMed', type=str, help='name of datasets')
     parser.add_argument('--gpu', '-g', default='0', type=int, help='-1 means cpu')
     parser.add_argument('--repeat', '-r', default='5', type=int, help='-1 means cpu')
     parser.add_argument('--gnn_type', '-a', default='gcnconv', type=str, help='aggregation type')
     parser.add_argument('--times', '-s', default=1, type=int, help='which yaml file')
-    parser.add_argument('--key', '-k', default='hidden_dim', type=str, help='attribute')
-    parser.add_argument('--value', '-v', default='8', type=str, help='value')
+    parser.add_argument('--key', '-k', default='has_bn', type=str, help='attribute')
+    parser.add_argument('--value', '-v', default='True', type=str, help='value')
     parser.add_argument('--configfile', '-c', default='config', type=str, help='The file path to load the configuration.')
     parser.add_argument('--predictfile', '-p', default='predict', type=str, help='The file path to store predict files.')
     args = parser.parse_args()

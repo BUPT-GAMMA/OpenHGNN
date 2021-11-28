@@ -27,6 +27,14 @@ def load_act(act):
 
 
 def read_config(args):
+    # specify the model family
+    if args.model == 'homo_GNN':
+        args.model_family = 'homogenization'
+    elif args.model == 'general_HGNN':
+        assert args.subgraph_extraction in ['relation', 'metapath']
+        args.model_family = args.subgraph_extraction
+    else:
+        raise ValueError('Wrong model name or subgraph_extraction')
     fileNamePath = os.path.split(os.path.realpath(__file__))[0]
     if args.key == 'gnn_type':
         yamlPath = os.path.join(fileNamePath, 'config/{}/{}.yaml'.format(args.configfile, args.times))

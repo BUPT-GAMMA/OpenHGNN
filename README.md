@@ -58,19 +58,20 @@ usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
                [--gpu GPU] [--use_best_config]
 
 *optional arguments*:
-	-h, --help            show this help message and exit
 
-​	--model MODEL,	-m MODEL	name of models
+``-h, --help``            show this help message and exit
 
-​	--task TASK,	-t TASK	name of task
+``--model -m ``		name of models
 
-​	--dataset DATASET,	-d DATASET	name of datasets
+``--task -t``	name of task
 
-​	--gpu GPU, -g GPU	controls which gpu you will use. If you do not have gpu, set -g -1.
+``--dataset -d``	name of datasets
 
-​	--use_best_config	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. The best_config will override the parameter in config.ini.
+``--gpu -g``	controls which gpu you will use. If you do not have gpu, set -g -1.
 
-​	--use_hpo Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
+``--use_best_config``	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. The best_config will override the parameter in config.ini.
+
+``--use_hpo`` Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
 
 e.g.: 
 
