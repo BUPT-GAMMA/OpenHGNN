@@ -6,9 +6,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-#downloaded data
+# downloaded data
 *.zip
 *.bin
+*.pt
 
-#numpy files
+# numpy files
 *.npy
+
+# yaml files
+*.yaml
+
+.DS_Store
+*.txt

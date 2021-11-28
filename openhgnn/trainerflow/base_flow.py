@@ -55,32 +55,49 @@ class BaseFlow(ABC):
 
         """
         if hasattr(self.args, 'activation'):
-            act = self.args.activation
+            if hasattr(self.args.activation, 'weight'):
+                import torch.nn as nn
+                act = nn.PReLU()
+            else:
+                act = self.args.activation
         else:
             act = None
         # useful type selection
-        if self.args.dataset[:3] == 'HGB':
-            if self.args.feat == 0:
-                print("feat0, pass!")
-                pass
-            elif self.args.feat == 1:
+        if hasattr(self.args, 'feat'):
+            pass
+        else:
+            self.args.feat = 0
+        if self.args.feat == 0:
+            print("feat0, pass!")
+            if isinstance(self.hg.ndata['h'], dict):
+                self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg),
+                                                   self.args.hidden_dim, act=act).to(self.device)
+            elif isinstance(self.hg.ndata['h'], torch.Tensor):
+                self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg),
+                                                   self.args.hidden_dim, act=act).to(self.device)
+        elif self.args.feat == 1:
+            if self.args.task != 'node_classification':
+                print('it is only for node classification task!')
+            else:
                 h_dict = self.hg.ndata.pop('h')
-                if h_dict.get(self.category, False):
-                    self.hg.ndata['h'] = {self.category: h_dict[self.category]}
-                    print('feat1, preserve target nodes!')
-            elif self.args.feat == 2:
-                self.hg.ndata.pop('h')
-                print('feat2, drop features!')
-
-        if isinstance(self.hg.ndata['h'], dict):
-            self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim, act=act).to(self.device)
-        elif isinstance(self.hg.ndata['h'], torch.Tensor):
-            self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim, act=act).to(self.device)
+                print('feat1, preserve target nodes!')
+                self.input_feature = HeteroFeature({self.category: h_dict[self.category]}, get_nodes_dict(self.hg), self.args.hidden_dim,
+                                                   act=act).to(self.device)
+        elif self.args.feat == 2:
+            self.hg.ndata.pop('h')
+            self.input_feature = HeteroFeature({}, get_nodes_dict(self.hg), self.args.hidden_dim,
+                                               act=act).to(self.device)
+            print('feat2, drop features!')
+        # if isinstance(self.hg.ndata['h'], dict):
+        #     self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg), self.args.hidden_dim, act=act).to(self.device)
+        # elif isinstance(self.hg.ndata['h'], torch.Tensor):
+        #     self.input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg), self.args.hidden_dim, act=act).to(self.device)
         # else:
         #     self.input_feature = HeteroFeature({}, get_nodes_dict(self.hg), self.args.hidden_dim,
         #                                        act=act).to(self.device)
         self.optimizer.add_param_group({'params': self.input_feature.parameters()})
-        self.model.add_module('feature', self.input_feature)
+        # for early stop, load the model with input_feature module.
+        self.model.add_module('input_feature', self.input_feature)
 
     @abstractmethod
     def train(self):

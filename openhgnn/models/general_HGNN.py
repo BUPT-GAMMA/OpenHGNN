@@ -29,7 +29,7 @@ class general_HGNN(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
         out_node_type = args.out_node_type
-        args.subgraph_extraction = args.subgraph
+        # args.subgraph_extraction = 'metapath'
         if args.subgraph_extraction == 'relation':
             new_hg = hg
             print('relation extraction!')

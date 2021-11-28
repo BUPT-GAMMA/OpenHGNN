@@ -132,7 +132,7 @@ class NodeClassification(BaseFlow):
             printMetric(self.metric, val_score, 'validation')
             self.model.eval()
             with torch.no_grad():
-                h_dict = self.input_feature()
+                h_dict = self.model.input_feature()
                 logits = self.model(self.hg, h_dict)[self.category]
                 self.task.dataset.save_results(logits=logits, file_path=self.args.HGB_results_path)
             return val_score[0], val_score[1], epoch
@@ -149,7 +149,7 @@ class NodeClassification(BaseFlow):
 
     def _full_train_step(self):
         self.model.train()
-        h_dict = self.input_feature()
+        h_dict = self.model.input_feature()
         logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
         self.optimizer.zero_grad()
@@ -181,7 +181,7 @@ class NodeClassification(BaseFlow):
     def _full_test_step(self, mode=None, logits=None):
         self.model.eval()
         with torch.no_grad():
-            h_dict = self.input_feature()
+            h_dict = self.model.input_feature()
             logits = logits if logits else self.model(self.hg, h_dict)[self.category]
             if mode == "train":
                 mask = self.train_idx

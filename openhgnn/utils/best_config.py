@@ -77,6 +77,19 @@ BEST_CONFIGS = {
                 'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,
             },
         },
+        'fastGTN': {
+            'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 64, 'max_epoch': 100, 'patience': 20,
+                        'norm_emd_flag': True, 'mini_batch_flag': False},
+            'acm4GTN': {
+                'num_layers': 2, 'num_channels': 8, 'adaptive_lr_flag': False,
+            },
+            'imdb4GTN': {
+                'num_layers': 2, 'num_channels': 4, 'adaptive_lr_flag': False,
+            },
+            'dblp4GTN': {
+                'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,
+            },
+        },
         'MHNF': {
             'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 64, 'max_epoch': 50, 'patience': 10,
                         'norm_emd_flag': True, 'mini_batch_flag': False},

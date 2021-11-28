@@ -5,7 +5,6 @@ from dgl.data.utils import load_graphs
 from dgl.data.knowledge_graph import load_data
 from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
-import os
 from ..utils import add_reverse_edges
 
 
@@ -17,7 +16,84 @@ class LinkPredictionDataset(BaseDataset):
 
     def __init__(self, ):
         super(LinkPredictionDataset, self).__init__()
-        self.meta_paths_dict = None
+        self.target_link = None
+        self.target_link_r = None
+
+    def get_idx(self, val_ratio=0.1, test_ratio=0.2):
+        """
+        Get subgraphs for train, valid and test.
+        Generally, the original will have train_mask and test_mask in edata, or we will split it automatically.
+
+        If the original graph do not has the train_mask in edata, we default that there is no valid_mask and test_mask.
+        So we will split the edges of the original graph into train/valid/test 0.7/0.1/0.2.
+
+        The dataset has not validation_mask, so we split train edges randomly.
+        Parameters
+        ----------
+        val_ratio : int
+            The ratio of validation. Default: 0.1
+        test_ratio : int
+            The ratio of test. Default: 0.2
+
+        Returns
+        -------
+        train_hg
+        """
+
+        val_edge_dict = {}
+        test_edge_dict = {}
+        out_ntypes = []
+        train_graph = self.g
+        for i, etype in enumerate(self.target_link):
+            if 'train_mask' not in self.g.edges[etype].data:
+                num_edges = self.g.num_edges(etype)
+
+                random_int = th.randperm(num_edges)
+                val_index = random_int[:int(num_edges * val_ratio)]
+                val_edge = self.g.find_edges(val_index, etype)
+                test_index = random_int[int(num_edges * test_ratio):int(num_edges * test_ratio)]
+                test_edge = self.g.find_edges(test_index, etype)
+
+                val_edge_dict[etype] = val_edge
+                test_edge_dict[etype] = test_edge
+                out_ntypes.append(etype[0])
+                out_ntypes.append(etype[2])
+                # train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
+                train_graph = dgl.remove_edges(train_graph, val_index, etype)
+                if self.target_link_r is None:
+                    pass
+                else:
+                    reverse_edge = self.target_link_r[i]
+                    train_graph = dgl.remove_edges(train_graph, th.arange(train_graph.num_edges(reverse_edge)),
+                                                   reverse_edge)
+                    edges = train_graph.edges(etype=etype)
+                    train_graph = dgl.add_edges(train_graph, edges[1], edges[0], etype=reverse_edge)
+
+            else:
+                val_mask = self.g.edges[etype].data['valid_mask'].squeeze()
+                val_index = th.nonzero(val_mask).squeeze()
+                val_edge = self.g.find_edges(val_index, etype)
+
+                test_mask = self.g.edges[etype].data['test_mask'].squeeze()
+                test_index = th.nonzero(test_mask).squeeze()
+                test_edge = self.g.find_edges(test_index, etype)
+
+                val_edge_dict[etype] = val_edge
+                test_edge_dict[etype] = test_edge
+                out_ntypes.append(etype[0])
+                out_ntypes.append(etype[2])
+                self.val_label = train_graph.edges[etype[1]].data['label'][val_index]
+                self.test_label = train_graph.edges[etype[1]].data['label'][test_index]
+                train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
+
+        # train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), 'item-user')
+        self.out_ntypes = set(out_ntypes)
+        val_graph = dgl.heterograph(val_edge_dict,
+                                    {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
+        test_graph = dgl.heterograph(test_edge_dict,
+                                     {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
+
+        return train_graph, val_graph, test_graph
 
 
 @register_dataset('demo_link_prediction')
@@ -74,46 +150,6 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         super(HIN_LinkPrediction, self).__init__()
         self.g = self.load_HIN(dataset_name)
 
-    def get_idx(self):
-        r"""
-        Get graphs for train, valid or test.
-
-        The dataset has not validation_mask, so we split train edges randomly.
-        """
-        val_edge_dict = {}
-        test_edge_dict = {}
-        out_ntypes = []
-        train_graph = self.g
-        val_ratio = 0.1
-        for etype in self.target_link:
-            # train_mask = self.g.edges[etype].data['train_mask'].squeeze()
-            # train_index = th.nonzero(train_mask).squeeze()
-
-            val_mask = self.g.edges[etype].data['valid_mask'].squeeze()
-            val_index = th.nonzero(val_mask).squeeze()
-            val_edge = self.g.find_edges(val_index, etype)
-
-            test_mask = self.g.edges[etype].data['test_mask'].squeeze()
-            test_index = th.nonzero(test_mask).squeeze()
-            test_edge = self.g.find_edges(test_index, etype)
-
-            val_edge_dict[etype] = val_edge
-            test_edge_dict[etype] = test_edge
-            out_ntypes.append(etype[0])
-            out_ntypes.append(etype[2])
-            self.val_label = train_graph.edges[etype[1]].data['label'][val_index]
-            self.test_label = train_graph.edges[etype[1]].data['label'][test_index]
-            train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
-
-        #train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), 'item-user')
-        self.out_ntypes = set(out_ntypes)
-        val_graph = dgl.heterograph(val_edge_dict,
-                                    {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
-        test_graph = dgl.heterograph(test_edge_dict,
-                                     {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
-
-        return train_graph, val_graph, test_graph
-
     def load_link_pred(self, path):
         u_list = []
         v_list = []
@@ -127,6 +163,7 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         return u_list, v_list, label_list
 
     def load_HIN(self, dataset_name):
+        self.dataset_name = dataset_name
         if dataset_name == 'academic4HetGNN':
             # which is used in HetGNN
             dataset = AcademicDataset(name='academic4HetGNN', raw_dir='')
@@ -143,7 +180,69 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         elif dataset_name == 'amazon4SLICE':
             dataset = AcademicDataset(name='amazon4SLICE', raw_dir='')
             g = dataset[0].long()
+        elif dataset_name == 'HGBl-ACM':
+            dataset = HGBDataset(name='HGBn-ACM', raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = True
+            self.target_link = [('paper', 'paper-ref-paper', 'paper')]
+            self.node_type = ['author', 'paper', 'subject', 'term']
+            self.target_link_r = [('paper', 'paper-cite-paper', 'paper')]
+            self.meta_paths_dict = {'PAP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')],
+                                    'PSP': [('paper', 'paper-subject', 'subject'),
+                                            ('subject', 'subject-paper', 'paper')],
+                                    'PcPAP': [('paper', 'paper-cite-paper', 'paper'),
+                                              ('paper', 'paper-author', 'author'),
+                                              ('author', 'author-paper', 'paper')],
+                                    'PcPSP': [('paper', 'paper-cite-paper', 'paper'),
+                                              ('paper', 'paper-subject', 'subject'),
+                                              ('subject', 'subject-paper', 'paper')],
+                                    'PrPAP': [('paper', 'paper-ref-paper', 'paper'),
+                                              ('paper', 'paper-author', 'author'),
+                                              ('author', 'author-paper', 'paper')],
+                                    'PrPSP': [('paper', 'paper-ref-paper', 'paper'),
+                                              ('paper', 'paper-subject', 'subject'),
+                                              ('subject', 'subject-paper', 'paper')]
+                                    }
+        elif dataset_name == 'HGBl-DBLP':
+            dataset = HGBDataset(name='HGBn-DBLP', raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = True
+            self.target_link = [('author', 'author-paper', 'paper')]
+            self.node_type = ['author', 'paper', 'venue', 'term']
+            self.target_link_r = [('paper', 'paper-author', 'author')]
+            self.meta_paths_dict = {'APA': [('author', 'author-paper', 'paper'), ('paper', 'paper-author', 'author')],
+                                    'APTPA': [('author', 'author-paper', 'paper'), ('paper', 'paper-term', 'term'),
+                                              ('term', 'term-paper', 'paper'), ('paper', 'paper-author', 'author')],
+                                    'APVPA': [('author', 'author-paper', 'paper'), ('paper', 'paper-venue', 'venue'),
+                                              ('venue', 'venue-paper', 'paper'), ('paper', 'paper-author', 'author')],
+                                    'PAP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')],
+                                    'PTP': [('paper', 'paper-term', 'term'), ('term', 'term-paper', 'paper')],
+                                    'PVP': [('paper', 'paper-venue', 'venue'), ('venue', 'venue-paper', 'paper')],
+                                    }
+
+        elif dataset_name == 'HGBl-IMDB':
+            dataset = HGBDataset(name='HGBn-IMDB', raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = True
+            # self.target_link = [('author', 'author-paper', 'paper')]
+            # self.node_type = ['author', 'paper', 'subject', 'term']
+            # self.target_link_r = [('paper', 'paper-author', 'author')]
+            self.target_link = [('actor', 'actor->movie', 'movie')]
+            self.node_type = ['actor', 'director', 'keyword', 'movie']
+            self.target_link_r = [('movie', 'movie->actor', 'actor')]
+            self.meta_paths_dict = {
+                'MAM': [('movie', 'movie->actor', 'actor'), ('actor', 'actor->movie', 'movie')],
+                'MDM': [('movie', 'movie->director', 'director'), ('director', 'director->movie', 'movie')],
+                'MKM': [('movie', 'movie->keyword', 'keyword'), ('keyword', 'keyword->movie', 'movie')],
+                # 'DMD': [('director', 'director->movie', 'movie'), ('movie', 'movie->director', 'director')],
+                # 'DMAMD': [('director', 'director->movie', 'movie'), ('movie', 'movie->actor', 'actor'),
+                #           ('actor', 'actor->movie', 'movie'), ('movie', 'movie->director', 'director')],
+                'AMA': [('actor', 'actor->movie', 'movie'), ('movie', 'movie->actor', 'actor')],
+                'AMDMA': [('actor', 'actor->movie', 'movie'), ('movie', 'movie->director', 'director'),
+                          ('director', 'director->movie', 'movie'), ('movie', 'movie->actor', 'actor')]
+                                    }
         return g
+
 
 @register_dataset('HGBl_link_prediction')
 class HGB_LinkPrediction(LinkPredictionDataset):
@@ -172,7 +271,6 @@ class HGB_LinkPrediction(LinkPredictionDataset):
         if dataset_name == 'HGBl-amazon':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
-            # g.ndata.pop('h')
             self.has_feature = False
             self.target_link = [('product', 'product-product-0', 'product'),
                                 ('product', 'product-product-1', 'product')]
@@ -180,10 +278,6 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.link = [0, 1]
             self.node_type = ["product"]
             self.test_edge_type = {'product-product-0': 0, 'product-product-1': 1}
-            self.meta_paths = [
-                (('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')),
-                (('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')),
-                ]
             self.meta_paths_dict = {
                 'P0P': [('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')],
                 'P1P': [('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')]
@@ -198,14 +292,6 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.test_edge_type = {'user-artist': 0}
             g = add_reverse_edges(g)
             self.target_link_r = [('artist', 'user-artist-rev', 'user')]
-            self.meta_paths = [
-                (('user', 'user-user', 'user'),),
-                (('user', 'user-artist', 'artist'), ('artist', 'user-artist-rev', 'user')),
-                (('user', 'user-artist', 'artist'), ('artist', 'artist-tag', 'tag'),
-                 ('tag', 'artist-tag-rev', 'artist'), ('artist', 'user-artist-rev', 'user')),
-                (('artist', 'user-artist-rev', 'user'), ('user', 'user-artist', 'artist')),
-                (('artist', 'artist-tag', 'tag'), ('tag', 'artist-tag-rev', 'artist'))
-            ]
             self.meta_paths_dict = {'UU': [('user', 'user-user', 'user')],
                                     'UAU': [('user', 'user-artist', 'artist'), ('artist', 'user-artist-rev', 'user')],
                                     'UATAU': [('user', 'user-artist', 'artist'), ('artist', 'artist-tag', 'tag'),
@@ -223,13 +309,12 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.node_type = ['0', '1', '2', '3']
             self.test_edge_type = {'1_to_1': 2}
             g = add_reverse_edges(g)
-            g.ndata.pop('h')
             self.target_link_r = [('1', '1_to_1-rev', '1')]
             self.meta_paths_dict = {'101': [('1', '0_to_1-rev', '0'), ('0', '0_to_1', '1')],
+                                    '111': [('1', '1_to_1', '1'), ('1', '1_to_1-rev', '1')],
                                     '121': [('1', '2_to_1-rev', '2'), ('2', '2_to_1', '1')],
                                     '131': [('1', '3_to_1-rev', '3'), ('3', '3_to_1', '1')]
                                     }
-
 
         self.g = g
         self.shift_dict = self.calculate_node_shift()
@@ -303,7 +388,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             edge_type_list = th.cat(edge_type_list)
             with open(file_path, "w") as f:
                 for l, r, edge_type, c in zip(src_list, dst_list, edge_type_list, score):
-                    f.write(f"{l}\t{r}\t{edge_type}\t{c}\n")
+                    f.write(f"{l}\t{r}\t{edge_type}\t{round(float(c), 4)}\n")
 
 
 def build_graph_from_triplets(num_nodes, num_rels, triplets):

@@ -199,6 +199,7 @@ class SimpleConv(nn.Module):
         h = self.model(g, h)
         return h
 
+
 class HgtConv(nn.Module):
     def __init__(self, dim_in, dim_out, bias=False, **kwargs):
         super(HgtConv, self).__init__()
@@ -207,6 +208,7 @@ class HgtConv(nn.Module):
     def forward(self, g, h):
         h = self.model(g,h)
         return h
+
 
 class APPNPConv(nn.Module):
     def __init__(self, dim_in, dim_out, bias=False, **kwargs):

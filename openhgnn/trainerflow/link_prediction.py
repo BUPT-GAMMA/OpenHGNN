@@ -1,5 +1,6 @@
 import dgl
 import torch as th
+from torch import nn
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
@@ -11,34 +12,60 @@ from ..utils import extract_embed, EarlyStopping, get_nodes_dict
 
 @register_flow("link_prediction")
 class LinkPrediction(BaseFlow):
-    """Link Prediction flows."""
+    """
+    Link Prediction trainer flows.
+    Here is a tutorial teach you how to train a GNN for link prediction. <https://docs.dgl.ai/en/latest/tutorials/blitz/4_link_predict.html>_
+
+    When training, you will need to remove the edges in the test set from the original graph.
+    DGL recommends you to treat the pairs of nodes as another graph, since you can describe a pair of nodes with an edge.
+    In link prediction, you will have a positive graph consisting of all the positive examples as edges,
+    and a negative graph consisting of all the negative examples.
+    The positive graph and the negative graph will contain the same set of nodes as the original graph.
+    This makes it easier to pass node features among multiple graphs for computation.
+    As you will see later, you can directly feed the node representations computed on the entire graph to the positive
+    and the negative graphs for computing pair-wise scores.
+    """
 
     def __init__(self, args):
         super(LinkPrediction, self).__init__(args)
 
         self.target_link = self.task.dataset.target_link
         self.loss_fn = self.task.get_loss_fn()
-        self.args.has_feature = self.task.dataset.has_feature
 
         self.args.out_node_type = self.task.dataset.out_ntypes
         self.args.out_dim = self.args.hidden_dim
 
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
-        self.model = self.model.to(self.device)
+        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.args.score_fn = 'distmult'
+        if self.args.score_fn == 'distmult':
+            self.r_embedding = nn.ParameterDict({etype[1]: nn.Parameter(th.Tensor(1, self.args.out_dim))
+                                                for etype in self.hg.canonical_etypes}).to(self.device)
+            for _, para in self.r_embedding.items():
+                nn.init.xavier_uniform_(para)
 
         self.evaluator = self.task.get_evaluator('roc_auc')
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-
+        if self.args.score_fn == 'distmult':
+            self.optimizer.add_param_group({'params': self.r_embedding.parameters()})
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
-    def preprocess(self):
         self.train_hg, self.val_hg, self.test_hg = self.task.get_idx()
         self.train_hg = self.train_hg.to(self.device)
         self.val_hg = self.val_hg.to(self.device)
         self.test_hg = self.test_hg.to(self.device)
         self.negative_sampler = Uniform(1)
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
+
+    def preprocess(self):
+        """
+        In link prediction, you will have a positive graph consisting of all the positive examples as edges,
+        and a negative graph consisting of all the negative examples.
+        The positive graph and the negative graph will contain the same set of nodes as the original graph.
+        Returns
+        -------
+
+        """
         self.preprocess_feature()
 
     def train(self):
@@ -63,17 +90,17 @@ class LinkPrediction(BaseFlow):
         stopper.load_model(self.model)
 
         ############ TEST SCORE #########
-        if self.args.dataset[:4] == 'HGBl':
+        if self.args.dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
             self.model.eval()
             with torch.no_grad():
-                h_dict = self.input_feature()
                 val_metric = self._test_step('valid')
+                h_dict = self.model.input_feature()
                 embedding = self.model(self.hg, h_dict)
                 score = th.sigmoid(self.ScorePredictor(self.test_hg, embedding))
                 self.task.dataset.save_results(hg=self.test_hg, score=score, file_path=self.args.HGB_results_path)
-            return dict(Val_score=val_metric)
+            return val_metric, val_metric, epoch
         test_mrr = self._test_step(split="test")
-        val_mrr = self._test_step(split="val")
+        val_mrr = self._test_step(split="valid")
         print(f"Test mrr = {test_mrr:.4f}")
         return dict(Test_mrr=test_mrr, Val_mrr=val_mrr)
 
@@ -105,20 +132,44 @@ class LinkPrediction(BaseFlow):
         return loss
 
     def ScorePredictor(self, edge_subgraph, x):
-        with edge_subgraph.local_scope():
+        if self.args.score_fn == 'dot-product':
+            with edge_subgraph.local_scope():
 
-            for ntype in edge_subgraph.ntypes:
-                edge_subgraph.nodes[ntype].data['x'] = x[ntype]
-            for etype in edge_subgraph.canonical_etypes:
-                edge_subgraph.apply_edges(
-                    dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
-            score = edge_subgraph.edata['score']
-            if isinstance(score, dict):
-                result = []
-                for _, value in score.items():
-                    result.append(value)
-                score = th.cat(result)
-            return score.squeeze()
+                for ntype in edge_subgraph.ntypes:
+                    edge_subgraph.nodes[ntype].data['x'] = x[ntype]
+                for etype in edge_subgraph.canonical_etypes:
+                    edge_subgraph.apply_edges(
+                        dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
+                score = edge_subgraph.edata['score']
+                if isinstance(score, dict):
+                    result = []
+                    for _, value in score.items():
+                        result.append(value)
+                    score = th.cat(result)
+                return score.squeeze()
+        elif self.args.score_fn == 'distmult':
+            score_list = []
+            with edge_subgraph.local_scope():
+                for ntype in edge_subgraph.ntypes:
+                    edge_subgraph.nodes[ntype].data['x'] = x[ntype]
+                for etype in edge_subgraph.canonical_etypes:
+                    e = self.r_embedding[etype[1]]
+                    n = edge_subgraph.num_edges(etype)
+                    if 1 == len(edge_subgraph.canonical_etypes):
+                        edge_subgraph.edata['e'] = e.expand(n, -1)
+                    else:
+                        edge_subgraph.edata['e'] = {etype: e.expand(n, -1)}
+                    edge_subgraph.apply_edges(
+                        dgl.function.u_mul_e('x', 'e', 's'), etype=etype)
+                    edge_subgraph.apply_edges(
+                        dgl.function.e_mul_v('s', 'x', 'score'), etype=etype)
+                    if 1 == len(edge_subgraph.canonical_etypes):
+                        score = th.sum(edge_subgraph.edata['score'], dim=1)
+                    else:
+                        score = th.sum(edge_subgraph.edata['score'].pop(etype), dim=1)
+                    #score = th.sum(th.mul(edge_subgraph.edata['score'].pop(etype), e), dim=1)
+                    score_list.append(score)
+                return th.cat(score_list)
 
     def regularization_loss(self, embedding):
         return th.mean(embedding.pow(2)) + th.mean(self.r_embedding.pow(2))
@@ -134,11 +185,12 @@ class LinkPrediction(BaseFlow):
 
     def _full_train_setp(self):
         self.model.train()
-        h_dict = self.input_feature()
+        h_dict = self.model.input_feature()
         embedding = self.model(self.train_hg, h_dict)
         negative_graph = self.construct_negative_graph(self.positive_graph)
         loss = self.loss_calculation(self.positive_graph, negative_graph, embedding)
-
+        # negative_graph = self.construct_negative_graph(self.train_hg)
+        # loss = self.loss_calculation(self.train_hg, negative_graph, embedding)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -148,15 +200,22 @@ class LinkPrediction(BaseFlow):
     def _test_step(self, split=None, logits=None):
         self.model.eval()
         with th.no_grad():
-            h_dict = self.input_feature()
+            h_dict = self.model.input_feature()
             embedding = self.model(self.hg, h_dict)
             if split == 'valid':
                 eval_hg = self.val_hg
+                # label = self.task.dataset.val_label
+            elif split == 'test':
+                eval_hg = self.test_hg
+                # label = self.task.dataset.test_label
+
+            # score = th.sigmoid(self.ScorePredictor(eval_hg, embedding))
+            # metric = self.evaluator(label.cpu(), score.cpu())
             negative_graph = self.construct_negative_graph(eval_hg)
             p_score = th.sigmoid(self.ScorePredictor(eval_hg, embedding))
             n_score = th.sigmoid(self.ScorePredictor(negative_graph, embedding))
             p_label = th.ones(len(p_score), device=self.device)
             n_label = th.zeros(len(n_score), device=self.device)
-        metric = self.evaluator(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu() )
+        metric = self.evaluator(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu())
 
         return metric
