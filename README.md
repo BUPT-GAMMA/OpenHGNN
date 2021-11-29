@@ -35,14 +35,14 @@ pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.
 
 **3. DGL:** Install [DGL](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html), follow their instructions. For example:
 
-```
+```bash
 # CUDA versions: cpu, cu101, cu102, cu110, cu111
 pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
 ```
 
 **4. OpenHGNN and other dependencies:**
 
-```
+```bash
 git clone https://github.com/BUPT-GAMMA/OpenHGNN
 cd OpenHGNN
 pip install -r requirements.txt
@@ -59,9 +59,9 @@ usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
 
 *optional arguments*:
 
-``-h, --help``            show this help message and exit
+``-h, --help``	show this help message and exit
 
-``--model -m ``		name of models
+``--model -m ``	name of models
 
 ``--task -t``	name of task
 

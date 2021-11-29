@@ -16,7 +16,7 @@ def Space4HGNN(args):
     for i in range(args.repeat):
         args.seed = i
         set_random_seed(args.seed)
-        path = './space4hgnn/prediction/txt/{}/{}_{}/{}_{}_{}'.format(args.predictfile, args.key, args.value, args.subgraph_extraction, args.gnn_type, args.times)
+        path = './space4hgnn/prediction/txt/{}/{}_{}/{}_{}_{}'.format(args.predictfile, args.key, args.value, args.model_family, args.gnn_type, args.times)
         if not os.path.exists(path):
             os.makedirs(path)
         args.HGB_results_path = '{}/{}_{}.txt'.format(path, args.dataset[5:], str(i+1))
@@ -32,8 +32,7 @@ def Space4HGNN(args):
         'key': [args.key],
         'value': [args.value],
         'dataset': [args.dataset],
-        'model': [args.model],
-        'subgraph_extraction': [args.subgraph_extraction],
+        'model_family': [args.model_family],
         'gnn_type': [args.gnn_type],
         'times': [args.times],
         'hidden_dim': [args.hidden_dim],
@@ -68,7 +67,7 @@ def Space4HGNN(args):
     path = 'space4hgnn/prediction/excel/{}/{}_{}'.format(args.predictfile, args.key, args.value)
     if not os.path.exists(path):
         os.makedirs(path)
-    df.to_csv('{}/{}_{}_{}_{}.csv'.format(path, args.subgraph_extraction, args.gnn_type, args.times, args.dataset))
+    df.to_csv('{}/{}_{}_{}_{}.csv'.format(path, args.model_family, args.gnn_type, args.times, args.dataset))
 
 
 if __name__ == '__main__':

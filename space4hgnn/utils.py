@@ -31,7 +31,7 @@ def read_config(args):
     if args.model == 'homo_GNN':
         args.model_family = 'homogenization'
     elif args.model == 'general_HGNN':
-        assert args.subgraph_extraction in ['relation', 'metapath']
+        assert args.subgraph_extraction in ['relation', 'metapath', 'mixed']
         args.model_family = args.subgraph_extraction
     else:
         raise ValueError('Wrong model name or subgraph_extraction')
