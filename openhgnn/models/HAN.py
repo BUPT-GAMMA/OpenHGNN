@@ -96,6 +96,12 @@ class HAN(BaseModel):
 
         return {self.category: self.linear(h)}
 
+    def get_emb(self, g, h_dict):
+        h = h_dict[self.category]
+        for gnn in self.layers:
+            h = gnn(g, h)
+
+        return {self.category: h.detach().cpu().numpy()}
 
 class HANLayer(nn.Module):
     """

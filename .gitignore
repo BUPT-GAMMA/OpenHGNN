@@ -19,3 +19,6 @@ __pycache__/
 
 .DS_Store
 *.txt
+
+# visualization figure files
+*.jpg

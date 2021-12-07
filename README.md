@@ -23,7 +23,7 @@ This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) 
 
 ```bash
 conda create -n openhgnn python=3.7
-source activate openhgnn
+conda activate openhgnn
 ```
 
 **2. Pytorch:** Install [PyTorch](https://pytorch.org/). For example:
@@ -43,7 +43,7 @@ pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
 **4. OpenHGNN and other dependencies:**
 
 ```bash
-git clone https://github.com/BUPT-GAMMA/OpenHGNN
+git clone git@github.com:BUPT-GAMMA/OpenHGNN.git
 cd OpenHGNN
 pip install -r requirements.txt
 ```

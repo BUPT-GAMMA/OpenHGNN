@@ -36,6 +36,7 @@ class NodeClassification(BaseFlow):
 
         self.category = self.args.category
         self.args.out_node_type = [self.category]
+        self.vis_emb = args.vis_emb
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
 
@@ -191,6 +192,11 @@ class NodeClassification(BaseFlow):
                 mask = self.test_idx
             else:
                 mask = None
+            
+            if mode == "test" and self.vis_emb:
+                x = self.model.get_emb(self.hg, h_dict)[self.category][mask]
+                y = self.labels[mask]
+                self.visualize(x, y)
 
             if mask is not None:
                 loss = self.loss_fn(logits[mask], self.labels[mask]).item()
@@ -238,3 +244,17 @@ class NodeClassification(BaseFlow):
         evaluator = self.task.get_evaluator(name='f1')
         metric = evaluator(y_trues, y_predicts.argmax(dim=1).to('cpu'))
         return metric, loss
+
+    def visualize(self, x, y):
+        # visualize the embedding by t-SNE, and save the figure to `output`
+        from sklearn import manifold
+        import matplotlib.pyplot as plt
+
+        tsne = manifold.TSNE(n_components=2, init='pca')
+        X_tsne = tsne.fit_transform(x)
+        x_min, x_max = X_tsne.min(0), X_tsne.max(0)
+        X_norm = (X_tsne - x_min) / (x_max - x_min)
+        plt.figure(figsize = (12, 9), dpi=500)
+        color_values = ((y + 0.5)/7.0)
+        plt.scatter(X_norm[:, 0], X_norm[:, 1], cmap=plt.get_cmap('jet'), c=color_values, s=10)
+        plt.savefig("./openhgnn/output/{}/embedding_visulization.jpg".format(self.model_name))
