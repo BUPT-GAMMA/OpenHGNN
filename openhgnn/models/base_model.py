@@ -53,3 +53,13 @@ class BaseModel(nn.Module, metaclass=ABCMeta):
             out_dict[i] = h[pre:value.shape[0]+pre]
             pre += value.shape[0]
         return out_dict
+
+    def get_emb(self):
+        r"""
+        Return the embedding of a model for further analysis.
+
+        Returns
+        -------
+        numpy.array
+        """
+        raise NotImplementedError
