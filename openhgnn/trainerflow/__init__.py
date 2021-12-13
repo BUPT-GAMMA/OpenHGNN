@@ -59,6 +59,7 @@ SUPPORTED_FLOWS = {
     'kgcntrainer': 'openhgnn.trainerflow.kgcn_trainer',
     'HeGAN_trainer': 'openhgnn.trainerflow.HeGAN_trainer',
     'mp2vec_trainer': 'openhgnn.trainerflow.mp2vec_trainer',
+    'herec_trainer': 'openhgnn.trainerflow.herec_trainer',
     'HeCo_trainer': 'openhgnn.trainerflow.HeCo_trainer',
     'DMGI_trainer': 'openhgnn.trainerflow.DMGI_trainer',
     'slicetrainer':'openhgnn.trainerflow.slice_trainer',

@@ -178,6 +178,7 @@ class HIN_NodeClassification(NodeClassificationDataset):
             category = 'A'
             g = dataset[0].long()
             num_classes = 4
+            self.meta_paths = [(('A', 'A-P', 'P'), ('P', 'P-V', 'V'), ('V', 'V-P', 'P'), ('P', 'P-A', 'A'))]
             self.in_dim = g.ndata['h'][category].shape[1]
 
         elif name_dataset == 'imdb4MAGNN':

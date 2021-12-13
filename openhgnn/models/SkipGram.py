@@ -10,14 +10,15 @@ from . import BaseModel, register_model
 """
 
 
+@register_model('HERec')
 @register_model('Metapath2vec')
-class HeteroEmbedding(BaseModel):
+class SkipGram(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
         return cls(hg.num_nodes(), args.dim)
 
     def __init__(self, num_nodes, dim):
-        super(HeteroEmbedding, self).__init__()
+        super(SkipGram, self).__init__()
         self.embedding_dim = dim
 
         self.u_embeddings = nn.Embedding(num_nodes, self.embedding_dim,
