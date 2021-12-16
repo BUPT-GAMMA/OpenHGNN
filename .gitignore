@@ -13,7 +13,7 @@ __pycache__/
 
 # numpy files
 *.npy
-
+*.npz
 # yaml files
 *.yaml
 

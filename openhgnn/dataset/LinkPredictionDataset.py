@@ -1,7 +1,6 @@
 import dgl
 import numpy as np
 import torch as th
-from dgl.data.utils import load_graphs
 from dgl.data.knowledge_graph import load_data
 from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset
@@ -45,9 +44,11 @@ class LinkPredictionDataset(BaseDataset):
         out_ntypes = []
         train_graph = self.g
         for i, etype in enumerate(self.target_link):
+            num_edges = self.g.num_edges(etype)
             if 'train_mask' not in self.g.edges[etype].data:
-                num_edges = self.g.num_edges(etype)
-
+                """
+                split edges into train/valid/test.
+                """
                 random_int = th.randperm(num_edges)
                 val_index = random_int[:int(num_edges * val_ratio)]
                 val_edge = self.g.find_edges(val_index, etype)
@@ -70,9 +71,16 @@ class LinkPredictionDataset(BaseDataset):
                     train_graph = dgl.add_edges(train_graph, edges[1], edges[0], etype=reverse_edge)
 
             else:
-                val_mask = self.g.edges[etype].data['valid_mask'].squeeze()
-                val_index = th.nonzero(val_mask).squeeze()
-                val_edge = self.g.find_edges(val_index, etype)
+                if 'valid_mask' not in self.g.edges[etype].data:
+                    train_idx = self.g.edges[etype].data['train_mask']
+                    random_int = th.randperm(int(train_idx.sum()))
+                    val_index = random_int[:int(train_idx.sum() * val_ratio)]
+                    val_edge = self.g.find_edges(val_index, etype)
+
+                else:
+                    val_mask = self.g.edges[etype].data['valid_mask'].squeeze()
+                    val_index = th.nonzero(val_mask).squeeze()
+                    val_edge = self.g.find_edges(val_index, etype)
 
                 test_mask = self.g.edges[etype].data['test_mask'].squeeze()
                 test_index = th.nonzero(test_mask).squeeze()
@@ -82,7 +90,7 @@ class LinkPredictionDataset(BaseDataset):
                 test_edge_dict[etype] = test_edge
                 out_ntypes.append(etype[0])
                 out_ntypes.append(etype[2])
-                self.val_label = train_graph.edges[etype[1]].data['label'][val_index]
+                #self.val_label = train_graph.edges[etype[1]].data['label'][val_index]
                 self.test_label = train_graph.edges[etype[1]].data['label'][test_index]
                 train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
 
@@ -106,10 +114,6 @@ class Test_LinkPrediction(LinkPredictionDataset):
         self.meta_paths_dict = None
         self.preprocess()
         # self.generate_negative()
-
-    def load_HIN(self, dataset_name):
-        g, _ = load_graphs(dataset_name)
-        return g[0]
 
     def preprocess(self):
         test_mask = self.g.edges[self.target_link].data['test_mask']
@@ -180,6 +184,12 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         elif dataset_name == 'amazon4SLICE':
             dataset = AcademicDataset(name='amazon4SLICE', raw_dir='')
             g = dataset[0].long()
+        elif dataset_name == 'MTWM':
+            dataset = AcademicDataset(name='MTWM', raw_dir='')
+            g = dataset[0].long()
+            self.target_link = [('user', 'user-buy-spu', 'spu')]
+            #self.target_link_r = [('spu', 'user-buy-spu-rev', 'user')]
+            self.node_type = ['user', 'spu']
         elif dataset_name == 'HGBl-ACM':
             dataset = HGBDataset(name='HGBn-ACM', raw_dir='')
             g = dataset[0].long()

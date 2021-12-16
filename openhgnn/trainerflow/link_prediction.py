@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from . import BaseFlow, register_flow
 from ..models import build_model
 from dgl.dataloading.negative_sampler import Uniform
-from ..utils import extract_embed, EarlyStopping, get_nodes_dict
+from ..utils import extract_embed, EarlyStopping, get_nodes_dict, add_reverse_edges
 
 
 @register_flow("link_prediction")
@@ -34,8 +34,9 @@ class LinkPrediction(BaseFlow):
 
         self.args.out_node_type = self.task.dataset.out_ntypes
         self.args.out_dim = self.args.hidden_dim
-
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.train_hg, self.val_hg, self.test_hg = self.task.get_idx()
+        self.train_hg = add_reverse_edges(self.train_hg)
+        self.model = build_model(self.model_name).build_model_from_args(self.args, self.train_hg).to(self.device)
         self.args.score_fn = 'distmult'
         if self.args.score_fn == 'distmult':
             self.r_embedding = nn.ParameterDict({etype[1]: nn.Parameter(th.Tensor(1, self.args.out_dim))
@@ -50,7 +51,6 @@ class LinkPrediction(BaseFlow):
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
-        self.train_hg, self.val_hg, self.test_hg = self.task.get_idx()
         self.train_hg = self.train_hg.to(self.device)
         self.val_hg = self.val_hg.to(self.device)
         self.test_hg = self.test_hg.to(self.device)
@@ -201,21 +201,23 @@ class LinkPrediction(BaseFlow):
         self.model.eval()
         with th.no_grad():
             h_dict = self.model.input_feature()
-            embedding = self.model(self.hg, h_dict)
+            embedding = self.model(self.train_hg, h_dict)
             if split == 'valid':
                 eval_hg = self.val_hg
                 # label = self.task.dataset.val_label
             elif split == 'test':
-                eval_hg = self.test_hg
-                # label = self.task.dataset.test_label
+                label = self.task.dataset.test_label
+                score = th.sigmoid(self.ScorePredictor(self.test_hg, embedding))
+                metric = self.evaluator(label.cpu(), score.cpu())
+                return metric
 
             # score = th.sigmoid(self.ScorePredictor(eval_hg, embedding))
             # metric = self.evaluator(label.cpu(), score.cpu())
             negative_graph = self.construct_negative_graph(eval_hg)
             p_score = th.sigmoid(self.ScorePredictor(eval_hg, embedding))
             n_score = th.sigmoid(self.ScorePredictor(negative_graph, embedding))
-            p_label = th.ones(len(p_score), device=self.device)
-            n_label = th.zeros(len(n_score), device=self.device)
+            p_label = th.ones(len(p_score))
+            n_label = th.zeros(len(n_score))
         metric = self.evaluator(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu())
 
         return metric

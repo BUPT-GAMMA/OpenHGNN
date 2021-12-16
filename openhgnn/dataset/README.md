@@ -127,14 +127,19 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
   - rating prediction (e.g. on a scale of 1 to 5 stars), and
   - item prediction from positive-only feedback.
 
-- 
-
   |        | User  | Item  | View  | Category | Brand | User-Item | Item-View | Item-Category | Item-Brand | Test(20%)<br />User-Item |
   | ------ | ----- | ----- | ----- | -------- | ----- | --------- | --------- | ------------- | ---------- | ------------------------ |
   | Amazon | 6,170 | 2,753 | 3,857 | 22       | 334   | 195,791   | 5,694     | 5,508         | 2,753      | 39,159                   |
 
+- MTWM
 
-  **yelp4rec**
+  |      | user    | poi   | Sup    |      | poi-contain-spu | user-buy-poi | user-buy-spu | user-click-poi |
+| ---- | ------- | ----- | ------ | ---- | --------------- | ------------ | ------------ | -------------- |
+  | MTWM | 188,155 | 3,474 | 16,889 |      | 92,024          | 542,915      | 1,797,283    | 1,477,316      |
+
+- 
+
+  
 
 
 ### How to build a new dataset
