@@ -1,3 +1,4 @@
+import os
 import numpy
 from tqdm import tqdm
 import torch.sparse as sparse
@@ -18,9 +19,11 @@ class HERecTrainer(BaseFlow):
 
         self.dataloader = None
 
-        self.metapath = self.task.dataset.meta_paths[0]
-        self.start_ntype = self.hg.to_canonical_etype(self.metapath[0])[0]
-        self.embeddings_file_name = self.args.dataset + '_' + self.start_ntype + '_herec_embeddings'
+        self.metapath = self.task.dataset.meta_paths_dict[self.args.meta_path_keys[0]]
+        self.output_dir = './openhgnn/output/' + self.model_name
+        self.embeddings_file_path = os.path.join(self.output_dir, self.args.dataset + '_' +
+                                                 self.args.meta_path_keys[0] + '_herec_embeddings.npy')
+        self.load_trained_embeddings = False
 
     def preprocess(self):
 
@@ -48,14 +51,12 @@ class HERecTrainer(BaseFlow):
         emb = self.load_embeddings()
 
         # todo: only supports node classification now
-        self.task.evaluate(logits=emb[:self.hg.num_nodes(self.start_ntype)], name='f1_lr')
+        self.task.evaluate(logits=emb, name='f1_lr')
 
     def load_embeddings(self):
-        try:
-            emb = numpy.load(self.embeddings_file_name + '.npy')
-        except Exception:
+        if not self.load_trained_embeddings or not os.path.exists(self.embeddings_file_path):
             self.train_embeddings()
-            emb = numpy.load(self.embeddings_file_name + '.npy')
+        emb = numpy.load(self.embeddings_file_path)
         return emb
 
     def train_embeddings(self):
@@ -83,4 +84,4 @@ class HERecTrainer(BaseFlow):
                     running_loss = running_loss * 0.9 + loss.item() * 0.1
                     if i > 0 and i % 50 == 0:
                         print(' Loss: ' + str(running_loss))
-        self.model.save_embedding(self.embeddings_file_name)
+        self.model.save_embedding(self.embeddings_file_path)

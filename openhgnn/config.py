@@ -167,6 +167,7 @@ class Config(object):
             self.neg_size = conf.getint("Metapath2vec", "neg_size")
             self.rw_length = conf.getint("Metapath2vec", "rw_length")
             self.rw_walks = conf.getint("Metapath2vec", "rw_walks")
+            self.meta_path_key = conf.get("Metapath2vec", "meta_path_key")
 
         elif model == 'HERec':
             self.lr = conf.getfloat("HERec", "learning_rate")
@@ -178,7 +179,9 @@ class Config(object):
             self.neg_size = conf.getint("HERec", "neg_size")
             self.rw_length = conf.getint("HERec", "rw_length")
             self.rw_walks = conf.getint("HERec", "rw_walks")
-            
+            meta_path_keys = conf.get("HERec", "meta_path_keys")
+            self.meta_path_keys = meta_path_keys.split(',')
+
         elif model == 'HAN':
             self.lr = conf.getfloat("HAN", "learning_rate")
             self.weight_decay = conf.getfloat("HAN", "weight_decay")
