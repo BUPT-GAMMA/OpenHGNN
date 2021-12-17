@@ -480,6 +480,15 @@ class Config(object):
             self.validation = conf.getboolean('HeGAN', 'validation')
             self.emb_size = conf.getint("HeGAN", 'emb_size')
             self.patience = conf.getint("HeGAN", 'patience')
+        elif model == 'HDE':
+            self.emb_dim = conf.getint('HDE', 'emb_dim')
+            self.num_neighbor = conf.getint('HDE', 'num_neighbor')
+            self.use_bias = conf.getboolean('HDE', 'use_bias')
+            self.k_hop = conf.getint('HDE', 'k_hop')
+            self.max_epoch = conf.getint('HDE', 'max_epoch')
+            self.batch_size = conf.getint('HDE', 'batch_size')
+            self.max_dist = conf.getint('HDE', 'max_dist')
+            self.lr = conf.getfloat('HDE', 'lr')
 
     def __repr__(self):
         return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset

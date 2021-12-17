@@ -77,4 +77,5 @@ SUPPORTED_MODELS = {
     'GAT': 'space4hgnn.homo_models.GAT',
     'homo_GNN': 'openhgnn.models.homo_GNN',
     'general_HGNN': 'openhgnn.models.general_HGNN',
+    'HDE': 'openhgnn.models.HDE',
 }
