@@ -107,6 +107,7 @@ class HDESampler:
         A_ego = nx.ego_graph(G, A, radius=args.k_hop)
         B_ego = nx.ego_graph(G, B, radius=args.k_hop)
         sub_G_for_AB = nx.compose(A_ego, B_ego)
+        sub_G_for_AB.remove_edges_from(combinations(node_pair, 2))
 
         sub_G_nodes = sub_G_for_AB.nodes
         SPD_based_on_node_pair = {}
