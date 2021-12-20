@@ -65,7 +65,6 @@ BEST_CONFIGS = {
             },
         },
         'GTN': {
-            'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 64, 'max_epoch': 50, 'patience': 10,
                         'norm_emd_flag': True, 'mini_batch_flag': False},
             'acm4GTN': {
                 'num_layers': 2, 'num_channels': 2, 'adaptive_lr_flag': True,
@@ -158,7 +157,7 @@ BEST_CONFIGS = {
         },
         'NSHE': {
             'general': {},
-            'acm4SNHE': {'weight_decay': 0.001, 'num_e_neg': 1, 'num_ns_neg': 4,
+            'acm4NSHE': {'weight_decay': 0.001, 'num_e_neg': 1, 'num_ns_neg': 4,
                          'max_epoch': 500, 'patience': 10,
                          }
         },

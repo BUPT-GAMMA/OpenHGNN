@@ -14,17 +14,27 @@ class BaseFlow(ABC):
     }
 
     def __init__(self, args):
+        """
+
+        Parameters
+        ----------
+        args
+
+        Attributes
+        -------------
+        evaluate_interval: int
+            the interval of evaluation in validation
+        """
         super(BaseFlow, self).__init__()
         self.evaluator = None
         self.evaluate_interval = 1
-        self.load_from_checkpoint = True
         if hasattr(args, '_checkpoint'):
             self._checkpoint = os.path.join(args._checkpoint,
                                             f"{args.model}_{args.dataset}.pt")
         else:
-            if self.load_from_checkpoint:
+            if hasattr(args, 'load_from_pretrained'):
                 self._checkpoint = os.path.join("./openhgnn/output/{}".format(args.model),
-                                                f"{args.model}_{args.dataset}.pt")
+                                                f"{args.model}_{args.dataset}_{args.task}.pt")
             else:
                 self._checkpoint = None
 
@@ -68,7 +78,7 @@ class BaseFlow(ABC):
         else:
             self.args.feat = 0
         if self.args.feat == 0:
-            print("feat0, pass!")
+            print("[Feature transformation] Nothing to do!")
             if isinstance(self.hg.ndata['h'], dict):
                 self.input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg),
                                                    self.args.hidden_dim, act=act).to(self.device)
@@ -98,6 +108,7 @@ class BaseFlow(ABC):
         self.optimizer.add_param_group({'params': self.input_feature.parameters()})
         # for early stop, load the model with input_feature module.
         self.model.add_module('input_feature', self.input_feature)
+        self.load_from_pretrained()
 
     @abstractmethod
     def train(self):
@@ -128,13 +139,14 @@ class BaseFlow(ABC):
         raise NotImplementedError
 
     def load_from_pretrained(self):
-        if self.load_from_checkpoint:
+        if self.load_from_pretrained:
             try:
                 ck_pt = torch.load(self._checkpoint)
                 self.model.load_state_dict(ck_pt)
+                print('Load model from pretrained model:' + self._checkpoint)
             except FileNotFoundError:
-                print(f"'{self._checkpoint}' doesn't exists")
-        return self.model
+                print(f"'Do not load the model from pretrained, {self._checkpoint}' doesn't exists")
+        # return self.model
 
     def save_checkpoint(self):
         if self._checkpoint and hasattr(self.model, "_parameters()"):

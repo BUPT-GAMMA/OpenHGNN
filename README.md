@@ -51,7 +51,7 @@ pip install -r requirements.txt
 #### Running an existing baseline model on an existing benchmark [dataset](./openhgnn/dataset/#Dataset)
 
 ```bash
-python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
+python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --load_from_pretrained
 ```
 
 usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
@@ -72,6 +72,8 @@ usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
 ``--use_best_config``	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. The best_config will override the parameter in config.ini.
 
 ``--use_hpo`` Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
+
+``--load_from_pretrained`` will load the model from a default checkpoint.
 
 e.g.: 
 
@@ -97,7 +99,7 @@ The link will give some basic usage.
 | [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]    | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [GTN](./openhgnn/output/GTN)[NeurIPS 2019]      | :heavy_check_mark:  |                    |                    |
 | [RSHN](./openhgnn/output/RSHN)[ICDM 2019]       | :heavy_check_mark:  |                    |                    |
-| [DGMI](./openhgnn/output/DMGI)[AAAI 2020]       | :heavy_check_mark:  |                    |                    |
+| [DMGI](./openhgnn/output/DMGI)[AAAI 2020]       | :heavy_check_mark:  |                    |                    |
 | [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]      | :heavy_check_mark:  |                    |                    |
 | [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020] | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]      | :heavy_check_mark:  |                    |                    |
@@ -120,9 +122,7 @@ The link will give some basic usage.
 
 ## Contributors
 
-**[GAMMA LAB](https://github.com/BUPT-GAMMA) [BUPT]**: [Tianyu Zhao](https://github.com/Theheavens), Yaoqi Liu, Fengqi Liang, Yibo Li, Yanhu Mo, Donglin Xia, Xinlong Zhai, Siyuan Zhang, Qi Zhang, [Chuan Shi](http://shichuan.org/), Cheng Yang, Xiao Wang
+OpenHGNN Team[GAMMA LAB] & DGL Team.
 
-**BUPT**: Jiahang Li, Anke Hu
-
-**DGL Team**: Quan Gan, [Jian Zhang](https://github.com/zhjwy9343)
+See more in [CONTRIBUTING](./CONTRIBUTING.md).
 

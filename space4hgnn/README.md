@@ -12,7 +12,7 @@ The installation process is same with OpenHGNN [Get Started](https://github.com/
 
 #### 2.1 Generate designs randomly
 
-Here we will generate a random design combination for each dataset and save it in a `.yaml` file. The candidate designs are list in [`./space4hgnn/generate_yaml.py`](./generate_yaml.py).
+Here we will generate a random design combination for each dataset and save it in a `.yaml` file. The candidate designs are listed in [`./space4hgnn/generate_yaml.py`](./generate_yaml.py).
 
 ```bash
 python ./space4hgnn/generate_yaml.py --gnn_type gcnconv --times 1 --key has_bn --configfile test
@@ -85,7 +85,9 @@ For **Meta-path model family**, ``--model`` is general_HGNN and ``--subgraph_ext
 python space4hgnn.py -m general_HGNN -u metapath -t node_classification -d HGBn-ACM -g 0 -r 5 -a gcnconv -s 1 -k has_bn -v True -c test -p HGB
 ```
 
-**Note: ** Similar with  generating yaml file, experiment will load the design configuration from ``yaml_file_path``. And it will save the results into a `.csv` file in `prediction_file_path`.
+**Note: ** 
+
+Similar with  generating yaml file, experiment will load the design configuration from ``yaml_file_path``. And it will save the results into a `.csv` file in `prediction_file_path`.
 
 ```python
 yaml_file_path = './space4hgnn/config/{}/{}/{}_{}.yaml'.format(configfile, key, gnn_type, times)
@@ -94,7 +96,7 @@ prediction_file_path = './space4hgnn/prediction/excel/{}/{}_{}/{}_{}_{}_{}.csv'.
 # Here prediction_file_path = './space4hgnn/prediction/test/has_bn_True/metapath_gcnconv_1_HGBn-ACM.yaml'
 ```
 
-### 3 Run a bach of experiments
+### 3 Run a batch of experiments
 
 An example:
 
@@ -102,14 +104,14 @@ An example:
 ./space4hgnn/parallel.sh 0 5 has_bn True node_classification test_paral test_paral
 ```
 
-It will generate  configuration files for the bach of experiments. And 
+It will generate  configuration files for the batch of experiments and launch a batch of experiments.
 
 The following is the arguments descriptions:
 
 1. The first argument controls which gpu to use. Here is 0.
 2. Repeat times. Here is 5
 3. Design dimension. Here is BN.
-4. Choice of design dimension. Here set BN`` True``.
+4. Choice of design dimension. Here set BN `` True``.
 5. Task name. Here is nodeclassification
 6. Configfile is the path to save configuration files. 
 7. Predictfile is the path to save prediction files.
@@ -132,12 +134,12 @@ python ./space4hgnn/prediction/excel/gather_all_Csv.py -p ./space4hgnn/predictio
 
 ##### 3.2.1 Ranking analysis
 
-We analyze the results with average ranking following [GraphGym](https://github.com/snap-stanford/GraphGym#3-analyze-the-results), and 
+We analyze the results with average ranking following [GraphGym](https://github.com/snap-stanford/GraphGym#3-analyze-the-results), the according code is in [`figure/rank.py`](./figure/rank.py).
 
 ![space4hgnn_rank](../docs/source/_static/space4hgnn_rank.png)
 
-##### 3.2.2 Distribution analysis
+##### 3.2.2 Distribution estimates
 
-We analyze the results with distribution estimates following [NDS](https://github.com/facebookresearch/nds), and 
+We analyze the results with distribution estimates following [NDS](https://github.com/facebookresearch/nds), and the according code is in [`figure/distribution.py`](./figure/distribution.py).
 
 ![space4hgnn_distribution](../docs/source/_static/space4hgnn_distribution.png)

@@ -14,7 +14,8 @@ from ..utils import extract_embed, EarlyStopping, get_nodes_dict, add_reverse_ed
 class LinkPrediction(BaseFlow):
     """
     Link Prediction trainer flows.
-    Here is a tutorial teach you how to train a GNN for link prediction. <https://docs.dgl.ai/en/latest/tutorials/blitz/4_link_predict.html>_
+    Here is a tutorial teach you how to train a GNN for
+    `link prediction <https://docs.dgl.ai/en/latest/tutorials/blitz/4_link_predict.html>_`.
 
     When training, you will need to remove the edges in the test set from the original graph.
     DGL recommends you to treat the pairs of nodes as another graph, since you can describe a pair of nodes with an edge.
@@ -27,19 +28,47 @@ class LinkPrediction(BaseFlow):
     """
 
     def __init__(self, args):
+        """
+
+        Parameters
+        ----------
+        args
+
+        Attributes
+        ------------
+        target_link: list
+            list of edge types which are target link type to be predicted
+
+        score_fn: str
+            score function used in calculating the scores of links, supported function: distmult[Default if not specified] & dot product
+
+        r_embedding: nn. ParameterDict
+            In DistMult, the representations of edge types are involving the calculation of score.
+            General models do not generate the representations of edge types, so we generate the embeddings of edge types.
+            The dimension of embedding is `self.args.hidden_dim`.
+
+        """
         super(LinkPrediction, self).__init__(args)
 
         self.target_link = self.task.dataset.target_link
-        self.loss_fn = self.task.get_loss_fn()
 
-        self.args.out_node_type = self.task.dataset.out_ntypes
-        self.args.out_dim = self.args.hidden_dim
         self.train_hg, self.val_hg, self.test_hg = self.task.get_idx()
-        self.train_hg = add_reverse_edges(self.train_hg)
+        self.train_hg = self.train_hg.to(self.device)
+        self.val_hg = self.val_hg.to(self.device)
+        self.test_hg = self.test_hg.to(self.device)
+
+        if hasattr(self.args, 'flag_add_reverse_edges'):
+            self.train_hg = add_reverse_edges(self.train_hg)
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.train_hg).to(self.device)
-        self.args.score_fn = 'distmult'
+
+        if not hasattr(self.args, 'score_fn'):
+            self.args.score_fn = 'distmult'
         if self.args.score_fn == 'distmult':
-            self.r_embedding = nn.ParameterDict({etype[1]: nn.Parameter(th.Tensor(1, self.args.out_dim))
+            """
+            In DistMult, the representations of edge types are involving the calculation of score.
+            General models do not generate the representations of edge types, so we generate the embeddings of edge types.
+            """
+            self.r_embedding = nn.ParameterDict({etype[1]: nn.Parameter(th.Tensor(1, self.args.hidden_dim))
                                                 for etype in self.hg.canonical_etypes}).to(self.device)
             for _, para in self.r_embedding.items():
                 nn.init.xavier_uniform_(para)
@@ -51,9 +80,6 @@ class LinkPrediction(BaseFlow):
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
-        self.train_hg = self.train_hg.to(self.device)
-        self.val_hg = self.val_hg.to(self.device)
-        self.test_hg = self.test_hg.to(self.device)
         self.negative_sampler = Uniform(1)
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
 
@@ -71,13 +97,13 @@ class LinkPrediction(BaseFlow):
     def train(self):
         self.preprocess()
         epoch_iter = tqdm(range(self.max_epoch))
-        stopper = EarlyStopping(self.args.patience, self._checkpoint)
+        stopper = EarlyStopping(self.patience, self._checkpoint)
         for epoch in tqdm(range(self.max_epoch), ncols=80):
             if self.args.mini_batch_flag:
                 loss = self._mini_train_step()
             else:
                 loss = self._full_train_setp()
-            if epoch % 2 == 0:
+            if epoch % self.evaluate_interval == 0:
                 val_metric = self._test_step('valid')
                 epoch_iter.set_description(
                     f"Epoch: {epoch:03d}, roc_auc: {val_metric:.4f}, Loss:{loss:.4f}"
@@ -89,8 +115,9 @@ class LinkPrediction(BaseFlow):
         print(f"Valid_score_ = {stopper.best_score: .4f}")
         stopper.load_model(self.model)
 
-        ############ TEST SCORE #########
+        # Test
         if self.args.dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
+            # Test in HGB datasets.
             self.model.eval()
             with torch.no_grad():
                 val_metric = self._test_step('valid')
@@ -99,10 +126,24 @@ class LinkPrediction(BaseFlow):
                 score = th.sigmoid(self.ScorePredictor(self.test_hg, embedding))
                 self.task.dataset.save_results(hg=self.test_hg, score=score, file_path=self.args.HGB_results_path)
             return val_metric, val_metric, epoch
-        test_mrr = self._test_step(split="test")
-        val_mrr = self._test_step(split="valid")
-        print(f"Test mrr = {test_mrr:.4f}")
-        return dict(Test_mrr=test_mrr, Val_mrr=val_mrr)
+        test_score = self._test_step(split="test")
+        val_score = self._test_step(split="valid")
+        print(f"Test mrr = {test_score:.4f}")
+        return dict(Test_mrr=test_score, Val_mrr=val_score)
+
+    def _full_train_setp(self):
+        self.model.train()
+        h_dict = self.model.input_feature()
+        embedding = self.model(self.train_hg, h_dict)
+        # construct a negative graph according to the positive graph in each training epoch.
+        negative_graph = self.construct_negative_graph(self.positive_graph)
+        loss = self.loss_calculation(self.positive_graph, negative_graph, embedding)
+        # negative_graph = self.construct_negative_graph(self.train_hg)
+        # loss = self.loss_calculation(self.train_hg, negative_graph, embedding)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
 
     def _mini_train_step(self,):
         self.model.train()
@@ -182,20 +223,6 @@ class LinkPrediction(BaseFlow):
         neg_pair_graph = dgl.heterograph(neg_srcdst,
                                          {ntype: hg.number_of_nodes(ntype) for ntype in hg.ntypes})
         return neg_pair_graph
-
-    def _full_train_setp(self):
-        self.model.train()
-        h_dict = self.model.input_feature()
-        embedding = self.model(self.train_hg, h_dict)
-        negative_graph = self.construct_negative_graph(self.positive_graph)
-        loss = self.loss_calculation(self.positive_graph, negative_graph, embedding)
-        # negative_graph = self.construct_negative_graph(self.train_hg)
-        # loss = self.loss_calculation(self.train_hg, negative_graph, embedding)
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-        #print(loss.item())
-        return loss.item()
 
     def _test_step(self, split=None, logits=None):
         self.model.eval()
