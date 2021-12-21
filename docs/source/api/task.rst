@@ -22,7 +22,7 @@ Node classification Task
 Link prediction Task
 ---------------------
 
-.. autoclass:: openhgnn.tasks.link_prediction.LinkPrediction
+.. autoclass:: openhgnn.tasks.link_prediction
     :members:
     :undoc-members:
     :show-inheritance:

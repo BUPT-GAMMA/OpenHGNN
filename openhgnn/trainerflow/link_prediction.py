@@ -6,7 +6,6 @@ import torch
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
 from ..models import build_model
-from dgl.dataloading.negative_sampler import Uniform
 from ..utils import extract_embed, EarlyStopping, get_nodes_dict, add_reverse_edges
 
 
@@ -51,12 +50,7 @@ class LinkPrediction(BaseFlow):
         super(LinkPrediction, self).__init__(args)
 
         self.target_link = self.task.dataset.target_link
-
-        self.train_hg, self.val_hg, self.test_hg = self.task.get_idx()
-        self.train_hg = self.train_hg.to(self.device)
-        self.val_hg = self.val_hg.to(self.device)
-        self.test_hg = self.test_hg.to(self.device)
-
+        self.train_hg = self.task.get_train().to(self.device)
         if hasattr(self.args, 'flag_add_reverse_edges'):
             self.train_hg = add_reverse_edges(self.train_hg)
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.train_hg).to(self.device)
@@ -72,15 +66,19 @@ class LinkPrediction(BaseFlow):
                                                 for etype in self.hg.canonical_etypes}).to(self.device)
             for _, para in self.r_embedding.items():
                 nn.init.xavier_uniform_(para)
+        else:
+            self.r_embedding = None
 
-        self.evaluator = self.task.get_evaluator('roc_auc')
+        if self.args.dataset in ['wn18', 'FB15k', 'FB15k-237']:
+            self.evaluation = 'mrr'
+        else:
+            self.evaluation = 'roc_auc'
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         if self.args.score_fn == 'distmult':
             self.optimizer.add_param_group({'params': self.r_embedding.parameters()})
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
-        self.negative_sampler = Uniform(1)
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
 
     def preprocess(self):
@@ -88,9 +86,6 @@ class LinkPrediction(BaseFlow):
         In link prediction, you will have a positive graph consisting of all the positive examples as edges,
         and a negative graph consisting of all the negative examples.
         The positive graph and the negative graph will contain the same set of nodes as the original graph.
-        Returns
-        -------
-
         """
         self.preprocess_feature()
 
@@ -136,7 +131,7 @@ class LinkPrediction(BaseFlow):
         h_dict = self.model.input_feature()
         embedding = self.model(self.train_hg, h_dict)
         # construct a negative graph according to the positive graph in each training epoch.
-        negative_graph = self.construct_negative_graph(self.positive_graph)
+        negative_graph = self.task.construct_negative_graph(self.positive_graph)
         loss = self.loss_calculation(self.positive_graph, negative_graph, embedding)
         # negative_graph = self.construct_negative_graph(self.train_hg)
         # loss = self.loss_calculation(self.train_hg, negative_graph, embedding)
@@ -164,87 +159,20 @@ class LinkPrediction(BaseFlow):
         return all_loss
 
     def loss_calculation(self, positive_graph, negative_graph, embedding):
-        p_score = self.ScorePredictor(positive_graph, embedding)
-        n_score = self.ScorePredictor(negative_graph, embedding)
+        p_score = self.task.ScorePredictor(positive_graph, embedding, self.r_embedding)
+        n_score = self.task.ScorePredictor(negative_graph, embedding, self.r_embedding)
 
         p_label = th.ones(len(p_score), device=self.device)
         n_label = th.zeros(len(n_score), device=self.device)
         loss = F.binary_cross_entropy_with_logits(th.cat((p_score, n_score)), th.cat((p_label, n_label)))
         return loss
 
-    def ScorePredictor(self, edge_subgraph, x):
-        if self.args.score_fn == 'dot-product':
-            with edge_subgraph.local_scope():
-
-                for ntype in edge_subgraph.ntypes:
-                    edge_subgraph.nodes[ntype].data['x'] = x[ntype]
-                for etype in edge_subgraph.canonical_etypes:
-                    edge_subgraph.apply_edges(
-                        dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
-                score = edge_subgraph.edata['score']
-                if isinstance(score, dict):
-                    result = []
-                    for _, value in score.items():
-                        result.append(value)
-                    score = th.cat(result)
-                return score.squeeze()
-        elif self.args.score_fn == 'distmult':
-            score_list = []
-            with edge_subgraph.local_scope():
-                for ntype in edge_subgraph.ntypes:
-                    edge_subgraph.nodes[ntype].data['x'] = x[ntype]
-                for etype in edge_subgraph.canonical_etypes:
-                    e = self.r_embedding[etype[1]]
-                    n = edge_subgraph.num_edges(etype)
-                    if 1 == len(edge_subgraph.canonical_etypes):
-                        edge_subgraph.edata['e'] = e.expand(n, -1)
-                    else:
-                        edge_subgraph.edata['e'] = {etype: e.expand(n, -1)}
-                    edge_subgraph.apply_edges(
-                        dgl.function.u_mul_e('x', 'e', 's'), etype=etype)
-                    edge_subgraph.apply_edges(
-                        dgl.function.e_mul_v('s', 'x', 'score'), etype=etype)
-                    if 1 == len(edge_subgraph.canonical_etypes):
-                        score = th.sum(edge_subgraph.edata['score'], dim=1)
-                    else:
-                        score = th.sum(edge_subgraph.edata['score'].pop(etype), dim=1)
-                    #score = th.sum(th.mul(edge_subgraph.edata['score'].pop(etype), e), dim=1)
-                    score_list.append(score)
-                return th.cat(score_list)
-
     def regularization_loss(self, embedding):
         return th.mean(embedding.pow(2)) + th.mean(self.r_embedding.pow(2))
 
-    def construct_negative_graph(self, hg):
-        e_dict = {
-            etype: hg.edges(etype=etype, form='eid')
-            for etype in hg.canonical_etypes}
-        neg_srcdst = self.negative_sampler(hg, e_dict)
-        neg_pair_graph = dgl.heterograph(neg_srcdst,
-                                         {ntype: hg.number_of_nodes(ntype) for ntype in hg.ntypes})
-        return neg_pair_graph
-
-    def _test_step(self, split=None, logits=None):
+    def _test_step(self, split=None):
         self.model.eval()
         with th.no_grad():
             h_dict = self.model.input_feature()
             embedding = self.model(self.train_hg, h_dict)
-            if split == 'valid':
-                eval_hg = self.val_hg
-                # label = self.task.dataset.val_label
-            elif split == 'test':
-                label = self.task.dataset.test_label
-                score = th.sigmoid(self.ScorePredictor(self.test_hg, embedding))
-                metric = self.evaluator(label.cpu(), score.cpu())
-                return metric
-
-            # score = th.sigmoid(self.ScorePredictor(eval_hg, embedding))
-            # metric = self.evaluator(label.cpu(), score.cpu())
-            negative_graph = self.construct_negative_graph(eval_hg)
-            p_score = th.sigmoid(self.ScorePredictor(eval_hg, embedding))
-            n_score = th.sigmoid(self.ScorePredictor(negative_graph, embedding))
-            p_label = th.ones(len(p_score))
-            n_label = th.zeros(len(n_score))
-        metric = self.evaluator(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu())
-
-        return metric
+            return self.task.evaluate(self.evaluation, embedding, self.r_embedding, mode=split)

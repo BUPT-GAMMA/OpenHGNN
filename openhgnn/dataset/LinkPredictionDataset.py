@@ -430,6 +430,9 @@ def comp_deg_norm(g):
 
 @register_dataset('kg_link_prediction')
 class KG_LinkPrediction(LinkPredictionDataset):
+    """
+    From `RGCN <https://arxiv.org/abs/1703.06103>`_, WN18 & FB15k face a data leakage.
+    """
     def __init__(self, dataset_name):
         super(KG_LinkPrediction, self).__init__()
         if dataset_name in ['wn18', 'FB15k', 'FB15k-237']:
@@ -438,40 +441,70 @@ class KG_LinkPrediction(LinkPredictionDataset):
             self.num_rels = dataset.num_rels * 2
             # include inverse edge
             self.num_nodes = dataset.num_nodes
-            self.homo_g = dataset[0]
-            self.g = self.homo_to_hetero(dataset[0])
+            self.train_hg = self.get_graph_directed_from_triples(dataset.train, 'graph')
+            self.valid_hg = self.get_graph_directed_from_triples(dataset.valid, 'graph')
+            self.test_hg = self.get_graph_directed_from_triples(dataset.test, 'graph')
+            self.train_triplets, self.valid_triplets, self.test_triplets = self.get_all_triplets(dataset)
+            self.target_link = self.test_hg.canonical_etypes
+            self.g = self.train_hg
             # self.g = self.build_g(dataset.train)
             # self.dataset = dataset
 
-    def get_triples_directed(self, mask_mode):
-        if mask_mode == 'train_mask':
-            data = self.dataset.train
-        elif mask_mode == 'val_mask':
-            data = self.dataset.test
-        elif mask_mode == 'test_mask':
-            data = self.dataset.test
-        s = th.LongTensor(data[:, 0])
-        r = th.LongTensor(data[:, 1])
-        o = th.LongTensor(data[:, 2])
-        return th.stack([s, r, o])
+    def get_graph_directed_from_triples(self, triples, format='graph'):
+        s = th.LongTensor(triples[:, 0])
+        r = th.LongTensor(triples[:, 1])
+        o = th.LongTensor(triples[:, 2])
+        if format == 'graph':
+            edge_dict = {}
+            for i in range(self.num_rels):
+                mask = (r == i)
+                edge_name = (self.category, str(i), self.category)
+                edge_dict[edge_name] = (s[mask], o[mask])
+            return dgl.heterograph(edge_dict, {self.category: self.num_nodes})
 
-    def get_triples(self, mask_mode):
+    def get_triples(self, g, mask_mode):
         '''
         :param g:
         :param mask_mode: should be one of 'train_mask', 'val_mask', 'test_mask
         :return:
         '''
-        g = self.homo_g
         edges = g.edges()
         etype = g.edata['etype']
         mask = g.edata.pop(mask_mode)
         return th.stack((edges[0][mask], etype[mask], edges[1][mask]))
 
-    def homo_to_hetero(self, g):
+    def get_all_triplets(self, dataset):
+        train_data = th.LongTensor(dataset.train)
+        valid_data = th.LongTensor(dataset.valid)
+        test_data = th.LongTensor(dataset.test)
+        return train_data, valid_data, test_data
+
+    def get_idx(self):
+        return self.train_hg, self.valid_hg, self.test_hg
+
+    def split_graph(self, g, mode='train'):
+        """
+
+        Parameters
+        ----------
+        g: DGLGraph
+            a homogeneous graph fomat
+        mode: str
+            split the subgraph according to the mode
+
+        Returns
+        -------
+        hg: DGLHeterograph
+        """
         edges = g.edges()
         etype = g.edata['etype']
-        train_mask = g.edata['train_mask']
-        hg = self.build_graph((edges[0][train_mask], edges[1][train_mask]), etype[train_mask])
+        if mode == 'train':
+            mask = g.edata['train_mask']
+        elif mode == 'valid':
+            mask = g.edata['valid_edge_mask']
+        elif mode == 'test':
+            mask = g.edata['test_edge_mask']
+        hg = self.build_graph((edges[0][mask], edges[1][mask]), etype[mask])
         return hg
 
     def build_graph(self, edges, etype):
