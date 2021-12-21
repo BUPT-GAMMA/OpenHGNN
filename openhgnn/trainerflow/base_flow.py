@@ -53,7 +53,7 @@ class BaseFlow(ABC):
         self.optimizer = None
         self.loss_fn = self.task.get_loss_fn()
 
-    def preprocess_feature(self):
+    def preprocess(self):
         r"""
         Every trainerflow should run the preprocess_feature if you want to get a feature preprocessing.
         The Parameters in input_feature will be added into optimizer and input_feature will be added into the model.
@@ -78,8 +78,26 @@ class BaseFlow(ABC):
         else:
             # Default 0, nothing to do.
             self.args.feat = 0
+        self.feature_preprocess(act)
+        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
+        # for early stop, load the model with input_feature module.
+        self.model.add_module('input_feature', self.input_feature)
+        self.load_from_pretrained()
 
-        if self.hg.ndata == {} or self.args.feat == 2:
+    def feature_preprocess(self, act):
+        """
+        Feat
+            0, 1 ,2
+        Node feature
+            1 node type & more than 1 node types
+            no feature
+
+        Returns
+        -------
+
+        """
+
+        if self.hg.ndata.get('h', {}) == {} or self.args.feat == 2:
             if self.hg.ndata == {}:
                 print('Assign embedding as features, because hg.ndata is empty.')
             else:
@@ -98,11 +116,6 @@ class BaseFlow(ABC):
                 print('feat1, preserve target nodes!')
                 self.input_feature = HeteroFeature({self.category: h_dict[self.category]}, get_nodes_dict(self.hg), self.args.hidden_dim,
                                                    act=act).to(self.device)
-
-        self.optimizer.add_param_group({'params': self.input_feature.parameters()})
-        # for early stop, load the model with input_feature module.
-        self.model.add_module('input_feature', self.input_feature)
-        self.load_from_pretrained()
 
     def init_feature(self, act):
         print("[Feature transformation] Feat is 0, nothing to do!")
@@ -145,7 +158,7 @@ class BaseFlow(ABC):
         raise NotImplementedError
 
     def load_from_pretrained(self):
-        if self.load_from_pretrained:
+        if self.args.load_from_pretrained:
             try:
                 ck_pt = torch.load(self._checkpoint)
                 self.model.load_state_dict(ck_pt)

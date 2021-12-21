@@ -53,6 +53,9 @@ class LinkPrediction(BaseFlow):
         self.train_hg = self.task.get_train().to(self.device)
         if hasattr(self.args, 'flag_add_reverse_edges'):
             self.train_hg = add_reverse_edges(self.train_hg)
+        if not hasattr(self.args, 'out_dim'):
+            self.args.out_dim = self.args.hidden_dim
+
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.train_hg).to(self.device)
 
         if not hasattr(self.args, 'score_fn'):
@@ -73,6 +76,7 @@ class LinkPrediction(BaseFlow):
             self.evaluation = 'mrr'
         else:
             self.evaluation = 'roc_auc'
+
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         if self.args.score_fn == 'distmult':
             self.optimizer.add_param_group({'params': self.r_embedding.parameters()})
@@ -87,7 +91,7 @@ class LinkPrediction(BaseFlow):
         and a negative graph consisting of all the negative examples.
         The positive graph and the negative graph will contain the same set of nodes as the original graph.
         """
-        self.preprocess_feature()
+        super(LinkPrediction, self).preprocess()
 
     def train(self):
         self.preprocess()
@@ -118,8 +122,8 @@ class LinkPrediction(BaseFlow):
                 val_metric = self._test_step('valid')
                 h_dict = self.model.input_feature()
                 embedding = self.model(self.hg, h_dict)
-                score = th.sigmoid(self.ScorePredictor(self.test_hg, embedding))
-                self.task.dataset.save_results(hg=self.test_hg, score=score, file_path=self.args.HGB_results_path)
+                score = th.sigmoid(self.task.ScorePredictor(self.task.test_hg, embedding, self.r_embedding))
+                self.task.dataset.save_results(hg=self.task.test_hg, score=score, file_path=self.args.HGB_results_path)
             return val_metric, val_metric, epoch
         test_score = self._test_step(split="test")
         val_score = self._test_step(split="valid")

@@ -107,7 +107,6 @@ class Config(object):
 
             self.in_dim = conf.getint("RGCN", "in_dim")
             self.hidden_dim = conf.getint("RGCN", "hidden_dim")
-            self.out_dim = conf.getint("RGCN", "out_dim")
 
             self.n_bases = conf.getint("RGCN", "n_bases")
             self.n_layers = conf.getint("RGCN", "n_layers")

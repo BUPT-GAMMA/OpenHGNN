@@ -22,10 +22,18 @@ Node classification Task
 Link prediction Task
 ---------------------
 
-.. autoclass:: openhgnn.tasks.link_prediction
+.. automodule::  openhgnn.tasks.link_prediction
     :members:
     :undoc-members:
     :show-inheritance:
+
+Link prediction Model
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.link_prediction.LinkPrediction
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Recommendation Task
 ---------------------

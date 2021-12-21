@@ -219,6 +219,16 @@ BEST_CONFIGS = {
                 'lr': 0.01, 'weight_decay': 0.0001, 'dim': 128, 'batch_size': 64, 'window_size': 5,
                 'batches_per_epoch': 50, 'rw_length': 50, 'rw_walks': 10, 'rwr_prob': 0.5,
             }
+        },
+        'RGCN': {
+            'general': {
+
+            },
+            'FB15k-237': {
+                'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 100,
+                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'validation': True
+            },
         }
 
     },
