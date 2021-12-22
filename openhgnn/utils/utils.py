@@ -5,7 +5,8 @@ import torch as th
 from scipy.sparse import coo_matrix
 import numpy as np
 import random
-from . import load_HIN, load_KG, load_OGB, BEST_CONFIGS
+from . import load_HIN, load_KG, load_OGB
+from .best_config import BEST_CONFIGS
 
 
 def sum_up_params(model):

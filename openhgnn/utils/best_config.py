@@ -209,11 +209,12 @@ BEST_CONFIGS = {
         }
 
     },
+    
     "link_prediction": {
         'NARS': {
             'general': {'num_hops': 3},
         },
-        'HetGNN':{
+        'HetGNN': {
             'general': {'max_epoch': 500, 'patience': 10, 'mini_batch_flag': True},
             'academic4HetGNN': {
                 'lr': 0.01, 'weight_decay': 0.0001, 'dim': 128, 'batch_size': 64, 'window_size': 5,
@@ -229,7 +230,7 @@ BEST_CONFIGS = {
                 'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
                 'validation': True
             },
-        }
+        },
 
     },
     "recommendation": {

@@ -37,9 +37,11 @@ class LinkPrediction(BaseTask):
         self.test_hg = self.test_hg.to(args.device)
         self.evaluator = Evaluator(args.seed)
         if not hasattr(args, 'score_fn'):
-            self.score_fn = 'distmult'
-        else:
-            self.score_fn = args.score_fn
+            self.ScorePredictor = HeteroDotProductPredictor()
+        elif args.score_fn == 'dot-product':
+            self.ScorePredictor = HeteroDotProductPredictor()
+        elif args.score_fn == 'distmult':
+            self.ScorePredictor = HeteroDistMultPredictor()
         self.negative_sampler = Uniform(1)
 
     def get_graph(self):
@@ -124,35 +126,34 @@ class LinkPrediction(BaseTask):
                                          {ntype: hg.number_of_nodes(ntype) for ntype in hg.ntypes})
         return neg_pair_graph
 
-    def ScorePredictor(self, g, n_embedding, r_embedding=None):
-        if self.score_fn == 'dot-product':
-            score = self.dot_product(g, n_embedding)
-        elif self.score_fn == 'distmult':
-            score = self.distmult(g, n_embedding, r_embedding)
-        return score
 
-    def dot_product(self, edge_subgraph, x):
+class HeteroDotProductPredictor(th.nn.Module):
+    """
+    References: `documentation of dgl <https://docs.dgl.ai/guide/training-link.html#heterogeneous-graphs>_`
+    
+    """
+    def forward(self, edge_subgraph, x, *args, **kwargs):
         """
-
         Parameters
         ----------
         edge_subgraph: dgl.Heterograph
-            the prediction graph
-        x: dict[th.Tensor]
-            the embedding dict
-
+            the prediction graph only contains the edges of the target link
+        x: dict[str: th.Tensor]
+            the embedding dict. The key only contains the nodes involving with the target link.
+    
         Returns
         -------
         score: th.Tensor
             the prediction of the edges in edge_subgraph
         """
-
+    
         with edge_subgraph.local_scope():
             for ntype in edge_subgraph.ntypes:
                 edge_subgraph.nodes[ntype].data['x'] = x[ntype]
             for etype in edge_subgraph.canonical_etypes:
                 edge_subgraph.apply_edges(
                     dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
+                
             score = edge_subgraph.edata['score']
             if isinstance(score, dict):
                 result = []
@@ -160,32 +161,35 @@ class LinkPrediction(BaseTask):
                     result.append(value)
                 score = th.cat(result)
             return score.squeeze()
-
-    def distmult(self, edge_subgraph, x, r_embedding):
+        
+        
+class HeteroDistMultPredictor(th.nn.Module):
+    
+    def forward(self, edge_subgraph, x, r_embedding, *args, **kwargs):
         """
         DistMult factorization (Yang et al. 2014) as the scoring function,
         which is known to perform well on standard link prediction benchmarks when used on its own.
-
+    
         In DistMult, every relation r is associated with a diagonal matrix :math:`R_{r} \in \mathbb{R}^{d \times d}`
         and a triple (s, r, o) is scored as
-
+    
         .. math::
             f(s, r, o)=e_{s}^{T} R_{r} e_{o}
-
+    
         Parameters
         ----------
         edge_subgraph: dgl.Heterograph
-            the prediction graph
-        x: dict[th.Tensor]
-            the embedding dict
+            the prediction graph only contains the edges of the target link
+        x: dict[str: th.Tensor]
+            the node embedding dict. The key only contains the nodes involving with the target link.
         r_embedding: th.Tensor
-
+            the all relation types embedding
+    
         Returns
         -------
         score: th.Tensor
             the prediction of the edges in edge_subgraph
         """
-        score_list = []
         with edge_subgraph.local_scope():
             for ntype in edge_subgraph.ntypes:
                 edge_subgraph.nodes[ntype].data['x'] = x[ntype]
@@ -200,11 +204,14 @@ class LinkPrediction(BaseTask):
                     dgl.function.u_mul_e('x', 'e', 's'), etype=etype)
                 edge_subgraph.apply_edges(
                     dgl.function.e_mul_v('s', 'x', 'score'), etype=etype)
-                if 1 == len(edge_subgraph.canonical_etypes):
-                    score = th.sum(edge_subgraph.edata['score'], dim=1)
-                else:
-                    score = th.sum(edge_subgraph.edata['score'].pop(etype), dim=1)
-                # score = th.sum(th.mul(edge_subgraph.edata['score'].pop(etype), e), dim=1)
-                score_list.append(score)
-            return th.cat(score_list)
+
+            score = edge_subgraph.edata['score']
+            if isinstance(score, dict):
+                result = []
+                for _, value in score.items():
+                    result.append(th.sum(value, dim=1))
+                score = th.cat(result)
+            else:
+                score = th.sum(score, dim=1)
+            return score
 

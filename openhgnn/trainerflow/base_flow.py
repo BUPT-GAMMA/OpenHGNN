@@ -98,7 +98,7 @@ class BaseFlow(ABC):
         """
 
         if self.hg.ndata.get('h', {}) == {} or self.args.feat == 2:
-            if self.hg.ndata == {}:
+            if self.hg.ndata.get('h', {}) == {}:
                 print('Assign embedding as features, because hg.ndata is empty.')
             else:
                 print('feat2, drop features!')

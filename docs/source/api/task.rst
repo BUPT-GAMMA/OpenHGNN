@@ -23,9 +23,6 @@ Link prediction Task
 ---------------------
 
 .. automodule::  openhgnn.tasks.link_prediction
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 Link prediction Model
 ~~~~~~~~~~~~~~~~~~~~~~
