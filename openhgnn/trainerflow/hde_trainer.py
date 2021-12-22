@@ -15,8 +15,11 @@ class hde_trainer(BaseFlow):
     HDE trainer flow.
     Supported Model: HDE
     Supported Dataset：imdb4hde
-
-    The trainerflow supports link prediction task.
+    The trainerflow supports link prediction task. It first calculates HDE for every node in the graph,
+    and uses the HDE as a part of the initial feature for each node.
+    And then it performs standard message passing and link prediction operations.
+    Please notice that for different target node set, the HDE for each node can be different.
+    For more details, please refer to the original paper: http://www.shichuan.org/doc/116.pdf
     """
 
     def __init__(self, args):
@@ -28,6 +31,7 @@ class hde_trainer(BaseFlow):
         self.node_type = len(self.type2idx)
         self.num_fea = (self.node_type * (args.max_dist + 1)) * 2 + self.node_type
         self.sample_size = self.num_fea * (1 + args.num_neighbor + args.num_neighbor * args.num_neighbor)
+        self.args.patience = 10
         args.input_dim = self.num_fea
         args.output_dim = args.emb_dim // 2
 

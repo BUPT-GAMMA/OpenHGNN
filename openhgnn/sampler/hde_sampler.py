@@ -3,9 +3,16 @@ import random
 import torch
 from tqdm import tqdm
 import numpy as np
+from itertools import combinations
 
 
 class HDESampler:
+    """
+    Sampler for HDE model, the function of this sampler is perform data preprocess
+    and compute HDE for each node. Please notice that for different target node set,
+    the HDE for each node can be different.
+    For more details, please refer to the original paper: http://www.shichuan.org/doc/116.pdf
+    """
     def __init__(self, that):
         self.mini_batch = []
         self.type2idx = that.type2idx
@@ -20,7 +27,11 @@ class HDESampler:
         self.preprocess_feature()
 
     def dgl2nx(self):
-        test_ratio = 0.2
+        """
+        Convert the dgl graph data to networkx data structure.
+        :return:
+        """
+        test_ratio = 0.1
         nx_g = nx.Graph()
         sp = 1 - test_ratio * 2
 
@@ -43,6 +54,11 @@ class HDESampler:
         self.g_test.add_edges_from(edge_list[sp1 + sp2:])
 
     def compute_hde(self, args):
+        """
+        Compute hde for training set, validation set and test set.
+        :param args: arguments
+        :return:
+        """
         print("Computing HDE for training set...")
         self.data_A_train, self.data_B_train, self.data_y_train = self.batch_data(self.g_train, args)
         print("Computing HDE for validation set...")
@@ -68,6 +84,12 @@ class HDESampler:
                self.test_batch_A_fea, self.test_batch_B_fea, self.test_batch_y
 
     def batch_data(self, g, args):
+        """
+        Generate batch data.
+        :param g: graph data
+        :param args: arguments
+        :return:
+        """
         edge = list(g.edges)
         nodes = list(g.nodes)
         num_batch = int(len(edge) * 2 / args.batch_size)
@@ -103,6 +125,13 @@ class HDESampler:
                                             G,
                                             node_pair,
                                             args):
+        """
+        compute distance encoding given a target node set
+        :param G: graph data
+        :param node_pair: target node set
+        :param args: arguments
+        :return:
+        """
         [A, B] = node_pair
         A_ego = nx.ego_graph(G, A, radius=args.k_hop)
         B_ego = nx.ego_graph(G, B, radius=args.k_hop)
@@ -127,6 +156,15 @@ class HDESampler:
         return A_fea_batch, B_fea_batch
 
     def gen_fea_batch(self, G, root, fea_dict, args):
+        """
+        Neighbor sampling for each node. The Neighbor feature will be concatenated and
+        will be separated in the model.
+        :param G: graph data
+        :param root: root node
+        :param fea_dict: node features
+        :param args: arguments
+        :return:
+        """
         fea_batch = []
         self.mini_batch.append([root])
         a = [0] * (self.num_fea - self.node_type) + self.type_encoder(root)
@@ -171,6 +209,14 @@ class HDESampler:
         return np.concatenate(fea_batch, axis=1)
 
     def dist_encoder(self, src, dest, G, args):
+        """
+        compute H_SPD for a node pair
+        :param src: source node
+        :param dest: target node
+        :param G: graph data
+        :param args: arguments
+        :return:
+        """
         paths = list(nx.all_simple_paths(G, src, dest, cutoff=args.max_dist + 1))
         cnt = [args.max_dist] * self.node_type  # truncation SPD at max_spd
         for path in paths:
@@ -186,6 +232,11 @@ class HDESampler:
         return np.concatenate(one_hot_list)
 
     def type_encoder(self, node):
+        """
+        perform one-hot encoding based on the node type.
+        :param node:
+        :return:
+        """
         res = [0] * self.node_type
         res[self.type2idx[node[0]]] = 1.0
         return res
