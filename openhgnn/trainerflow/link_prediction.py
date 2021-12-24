@@ -72,17 +72,12 @@ class LinkPrediction(BaseFlow):
         else:
             self.r_embedding = None
 
-        if self.args.dataset in ['wn18', 'FB15k', 'FB15k-237']:
-            self.evaluation = 'mrr'
-        else:
-            self.evaluation = 'roc_auc'
-
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         if self.args.score_fn == 'distmult':
             self.optimizer.add_param_group({'params': self.r_embedding.parameters()})
         self.patience = args.patience
         self.max_epoch = args.max_epoch
-
+        
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
 
     def preprocess(self):
@@ -95,23 +90,20 @@ class LinkPrediction(BaseFlow):
 
     def train(self):
         self.preprocess()
-        epoch_iter = tqdm(range(self.max_epoch))
         stopper = EarlyStopping(self.patience, self._checkpoint)
-        for epoch in tqdm(range(self.max_epoch), ncols=80):
+        for epoch in tqdm(range(self.max_epoch)):
             if self.args.mini_batch_flag:
                 loss = self._mini_train_step()
             else:
                 loss = self._full_train_setp()
             if epoch % self.evaluate_interval == 0:
                 val_metric = self._test_step('valid')
-                epoch_iter.set_description(
-                    f"Epoch: {epoch:03d}, roc_auc: {val_metric:.4f}, Loss:{loss:.4f}"
-                )
+                self.logger.train_info(f"Epoch: {epoch:03d}, roc_auc: {val_metric:.4f}, Loss:{loss:.4f}")
                 early_stop = stopper.step_score(val_metric, self.model)
                 if early_stop:
-                    print('Early Stop!\tEpoch:' + str(epoch))
+                    self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}')
                     break
-        print(f"Valid_score_ = {stopper.best_score: .4f}")
+        self.logger.train_info(f"Valid score = {stopper.best_score: .4f}")
         stopper.load_model(self.model)
 
         # Test
@@ -127,7 +119,7 @@ class LinkPrediction(BaseFlow):
             return val_metric, val_metric, epoch
         test_score = self._test_step(split="test")
         val_score = self._test_step(split="valid")
-        print(f"Test mrr = {test_score:.4f}")
+        self.logger.train_info(f"Test score = {test_score:.4f}")
         return dict(Test_mrr=test_score, Val_mrr=val_score)
 
     def _full_train_setp(self):
@@ -179,4 +171,4 @@ class LinkPrediction(BaseFlow):
         with th.no_grad():
             h_dict = self.model.input_feature()
             embedding = self.model(self.train_hg, h_dict)
-            return self.task.evaluate(self.evaluation, embedding, self.r_embedding, mode=split)
+            return self.task.evaluate(embedding, self.r_embedding, mode=split)

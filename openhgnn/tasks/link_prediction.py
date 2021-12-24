@@ -37,13 +37,23 @@ class LinkPrediction(BaseTask):
         self.test_hg = self.test_hg.to(args.device)
         self.evaluator = Evaluator(args.seed)
         if not hasattr(args, 'score_fn'):
-            self.ScorePredictor = HeteroDotProductPredictor()
+            self.ScorePredictor = HeteroDistMultPredictor()
+            args.score_fn = 'distmult'
         elif args.score_fn == 'dot-product':
             self.ScorePredictor = HeteroDotProductPredictor()
         elif args.score_fn == 'distmult':
             self.ScorePredictor = HeteroDistMultPredictor()
         self.negative_sampler = Uniform(1)
-
+        
+        if args.dataset in ['wn18', 'FB15k', 'FB15k-237']:
+            self.evaluation = 'mrr'
+        else:
+            self.evaluation = 'roc_auc'
+            
+        args.logger.info('[Init Task] The task: link prediction, the dataset: {}, the evaluation metric is {}, '
+                         'the score function: {} '.format(self.n_dataset, self.evaluation, args.score_fn))
+        
+        
     def get_graph(self):
         return self.dataset.g
 
@@ -60,13 +70,11 @@ class LinkPrediction(BaseTask):
         elif name == 'roc_auc':
             return self.evaluator.cal_roc_auc
 
-    def evaluate(self, name, n_embedding, r_embedding=None, mode='test'):
+    def evaluate(self, n_embedding, r_embedding=None, mode='test'):
         r"""
 
         Parameters
         ----------
-        name: str
-            the name of evaluation metric
         n_embedding: th.Tensor
             the embedding of nodes
         r_embedding: th.Tensor
@@ -77,16 +85,16 @@ class LinkPrediction(BaseTask):
         -------
 
         """
-        if name == 'acc':
+        if self.evaluation == 'acc':
             return self.evaluator.author_link_prediction
-        elif name == 'mrr':
+        elif self.evaluation == 'mrr':
 
             return self.evaluator.mrr_(n_embedding['_N'], self.dict2emd(r_embedding), self.dataset.train_triplets,
                                        self.dataset.valid_triplets, self.dataset.test_triplets,
                                        hits=[1, 3, 10], eval_bz=100)
-        elif name == 'academic_lp':
+        elif self.evaluation == 'academic_lp':
             return self.evaluator.author_link_prediction(n_embedding, self.dataset.train_batch, self.dataset.test_batch)
-        elif name == 'roc_auc':
+        elif self.evaluation == 'roc_auc':
             if mode == 'test':
                 eval_hg = self.test_hg
             elif mode == 'valid':

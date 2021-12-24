@@ -67,20 +67,20 @@ def add_reverse_edges(hg, copy_ndata=True, copy_edata=True, ignore_one_type=True
 def set_best_config(args):
     configs = BEST_CONFIGS.get(args.task)
     if configs is None:
-        print('The task do not have a best_config!')
+        args.logger.load_best_config('The task: {} do not have a best_config!'.format(args.task))
         return args
     if args.model not in configs:
-        print('The model is not in the best config.')
+        args.logger.load_best_config('The model: {} is not in the best config.'.format(args.model))
         return args
     configs = configs[args.model]
     for key, value in configs["general"].items():
         args.__setattr__(key, value)
     if args.dataset not in configs:
-        print('The dataset is not in the best config.')
+        args.logger.load_best_config('The dataset: {} is not in the best config of model: {}.'.format(args.dataset, args.model))
         return args
     for key, value in configs[args.dataset].items():
         args.__setattr__(key, value)
-    print('Use the best config.')
+    args.logger.load_best_config('Load the best config of model: {} for dataset: {}.'.format(args.model, args.dataset))
     return args
 
 
@@ -335,3 +335,27 @@ def extract_metapaths(category, canonical_etypes, self_loop=False):
                         if etype[0] != etype[2]:
                             meta_paths.append((etype, dst_e))
     return meta_paths
+
+# for etype in self.model.hg.etypes:
+# g = self.model.hg[etype]
+# for etype in ['paper-ref-paper','paper-cite-paper']:
+#     g = self.hg[etype]
+#     r = []
+#     for i in self.train_idx:
+#         neigh = g.predecessors(i)
+#         cen_label = self.labels[i]
+#         neigh_label = self.labels[neigh]
+#         if len(neigh) == 0:
+#             pass
+#         else:
+#             r.append((cen_label == neigh_label).sum() / len(neigh))
+#     for i in self.valid_idx:
+#         neigh = g.predecessors(i)
+#         cen_label = self.labels[i]
+#         neigh_label = self.labels[neigh]
+#         if len(neigh) == 0:
+#             pass
+#         else:
+#             r.append((cen_label == neigh_label).sum() / len(neigh))
+#     he = torch.stack(r).mean()
+#     print(etype+ str(he))

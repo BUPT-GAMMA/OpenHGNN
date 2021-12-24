@@ -42,6 +42,7 @@ class BaseFlow(ABC):
             args.HGB_results_path = os.path.join("./openhgnn/output/{}/{}_{}.txt".format(args.model, args.dataset[5:], args.seed))
 
         self.args = args
+        self.logger = self.args.logger
         self.model_name = args.model
         self.device = args.device
         self.task = build_task(args)
@@ -99,9 +100,9 @@ class BaseFlow(ABC):
 
         if self.hg.ndata.get('h', {}) == {} or self.args.feat == 2:
             if self.hg.ndata.get('h', {}) == {}:
-                print('Assign embedding as features, because hg.ndata is empty.')
+                self.logger.feature_info('Assign embedding as features, because hg.ndata is empty.')
             else:
-                print('feat2, drop features!')
+                self.logger.feature_info('feat2, drop features!')
                 self.hg.ndata.pop('h')
             self.input_feature = HeteroFeature({}, get_nodes_dict(self.hg), self.args.hidden_dim,
                                                act=act).to(self.device)
@@ -109,16 +110,16 @@ class BaseFlow(ABC):
             self.input_feature = self.init_feature(act)
         elif self.args.feat == 1:
             if self.args.task != 'node_classification':
-                print('\'feat 1\' is only for node classification task, set feat 0!')
+                self.logger.feature_info('\'feat 1\' is only for node classification task, set feat 0!')
                 self.input_feature = self.init_feature(act)
             else:
                 h_dict = self.hg.ndata.pop('h')
-                print('feat1, preserve target nodes!')
+                self.logger.feature_info('feat1, preserve target nodes!')
                 self.input_feature = HeteroFeature({self.category: h_dict[self.category]}, get_nodes_dict(self.hg), self.args.hidden_dim,
                                                    act=act).to(self.device)
 
     def init_feature(self, act):
-        print("[Feature transformation] Feat is 0, nothing to do!")
+        self.logger.feature_info("Feat is 0, nothing to do!")
         if isinstance(self.hg.ndata['h'], dict):
             # The heterogeneous contains more than one node type.
             input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg),
@@ -162,9 +163,10 @@ class BaseFlow(ABC):
             try:
                 ck_pt = torch.load(self._checkpoint)
                 self.model.load_state_dict(ck_pt)
-                print('Load model from pretrained model:' + self._checkpoint)
+                self.logger.info('[Load Model] Load model from pretrained model:' + self._checkpoint)
             except FileNotFoundError:
-                print(f"'Do not load the model from pretrained, {self._checkpoint}' doesn't exists")
+                self.logger.info('[Load Model] Do not load the model from pretrained, '
+                                      '{} doesn\'t exists'.format(self._checkpoint))
         # return self.model
 
     def save_checkpoint(self):
