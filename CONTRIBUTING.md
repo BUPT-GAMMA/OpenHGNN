@@ -1,6 +1,6 @@
 ## Contributing to OpenHGNN
 
-Contribution is always welcomed. Please feel open an issue or email to tyzhao@bupt.edu.cn.
+Contribution is always welcomed. Please feel free to open an issue or email to tyzhao@bupt.edu.cn.
 
 ## Contributors
 
