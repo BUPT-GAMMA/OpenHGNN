@@ -14,7 +14,7 @@ class Config(object):
             if th.cuda.is_available():
                 self.device = th.device('cuda', int(gpu))
             else:
-                print("cuda is not available, please set 'gpu' -1")
+                raise ValueError("cuda is not available, please set 'gpu' -1")
 
         try:
             conf.read(file_path)
@@ -496,4 +496,4 @@ class Config(object):
             self.lr = conf.getfloat('HDE', 'lr')
 
     def __repr__(self):
-        return 'Model:' + self.model + '\nTask:' + self.task + '\nDataset:' + self.dataset
+        return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)

@@ -52,7 +52,7 @@ class Metapath2VecTrainer(BaseFlow):
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, len(self.dataloader))
 
         for epoch in range(self.max_epoch):
-            print('\n\n\nEpoch: ' + str(epoch + 1))
+            self.logger.info('Epoch: ' + str(epoch + 1))
             running_loss = 0.0
             for i, sample_batched in enumerate(tqdm(self.dataloader)):
                 if len(sample_batched[0]) > 1:
@@ -60,15 +60,15 @@ class Metapath2VecTrainer(BaseFlow):
                     pos_v = sample_batched[1].to(self.device)
                     neg_v = sample_batched[2].to(self.device)
 
-                    scheduler.step()
                     optimizer.zero_grad()
                     loss = self.model.forward(pos_u, pos_v, neg_v)
                     loss.backward()
                     optimizer.step()
+                    scheduler.step()
 
                     running_loss = running_loss * 0.9 + loss.item() * 0.1
                     if i > 0 and i % 50 == 0:
-                        print(' Loss: ' + str(running_loss))
+                        self.logger.info(' Loss: ' + str(running_loss))
         self.model.save_embedding(self.embeddings_file_path)
 
     def get_ntype_range(self, target_ntype):

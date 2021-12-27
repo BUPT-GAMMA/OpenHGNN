@@ -11,14 +11,37 @@
 - Clone the Openhgnn-DGL
 
   ```bash
+  # For node classification task
   python main.py -m RGCN -t node_classification -d aifb -g 0 --use_best_config
+  # For link prediction task
+  python main.py -m RGCN -t link_prediction -d HGBl-amazon -g 0 --use_best_config
   ```
-
+  
   If you do not have gpu, set -gpu -1.
+  
+  ##### Supported dataset
+  
+  ###### Node classification:
+  
+  [RDFDataset](../../dataset/#RDF_NodeCLassification)[aifb/mutag/bgs/am], [HGBn](../../dataset/#HGBn) and other datasets for node classification.
+  
+  ###### Link prediction:
+  
+  
 
-  -d means dataset, candidate dataset: aifb/mutag/bgs/am. Refer to [RDFDataset](../../dataset/#RDF_NodeCLassification) to get more infos.
+## Performance
 
-## Performance: Node classification
+#### Task: Node classification
+
+Evaluation metric: accuracy
+
+| Method   | AIFB  | MUTAG | BGS   | AM    |
+| -------- | ----- | ----- | ----- | ----- |
+| **RGCN** | 97.22 | 72.06 | 96.55 | 88.89 |
+
+#### Task: Link prediction
+
+Evaluation metric: roc_auc
 
 | Method               | AIFB  | MUTAG | BGS   | AM    |
 | -------------------- | ----- | ----- | ----- | ----- |

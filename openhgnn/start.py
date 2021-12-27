@@ -6,10 +6,10 @@ from .auto import hpo_experiment
 def OpenHGNN(args):
     if not getattr(args, 'seed', False):
         args.seed = 0
-    set_random_seed(args.seed)
     args.logger = Logger(args)
     if getattr(args, "use_best_config", False):
         args = set_best_config(args)
+    set_random_seed(args.seed)
     trainerflow = SpecificTrainerflow.get(args.model, args.task)
     if getattr(args, "use_hpo", False):
         # hyper-parameter search

@@ -6,6 +6,7 @@ import datetime
 from logging import getLogger
 from colorama import init
 
+
 def printInfo(metric, epoch, train_score, train_loss, val_score, val_loss):
     if metric == 'f1_lr':
         print((
@@ -100,7 +101,6 @@ def set_color(log, color, highlight=True):
 # UPDATE
 # Hu AnKe 2021/12/16
 class Logger:
-    logger = getLogger()
 
     def __init__(self, config):
         """
@@ -154,10 +154,14 @@ class Logger:
         sh = logging.StreamHandler()
         sh.setLevel(level)
         sh.setFormatter(sformatter)
+        
+        root_logger = logging.getLogger()
+        for h in root_logger.handlers:
+            root_logger.removeHandler(h)
 
         logging.basicConfig(level=level, handlers=[sh, fh])
-        logger = getLogger()
-        logger.info(config)
+        self.logger = getLogger()
+        self.logger.info(config)
 
     def info(self, s):
         self.logger.info(s)

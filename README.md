@@ -91,29 +91,29 @@ Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get
 
 The link will give some basic usage.
 
-| Model                                           | Node classification | Link prediction    | Recommendation     |
-| ----------------------------------------------- | ------------------- | ------------------ | ------------------ |
-| [RGCN](./openhgnn/output/RGCN)[ESWC 2018]       | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [HAN](./openhgnn/output/HAN)[WWW 2019]          | :heavy_check_mark:  |                    |                    |
-| [KGCN](./openhgnn/output/KGCN)[WWW 2019]        |                     |                    | :heavy_check_mark: |
-| [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]    | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [GTN](./openhgnn/output/GTN)[NeurIPS 2019]      | :heavy_check_mark:  |                    |                    |
-| [RSHN](./openhgnn/output/RSHN)[ICDM 2019]       | :heavy_check_mark:  |                    |                    |
-| [DMGI](./openhgnn/output/DMGI)[AAAI 2020]       | :heavy_check_mark:  |                    |                    |
-| [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]      | :heavy_check_mark:  |                    |                    |
-| [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020] | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]      | :heavy_check_mark:  |                    |                    |
-| [NARS](./openhgnn/output/NARS)[arxiv]           | :heavy_check_mark:  |                    |                    |
-| [MHNF](./openhgnn/output/MHNF)[arxiv]           | :heavy_check_mark:  |                    |                    |
-| [HGSL](./openhgnn/output/HGSL)[AAAI 2021]       | :heavy_check_mark:  |                    |                    |
-| [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]  | :heavy_check_mark:  |                    |                    |
-| [HeCo](./openhgnn/output/HeCo)[KDD 2021]        | :heavy_check_mark:  |                    |                    |
-| [HPN](./openhgnn/output/HPN)[TKDE 2021]         | :heavy_check_mark:  |                    |                    |
-| [RHGNN](./openhgnn/output/RHGNN)[arxiv]         | :heavy_check_mark:  |                    |                    |
-
-### To be supported models
 
 - Metapath2vec[KDD 2017]
+| [HAN](./openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark:  |                    |                    |
+| [KGCN](./openhgnn/output/KGCN)[WWW 2019]                 |                     |                    | :heavy_check_mark: |
+| [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| HGAT[EMNLP 2019]                                         |                     |                    |                    |
+| [GTN](./openhgnn/output/GTN)[NeurIPS 2019]               | :heavy_check_mark:  |                    |                    |
+| [RSHN](./openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark:  |                    |                    |
+| [DMGI](./openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark:  |                    |                    |
+| [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark:  |                    |                    |
+| HGT[WWW 2020]                                            |                     |                    |                    |
+| [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020]          | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]               | :heavy_check_mark:  |                    |                    |
+| [NARS](./openhgnn/output/NARS)[arxiv]                    | :heavy_check_mark:  |                    |                    |
+| [MHNF](./openhgnn/output/MHNF)[arxiv]                    | :heavy_check_mark:  |                    |                    |
+| [HGSL](./openhgnn/output/HGSL)[AAAI 2021]                | :heavy_check_mark:  |                    |                    |
+| [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]           | :heavy_check_mark:  |                    |                    |
+| [HeCo](./openhgnn/output/HeCo)[KDD 2021]                 | :heavy_check_mark:  |                    |                    |
+| SimpleHGN[KDD 2021]                                      |                     |                    |                    |
+| [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  |                    |                    |
+| [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
+| [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
+|                                                          |                     |                    |                    |
 
 ### Candidate models
 

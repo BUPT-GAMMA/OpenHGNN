@@ -46,12 +46,12 @@ class LinkPrediction(BaseTask):
         self.negative_sampler = Uniform(1)
         
         if args.dataset in ['wn18', 'FB15k', 'FB15k-237']:
-            self.evaluation = 'mrr'
+            self.evaluation_metric = 'mrr'
         else:
-            self.evaluation = 'roc_auc'
+            self.evaluation_metric = 'roc_auc'
             
         args.logger.info('[Init Task] The task: link prediction, the dataset: {}, the evaluation metric is {}, '
-                         'the score function: {} '.format(self.n_dataset, self.evaluation, args.score_fn))
+                         'the score function: {} '.format(self.n_dataset, self.evaluation_metric, args.score_fn))
         
         
     def get_graph(self):
@@ -85,16 +85,16 @@ class LinkPrediction(BaseTask):
         -------
 
         """
-        if self.evaluation == 'acc':
+        if self.evaluation_metric == 'acc':
             return self.evaluator.author_link_prediction
-        elif self.evaluation == 'mrr':
+        elif self.evaluation_metric == 'mrr':
 
             return self.evaluator.mrr_(n_embedding['_N'], self.dict2emd(r_embedding), self.dataset.train_triplets,
                                        self.dataset.valid_triplets, self.dataset.test_triplets,
                                        hits=[1, 3, 10], eval_bz=100)
-        elif self.evaluation == 'academic_lp':
+        elif self.evaluation_metric == 'academic_lp':
             return self.evaluator.author_link_prediction(n_embedding, self.dataset.train_batch, self.dataset.test_batch)
-        elif self.evaluation == 'roc_auc':
+        elif self.evaluation_metric == 'roc_auc':
             if mode == 'test':
                 eval_hg = self.test_hg
             elif mode == 'valid':

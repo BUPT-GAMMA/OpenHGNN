@@ -44,9 +44,13 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
     | imdb4GTN   | 4,661 | 5,841 | 2,270    | 13,983      | 4,661          | 300   | 300  | 2,339 |
     | imdb4MAGNN | 4,278 | 5,257 | 2,081    | 12,828      | 4,278          | 400   | 400  | 3,478 |
 
-- **HGB_NodeClassification**
+- **HGBn **
+
+  The datasets are HGB for Node Classification
 
   **Note**：The test data labels are randomly replaced to prevent data leakage issues, refer to [HGB](https://github.com/THUDM/HGB).
+
+  In OpenHGNN, you will get the test results in `./openhgnn/output/{model_name}/`.  If you want to obtain test scores, you need to submit your prediction to HGB's [website](https://www.biendata.xyz/hgb/).
 
   - HGBn-ACM
 
@@ -86,9 +90,13 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 
   - ###### academic4HetGNN
 
-- **HGBl-LinkPrediction**
+- **HGBl**
+
+  The datasets are HGB for Link Prediction.
 
   **Note**：The test data labels are randomly replaced to prevent data leakage issues, refer to [HGB](https://github.com/THUDM/HGB).
+
+  In OpenHGNN, you will get the test results in `./openhgnn/output/{model_name}/`.  If you want to obtain test scores, you need to submit your prediction to HGB's [website](https://www.biendata.xyz/hgb/).
 
   - HGBl-amazon
 

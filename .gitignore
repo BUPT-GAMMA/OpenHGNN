@@ -10,10 +10,11 @@ __pycache__/
 *.zip
 *.bin
 *.pt
-
+*.log
 # numpy files
 *.npy
 *.npz
+
 # yaml files
 *.yaml
 
