@@ -32,4 +32,5 @@ SpecificTrainerflow = {
     'Metapath2vec': 'mp2vec_trainer',
     'SLiCE':'slicetrainer',
     'HeGAN': 'HeGAN_trainer',
+    'HDE': 'hde_trainer',
 }

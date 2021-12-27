@@ -61,5 +61,6 @@ SUPPORTED_FLOWS = {
     'mp2vec_trainer': 'openhgnn.trainerflow.mp2vec_trainer',
     'HeCo_trainer': 'openhgnn.trainerflow.HeCo_trainer',
     'DMGI_trainer': 'openhgnn.trainerflow.DMGI_trainer',
-    'slicetrainer':'openhgnn.trainerflow.slice_trainer',
+    'slicetrainer': 'openhgnn.trainerflow.slice_trainer',
+    'hde_trainer':  'openhgnn.trainerflow.hde_trainer',
 }
