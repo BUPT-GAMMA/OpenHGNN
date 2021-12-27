@@ -158,22 +158,28 @@ class Config(object):
             pass
         elif model == 'Metapath2vec':
             self.lr = conf.getfloat("Metapath2vec", "learning_rate")
-            # self.weight_decay = conf.getfloat("Metapath2vec", "weight_decay")
-
-            #self.dropout = conf.getfloat("CompGCN", "dropout")
             self.max_epoch = conf.getint("Metapath2vec", "max_epoch")
             self.dim = conf.getint("Metapath2vec", "dim")
             self.batch_size = conf.getint("Metapath2vec", "batch_size")
             self.window_size = conf.getint("Metapath2vec", "window_size")
             self.num_workers = conf.getint("Metapath2vec", "num_workers")
             self.neg_size = conf.getint("Metapath2vec", "neg_size")
-            # self.batches_per_epoch = conf.getint("Metapath2vec", "batches_per_epoch")
-            # self.seed = conf.getint("Metapath2vec", "seed")
-            # self.patience = conf.getint("Metapath2vec", "patience")
             self.rw_length = conf.getint("Metapath2vec", "rw_length")
             self.rw_walks = conf.getint("Metapath2vec", "rw_walks")
-            # self.rwr_prob = conf.getfloat("Metapath2vec", "rwr_prob")
-            # self.mini_batch_flag = conf.getboolean("Metapath2vec", "mini_batch_flag")
+            self.meta_path_key = conf.get("Metapath2vec", "meta_path_key")
+
+        elif model == 'HERec':
+            self.lr = conf.getfloat("HERec", "learning_rate")
+            self.max_epoch = conf.getint("HERec", "max_epoch")
+            self.dim = conf.getint("HERec", "dim")
+            self.batch_size = conf.getint("HERec", "batch_size")
+            self.window_size = conf.getint("HERec", "window_size")
+            self.num_workers = conf.getint("HERec", "num_workers")
+            self.neg_size = conf.getint("HERec", "neg_size")
+            self.rw_length = conf.getint("HERec", "rw_length")
+            self.rw_walks = conf.getint("HERec", "rw_walks")
+            meta_path_keys = conf.get("HERec", "meta_path_keys")
+            self.meta_path_keys = meta_path_keys.split(',')
 
         elif model == 'HAN':
             self.lr = conf.getfloat("HAN", "learning_rate")

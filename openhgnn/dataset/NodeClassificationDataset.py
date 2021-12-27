@@ -178,6 +178,12 @@ class HIN_NodeClassification(NodeClassificationDataset):
             category = 'A'
             g = dataset[0].long()
             num_classes = 4
+            self.meta_paths_dict = {
+                'APVPA': [('A', 'A-P', 'P'), ('P', 'P-V', 'V'), ('V', 'V-P', 'P'), ('P', 'P-A', 'A')],
+                'APA': [('A', 'A-P', 'P'), ('P', 'P-A', 'A')],
+            }
+            self.meta_paths = [(('A', 'A-P', 'P'), ('P', 'P-V', 'V'), ('V', 'V-P', 'P'), ('P', 'P-A', 'A')),
+                               (('A', 'A-P', 'P'), ('P', 'P-A', 'A'))]
             self.in_dim = g.ndata['h'][category].shape[1]
 
         elif name_dataset == 'imdb4MAGNN':
@@ -197,6 +203,10 @@ class HIN_NodeClassification(NodeClassificationDataset):
             category = 'paper'
             g = dataset[0].long()
             num_classes = 3
+            self.meta_paths_dict = {'PAPSP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
+                                              ('paper', 'paper-subject', 'subject'),
+                                              ('subject', 'subject-paper', 'paper')]
+                                    }
             self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
                                 ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper'))]
             self.in_dim = g.ndata['h'][category].shape[1]
