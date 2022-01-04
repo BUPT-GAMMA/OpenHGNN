@@ -1,49 +1,49 @@
-# OpenHGNN 
+# OpenHGNN
 
-| [**中文** ](./README.md) | [**English**](./README_EN.md)｜
+| [**English**](./README_EN.md) | [**中文** ](./README.md) | 
 
-OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包, 集成了异质图神经网络的SOTA模型.
+This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https://pytorch.org/). We integrate SOTA models of heterogeneous graph.
 
-| [**文档** ](https://openhgnn.readthedocs.io/en/latest/index.html) | [**Space4HGNN**](./space4hgnn)｜
+| [**Documentation** ](https://openhgnn.readthedocs.io/en/latest/index.html) | [**Space4HGNN**](./space4hgnn)｜
 
-## 关键特性
+## Key Features
 
-- 易用: OpenHGNN提供了了易用的接口在给定的模型和数据集上运行实验, 且集成了 [optuna](https://optuna.org/) 进行超参数优化.
-- 可扩展: 用户可以定义定制化的任务/模型/数据集来对新的场景应用新的模型.
-- 高效: 底层的DGL框架提供了提供了高效的API.
+- Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and dataset. Besides, we also integrate [optuna](https://optuna.org/) to get hyperparameter optimization.
+- Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
+- Efficiency: The backend dgl provides efficient APIs.
 
-## 开始使用
+## Get Started
 
-#### 环境要求
+#### Requirements and Installation
 
 - Python  >= 3.6
 - [PyTorch](https://pytorch.org/get-started/locally/)  >= 1.7.1
 - [DGL](https://github.com/dmlc/dgl) >= 0.7.0
 
-- CPU 或者 NVIDIA GPU, Linux, Python3
+- CPU or NVIDIA GPU, Linux, Python3
 
-**1. Python 环境 (可选):** 推荐使用 Conda 包管理
+**1. Python environment (Optional):** We recommend using Conda package manager
 
 ```bash
 conda create -n openhgnn python=3.7
 source activate openhgnn
 ```
 
-**2. Pytorch:** 安装Pytorch, 参考[PyTorch安装文档](https://pytorch.org/get-started/locally/).
+**2. Pytorch:** Install [PyTorch](https://pytorch.org/). For example:
 
 ```bash
 # CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
 pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
-**3. DGL:** 安装 DGL, 参考[DGL安装文档](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html).
+**3. DGL:** Install [DGL](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html), follow their instructions. For example:
 
 ```bash
 # CUDA versions: cpu, cu101, cu102, cu110, cu111
 pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
 ```
 
-**4. 下载OpenHGNN, 安装依赖:**
+**4. OpenHGNN and other dependencies:**
 
 ```bash
 git clone https://github.com/BUPT-GAMMA/OpenHGNN
@@ -51,50 +51,50 @@ cd OpenHGNN
 pip install -r requirements.txt
 ```
 
-#### 在已有的评测上运行已有的基线模型 [数据集](./openhgnn/dataset/#Dataset)
+#### Running an existing baseline model on an existing benchmark [dataset](./openhgnn/dataset/#Dataset)
 
 ```bash
 python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --load_from_pretrained
 ```
 
-使用方法: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
+usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
                [--gpu GPU] [--use_best_config]
 
-*可选参数*:
+*optional arguments*:
 
-``-h, --help``	展示帮助信息并退出
+``-h, --help``	show this help message and exit
 
-``--model -m ``	模型名
+``--model -m ``	name of models
 
-``--task -t``	任务名
+``--task -t``	name of task
 
-``--dataset -d``    数据集名
+``--dataset -d``	name of datasets
 
-``--gpu -g``	控制你使用哪一个GPU, 如果没有GPU, 设定 -g -1.
+``--gpu -g``	controls which gpu you will use. If you do not have gpu, set -g -1.
 
-``--use_best_config``	use_best_config 意味着你使用该模型在该数据集下最优的配置, 如果你想要设定不同的超参数,请手动修改 [配置文件](./openhgnn/config.ini) . 使用最佳配置会覆盖配置文件中的参数。
+``--use_best_config``	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. The best_config will override the parameter in config.ini.
 
-``--use_hpo`` 除了 use_best_config, 我们还提供了一个超参数的 [样例](./openhgnn/auto) 来自动查找最佳超参数.
+``--use_hpo`` Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
 
-``--load_from_pretrained`` 从默认检查点加载模型.
+``--load_from_pretrained`` will load the model from a default checkpoint.
 
-示例: 
+e.g.: 
 
 ```bash
 python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 ```
 
-**提示**: 如果你对某个模型感兴趣,你可以参考下列的模型列表.
+**Note**: If you are interested in some model, you can refer to the below models list.
 
-请参考 [文档](https://openhgnn.readthedocs.io/en/latest/index.html) 了解更多的基础和进阶的使用方法.
+Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get more basic and depth usage.
 
-## [模型](./openhgnn/models/#Model)
+## [Models](./openhgnn/models/#Model)
 
-### 特定任务下支持的模型
+### Supported Models with specific task
 
-表格中的链接给出了模型的基本使用方法.
+The link will give some basic usage.
 
-| 模型                                                      | 节点分类             | 链路预测             | 推荐               |
+| Model                                                    | Node classification | Link prediction    | Recommendation     |
 | -------------------------------------------------------- | ------------------- | ------------------ | ------------------ |
 | [Metapath2vec](./openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark:  |                    |                    |
 | [RGCN](./openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
@@ -121,14 +121,14 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 | [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
 |                                                          |                     |                    |                    |
 
-### 候选模型
+### Candidate models
 
 - Heterogeneous Graph Attention Networks for Semi-supervised Short Text Classification[EMNLP 2019]
 - [Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]](https://ieeexplore.ieee.org/document/9483653)
 
-## 贡献者
+## Contributors
 
-OpenHGNN 团队 [北邮 GAMMA 实验室] 和 DGL 团队.
+OpenHGNN Team[GAMMA LAB] & DGL Team.
 
-[贡献者名单](./CONTRIBUTING.md).
+See more in [CONTRIBUTING](./CONTRIBUTING.md).
 
