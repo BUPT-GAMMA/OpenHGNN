@@ -41,7 +41,7 @@ Welcome to OpenHGNN's documentation!
    api/trainerflow
 
 
-This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on `DGL [Deep Graph Library] <https://github.com/dmlc/dgl>`_.
+This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on `DGL [Deep Graph Library] <https://github.com/dmlc/dgl>`_ and `PyTorch <https://pytorch.org/>`_.
 We integrate SOTA models of heterogeneous graph.
 
 Key Features

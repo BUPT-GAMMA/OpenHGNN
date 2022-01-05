@@ -4,7 +4,9 @@
 
 OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包, 集成了异质图神经网络的SOTA模型.
 
-| [**文档** ](https://openhgnn.readthedocs.io/en/latest/index.html) | [**Space4HGNN**](./space4hgnn)｜
+| [**中文文档** ](https://openhgnn.readthedocs.io/zh_CN/latest/index.html) | [**English Documentation** ](https://openhgnn.readthedocs.io/en/latest/index.html) |
+
+| [**Space4HGNN**](./space4hgnn)｜
 
 ## 关键特性
 

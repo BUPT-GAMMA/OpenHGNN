@@ -1,32 +1,42 @@
-How to build document locally
-================================
+# How to update OpenHGNN documents
 
-Requirements
-------------
-* sphinx
-* sphinx-gallery
-* sphinx_rtd_theme
+## Requirements
+
+- sphinx
+- sphinx-gallery 
+- sphinx_rtd_theme
 
 Or you can just install with requirements
 ```
 pip install -r ./requirements.txt
 ```
 
-Build documents
----------------
-First, clean up existing files:
-```bash
-./clean.sh
-```
+## Steps
 
-Then build:
-```bash
-make html
-```
+### 1. Install dependencies.
 
-Render locally
---------------
-```bash
-cd build/html
-python -m http.server 8000
+### 2. Update English Documents.
+
+### 3. Update Chinese translation.
+
+First, update the English text for translation.
+
+```
+cd docs
+sh update.sh
+```
+Then edit xx.po files in source/locales/zh_CN/LC_MESSAGES 
+
+### 4. Build and check locally.
+```
+cd docs 
+sh build.sh
+```
+Go to  http://127.0.0.1:8000/ and see whether your edition is displayed correctly.
+
+You can specify the language in conf.py.
+### 4. Clean before your submit.
+```
+cd docs 
+sh clean.sh
 ```
