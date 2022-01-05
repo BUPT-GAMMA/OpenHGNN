@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from ..layers.GeneralHGNNLayer import HeteroGeneralLayer
 from ..layers.GeneralGNNLayer import GeneralLayer
 
+
 def HGNNLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm, **kwargs):
     return HeteroGeneralLayer(gnn_type, rel_names, dim_in, dim_out, dropout, act, has_bn, has_l2norm, **kwargs)
 

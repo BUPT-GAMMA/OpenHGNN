@@ -44,6 +44,8 @@ pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
 
 ```bash
 git clone https://github.com/BUPT-GAMMA/OpenHGNN
+# If you encounter a network error, try git clone from openi as following.
+# git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
 cd OpenHGNN
 pip install -r requirements.txt
 ```
@@ -96,7 +98,7 @@ The link will give some basic usage.
 | [Metapath2vec](./openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark:  |                    |                    |
 | [RGCN](./openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [HERec](./openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark:  |                    |                    |
-| [HAN](./openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark:  |                    |                    |
+| [HAN](./openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [KGCN](./openhgnn/output/KGCN)[WWW 2019]                 |                     |                    | :heavy_check_mark: |
 | [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | HGAT[EMNLP 2019]                                         |                     |                    |                    |

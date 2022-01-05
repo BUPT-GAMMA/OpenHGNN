@@ -171,7 +171,6 @@ def get_nodes_dict(hg):
 
 def extract_embed(node_embed, input_nodes):
     emb = {}
-
     for ntype, nid in input_nodes.items():
         nid = input_nodes[ntype]
         emb[ntype] = node_embed[ntype][nid]
@@ -324,17 +323,19 @@ def print_dict(d, end_string='\n\n'):
 
 
 def extract_metapaths(category, canonical_etypes, self_loop=False):
-    meta_paths = []
+    meta_paths_dict = {}
     for etype in canonical_etypes:
-        if etype[0] == category:
+        if etype[0] in category:
             for dst_e in canonical_etypes:
                 if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
                     if self_loop:
-                        meta_paths.append((etype, dst_e))
+                        mp_name = 'mp' + str(len(meta_paths_dict))
+                        meta_paths_dict[mp_name] = [etype, dst_e]
                     else:
                         if etype[0] != etype[2]:
-                            meta_paths.append((etype, dst_e))
-    return meta_paths
+                            mp_name = 'mp' + str(len(meta_paths_dict))
+                            meta_paths_dict[mp_name] = [etype, dst_e]
+    return meta_paths_dict
 
 # for etype in self.model.hg.etypes:
 # g = self.model.hg[etype]

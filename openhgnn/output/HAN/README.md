@@ -35,9 +35,9 @@ Candidate dataset: acm_han_raw, acm4GTN, imdb4GTN
 
 The model is  trained in semi-supervisied node classification.
 
-#### model
+#### Model
 
-HANLayer
+We implement HANLayer with MetapathConv.
 
 SemanticAttention
 

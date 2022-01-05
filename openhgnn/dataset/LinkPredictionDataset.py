@@ -252,6 +252,12 @@ class HIN_LinkPrediction(LinkPredictionDataset):
                           ('director', 'director->movie', 'movie'), ('movie', 'movie->actor', 'actor')]
                                     }
         return g
+    
+    def get_idx(self, val_ratio=0.1, test_ratio=0.2):
+        if self.dataset_name == 'academic4HetGNN':
+            return None, None, None
+        else:
+            super(HIN_LinkPrediction, self).get_idx(val_ratio, test_ratio)
 
 
 @register_dataset('HGBl_link_prediction')

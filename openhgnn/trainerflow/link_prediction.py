@@ -48,8 +48,9 @@ class LinkPrediction(BaseFlow):
 
         """
         super(LinkPrediction, self).__init__(args)
-
+        
         self.target_link = self.task.dataset.target_link
+        self.args.out_node_type = self.task.get_out_ntype()
         self.train_hg = self.task.get_train().to(self.device)
         if hasattr(self.args, 'flag_add_reverse_edges'):
             self.train_hg = add_reverse_edges(self.train_hg)
@@ -65,14 +66,15 @@ class LinkPrediction(BaseFlow):
             In DistMult, the representations of edge types are involving the calculation of score.
             General models do not generate the representations of edge types, so we generate the embeddings of edge types.
             """
-            self.r_embedding = nn.ParameterDict({etype[1]: nn.Parameter(th.Tensor(1, self.args.hidden_dim))
+            self.r_embedding = nn.ParameterDict({etype[1]: nn.Parameter(th.Tensor(1, self.args.out_dim))
                                                 for etype in self.hg.canonical_etypes}).to(self.device)
             for _, para in self.r_embedding.items():
                 nn.init.xavier_uniform_(para)
         else:
             self.r_embedding = None
 
-        self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+        self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),
+                                                                  lr=args.lr, weight_decay=args.weight_decay)
         if self.args.score_fn == 'distmult':
             self.optimizer.add_param_group({'params': self.r_embedding.parameters()})
         self.patience = args.patience
@@ -98,8 +100,8 @@ class LinkPrediction(BaseFlow):
                 loss = self._full_train_setp()
             if epoch % self.evaluate_interval == 0:
                 val_metric = self._test_step('valid')
-                self.logger.train_info(f"Epoch: {epoch:03d}, roc_auc: {val_metric:.4f}, Loss:{loss:.4f}")
-                early_stop = stopper.step_score(val_metric, self.model)
+                self.logger.train_info(f"Epoch: {epoch:03d}, train loss: {loss:.4f}" + self.logger.metric2str(val_metric))
+                early_stop = stopper.step_score(val_metric['valid']['loss'], self.model)
                 if early_stop:
                     self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}')
                     break
@@ -171,4 +173,4 @@ class LinkPrediction(BaseFlow):
         with th.no_grad():
             h_dict = self.model.input_feature()
             embedding = self.model(self.train_hg, h_dict)
-            return self.task.evaluate(embedding, self.r_embedding, mode=split)
+            return {split: self.task.evaluate(embedding, self.r_embedding, mode=split)}

@@ -63,10 +63,9 @@ class Evaluator():
     def link_prediction(self, train_X, train_Y, test_X, test_Y):
         pred_Y = self.LR_pred(train_X, train_Y, test_X)
         AUC_score = Metric.roc_auc_score(test_Y, pred_Y)
-        print('\t<Link prediction> AUC=%.4f' % AUC_score, end='\t')
         macro_f1, micro_f1 = f1_node_classification(test_Y, pred_Y)
-        print('macro_f1: {:.4f}, micro_f1: {:.4f}'.format(macro_f1, micro_f1))
-
+        return AUC_score, macro_f1, micro_f1
+    
     def author_link_prediction(self, x, train_batch, test_batch):
         train_u, train_v, train_Y = train_batch
         test_u, test_v, test_Y = test_batch
@@ -75,7 +74,7 @@ class Evaluator():
         test_X = concat_u_v(x, th.tensor(test_u), th.tensor(test_v))
         train_Y = th.tensor(train_Y)
         test_Y = th.tensor(test_Y)
-        self.link_prediction(train_X, train_Y, test_X, test_Y)
+        return self.link_prediction(train_X, train_Y, test_X, test_Y)
     ''''''
     # Given embedding and labels, train_idx and test_idx, training a LR.
     def nc_with_LR(self, emd, labels, train_idx, test_idx):
@@ -87,7 +86,6 @@ class Evaluator():
         LR.fit(X_train, Y_train)
         Y_pred = LR.predict(X_test)
         macro_f1, micro_f1 = f1_node_classification(Y_test, Y_pred)
-        print('\t<node classification> macro_f1: {:.4f}, micro_f1: {:.4f}'.format(macro_f1, micro_f1))
         return micro_f1, macro_f1
 
 

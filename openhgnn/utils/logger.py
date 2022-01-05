@@ -172,9 +172,17 @@ class Logger:
     def train_info(self, s):
         self.logger.info('[Train Info] ' + s)
     
+    def metric2str(self, metric_dict):
+        out = "[Evaluation metric]"
+        for mode, score_dict in metric_dict.items():
+            out += f"\tMode:{mode}, "
+            for metric, score in score_dict.items():
+                out += f"{metric}: {score:.4f}; "
+        return out
+                
     def feature_info(self, s):
         self.logger.info('[Feature Transformation] ' + s)
-        
+    
     # graph data analyze
     def log_data_info(self, g):
         num_nodes = g.num_nodes()

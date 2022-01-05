@@ -3,8 +3,8 @@ import torch.nn as nn
 from . import BaseModel, register_model
 from dgl.nn.pytorch.conv import APPNPConv
 from ..layers.MetapathConv import MetapathConv
-from openhgnn.utils.utils import extract_metapaths
-from openhgnn.layers.macro_layer import SemanticAttention
+from ..utils.utils import extract_metapaths
+from ..layers.macro_layer.SemanticConv import SemanticAttention
 
 
 @register_model('HPN')
@@ -63,12 +63,12 @@ class HPN(BaseModel):
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
-        if args.meta_paths is None:
+        if args.meta_paths_dict is None:
             meta_paths = extract_metapaths(args.category, hg.canonical_etypes)
         else:
-            meta_paths = args.meta_paths
+            meta_paths = args.meta_paths_dict
 
-        return cls(meta_paths=meta_paths, category=args.category,
+        return cls(meta_paths=meta_paths, category=args.out_node_type,
                     in_size=args.hidden_dim,
                     out_size=args.out_dim,
                     dropout=args.dropout,
@@ -85,19 +85,18 @@ class HPN(BaseModel):
         self.layers.append(HPNLayer(meta_paths, in_size,  dropout, k_layer, alpha, edge_drop, out_embedsize))
         self.linear = nn.Linear(out_embedsize, out_size)
 
-
     def forward(self, g, h_dict):
-
-        h = h_dict[self.category]
+    
         for gnn in self.layers:
-            h = gnn(g, h)
-
-        return {self.category: self.linear(h)}
+            h_dict = gnn(g, h_dict)
+        out_dict = {ntype: self.linear(h_dict[ntype]) for ntype in self.category}
+    
+        return out_dict
 
 
 class HPNLayer(nn.Module):
 
-    def __init__(self, meta_paths, in_size, dropout, k_layer, alpha, edge_drop, out_embedsize):
+    def __init__(self, meta_paths_dict, in_size, dropout, k_layer, alpha, edge_drop, out_embedsize):
         super(HPNLayer, self).__init__()
 
         # semantic projection function fΦ projects node into semantic space
@@ -106,19 +105,15 @@ class HPNLayer(nn.Module):
             nn.Linear(in_features=in_size, out_features=out_embedsize, bias=True),
             nn.ReLU()
         )
-        self.meta_paths = meta_paths
+        self.meta_paths_dict = meta_paths_dict
 
         semantic_attention = SemanticAttention(in_size=in_size)
-        self.model = MetapathConv(
-            meta_paths,
-            [APPNPConv(k_layer, alpha, edge_drop)
-             for _ in meta_paths],
-            semantic_attention
-        )
+        mods = nn.ModuleDict({mp: APPNPConv(k_layer, alpha, edge_drop) for mp in meta_paths_dict})
+        self.model = MetapathConv(meta_paths_dict, mods, semantic_attention)
         self._cached_graph = None
         self._cached_coalesced_graph = {}
 
-    def forward(self, g, h):
+    def forward(self, g, h_dict):
         r"""
         Parameters
         -----------
@@ -132,15 +127,15 @@ class HPNLayer(nn.Module):
         h : tensor
             The output features
         """
-        h = self.hidden(h)
+        h_dict = {ntype: self.hidden(h_dict[ntype]) for ntype in h_dict}
         if self._cached_graph is None or self._cached_graph is not g:
             self._cached_graph = g
             self._cached_coalesced_graph.clear()
-            for meta_path in self.meta_paths:
-                self._cached_coalesced_graph[meta_path] = dgl.metapath_reachable_graph(
-                        g, meta_path)
+            for mp, mp_value in self.meta_paths_dict.items():
+                self._cached_coalesced_graph[mp] = dgl.metapath_reachable_graph(
+                        g, mp_value)
 
-        h = self.model(self._cached_coalesced_graph, h)
-        return h
+        h_dict = self.model(self._cached_coalesced_graph, h_dict)
+        return h_dict
 
 

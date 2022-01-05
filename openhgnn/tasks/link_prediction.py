@@ -33,8 +33,11 @@ class LinkPrediction(BaseTask):
         self.dataset = build_dataset(args.dataset, 'link_prediction')
         # self.evaluator = Evaluator()
         self.train_hg, self.val_hg, self.test_hg = self.dataset.get_idx()
-        self.val_hg = self.val_hg.to(args.device)
-        self.test_hg = self.test_hg.to(args.device)
+        if self.val_hg is None and self.test_hg is None:
+            pass
+        else:
+            self.val_hg = self.val_hg.to(args.device)
+            self.test_hg = self.test_hg.to(args.device)
         self.evaluator = Evaluator(args.seed)
         if not hasattr(args, 'score_fn'):
             self.ScorePredictor = HeteroDistMultPredictor()
@@ -53,7 +56,13 @@ class LinkPrediction(BaseTask):
         args.logger.info('[Init Task] The task: link prediction, the dataset: {}, the evaluation metric is {}, '
                          'the score function: {} '.format(self.n_dataset, self.evaluation_metric, args.score_fn))
         
-        
+    def get_out_ntype(self):
+        ntype = []
+        for l in self.dataset.target_link:
+            ntype.append(l[0])
+            ntype.append(l[2])
+        return set(ntype)
+    
     def get_graph(self):
         return self.dataset.g
 
@@ -86,14 +95,13 @@ class LinkPrediction(BaseTask):
 
         """
         if self.evaluation_metric == 'acc':
-            return self.evaluator.author_link_prediction
+            acc = self.evaluator.author_link_prediction
+            return dict(Accuracy=acc)
         elif self.evaluation_metric == 'mrr':
-
-            return self.evaluator.mrr_(n_embedding['_N'], self.dict2emd(r_embedding), self.dataset.train_triplets,
+            mrr = self.evaluator.mrr_(n_embedding['_N'], self.dict2emd(r_embedding), self.dataset.train_triplets,
                                        self.dataset.valid_triplets, self.dataset.test_triplets,
                                        hits=[1, 3, 10], eval_bz=100)
-        elif self.evaluation_metric == 'academic_lp':
-            return self.evaluator.author_link_prediction(n_embedding, self.dataset.train_batch, self.dataset.test_batch)
+            return dict(MRR=mrr)
         elif self.evaluation_metric == 'roc_auc':
             if mode == 'test':
                 eval_hg = self.test_hg
@@ -104,11 +112,18 @@ class LinkPrediction(BaseTask):
             negative_graph = self.construct_negative_graph(eval_hg)
             p_score = th.sigmoid(self.ScorePredictor(eval_hg, n_embedding, r_embedding))
             n_score = th.sigmoid(self.ScorePredictor(negative_graph, n_embedding, r_embedding))
-            p_label = th.ones(len(p_score))
-            n_label = th.zeros(len(n_score))
-            return self.evaluator.cal_roc_auc(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu())
+            p_label = th.ones(len(p_score), device=p_score.device)
+            n_label = th.zeros(len(n_score), device=p_score.device)
+            roc_auc = self.evaluator.cal_roc_auc(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu())
+            loss = F.binary_cross_entropy_with_logits(th.cat((p_score, n_score)), th.cat((p_label, n_label)))
+            return dict(roc_auc=roc_auc, loss=loss)
         else:
             return self.evaluator.link_prediction
+
+    def downstream_evaluate(self, logits, evaluation_metric):
+        if evaluation_metric == 'academic_lp':
+            auc, macro_f1, micro_f1 = self.evaluator.author_link_prediction(logits, self.dataset.train_batch, self.dataset.test_batch)
+            return dict(AUC=auc, Macro_f1=macro_f1, Mirco_f1=micro_f1)
 
     def get_batch(self):
         return self.dataset.train_batch, self.dataset.test_batch

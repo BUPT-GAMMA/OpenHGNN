@@ -2,7 +2,8 @@ import configparser
 import os
 import numpy as np
 import torch as th
-#from .utils.activation import act_dict
+from .utils.activation import act_dict
+
 
 class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
@@ -444,7 +445,7 @@ class Config(object):
             self.gnn_type = conf.get('general_HGNN', 'gnn_type')
             self.activation = conf.get('general_HGNN', 'activation')
             self.activation = act_dict[self.activation]
-            self.subgraph = conf.get('general_HGNN', 'subgraph')
+            self.subgraph_extraction = conf.get('general_HGNN', 'subgraph_extraction')
             self.feat = conf.getint('general_HGNN', 'feat')
             self.has_bn = conf.getboolean('general_HGNN', 'has_bn')
             self.has_l2norm = conf.getboolean('general_HGNN', 'has_l2norm')

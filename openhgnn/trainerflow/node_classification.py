@@ -11,41 +11,42 @@ from ..utils import extract_embed, EarlyStopping
 @register_flow("node_classification")
 class NodeClassification(BaseFlow):
     r"""
-    Node classification flow means
+    Node classification flow,
 
-    The task is to classify the nodes of Heterogeneous graph.
-    
+    The task is to classify the nodes of target nodes.
     Note: If the output dim is not equal the number of classes, we will modify the output dim with the number of classes.
     """
 
     def __init__(self, args):
+        """
+        
+        Attributes
+        ------------
+        category: str
+            The target node type to predict
+        num_classes: int
+            The number of classes for category node type
+            
+        """
         super(NodeClassification, self).__init__(args)
-
-        if hasattr(args, 'metric'):
-            self.metric = args.metric
-        else:
-            self.metric = 'f1'
-
-        self.num_classes = self.task.dataset.num_classes
         self.args.category = self.task.dataset.category
+        self.category = self.args.category
+        
+        self.num_classes = self.task.dataset.num_classes
 
         if not hasattr(self.task.dataset, 'out_dim') or args.out_dim != self.num_classes:
-            print('Modify the out_dim with num_classes')
+            self.logger.info('[NC Specific] Modify the out_dim with num_classes')
             args.out_dim = self.num_classes
-        self.args.has_feature = self.task.dataset.has_feature
-
-        self.category = self.args.category
         self.args.out_node_type = [self.category]
-        self.vis_emb = args.vis_emb
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
 
-        self.evaluator = self.task.get_evaluator('f1')
-
-        self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+        self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),
+                                                                  lr=args.lr, weight_decay=args.weight_decay)
 
         self.train_idx, self.valid_idx, self.test_idx = self.task.get_idx()
         self.labels = self.task.get_labels().to(self.device)
+
         if self.args.mini_batch_flag:
             # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
             sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
@@ -92,9 +93,7 @@ class NodeClassification(BaseFlow):
                                                                          train_idx=self.train_idx, valid_idx=self.valid_idx,
                                                                          test_idx=self.test_idx)
 
-
-        self.preprocess_feature()
-        return
+        super(NodeClassification, self).preprocess()
 
     def train(self):
         self.preprocess()
@@ -108,45 +107,38 @@ class NodeClassification(BaseFlow):
             if epoch % self.evaluate_interval == 0:
                 if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
                     train_score, train_loss = self._mini_test_step(mode='train')
-                    val_score, val_loss = self._mini_test_step(mode='validation')
+                    val_score, val_loss = self._mini_test_step(modes='valid')
                 else:
-                    score, losses = self._full_test_step()
-                    train_score = score["train"]
-                    val_score = score["val"]
-                    val_loss = losses["val"]
-
-                printInfo(self.metric, epoch, train_score, train_loss, val_score, val_loss)
+                    metric_dict, losses = self._full_test_step(modes=['train', 'valid', 'test'])
+                    val_loss = losses['valid']
+                self.logger.train_info(f"Epoch: {epoch}, Train loss: {train_loss:.4f}, Valid loss: {val_loss:.4f}. "
+                                       + self.logger.metric2str(metric_dict))
                 early_stop = stopper.loss_step(val_loss, self.model)
                 if early_stop:
-                    print('Early Stop!\tEpoch:' + str(epoch))
+                    self.logger.train_info('Early Stop!\tEpoch:' + str(epoch))
                     break
 
         stopper.load_model(self.model)
-        # save results for HGBn
         if self.args.dataset[:4] == 'HGBn':
-
+            # save results for HGBn
             if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
-                val_score, val_loss = self._mini_test_step(mode='validation')
+                val_loss = self._mini_test_step(mode='valid')
             else:
-                val_score, val_loss = self._full_test_step(mode='validation')
-
-            printMetric(self.metric, val_score, 'validation')
+                metric_dict, val_loss = self._full_test_step(modes=['valid'])
+            self.logger.train_info('[Test Info]' + self.logger.metric2str(metric_dict))
             self.model.eval()
             with torch.no_grad():
                 h_dict = self.model.input_feature()
                 logits = self.model(self.hg, h_dict)[self.category]
                 self.task.dataset.save_results(logits=logits, file_path=self.args.HGB_results_path)
-            return val_score[0], val_score[1], epoch
+            return metric_dict, epoch
         if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
             test_score, _ = self._mini_test_step(mode='test')
             val_score, val_loss = self._mini_test_step(mode='validation')
         else:
-            test_score, _ = self._full_test_step(mode='test')
-            val_score, val_loss = self._full_test_step(mode='validation')
-
-        printMetric(self.metric, val_score, 'validation')
-        printMetric(self.metric, test_score, 'test')
-        return dict(Test_score=test_score, ValAcc=val_score)
+            metric_dict, _ = self._full_test_step(modes=['valid', 'test'])
+        self.logger.train_info('[Test Info]' + self.logger.metric2str(metric_dict))
+        return metric_dict, epoch
 
     def _full_train_step(self):
         self.model.train()
@@ -166,10 +158,7 @@ class NodeClassification(BaseFlow):
             blocks = [blk.to(self.device) for blk in blocks]
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
             # batch_tic = time.time()
-            if hasattr(self.model, 'embed_layer'):
-                emb = extract_embed(self.model.embed_layer(), input_nodes)
-            else:
-                emb = blocks[0].srcdata['h']
+            emb = extract_embed(self.model.input_feature(), input_nodes)
             lbl = self.labels[seeds].to(self.device)
             logits = self.model(blocks, emb)[self.category]
             loss = self.loss_fn(logits, lbl)
@@ -179,42 +168,42 @@ class NodeClassification(BaseFlow):
             self.optimizer.step()
         return loss_all / (i + 1)
 
-    def _full_test_step(self, mode=None, logits=None):
+    def _full_test_step(self, modes=None, logits=None):
+        """
+        
+        Parameters
+        ----------
+        mode: list[str]
+            `train`, 'test', 'valid' are optional in list.
+
+        logits: dict[str, th.Tensor]
+            given logits, default `None`.
+            
+        Returns
+        -------
+        metric_dict: dict[str, float]
+            score of evaluation metric
+        info: dict[str, str]
+            evaluation information
+        loss: dict[str, float]
+            the loss item
+        """
         self.model.eval()
         with torch.no_grad():
             h_dict = self.model.input_feature()
             logits = logits if logits else self.model(self.hg, h_dict)[self.category]
-            if mode == "train":
-                mask = self.train_idx
-            elif mode == "validation":
-                mask = self.valid_idx
-            elif mode == "test":
-                mask = self.test_idx
-            else:
-                mask = None
-            
-            if mode == "test" and self.vis_emb:
-                x = self.model.get_emb(self.hg, h_dict)[self.category][mask]
-                y = self.labels[mask]
-                self.visualize(x, y)
-
-            if mask is not None:
-                loss = self.loss_fn(logits[mask], self.labels[mask]).item()
-                if self.task.multi_label:
-                    pred = (logits[mask].cpu().numpy()>0).astype(int)
-                else:
-                    pred = logits[mask].argmax(dim=1).to('cpu')
-                metric = self.task.evaluate(pred, name=self.metric, mask=mask)
-
-                return metric, loss
-            else:
-                masks = {'train': self.train_idx, 'val': self.valid_idx, 'test': self.test_idx}
-                metrics = {key: self.task.evaluate((logits[mask].cpu().numpy()>0).astype(int) if self.task.multi_label
-                                                   else logits[mask].argmax(dim=1).to('cpu'),
-                                                   name=self.metric, mask=mask) for
-                           key, mask in masks.items()}
-                losses = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}
-                return metrics, losses
+            masks = {}
+            for mode in modes:
+                if mode == "train":
+                    masks[mode] = self.train_idx
+                elif mode == "valid":
+                    masks[mode] = self.valid_idx
+                elif mode == "test":
+                    masks[mode] = self.test_idx
+                    
+            metric_dict = {key: self.task.evaluate(logits, mode=key) for key in masks}
+            loss_dict = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}
+            return metric_dict, loss_dict
 
     def _mini_test_step(self, mode):
         self.model.eval()
@@ -244,17 +233,3 @@ class NodeClassification(BaseFlow):
         evaluator = self.task.get_evaluator(name='f1')
         metric = evaluator(y_trues, y_predicts.argmax(dim=1).to('cpu'))
         return metric, loss
-
-    def visualize(self, x, y):
-        # visualize the embedding by t-SNE, and save the figure to `output`
-        from sklearn import manifold
-        import matplotlib.pyplot as plt
-
-        tsne = manifold.TSNE(n_components=2, init='pca')
-        X_tsne = tsne.fit_transform(x)
-        x_min, x_max = X_tsne.min(0), X_tsne.max(0)
-        X_norm = (X_tsne - x_min) / (x_max - x_min)
-        plt.figure(figsize = (12, 9), dpi=500)
-        color_values = ((y + 0.5)/7.0)
-        plt.scatter(X_norm[:, 0], X_norm[:, 1], cmap=plt.get_cmap('jet'), c=color_values, s=10)
-        plt.savefig("./openhgnn/output/{}/embedding_visulization.jpg".format(self.model_name))

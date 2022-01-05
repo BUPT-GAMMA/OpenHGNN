@@ -60,14 +60,18 @@ class HetGNNTrainer(BaseFlow):
                 loss = self._mini_train_step()
             else:
                 loss = self._full_train_setp()
-            epoch_iter.set_description('Epoch{}: Loss:{:.4f}'.format(epoch, loss))
-            early_stop = stopper.loss_step(loss, self.model)
-            if early_stop:
-                print('Early Stop!\tEpoch:' + str(epoch))
-                break
+                
+            if epoch % self.evaluate_interval == 0:
+                early_stop = stopper.loss_step(loss, self.model)
+                metrics = self._test_step()
+                self.logger.train_info(f"Epoch{epoch}, train loss:{loss:.4f}" + self.logger.metric2str(metrics))
+                if early_stop:
+                    self.logger.train_info(f"Early Stop!\tEpoch:{epoch}")
+                    break
+                
         stopper.load_model(self.model)
         metrics = self._test_step()
-        return dict(metrics=metrics)
+        return metrics
 
     def _full_train_setp(self):
         self.model.train()
@@ -120,11 +124,11 @@ class HetGNNTrainer(BaseFlow):
             logits = logits if logits else self.model(self.het_graph, h)
             logits = logits[self.category].to('cpu')
             if self.args.task == 'node_classification':
-                metric = self.task.evaluate(logits, 'f1_lr')
-                return metric
+                metric = self.task.downstream_evaluate(logits, 'f1_lr')
+                return {'test': metric}
             elif self.args.task == 'link_prediction':
-                metric = self.task.evaluate(logits, 'academic_lp')
-                return metric
+                metric = self.task.downstream_evaluate(logits, 'academic_lp')
+                return {'test': metric}
 
 
 
