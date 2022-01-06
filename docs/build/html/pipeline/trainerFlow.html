@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrainerFlow &mdash; OpenHGNN v0.1.0 文档</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="../_static/translations.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Dataset" href="../api/dataset.html" />
+    <link rel="prev" title="Model" href="model.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> OpenHGNN
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">开始使用</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">安装和配置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/usage.html">基础使用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/usage.html#evaluate-a-new-dataset">评测一个新的数据集</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/usage.html#apply-a-new-model">应用一个新模型</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/usage.html#apply-to-a-new-scenario">应用到一个新的场景</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶文档</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">OpenHGNN的一个流水线</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="task.html">Task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model.html">Model</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">TrainerFlow</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">API说明</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/dataset.html">Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/layer.html">Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/trainerflow.html">Trainerflow</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenHGNN</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">OpenHGNN的一个流水线</a> &raquo;</li>
+      <li>TrainerFlow</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pipeline/trainerFlow.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="trainerflow">
+<span id="pipeline-trainerflow"></span><h1>TrainerFlow<a class="headerlink" href="#trainerflow" title="永久链接至标题"></a></h1>
+<p>A trainerflow is an abstraction of a predesigned workflow that trains and evaluate a model on a given dataset for a specific use case. It must contain a unique training mechanism involving loss calculation and a specific sampler(sample something used in loss calculation) .</p>
+<p>Once we select the model and the task, the func <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/start.py">get_trainerflow</a> will help us select the trainerflow. So the customized trainerflow needed be added in this func.</p>
+<section id="included-object">
+<h2>Included Object:<a class="headerlink" href="#included-object" title="永久链接至标题"></a></h2>
+<ul>
+<li><p>task : <a class="reference internal" href="task.html#pipeline-task"><span class="std std-ref">Task</span></a></p></li>
+<li><p>model : <a class="reference internal" href="model.html#pipeline-models"><span class="std std-ref">Model</span></a> (built through given args.model)</p></li>
+<li><p>optimizer : torch.optim.Optimizer</p></li>
+<li><p>dataloader(if mini_batch_flag is True) :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>torch.utils.data.DataLoader</p></li>
+<li><p><a class="reference external" href="https://docs.dgl.ai/en/latest/api/python/dgl.dataloading.html#">dgl.dataloading</a></p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="method">
+<h2>Method:<a class="headerlink" href="#method" title="永久链接至标题"></a></h2>
+<ul>
+<li><p>train()</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>decorated with &#64;abstractmethod, so it must be overridden.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>_full_train_setp()</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>train with a full_batch graph</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>_mini_train_step()</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>train with a mini_batch seed nodes graph</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>_test_step()</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>evaluate in training/validation/testing</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="supported-trainerflow">
+<h2>Supported trainerflow<a class="headerlink" href="#supported-trainerflow" title="永久链接至标题"></a></h2>
+<ul>
+<li><p>Node classification flow</p>
+<blockquote>
+<div><ul>
+<li><p>Supported Model: HAN/MAGNN/GTN…</p></li>
+<li><p>The task: node classification</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The task.dataset must include the splited[train/valid/test.] mask.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>The sampler in this flow is supported by dgl.dataloading.</p></li>
+<li><p>The flow is the most common in the GNNs cause most GNNs model are involved in the task semi-supervised node classification. Here the task is to classify the nodes of HIN(Heterogeneous Information Network).</p></li>
+<li><p>Note: we will set the args.out_dim with num_classes if they are not equivalent.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Dist Mult</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The same with entity classification except that it is used for link prediction.</p></li>
+<li><p>Supported Model: RGCN/CompGCN/RSHN</p></li>
+<li><p>Supported Task: link prediction</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>HetGNN trainerflow</p></li>
+<li><p>NSHE trainerflow</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="model.html" class="btn btn-neutral float-left" title="Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="../api/dataset.html" class="btn btn-neutral float-right" title="Dataset" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2021, GAMMA LAB.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

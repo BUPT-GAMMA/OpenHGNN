@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sampler.HGT_sampler &mdash; OpenHGNN v0.1.0 文档</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+        <script src="../../_static/translations.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> OpenHGNN
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">开始使用</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install/index.html">安装和配置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install/usage.html">基础使用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install/usage.html#evaluate-a-new-dataset">评测一个新的数据集</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install/usage.html#apply-a-new-model">应用一个新模型</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install/usage.html#apply-to-a-new-scenario">应用到一个新的场景</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶文档</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pipeline/index.html">OpenHGNN的一个流水线</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API说明</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/dataset.html">Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/layer.html">Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/trainerflow.html">Trainerflow</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenHGNN</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">模块代码</a> &raquo;</li>
+      <li>sampler.HGT_sampler</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>sampler.HGT_sampler 源代码</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">dgl</span>
+<span class="kn">import</span> <span class="nn">dgl.function</span> <span class="k">as</span> <span class="nn">fn</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">th</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">ssp</span>
+<span class="kn">import</span> <span class="nn">array</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+
+
+<div class="viewcode-block" id="Budget"><a class="viewcode-back" href="../../api/openhgnn.sampler.html#sampler.HGT_sampler.Budget">[文档]</a><span class="k">class</span> <span class="nc">Budget</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hg</span><span class="p">,</span> <span class="n">n_types</span><span class="p">,</span> <span class="n">NS</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_types</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">n_types</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_types</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NS</span> <span class="o">=</span> <span class="n">NS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hg</span> <span class="o">=</span> <span class="n">hg</span>
+<div class="viewcode-block" id="Budget.update"><a class="viewcode-back" href="../../api/openhgnn.sampler.html#sampler.HGT_sampler.Budget.update">[文档]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dst_type</span><span class="p">,</span> <span class="n">idxs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">etype</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hg</span><span class="o">.</span><span class="n">canonical_etypes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dst_type</span> <span class="o">==</span> <span class="n">etype</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+                <span class="n">src_type</span> <span class="o">=</span> <span class="n">etype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1">#degree = self.hg.in_degrees(idx, etype=etype)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
+                    <span class="n">src_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hg</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">etype</span><span class="o">=</span><span class="n">etype</span><span class="p">)</span>
+                    <span class="c1">#if src_idx.shape[0] &gt; 0:</span>
+                    <span class="nb">len</span> <span class="o">=</span> <span class="n">src_idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">src_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">src_idx</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">src_idx</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS</span><span class="p">[</span><span class="n">src_type</span><span class="p">]])</span>
+                    <span class="k">if</span> <span class="n">src_idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">n_types</span><span class="p">[</span><span class="n">src_type</span><span class="p">][</span><span class="n">src_idx</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="nb">len</span></div>
+
+<div class="viewcode-block" id="Budget.pop"><a class="viewcode-back" href="../../api/openhgnn.sampler.html#sampler.HGT_sampler.Budget.pop">[文档]</a>    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_types</span><span class="p">[</span><span class="nb">type</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div></div>
+
+
+<div class="viewcode-block" id="HGTsampler"><a class="viewcode-back" href="../../api/openhgnn.sampler.html#sampler.HGT_sampler.HGTsampler">[文档]</a><span class="k">class</span> <span class="nc">HGTsampler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hg</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">num_nodes_per_type</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_types</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">hg</span><span class="o">.</span><span class="n">ntypes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_types</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">hg</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="n">category</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_nodes_per_type</span> <span class="o">=</span> <span class="n">num_nodes_per_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span> <span class="o">=</span> <span class="n">num_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hg</span> <span class="o">=</span> <span class="n">hg</span>
+
+<div class="viewcode-block" id="HGTsampler.sampler_subgraph"><a class="viewcode-back" href="../../api/openhgnn.sampler.html#sampler.HGT_sampler.HGTsampler.sampler_subgraph">[文档]</a>    <span class="k">def</span> <span class="nf">sampler_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed_nodes</span><span class="p">):</span>
+        <span class="n">OS</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">:</span> <span class="n">th</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">seed_nodes</span><span class="p">)}</span>
+        <span class="n">NS</span> <span class="o">=</span> <span class="n">OS</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">Budget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_types</span><span class="p">,</span> <span class="n">NS</span><span class="p">)</span>
+        <span class="k">for</span> <span class="nb">type</span><span class="p">,</span> <span class="n">idxs</span> <span class="ow">in</span> <span class="n">OS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">B</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">idxs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">):</span>
+            <span class="n">prob</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">src_type</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">B</span><span class="o">.</span><span class="n">n_types</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1">#print(src_type)</span>
+                <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">prob</span><span class="p">[</span><span class="n">src_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span> <span class="o">/</span> <span class="n">th</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                    <span class="n">sampled_idx</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="n">prob</span><span class="p">[</span><span class="n">src_type</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_nodes_per_type</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">OS</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span><span class="n">src_type</span><span class="p">):</span>
+                        <span class="n">OS</span><span class="p">[</span><span class="n">src_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampled_idx</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">OS</span><span class="p">[</span><span class="n">src_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">OS</span><span class="p">[</span><span class="n">src_type</span><span class="p">],</span> <span class="n">sampled_idx</span><span class="p">))</span>
+                    <span class="n">B</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">src_type</span><span class="p">,</span> <span class="n">sampled_idx</span><span class="p">)</span>
+                    <span class="n">B</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">src_type</span><span class="p">,</span> <span class="n">sampled_idx</span><span class="p">)</span>
+        <span class="n">sg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hg</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">OS</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sg</span><span class="p">,</span> <span class="n">OS</span></div></div>
+
+
+
+
+<div class="viewcode-block" id="HGT_preprocess4mag"><a class="viewcode-back" href="../../api/openhgnn.sampler.html#sampler.HGT_sampler.HGT_preprocess4mag">[文档]</a><span class="k">def</span> <span class="nf">HGT_preprocess4mag</span><span class="p">(</span><span class="n">hg</span><span class="p">,</span> <span class="n">train_idx</span><span class="p">):</span>
+    <span class="n">hg</span> <span class="o">=</span> <span class="n">hg</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="p">{</span><span class="n">etype</span><span class="p">:</span> <span class="n">hg</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">etype</span><span class="o">=</span><span class="n">etype</span><span class="p">)</span> <span class="k">for</span> <span class="n">etype</span> <span class="ow">in</span> <span class="n">hg</span><span class="o">.</span><span class="n">canonical_etypes</span><span class="p">}</span>
+    <span class="n">edges</span><span class="o">.</span><span class="n">update</span><span class="p">({(</span><span class="n">v</span><span class="p">,</span> <span class="n">e</span> <span class="o">+</span> <span class="s1">&#39;_inv&#39;</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span> <span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">src</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span> <span class="ow">in</span> <span class="n">edges</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+    <span class="n">hg2</span> <span class="o">=</span> <span class="n">dgl</span><span class="o">.</span><span class="n">heterograph</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="n">hg2</span> <span class="o">=</span> <span class="n">dgl</span><span class="o">.</span><span class="n">to_simple</span><span class="p">(</span><span class="n">hg2</span><span class="p">)</span>
+
+    <span class="c1"># Initialize year</span>
+    <span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="s1">&#39;paper&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hg</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="s1">&#39;paper&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;year&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">ntype</span> <span class="ow">in</span> <span class="n">hg</span><span class="o">.</span><span class="n">ntypes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ntype</span> <span class="o">!=</span> <span class="s1">&#39;paper&#39;</span><span class="p">:</span>
+            <span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ntype</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">hg2</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">(</span><span class="n">ntype</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">th</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+    <span class="c1"># Aggregate bag-of-paper features</span>
+    <span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="s1">&#39;paper&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;feat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hg</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="s1">&#39;paper&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;feat&#39;</span><span class="p">]</span>
+    <span class="n">hg2</span><span class="o">.</span><span class="n">update_all</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">copy_u</span><span class="p">(</span><span class="s1">&#39;feat&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">),</span> <span class="n">fn</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;feat&#39;</span><span class="p">),</span> <span class="n">etype</span><span class="o">=</span><span class="s1">&#39;has_topic&#39;</span><span class="p">)</span>  <span class="c1"># field_of_study</span>
+    <span class="n">hg2</span><span class="o">.</span><span class="n">update_all</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">copy_u</span><span class="p">(</span><span class="s1">&#39;feat&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">),</span> <span class="n">fn</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;feat&#39;</span><span class="p">),</span> <span class="n">etype</span><span class="o">=</span><span class="s1">&#39;writes_inv&#39;</span><span class="p">)</span>  <span class="c1"># author</span>
+    <span class="n">hg2</span><span class="o">.</span><span class="n">update_all</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">copy_u</span><span class="p">(</span><span class="s1">&#39;feat&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">),</span> <span class="n">fn</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;feat&#39;</span><span class="p">),</span> <span class="n">etype</span><span class="o">=</span><span class="s1">&#39;affiliated_with&#39;</span><span class="p">)</span>  <span class="c1"># institution</span>
+
+    <span class="c1"># Attach log-degree to feature of each node type</span>
+    <span class="k">for</span> <span class="n">ntype</span> <span class="ow">in</span> <span class="n">hg2</span><span class="o">.</span><span class="n">ntypes</span><span class="p">:</span>
+        <span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ntype</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;deg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">hg2</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">(</span><span class="n">ntype</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">utype</span><span class="p">,</span> <span class="n">etype</span><span class="p">,</span> <span class="n">vtype</span> <span class="ow">in</span> <span class="n">hg2</span><span class="o">.</span><span class="n">canonical_etypes</span><span class="p">:</span>
+        <span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">vtype</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;deg&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hg2</span><span class="o">.</span><span class="n">in_degrees</span><span class="p">(</span><span class="n">etype</span><span class="o">=</span><span class="n">etype</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ntype</span> <span class="ow">in</span> <span class="n">hg2</span><span class="o">.</span><span class="n">ntypes</span><span class="p">:</span>
+        <span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ntype</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;feat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span>
+            <span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ntype</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;feat&#39;</span><span class="p">],</span>
+            <span class="n">th</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ntype</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;deg&#39;</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">])],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ntype</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;deg&#39;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">ntype</span> <span class="ow">in</span> <span class="n">hg2</span><span class="o">.</span><span class="n">ntypes</span><span class="p">:</span>
+        <span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ntype</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;train_mask&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">hg2</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">(</span><span class="n">ntype</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ntype</span> <span class="o">==</span> <span class="s1">&#39;paper&#39;</span><span class="p">:</span>
+            <span class="n">hg2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ntype</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;train_mask&#39;</span><span class="p">][</span><span class="n">train_idx</span><span class="p">[</span><span class="s1">&#39;paper&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Convert to homogeneous graph and add self-loop</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">dgl</span><span class="o">.</span><span class="n">to_homogeneous</span><span class="p">(</span><span class="n">hg2</span><span class="p">,</span> <span class="n">ndata</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">,</span> <span class="s1">&#39;feat&#39;</span><span class="p">])</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="s1">&#39;etype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="n">dgl</span><span class="o">.</span><span class="n">ETYPE</span><span class="p">]</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">&#39;ntype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="n">dgl</span><span class="o">.</span><span class="n">NTYPE</span><span class="p">]</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">&#39;nid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="n">dgl</span><span class="o">.</span><span class="n">NID</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="n">dgl</span><span class="o">.</span><span class="n">ETYPE</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="n">dgl</span><span class="o">.</span><span class="n">EID</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="n">dgl</span><span class="o">.</span><span class="n">NTYPE</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="n">dgl</span><span class="o">.</span><span class="n">NID</span><span class="p">]</span>
+    <span class="n">num_nodes</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">()</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">dgl</span><span class="o">.</span><span class="n">add_self_loop</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="s1">&#39;etype&#39;</span><span class="p">][</span><span class="o">-</span><span class="n">num_nodes</span><span class="p">:]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hg2</span><span class="o">.</span><span class="n">etypes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">g</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2021, GAMMA LAB.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

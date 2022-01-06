@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>基础使用 &mdash; OpenHGNN v0.1.0 文档</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="../_static/translations.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="OpenHGNN的一个流水线" href="../pipeline/index.html" />
+    <link rel="prev" title="安装和配置" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> OpenHGNN
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">开始使用</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">安装和配置</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">基础使用</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#run-experiments">运行实验</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hyper-parameter-optimization">超参数优化</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#evaluate-a-new-dataset">评测一个新的数据集</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-build-a-new-dataset">如何构建一个新的数据集</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#apply-a-new-model">应用一个新模型</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-build-a-new-model">如何创建一个新模型</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#apply-to-a-new-scenario">应用到一个新的场景</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-build-a-new-task">如何创建一个新的任务</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-build-a-new-trainerflow">如何创建一个新的训练流</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">进阶文档</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline/index.html">OpenHGNN的一个流水线</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API说明</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/dataset.html">Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/layer.html">Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/trainerflow.html">Trainerflow</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenHGNN</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>基础使用</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/install/usage.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="basic-usage">
+<h1>基础使用<a class="headerlink" href="#basic-usage" title="永久链接至标题"></a></h1>
+<section id="run-experiments">
+<h2>运行实验<a class="headerlink" href="#run-experiments" title="永久链接至标题"></a></h2>
+<p>在已有的评测上运行已有的基线模型 <span class="xref std std-ref">任务</span></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; python main.py -m model_name -d dataset_name -t task_name -g <span class="m">0</span> --use_best_config
+usage: main.py <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--model MODEL<span class="o">]</span> <span class="o">[</span>--task TASK<span class="o">]</span> <span class="o">[</span>--dataset DATASET<span class="o">]</span>
+           <span class="o">[</span>--gpu GPU<span class="o">]</span> <span class="o">[</span>--use_best_config<span class="o">]</span> <span class="o">[</span>--use_hpo<span class="o">]</span>
+</pre></div>
+</div>
+<p>可选参数</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--model</span> <span class="pre">MODEL</span></code>, <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">MODEL</span></code> 模型名. 请在 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN#models">模型列表</a> 查看支持的模型.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--task</span> <span class="pre">TASK</span></code>, <code class="docutils literal notranslate"><span class="pre">-t</span> <span class="pre">TASK</span></code> 任务名.  请在 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/tasks#Supportedtask">任务</a>  查看支持的任务.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--dataset</span> <span class="pre">DATASET</span></code>, <code class="docutils literal notranslate"><span class="pre">-d</span> <span class="pre">DATASET</span></code> 数据集名.  请在 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/dataset#Dataset">数据集</a> 查看支持的数据集.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--gpu</span> <span class="pre">GPU</span></code>, <code class="docutils literal notranslate"><span class="pre">-g</span> <span class="pre">GPU</span></code> 控制你使用哪一个GPU, 如果没有GPU, 设定 -g -1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--use_best_config</span></code> use_best_config 意味着你使用该模型在该数据集下最优的配置, 如果你想要设定不同的超参数,请手动修改 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini">配置文件</a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--use_hpo</span></code> 使用optuna进行超参数优化.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--load_from_pretrained</span></code> 从检查点加载模型.</p></li>
+</ul>
+</div></blockquote>
+<p>例如:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python main.py -m GTN -d imdb4GTN -t node_classification -g <span class="m">0</span> --use_best_config
+</pre></div>
+</div>
+</section>
+<section id="hyper-parameter-optimization">
+<h2>超参数优化<a class="headerlink" href="#hyper-parameter-optimization" title="永久链接至标题"></a></h2>
+<p>使用optuna运行实验</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; python main.py -m model_name -d dataset_name -t task_name -g <span class="m">0</span> --use_best_config --use_hpo
+</pre></div>
+</div>
+<p>OpenHGNN按如下的顺序决定超参数</p>
+<ul class="simple">
+<li><p>如果使用 <code class="docutils literal notranslate"><span class="pre">--use_hpo</span></code> 会通过optuna查找最佳超参数. 这个功能在``./openhgnn/auto/hpo.py`` 中的 <code class="xref py py-func docutils literal notranslate"><span class="pre">func_search()</span></code> 实现. 请在 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto">这里</a> 查看更多细节.</p></li>
+<li><p>否则, 如果使用 <code class="docutils literal notranslate"><span class="pre">--use_best_config</span></code> 则加载OpenHGNN内置的最佳超参数. 配置在 <code class="docutils literal notranslate"><span class="pre">./openhgnn/utils/best_config.py</span></code>.</p></li>
+<li><p>否则, 从 <code class="docutils literal notranslate"><span class="pre">./openhgnn/config.ini</span></code> 加载超参数.</p></li>
+</ul>
+</section>
+</section>
+<section id="evaluate-a-new-dataset">
+<h1>评测一个新的数据集<a class="headerlink" href="#evaluate-a-new-dataset" title="永久链接至标题"></a></h1>
+<p>如果需要的话，你可以指定你的数据集。在这一节中，我们以HGBn-ACM为例构建节点分类数据集。</p>
+<section id="how-to-build-a-new-dataset">
+<h2>如何构建一个新的数据集<a class="headerlink" href="#how-to-build-a-new-dataset" title="永久链接至标题"></a></h2>
+<p><strong>第一步：处理数据集</strong></p>
+<p>我们给出了一个节点分类数据集HGBn-ACM的处理 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/debug/HGBn-ACM2dgl.py">demo</a>。</p>
+<p>首先我们先下载 <a class="reference external" href="https://www.biendata.xyz/hgb/#/datasets">HGBn-ACM</a>。之后，我们将他处理成 <a class="reference external" href="https://docs.dgl.ai/en/latest/guide/graph-heterogeneous.html#guide-graph-heterogeneous">dgl.heterograph</a>。</p>
+<p>以下代码片段演示了如何在DGL中创建异质图。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">dgl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">th</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create a heterograph with 3 node types and 3 edges types.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">graph_data</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>   <span class="p">(</span><span class="s1">&#39;drug&#39;</span><span class="p">,</span> <span class="s1">&#39;interacts&#39;</span><span class="p">,</span> <span class="s1">&#39;drug&#39;</span><span class="p">):</span> <span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">th</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])),</span>
+<span class="gp">... </span>   <span class="p">(</span><span class="s1">&#39;drug&#39;</span><span class="p">,</span> <span class="s1">&#39;interacts&#39;</span><span class="p">,</span> <span class="s1">&#39;gene&#39;</span><span class="p">):</span> <span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">th</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])),</span>
+<span class="gp">... </span>   <span class="p">(</span><span class="s1">&#39;drug&#39;</span><span class="p">,</span> <span class="s1">&#39;treats&#39;</span><span class="p">,</span> <span class="s1">&#39;disease&#39;</span><span class="p">):</span> <span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">1</span><span class="p">]),</span> <span class="n">th</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">]))</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">dgl</span><span class="o">.</span><span class="n">heterograph</span><span class="p">(</span><span class="n">graph_data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">ntypes</span>
+<span class="go">[&#39;disease&#39;, &#39;drug&#39;, &#39;gene&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">etypes</span>
+<span class="go">[&#39;interacts&#39;, &#39;interacts&#39;, &#39;treats&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">canonical_etypes</span>
+<span class="go">[(&#39;drug&#39;, &#39;interacts&#39;, &#39;drug&#39;),</span>
+<span class="go"> (&#39;drug&#39;, &#39;interacts&#39;, &#39;gene&#39;),</span>
+<span class="go"> (&#39;drug&#39;, &#39;treats&#39;, &#39;disease&#39;)]</span>
+</pre></div>
+</div>
+<p>我们推荐将特征命名为``’h’<a href="#id1"><span class="problematic" id="id2">``</span></a>。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="s1">&#39;drug&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;h&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>DGL提供了 <code class="xref py py-func docutils literal notranslate"><span class="pre">dgl.save_graphs()</span></code> 和 <code class="xref py py-func docutils literal notranslate"><span class="pre">dgl.load_graphs()</span></code> 分别用于保存和加载二进制格式的异质图。所以我们可以使用 <a class="reference external" href="https://docs.dgl.ai/en/latest/generated/dgl.save_graphs.html#">dgl.save_graphs</a> 来将图保存到磁盘中。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dgl</span><span class="o">.</span><span class="n">save_graphs</span><span class="p">(</span><span class="s2">&quot;demo_graph.bin&quot;</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>第二步：添加额外信息</strong></p>
+<p>我们在第一步之后得到了一个二进制文件 <em>demo_graph.bin</em> ，并且我们需要将它放到目录 <em>openhgnn/dataset/</em> 中。下一步是在 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/NodeClassificationDataset.py#L145">NodeClassificationDataset.py</a> 中指定信息。</p>
+<p>例如，我们要将 <em>category</em>， <em>num_classes</em> 和 <em>multi_label</em> （如果必要的话）设置为 <code class="docutils literal notranslate"><span class="pre">&quot;paper&quot;</span></code>，<code class="docutils literal notranslate"><span class="pre">3</span></code>，<code class="docutils literal notranslate"><span class="pre">True</span></code>，分别代表要预测类别的节点类型，类别的数目，任务是否是多标签分类。更多细节请参考 <a class="reference internal" href="../api/dataset.html#api-base-node-dataset"><span class="std std-ref">Base Node Classification Dataset</span></a>。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">name_dataset</span> <span class="o">==</span> <span class="s1">&#39;demo_graph&#39;</span><span class="p">:</span>
+    <span class="n">data_path</span> <span class="o">=</span> <span class="s1">&#39;./openhgnn/dataset/demo_graph.bin&#39;</span>
+    <span class="n">g</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">load_graphs</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="s1">&#39;author&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">multi_label</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+<p><strong>第三步：可选</strong></p>
+<p>我们可以使用 <code class="docutils literal notranslate"><span class="pre">demo_graph</span></code> 作为我们的数据集名称来评测现有的模型。</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python main.py -m GTN -d demo_graph -t node_classification -g <span class="m">0</span> --use_best_config
+</pre></div>
+</div>
+<p>如果你有其他的数据集名称，你也需要在 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/__init__.py">build_dataset</a> 中改变名称。</p>
+</section>
+</section>
+<section id="apply-a-new-model">
+<h1>应用一个新模型<a class="headerlink" href="#apply-a-new-model" title="永久链接至标题"></a></h1>
+<p>这一节中，我们将创建一个并不在我们 <cite>模型包&lt;api-model&gt;</cite> 中的模型，叫做RGAT</p>
+<section id="how-to-build-a-new-model">
+<h2>如何创建一个新模型<a class="headerlink" href="#how-to-build-a-new-model" title="永久链接至标题"></a></h2>
+<p><strong>第一步：注册模型</strong></p>
+<p>我们要创建一个继承 <a class="reference internal" href="../api/model.html#api-model"><span class="std std-ref">Base Model</span></a> 的类 <code class="docutils literal notranslate"><span class="pre">RGAT</span></code> ，并使用 <code class="docutils literal notranslate"><span class="pre">&#64;register_model(str)</span></code> 注册模型。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">openhgnn.models</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">register_model</span>
+<span class="nd">@register_model</span><span class="p">(</span><span class="s1">&#39;RGAT&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">RGAT</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><strong>第二步：实现函数</strong></p>
+<p>我们必须实现 <code class="docutils literal notranslate"><span class="pre">build_model_from_args</span></code> 类方法，以及其他的例如 <code class="docutils literal notranslate"><span class="pre">__init__</span></code> ， <code class="docutils literal notranslate"><span class="pre">forward</span></code> 等函数。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="k">class</span> <span class="nc">RGAT</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build_model_from_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">hg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">in_dim</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">hidden_dim</span><span class="p">,</span>
+                   <span class="n">out_dim</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">hidden_dim</span><span class="p">,</span>
+                   <span class="n">h_dim</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">out_dim</span><span class="p">,</span>
+                   <span class="n">etypes</span><span class="o">=</span><span class="n">hg</span><span class="o">.</span><span class="n">etypes</span><span class="p">,</span>
+                   <span class="n">num_heads</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">num_heads</span><span class="p">,</span>
+                   <span class="n">dropout</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dropout</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">h_dim</span><span class="p">,</span> <span class="n">etypes</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">dropout</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RGAT</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rel_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">etypes</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">RGATLayer</span><span class="p">(</span>
+            <span class="n">in_dim</span><span class="p">,</span> <span class="n">h_dim</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rel_names</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">RGATLayer</span><span class="p">(</span>
+            <span class="n">h_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rel_names</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hg</span><span class="p">,</span> <span class="n">h_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">hg</span><span class="p">,</span> <span class="s1">&#39;ntypes&#39;</span><span class="p">):</span>
+            <span class="c1"># full graph training,</span>
+            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+                <span class="n">h_dict</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">hg</span><span class="p">,</span> <span class="n">h_dict</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># minibatch training, block</span>
+            <span class="k">for</span> <span class="n">layer</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span> <span class="n">hg</span><span class="p">):</span>
+                <span class="n">h_dict</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">h_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">h_dict</span>
+</pre></div>
+</div>
+<p>这里，我们并没有给出 <code class="docutils literal notranslate"><span class="pre">RGATLayer</span></code> 的实现细节。更多内容请参考 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/RGAT.py">RGATLayer</a>。</p>
+<div class="admonition note">
+<p class="admonition-title">注解</p>
+<p>在OpenHGNN中，我们在模型外预处理数据集的特征。具体来说，我们对每一个节点类型应用一个带偏置线性层，将所有的节点特征映射到一个共享的特征空间。所以模型的 <code class="docutils literal notranslate"><span class="pre">forward</span></code> 中的参数 <code class="docutils literal notranslate"><span class="pre">h_dict</span></code> 并不是原始的特征，你的模型也不需要特征预处理。</p>
+</div>
+<p><strong>第三步：添加到支持模型字典中</strong></p>
+<p>我们要在 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/__init__.py">models/init.py</a> 的 <code class="docutils literal notranslate"><span class="pre">SUPPORTED_MODELS</span></code> 中添加一个新的入口。</p>
+</section>
+</section>
+<section id="apply-to-a-new-scenario">
+<h1>应用到一个新的场景<a class="headerlink" href="#apply-to-a-new-scenario" title="永久链接至标题"></a></h1>
+<p>在本节中，我们将应用到一个推荐场景，包括创建一个新的任务和训练流。</p>
+<section id="how-to-build-a-new-task">
+<h2>如何创建一个新的任务<a class="headerlink" href="#how-to-build-a-new-task" title="永久链接至标题"></a></h2>
+<p><strong>第一步：注册任务</strong></p>
+<p>我们要创建一个继承 <a class="reference internal" href="../api/task.html#api-task"><span class="std std-ref">BaseTask</span></a> 的类 <code class="docutils literal notranslate"><span class="pre">Recommendation</span></code> ，并使用 <code class="docutils literal notranslate"><span class="pre">&#64;register_task(str)</span></code> 注册。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">openhgnn.tasks</span> <span class="kn">import</span> <span class="n">BaseTask</span><span class="p">,</span> <span class="n">register_task</span>
+<span class="nd">@register_task</span><span class="p">(</span><span class="s1">&#39;recommendation&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Recommendation</span><span class="p">(</span><span class="n">BaseTask</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><strong>第二步：实现方法</strong></p>
+<p>我们要实现的方法包括评测指标和损失函数。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Recommendation</span><span class="p">(</span><span class="n">BaseTask</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recommendation tasks.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Recommendation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_dataset</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">build_dataset</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;recommendation&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_hg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_neg_hg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_hg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_hg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_idx</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">Evaluator</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_loss_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">binary_cross_entropy_with_logits</span>
+
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;ndcg&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">ndcg</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>最后</strong></p>
+<p>我们要在 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/tasks/__init__.py">task/init.py</a> 的 <code class="docutils literal notranslate"><span class="pre">SUPPORTED_TASKS</span></code> 中添加一个新的入口。</p>
+</section>
+<section id="how-to-build-a-new-trainerflow">
+<h2>如何创建一个新的训练流<a class="headerlink" href="#how-to-build-a-new-trainerflow" title="永久链接至标题"></a></h2>
+<p><strong>第一步：注册训练流</strong></p>
+<p>我们创建一个继承 <a class="reference internal" href="../api/trainerflow.html#api-trainerflow"><span class="std std-ref">BaseFlow</span></a> 的类，并使用 <code class="docutils literal notranslate"><span class="pre">&#64;register_trainer(str)</span></code> 注册。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">openhgnn.trainerflow</span> <span class="kn">import</span> <span class="n">BaseFlow</span><span class="p">,</span> <span class="n">register_flow</span>
+<span class="nd">@register_flow</span><span class="p">(</span><span class="s1">&#39;Recommendation&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Recommendation</span><span class="p">(</span><span class="n">BaseFlow</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><strong>第二步：实现方法</strong></p>
+<p>我们将函数 <code class="docutils literal notranslate"><span class="pre">train()</span></code> 声明为一个抽象方法。因此train()需要被重写，否则不能实例化训练流，以下演示了训练循环的过程。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="k">class</span> <span class="nc">Recommendation</span><span class="p">(</span><span class="n">BaseFlow</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Recommendation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_link</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">target_link</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span><span class="o">.</span><span class="n">build_model_from_args</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">get_evaluator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,):</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">epoch_iter</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_full_train_step</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_full_test_step</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_full_train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hg</span><span class="p">)[</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">]</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">(</span><span class="n">logits</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">train_idx</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">train_idx</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_full_test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logits</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">(</span><span class="n">logits</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">metric</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">metric</span><span class="p">,</span> <span class="n">loss</span>
+</pre></div>
+</div>
+<p><strong>最后</strong></p>
+<p>我们应当在 <a class="reference external" href="https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/trainerflow/__init__.py">trainerflow/init.py</a> 的 <code class="docutils literal notranslate"><span class="pre">SUPPORTED_FLOWS</span></code> 中添加一个新入口。</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="安装和配置" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="../pipeline/index.html" class="btn btn-neutral float-right" title="OpenHGNN的一个流水线" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2021, GAMMA LAB.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

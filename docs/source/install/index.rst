@@ -29,7 +29,7 @@ Python environment requirments
     source activate openhgnn
 
 
-**2. Pytorch:** Install `PyTorch <https://pytorch.org/>`_. We have verified GraphGym under PyTorch 1.8.0. For example:
+**2. Pytorch:** Install `PyTorch <https://pytorch.org/>`_. For example:
 
 .. code:: bash
 

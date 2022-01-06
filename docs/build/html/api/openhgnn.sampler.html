@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sampler package &mdash; OpenHGNN v0.1.0 文档</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="../_static/translations.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> OpenHGNN
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">开始使用</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">安装和配置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/usage.html">基础使用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/usage.html#evaluate-a-new-dataset">评测一个新的数据集</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/usage.html#apply-a-new-model">应用一个新模型</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/usage.html#apply-to-a-new-scenario">应用到一个新的场景</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶文档</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline/index.html">OpenHGNN的一个流水线</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API说明</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trainerflow.html">Trainerflow</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenHGNN</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>sampler package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/openhgnn.sampler.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="sampler-package">
+<h1>sampler package<a class="headerlink" href="#sampler-package" title="永久链接至标题"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="永久链接至标题"></a></h2>
+</section>
+<section id="module-sampler.HGT_sampler">
+<span id="sampler-hgt-sampler-module"></span><h2>sampler.HGT_sampler module<a class="headerlink" href="#module-sampler.HGT_sampler" title="永久链接至标题"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sampler.HGT_sampler.Budget">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">sampler.HGT_sampler.</span></span><span class="sig-name descname"><span class="pre">Budget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NS</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HGT_sampler.html#Budget"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HGT_sampler.Budget" title="永久链接至目标"></a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.HGT_sampler.Budget.pop">
+<span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HGT_sampler.html#Budget.pop"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HGT_sampler.Budget.pop" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.HGT_sampler.Budget.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idxs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HGT_sampler.html#Budget.update"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HGT_sampler.Budget.update" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sampler.HGT_sampler.HGT_preprocess4mag">
+<span class="sig-prename descclassname"><span class="pre">sampler.HGT_sampler.</span></span><span class="sig-name descname"><span class="pre">HGT_preprocess4mag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HGT_sampler.html#HGT_preprocess4mag"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HGT_sampler.HGT_preprocess4mag" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sampler.HGT_sampler.HGTsampler">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">sampler.HGT_sampler.</span></span><span class="sig-name descname"><span class="pre">HGTsampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_nodes_per_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HGT_sampler.html#HGTsampler"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HGT_sampler.HGTsampler" title="永久链接至目标"></a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.HGT_sampler.HGTsampler.sampler_subgraph">
+<span class="sig-name descname"><span class="pre">sampler_subgraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed_nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HGT_sampler.html#HGTsampler.sampler_subgraph"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HGT_sampler.HGTsampler.sampler_subgraph" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="sampler-hgt-sampling-module">
+<h2>sampler.HGT_sampling module<a class="headerlink" href="#sampler-hgt-sampling-module" title="永久链接至标题"></a></h2>
+</section>
+<section id="module-sampler.HetGNN_sampler">
+<span id="sampler-hetgnn-sampler-module"></span><h2>sampler.HetGNN_sampler module<a class="headerlink" href="#module-sampler.HetGNN_sampler" title="永久链接至标题"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.HetGNNCollator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">sampler.HetGNN_sampler.</span></span><span class="sig-name descname"><span class="pre">HetGNNCollator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#HetGNNCollator"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.HetGNNCollator" title="永久链接至目标"></a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.HetGNNCollator.collate_train">
+<span class="sig-name descname"><span class="pre">collate_train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batches</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#HetGNNCollator.collate_train"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.HetGNNCollator.collate_train" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.NeighborSampler">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">sampler.HetGNN_sampler.</span></span><span class="sig-name descname"><span class="pre">NeighborSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntypes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#NeighborSampler"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.NeighborSampler" title="永久链接至目标"></a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.NeighborSampler.build_hetero_graph">
+<span class="sig-name descname"><span class="pre">build_hetero_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">heads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tails</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#NeighborSampler.build_hetero_graph"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.NeighborSampler.build_hetero_graph" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.NeighborSampler.sample_from_item_pairs">
+<span class="sig-name descname"><span class="pre">sample_from_item_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">heads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tails</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neg_tails</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#NeighborSampler.sample_from_item_pairs"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.NeighborSampler.sample_from_item_pairs" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.SkipGramBatchSampler">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">sampler.HetGNN_sampler.</span></span><span class="sig-name descname"><span class="pre">SkipGramBatchSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rw_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#SkipGramBatchSampler"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.SkipGramBatchSampler" title="永久链接至目标"></a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.dataset.Dataset</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.utils.data.dataset.T_co</span></code>]</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.SkipGramBatchSampler.pre_process">
+<span class="sig-name descname"><span class="pre">pre_process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#SkipGramBatchSampler.pre_process"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.SkipGramBatchSampler.pre_process" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.SkipGramBatchSampler.traces2pos">
+<span class="sig-name descname"><span class="pre">traces2pos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#SkipGramBatchSampler.traces2pos"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.SkipGramBatchSampler.traces2pos" title="永久链接至目标"></a></dt>
+<dd><p>sample positive edges through skip gram</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.assign_features_to_blocks">
+<span class="sig-prename descclassname"><span class="pre">sampler.HetGNN_sampler.</span></span><span class="sig-name descname"><span class="pre">assign_features_to_blocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntypes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#assign_features_to_blocks"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.assign_features_to_blocks" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.assign_simple_node_features">
+<span class="sig-prename descclassname"><span class="pre">sampler.HetGNN_sampler.</span></span><span class="sig-name descname"><span class="pre">assign_simple_node_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ndata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntypes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assign_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#assign_simple_node_features"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.assign_simple_node_features" title="永久链接至目标"></a></dt>
+<dd><p>Copies data to the given block from the corresponding nodes in the original graph.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.hetgnn_graph">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">sampler.HetGNN_sampler.</span></span><span class="sig-name descname"><span class="pre">hetgnn_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#hetgnn_graph"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.hetgnn_graph" title="永久链接至目标"></a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.hetgnn_graph.build_hetgnn_graph">
+<span class="sig-name descname"><span class="pre">build_hetgnn_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">walks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restart_prob</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#hetgnn_graph.build_hetgnn_graph"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.hetgnn_graph.build_hetgnn_graph" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.HetGNN_sampler.hetgnn_graph.get_hetgnn_graph">
+<span class="sig-name descname"><span class="pre">get_hetgnn_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">walks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restart_prob</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/HetGNN_sampler.html#hetgnn_graph.get_hetgnn_graph"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.HetGNN_sampler.hetgnn_graph.get_hetgnn_graph" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-sampler.RSHN_sampler">
+<span id="sampler-rshn-sampler-module"></span><h2>sampler.RSHN_sampler module<a class="headerlink" href="#module-sampler.RSHN_sampler" title="永久链接至标题"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sampler.RSHN_sampler.coarsened_line_graph">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">sampler.RSHN_sampler.</span></span><span class="sig-name descname"><span class="pre">coarsened_line_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rw_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/RSHN_sampler.html#coarsened_line_graph"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.RSHN_sampler.coarsened_line_graph" title="永久链接至目标"></a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.RSHN_sampler.coarsened_line_graph.build_cl_graph">
+<span class="sig-name descname"><span class="pre">build_cl_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/RSHN_sampler.html#coarsened_line_graph.build_cl_graph"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.RSHN_sampler.coarsened_line_graph.build_cl_graph" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.RSHN_sampler.coarsened_line_graph.edge2graph">
+<span class="sig-name descname"><span class="pre">edge2graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_batch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/RSHN_sampler.html#coarsened_line_graph.edge2graph"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.RSHN_sampler.coarsened_line_graph.edge2graph" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.RSHN_sampler.coarsened_line_graph.get_cl_graph">
+<span class="sig-name descname"><span class="pre">get_cl_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/RSHN_sampler.html#coarsened_line_graph.get_cl_graph"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.RSHN_sampler.coarsened_line_graph.get_cl_graph" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.RSHN_sampler.coarsened_line_graph.init_cl_graph">
+<span class="sig-name descname"><span class="pre">init_cl_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cl_graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/RSHN_sampler.html#coarsened_line_graph.init_cl_graph"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.RSHN_sampler.coarsened_line_graph.init_cl_graph" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.RSHN_sampler.coarsened_line_graph.random_walks">
+<span class="sig-name descname"><span class="pre">random_walks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/RSHN_sampler.html#coarsened_line_graph.random_walks"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.RSHN_sampler.coarsened_line_graph.random_walks" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sampler.RSHN_sampler.coarsened_line_graph.rw_map_edge_type">
+<span class="sig-name descname"><span class="pre">rw_map_edge_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traces</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/RSHN_sampler.html#coarsened_line_graph.rw_map_edge_type"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.RSHN_sampler.coarsened_line_graph.rw_map_edge_type" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sampler.RSHN_sampler.give_one_hot_feats">
+<span class="sig-prename descclassname"><span class="pre">sampler.RSHN_sampler.</span></span><span class="sig-name descname"><span class="pre">give_one_hot_feats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'h'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sampler/RSHN_sampler.html#give_one_hot_feats"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#sampler.RSHN_sampler.give_one_hot_feats" title="永久链接至目标"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-sampler">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sampler" title="永久链接至标题"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2021, GAMMA LAB.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

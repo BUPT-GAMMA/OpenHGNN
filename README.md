@@ -38,7 +38,7 @@ source activate openhgnn
 pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
-**3. DGL:** Install [DGL](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html), follow their instructions. For example:
+**3. DGL:** Install [DGL](https://www.dgl.ai/pages/start.html), follow their instructions. For example:
 
 ```bash
 # CUDA versions: cpu, cu101, cu102, cu110, cu111
