@@ -87,11 +87,6 @@ Evaluation metric: accuracy
 
 ## TrainerFlow: [node classification flow](../../trainerflow/#Node_classification_flow)
 
-### Model
-
-- [dglnn.HeteroGraphConv](https://docs.dgl.ai/en/latest/api/python/nn.pytorch.html#heterographconv) 
-- dglnn.WeightBasis [The basis function decomposition]
-
 ## Hyper-parameter specific to the model
 
 You can modify the parameters[SimpleHGN] in openhgnn/config.ini. 
