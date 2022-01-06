@@ -1,15 +1,20 @@
 # OpenHGNN
 
-[![Documentation Status](https://readthedocs.org/projects/openhgnn/badge/?version=latest)](https://openhgnn.readthedocs.io/en/latest/?badge=latest)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+ ![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)[![Documentation Status](https://readthedocs.org/projects/openhgnn/badge/?version=latest)](https://openhgnn.readthedocs.io/en/latest/?badge=latest)![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
 
-| [**English**](./README.md) | [**中文** ](./README_ZH.md) | 
+[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)
 
 This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https://pytorch.org/). We integrate SOTA models of heterogeneous graph.
 
-| [**English Documentation** ](https://openhgnn.readthedocs.io/en/latest/index.html) | [**中文文档** ](https://openhgnn.readthedocs.io/zh_CN/latest/index.html) |
+## News
 
-| [**Space4HGNN**](./space4hgnn)｜
+We release the latest version v0.1.1 on OpenI with Chinese. 
+
+启智社区用户可以享受到如下功能：
+
+- 全新的中文文档
+- 免费的计算资源
+- OpenHGNN最新功能
 
 ## Key Features
 
@@ -110,8 +115,8 @@ The link will give some basic usage.
 | [KGCN](./openhgnn/output/KGCN)[WWW 2019]                 |                     |                    | :heavy_check_mark: |
 | [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | HGAT[EMNLP 2019]                                         |                     |                    |                    |
-| [GTN](./openhgnn/output/GTN)[NeurIPS 2019]               | :heavy_check_mark:  |                    |                    |
-| [RSHN](./openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark:  |                    |                    |
+| [GTN](./openhgnn/output/GTN)[NeurIPS 2019] & fastGTN     | :heavy_check_mark:  |                    |                    |
+| [RSHN](./openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [DMGI](./openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark:  |                    |                    |
 | [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark:  |                    |                    |
 | HGT[WWW 2020]                                            |                     |                    |                    |
@@ -123,7 +128,7 @@ The link will give some basic usage.
 | [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]           | :heavy_check_mark:  |                    |                    |
 | [HeCo](./openhgnn/output/HeCo)[KDD 2021]                 | :heavy_check_mark:  |                    |                    |
 | SimpleHGN[KDD 2021]                                      |                     |                    |                    |
-| [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  |                    |                    |
+| [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
 | [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
 |                                                          |                     |                    |                    |

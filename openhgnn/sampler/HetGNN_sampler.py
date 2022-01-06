@@ -58,7 +58,6 @@ class SkipGramBatchSampler(IterableDataset):
                 neg_tails[0][mask] = th.randint(0, self.hg.number_of_nodes(ntype), size=neg_tails[0][mask].shape)
             yield heads, tails, neg_tails
 
-
     def pre_process(self):
         heads = th.arange(self.g.number_of_nodes())
         traces, _ = dgl.sampling.random_walk(self.g, heads, length=self.window_size)
@@ -72,7 +71,6 @@ class SkipGramBatchSampler(IterableDataset):
                 mask_t = (tails[1] == j)
                 edge = (self.ntypes[i], self.ntypes[i] + '-' + self.ntypes[j], self.ntypes[j])
                 self.edge_dict[edge] = (heads[0][mask_h], tails[0][mask_t])
-
 
     def traces2pos(self, traces, window_size):
         '''
@@ -185,6 +183,8 @@ class HetGNNCollator(object):
     #     blocks = self.sampler.sample_blocks(batch)
     #     assign_features_to_blocks(blocks, self.g, self.g.ntypes)
     #     return blocks
+    
+    
 class hetgnn_graph():
     """
 

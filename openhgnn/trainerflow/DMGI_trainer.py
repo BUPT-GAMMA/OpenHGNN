@@ -1,11 +1,11 @@
 import torch
 from sklearn.metrics import f1_score
+import torch.nn.functional as F
 from tqdm import tqdm
 import numpy as np
 import torch.nn as nn
 from openhgnn.models import build_model
 from openhgnn.models.DMGI import LogReg
-from openhgnn.tasks import build_task
 from openhgnn.trainerflow import register_flow, BaseFlow
 from openhgnn.utils import EarlyStopping
 
@@ -16,44 +16,26 @@ class DMGI_trainer(BaseFlow):
     def __init__(self, args):
         super(DMGI_trainer, self).__init__(args)
 
-        self.args = args
-        self.model_name = args.model
-        self.device = args.device
-        self.task = build_task(args)
-
-        self.semi_loss_fn = self.task.get_loss_fn()
-        if hasattr(args, 'metric'):
-            self.metric = args.metric
-        else:
-            self.metric = 'f1'
-        self.num_classes = self.task.dataset.num_classes
-        self.hg = self.task.get_graph().to(self.device)
-
-        self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
-
-        # get label
-        self.labels = self.task.get_labels().to(self.device)
         # get category
         self.args.category = self.task.dataset.category
         self.category = self.args.category
 
-        # get feat.shape[0]
         if hasattr(self.task.dataset, 'in_dim'):
             self.args.in_dim = self.task.dataset.in_dim
         else:
             self.args.in_dim = self.args.hidden_dim
         # get category num_classes
-        args.num_classes = self.num_classes
-
+        self.num_classes = self.task.dataset.num_classes
+        self.args.num_classes = self.task.dataset.num_classes
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
+        
+        self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),
+                                                                  lr=args.lr, weight_decay=args.weight_decay)
 
-
-        self.optimizer = (torch.optim.Adam(self.model.parameters(),
-                                           lr=args.lr,
-                                           weight_decay=self.args.l2_coef))
-        self.patience = args.patience
-        self.max_epoch = args.max_epoch
+        self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
+        # get label
+        self.labels = self.task.get_labels().to(self.device)
         # get category's numbers
         self.num_nodes = self.hg.num_nodes(self.category)
         self.isSemi = args.isSemi
@@ -71,12 +53,11 @@ class DMGI_trainer(BaseFlow):
             '''use earlyStopping'''
             loss = self._full_train_setp()
             early_stop = stopper.loss_step(loss, model)
-            print((f"Epoch: {epoch:03d}, Loss: {loss:.4f}"))
+            self.logger.train_info(f"Epoch: {epoch:03d}, Loss: {loss:.4f}")
 
             if early_stop:
-                print('Early Stop!\tEpoch:' + str(epoch))
+                self.logger.train_info(f'Early Stop!\tEpoch:{epoch}')
                 break
-
         # Evaluation
         stopper.load_model(self.model)
         model.eval()
@@ -85,8 +66,7 @@ class DMGI_trainer(BaseFlow):
     def _full_train_setp(self):
 
         self.model.train()
-        optm = self.optimizer
-        optm.zero_grad()
+        self.optimizer.zero_grad()
         lbl_1 = torch.ones(1, self.num_nodes)
         lbl_2 = torch.zeros(1, self.num_nodes)
         lbl = torch.cat((lbl_1, lbl_2), 1).to(self.args.device)
@@ -96,7 +76,7 @@ class DMGI_trainer(BaseFlow):
         loss = self.calculate_J(result, lbl)
 
         loss.backward()
-        optm.step()
+        self.optimizer.step()
         loss = loss.cpu()
         loss = loss.detach().numpy()
         return loss
@@ -161,11 +141,10 @@ class DMGI_trainer(BaseFlow):
             loss += self.sup_coef * semi_loss
         return loss
 
-
     def evaluate(self, embeds):
         hid_units = embeds.shape[2]
 
-        xent = self.semi_loss_fn
+        xent = F.cross_entropy
 
         train_embs = embeds[0, self.train_idx]
         val_embs = embeds[0, self.val_idx]
@@ -222,7 +201,6 @@ class DMGI_trainer(BaseFlow):
                 test_macro_f1s.append(test_f1_macro)
                 test_micro_f1s.append(test_f1_micro)
 
-
             max_iter = val_accs.index(max(val_accs))
             accs.append(test_accs[max_iter])
 
@@ -233,8 +211,7 @@ class DMGI_trainer(BaseFlow):
             max_iter = val_micro_f1s.index(max(val_micro_f1s))
             micro_f1s.append(test_micro_f1s[max_iter])
 
-
-        print("\t[Classification] Macro-F1: {:.4f} ({:.4f}) | Micro-F1: {:.4f} ({:.4f})".format(np.mean(macro_f1s),
+        self.logger.train_info("\t[Classification] Macro-F1: {:.4f} ({:.4f}) | Micro-F1: {:.4f} ({:.4f})".format(np.mean(macro_f1s),
                                                                                                     np.std(macro_f1s),
                                                                                                     np.mean(micro_f1s),
                                                                                                     np.std(micro_f1s)))

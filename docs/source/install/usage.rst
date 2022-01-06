@@ -280,7 +280,7 @@ training loop.
             self.optimizer.step()
             return loss.item()
 
-        def _full_test_step(self, mode=None, logits=None):
+        def _full_test_step(self, modes=None, logits=None):
             self.model.eval()
             with torch.no_grad():
                 loss = self.loss_fn(logits[mask], self.labels[mask]).item()

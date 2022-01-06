@@ -1,18 +1,18 @@
-import argparse
-from openhgnn.utils import set_random_seed
-from openhgnn.trainerflow import build_flow
-from space4hgnn.utils import read_config
 import os
-from pandas import DataFrame
-import numpy as np
 import time
+import argparse
+import numpy as np
+from pandas import DataFrame
+from space4hgnn.utils import read_config
+from openhgnn.utils import set_random_seed, Logger
+from openhgnn.trainerflow import build_flow
 
 
 def Space4HGNN(args):
-    scores1 = []
-    scores2 = []
+    metric_list = []
     epoches = []
     start = time.time()
+    args.logger = Logger(args)
     for i in range(args.repeat):
         args.seed = i
         set_random_seed(args.seed)
@@ -22,11 +22,20 @@ def Space4HGNN(args):
         args.HGB_results_path = '{}/{}_{}.txt'.format(path, args.dataset[5:], str(i+1))
         print(args)
         flow = build_flow(args, args.task)
-        s1, s2, epoch = flow.train()
-        scores1.append(s1)
-        scores2.append(s2)
+        metric, epoch = flow.train()
+        metric_list.append(metric)
         epoches.append(epoch)
+    out_dict = {}
+    for metrics in metric_list:
+        for mode, metric in metrics.items():
+            for m, score in metric.items():
+                if out_dict.get(f"{mode}_{m}", None) is None:
+                    out_dict[f"{mode}_{m}"] = []
+                out_dict[f"{mode}_{m}"].append(score)
+            
     end = time.time()
+    mean_dict = {k + 'mean': np.mean(v) for k, v in out_dict.items()}
+    std_dict = {k + 'std': np.std(v) for k, v in out_dict.items()}
     para = sum(p.numel() for p in flow.model.parameters())
     result = {
         'key': [args.key],
@@ -57,11 +66,9 @@ def Space4HGNN(args):
         'parameter': [para],
         'epoch': [np.mean(epoches)],
         'time': [end - start],
-        'score1-mean': [np.mean(scores1)],
-        'score1-std': [np.std(scores1)],
-        'score2-mean': [np.mean(scores2)],
-        'score2-std': [np.std(scores2)],
     }
+    result.update(mean_dict)
+    result.update(std_dict)
     df = DataFrame(result)
     print(df)
     path = 'space4hgnn/prediction/excel/{}/{}_{}'.format(args.predictfile, args.key, args.value)
