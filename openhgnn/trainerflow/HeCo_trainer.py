@@ -45,7 +45,7 @@ class HeCoTrainer(BaseFlow):
         self.labels = self.task.get_labels().to(self.device)
 
     def preprocess(self):
-        self.preprocess_feature()
+        super(HeCoTrainer, self).preprocess()
 
     def train(self):
         self.preprocess()

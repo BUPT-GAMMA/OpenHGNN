@@ -55,25 +55,25 @@ class HeCo(BaseModel):
 
     @classmethod
     def build_model_from_args(cls, args, hg):
-        if args.meta_paths is None:
-            meta_paths = extract_metapaths(args.category, hg.canonical_etypes)
+        if args.meta_paths_dict is None:
+            meta_paths_dict = extract_metapaths(args.category, hg.canonical_etypes)
         else:
-            meta_paths = args.meta_paths
+            meta_paths_dict = args.meta_paths_dict
         schema = []
         for etype in hg.canonical_etypes:
             if etype[2] == args.category:
                 schema.append(etype)
-        return cls(meta_paths=meta_paths, network_schema=schema, category=args.category,
+        return cls(meta_paths_dict=meta_paths_dict, network_schema=schema, category=args.category,
                    hidden_size=args.hidden_dim, feat_drop=args.feat_drop,
                    attn_drop=args.attn_drop, sample_rate=args.sample_rate, tau=args.tau, lam=args.lam)
 
-    def __init__(self, meta_paths, network_schema, category, hidden_size, feat_drop, attn_drop
+    def __init__(self, meta_paths_dict, network_schema, category, hidden_size, feat_drop, attn_drop
                  , sample_rate, tau, lam):
         super(HeCo, self).__init__()
         self.category = category  # target node type
         self.feat_drop = init_drop(feat_drop)
         self.attn_drop = attn_drop
-        self.mp = Mp_encoder(meta_paths, hidden_size, self.attn_drop)
+        self.mp = Mp_encoder(meta_paths_dict, hidden_size, self.attn_drop)
         self.sc = Sc_encoder(network_schema, hidden_size, self.attn_drop, sample_rate, self.category)
         self.contrast = Contrast(hidden_size, tau, lam)
 
@@ -152,7 +152,7 @@ class SelfAttention(nn.Module):
         self.att = nn.Parameter(torch.empty(size=(1, hidden_dim)), requires_grad=True)
         nn.init.xavier_normal_(self.att.data, gain=1.414)
 
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=0)
         self.attn_drop = init_drop(attn_drop)
         self.txt = txt
 
@@ -172,7 +172,7 @@ class SelfAttention(nn.Module):
 
 
 class Mp_encoder(nn.Module):
-    def __init__(self, meta_paths, hidden_size, attn_drop):
+    def __init__(self, meta_paths_dict, hidden_size, attn_drop):
         r"""
         Description
         -----------
@@ -187,12 +187,12 @@ class Mp_encoder(nn.Module):
         super(Mp_encoder, self).__init__()
         # One GCN layer for each meta path based adjacency matrix
         self.act = nn.PReLU()
-        self.gcn_layers = nn.ModuleList()
-        for i in range(len(meta_paths)):
+        self.gcn_layers = nn.ModuleDict()
+        for mp in meta_paths_dict:
             one_layer = GraphConv(hidden_size, hidden_size, activation=self.act, allow_zero_in_degree=True)
             one_layer.reset_parameters()
-            self.gcn_layers.append(one_layer)
-        self.meta_paths = list(tuple(meta_path) for meta_path in meta_paths)
+            self.gcn_layers[mp] = one_layer
+        self.meta_paths_dict = meta_paths_dict
         self._cached_graph = None
         self._cached_coalesced_graph = {}
         self.semantic_attention = SelfAttention(hidden_size, attn_drop, "mp")
@@ -202,13 +202,13 @@ class Mp_encoder(nn.Module):
         if self._cached_graph is None or self._cached_graph is not g:
             self._cached_graph = g
             self._cached_coalesced_graph.clear()
-            for meta_path in self.meta_paths:
-                self._cached_coalesced_graph[meta_path] = dgl.metapath_reachable_graph(
+            for mp, meta_path in self.meta_paths_dict.items():
+                self._cached_coalesced_graph[mp] = dgl.metapath_reachable_graph(
                     g, meta_path)
 
-        for i, meta_path in enumerate(self.meta_paths):
-            new_g = self._cached_coalesced_graph[meta_path]
-            one = self.gcn_layers[i](new_g, h)
+        for mp, meta_path in self.meta_paths_dict.items():
+            new_g = self._cached_coalesced_graph[mp]
+            one = self.gcn_layers[mp](new_g, h)
             semantic_embeddings.append(one)  # node level attention
         z_mp = self.semantic_attention(semantic_embeddings)
         return z_mp
