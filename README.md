@@ -1,6 +1,8 @@
 # OpenHGNN
 
- ![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)[![Documentation Status](https://readthedocs.org/projects/openhgnn/badge/?version=latest)](https://openhgnn.readthedocs.io/en/latest/?badge=latest)![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)
+[![Documentation Status](https://readthedocs.org/projects/openhgnn/badge/?version=latest)](https://openhgnn.readthedocs.io/en/latest/?badge=latest)
+![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
 
 [**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)
 

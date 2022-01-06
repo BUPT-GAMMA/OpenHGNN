@@ -51,7 +51,8 @@ class HERecTrainer(BaseFlow):
         emb = self.load_embeddings()
 
         # todo: only supports node classification now
-        self.task.downstream_evaluate(logits=emb, name='f1_lr')
+        metric = {'test': self.task.downstream_evaluate(logits=emb, evaluation_metric='f1_lr')}
+        self.logger.train_info(self.logger.metric2str(metric))
 
     def load_embeddings(self):
         if not self.load_trained_embeddings or not os.path.exists(self.embeddings_file_path):

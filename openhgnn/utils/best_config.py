@@ -2,7 +2,7 @@ BEST_CONFIGS = {
     "node_classification": {
         'RGCN': {
             'general': {
-                'seed': 0, 'patience': 20, 'validation': True, 'metric': 'acc'
+                'seed': 0, 'patience': 40, 'validation': True, 'evaluation_metric': 'acc'
             },
             'aifb': {
                 'lr': 0.005, 'weight_decay': 0, 'max_epoch': 100,
@@ -30,7 +30,7 @@ BEST_CONFIGS = {
                 'mini_batch_flag': True, 'validation': True
             },
             'HGBn-ACM': {
-
+                'evaluation_metric': 'f1'
             },
             'HGBn-DBLP': {
                 'n_layers': 2, 'hidden_dim': 16, 'dropout': 0.5
@@ -43,7 +43,7 @@ BEST_CONFIGS = {
         },
         'CompGCN': {
             'general': {
-                'seed': 0, 'patience': 50, 'validation': True, 'metric': 'acc'
+                'seed': 0, 'patience': 50, 'validation': True, 'evaluation_metric': 'acc'
             },
             'aifb': {
                 'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,

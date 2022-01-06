@@ -6,6 +6,101 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from . import BaseModel, register_model
+
+
+@register_model('SimpleHGN')
+class SimpleHGN(BaseModel):
+    @classmethod
+    def build_model_from_args(cls, args, hg):
+        heads = [args.num_heads] * args.num_layers + [1]
+        return cls(args.edge_dim,
+                   args.num_edge * 2,
+                   [args.hidden_dim],
+                   args.h_dim,
+                   len(hg.ntypes),
+                   args.num_layers,
+                   heads,
+                   args.feats_drop_rate,
+                   args.attn_drop_rate,
+                   args.slope,
+                   True,
+                   args.beta
+                   )
+
+    def __init__(self, edge_dim, num_etypes, in_dims, num_hidden, num_classes,
+                num_layers, heads, feat_drop, attn_drop, negative_slope,
+                residual, beta):
+        super(SimpleHGN, self).__init__()
+        self.num_layers = num_layers
+        self.gat_layers = nn.ModuleList()
+        self.activation = F.elu
+
+        # input projection (no residual)
+        self.gat_layers.append(
+            SimpleHGNConv(
+                edge_dim,
+                in_dims[0],
+                num_hidden,
+                heads[0],
+                num_etypes,
+                feat_drop,
+                attn_drop,
+                negative_slope,
+                False,
+                self.activation,
+                beta=beta,
+            )
+        )
+        # hidden layers
+        for l in range(1, num_layers):  # noqa E741
+            # due to multi-head, the in_dim = num_hidden * num_heads
+            self.gat_layers.append(
+                SimpleHGNConv(
+                    edge_dim,
+                    num_hidden * heads[l - 1],
+                    num_hidden,
+                    heads[l],
+                    num_etypes,
+                    feat_drop,
+                    attn_drop,
+                    negative_slope,
+                    residual,
+                    self.activation,
+                    beta=beta,
+                )
+            )
+        # output projection
+        self.gat_layers.append(
+            SimpleHGNConv(
+                edge_dim,
+                num_hidden * heads[-2],
+                num_classes,
+                heads[-1],
+                num_etypes,
+                feat_drop,
+                attn_drop,
+                negative_slope,
+                residual,
+                None,
+                beta=beta,
+            )
+        )
+
+    def forward(self, g, h_dict = None):
+        with g.local_scope():
+            g.ndata['h'] = h_dict
+            graph = dgl.to_homogeneous(g, ndata = ['h'])
+            h = graph.ndata['h']
+            for l in range(self.num_layers):  # noqa E741
+                h = self.gat_layers[l](graph, h)
+                h = h.flatten(1)
+
+        graph.ndata['h'] = h
+        g_2 = dgl.to_heterogeneous(graph, g.ntypes, g.etypes)
+        h_dict = g_2.ndata['h']
+
+        return h_dict
 
 class SimpleHGNConv(nn.Module):
     def __init__(self,

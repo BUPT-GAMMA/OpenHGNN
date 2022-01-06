@@ -37,7 +37,8 @@ class Metapath2VecTrainer(BaseFlow):
 
         # todo: only supports node classification now
         start_idx, end_idx = self.get_ntype_range(self.task.dataset.category)
-        self.task.downstream_evaluate(logits=emb[start_idx:end_idx], name='f1_lr')
+        metric = {'test': self.task.downstream_evaluate(logits=emb[start_idx:end_idx], evaluation_metric='f1_lr')}
+        self.logger.train_info(self.logger.metric2str(metric))
 
     def load_embeddings(self):
         if not self.load_trained_embeddings or not os.path.exists(self.embeddings_file_path):
