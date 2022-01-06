@@ -19,6 +19,7 @@ Optional arguments are as follows:
     - ``--gpu GPU``, ``-g GPU``	controls which GPU you will use. If you do not have GPU, set ``-g -1``.
     - ``--use_best_config`` use the best config OpenHGNN has found in the dataset with the model. If you want to set the different hyper-parameter, modify the `config.ini <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ file manually.
     - ``--use_hpo`` use hyper-parameter optimization from optuna.
+    - ``--load_from_pretrained`` will load the model from a default checkpoint.
 
 e.g.:
 

@@ -1,0 +1,78 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2021, GAMMA LAB
+# This file is distributed under the same license as the OpenHGNN package.
+# FIRST AUTHOR <zhanghongyi@bupt.edu.cn>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: OpenHGNN \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-05 21:55+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Hongyi Zhang <zhanghongyi@bupt.edu.cn>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.0\n"
+
+#: ../../index.rst:9
+msgid "Get Started"
+msgstr "开始使用"
+
+#: ../../index.rst:18
+msgid "Advanced Materials"
+msgstr "进阶文档"
+
+#: ../../index.rst:27
+msgid "API Reference"
+msgstr "API说明"
+
+#: ../../index.rst:7
+msgid "Welcome to OpenHGNN's documentation!"
+msgstr "欢迎使用OpenHGNN"
+
+#: ../../index.rst:44
+msgid ""
+"This is an open-source toolkit for Heterogeneous Graph Neural "
+"Network(OpenHGNN) based on `DGL [Deep Graph Library] "
+"<https://github.com/dmlc/dgl>`_ and `PyTorch <https://pytorch.org/>`_. We"
+" integrate SOTA models of heterogeneous graph."
+msgstr ""
+"OpenHGNN是一个基于 `DGL [Deep Graph Library] "
+"<https://github.com/dmlc/dgl>`_ 和 `PyTorch "
+"<https://pytorch.org/>`_ 的开源异质图神经网络工具包, 集成了异质图神经网络的SOTA模型."
+
+#: ../../index.rst:48
+msgid "Key Features"
+msgstr "关键特性"
+
+#: ../../index.rst:50
+msgid ""
+"Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running "
+"experiments with the given models and datasets using `optuna "
+"<https://optuna.org/>`_ which is a hyperparameter optimization framework."
+msgstr ""
+"易用: OpenHGNN提供了了易用的接口在给定的模型和数据集上运行实验, 且集成了 `optuna "
+"<https://optuna.org/>`_ 进行超参数优化."
+
+#: ../../index.rst:51
+msgid ""
+"Extensibility: User can define customized task/model/dataset to apply new"
+" models to new scenarios."
+msgstr "可扩展: 用户可以定义定制化的任务/模型/数据集来对新的场景应用新的模型."
+
+#: ../../index.rst:52
+msgid "Efficiency: The backend dgl provides efficient APIs."
+msgstr "高效: 底层的DGL框架提供了提供了高效的API."
+
+#: ../../index.rst:55
+msgid "Contract Us"
+msgstr "联系我们"
+
+#: ../../index.rst:56
+msgid ""
+"If you have any question, please submit issues or contact us: "
+"tyzhao@bupt.edu.cn"
+msgstr "如果你有任何问题，欢迎提交issue或者邮件联系我们: tyzhao@bupt.edu.cn"

@@ -1,0 +1,358 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2021, GAMMA LAB
+# This file is distributed under the same license as the OpenHGNN package.
+# FIRST AUTHOR <zhanghongyi@bupt.edu.cn>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: OpenHGNN \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-05 15:28+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Hongyi Zhang <zhanghongyi@bupt.edu.cn>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.0\n"
+
+#: ../../pipeline/index.rst:2
+msgid "A Pipeline of OpenHGNN"
+msgstr "OpenHGNN的一个流水线"
+
+#: ../../pipeline/index.rst:4
+msgid ""
+"We define three components: :ref:`pipeline-models`, :ref:`pipeline-task`,"
+" :ref:`pipeline-trainerFlow`"
+msgstr ""
+"OpenHGNN中定义了三个组件: :ref:`pipeline-models`, :ref:`pipeline-task`,"
+" :ref:`pipeline-trainerFlow`"
+
+#: ../../pipeline/model.rst:4
+msgid "Model"
+msgstr ""
+
+#: ../../pipeline/model.rst:6
+msgid ""
+"A model plays a role of encoder. For input given a hetero-graph or MFG "
+"and feature (if available), the model need to output a dict of node "
+"embedding. In general, it should ouput all nodes embedding. It is allowed"
+" that just output the embedding of target nodes which are participated in"
+" loss calculation."
+msgstr ""
+
+#: ../../pipeline/model.rst:10
+msgid "It mainly contains two parts: model builder and forward propagation."
+msgstr ""
+
+#: ../../pipeline/model.rst:13
+msgid "Model Builder"
+msgstr ""
+
+#: ../../pipeline/model.rst:15
+msgid ""
+"We create a classmethod build_model_from_args for every model. With that,"
+" we can use args and hg to build up a custom model with model-specific "
+"hyper-parameters. So it is necessary to implement the func "
+"build_model_from_args in your model."
+msgstr ""
+
+#: ../../pipeline/model.rst:19
+msgid ""
+"An example from section **how to build a new model** .. code-block:: "
+"python"
+msgstr ""
+
+#: ../../pipeline/model.rst:22
+msgid "... class RGAT(BaseModel):"
+msgstr ""
+
+#: ../../pipeline/model.rst:24
+msgid "@classmethod def build_model_from_args(cls, args, hg):"
+msgstr ""
+
+#: ../../pipeline/model.rst:31
+msgid "return cls(in_dim=args.hidden_dim,"
+msgstr ""
+
+#: ../../pipeline/model.rst:27
+msgid ""
+"out_dim=args.hidden_dim, h_dim=args.out_dim, etypes=hg.etypes, "
+"num_heads=args.num_heads, dropout=args.dropout)"
+msgstr ""
+
+#: ../../pipeline/model.rst:34
+msgid "Forward Propagation"
+msgstr ""
+
+#: ../../pipeline/model.rst:56
+msgid ""
+"In OpenHGNN, we preprocess the feature of dataset outside of model. "
+"Specifically, we use a linear layer with bias for each node type to map "
+"all node features to a shared feature space. So the parameter *h_dict* of"
+" *forward()* in model is not original, and your model need not feature "
+"preprocessing."
+msgstr ""
+
+#: ../../pipeline/model.rst:60
+msgid "Output: A dict of embedding."
+msgstr ""
+
+#: ../../pipeline/model.rst:62
+msgid ""
+"output all nodes embedding or just the target node embedding which is "
+"involved in loss calculation."
+msgstr ""
+
+#: ../../pipeline/overview.rst:4
+msgid "Overview"
+msgstr ""
+
+#: ../../pipeline/overview.rst:6
+msgid ":ref:`pipeline-task`"
+msgstr ""
+
+#: ../../pipeline/overview.rst:7
+msgid ":ref:`pipeline-models`"
+msgstr ""
+
+#: ../../pipeline/overview.rst:8
+msgid ":ref:`pipeline-trainerFlow`"
+msgstr ""
+
+#: ../../pipeline/task.rst:4
+msgid "Task"
+msgstr ""
+
+#: ../../pipeline/task.rst:6
+msgid "The task means downstream task. So it is related to dataset closely."
+msgstr ""
+
+#: ../../pipeline/task.rst:9 ../../pipeline/trainerFlow.rst:11
+msgid "Included Object:"
+msgstr ""
+
+#: ../../pipeline/task.rst:11
+msgid ""
+":ref:`api-dataset`, containing the heterogeneous graph as DGLGraph, as "
+"well as node/edge features"
+msgstr ""
+
+#: ../../pipeline/task.rst:12
+msgid "and additional dataset-specific information."
+msgstr ""
+
+#: ../../pipeline/task.rst:14
+msgid ""
+"Evaluation Metric, a callable object which takes in the prediction and "
+"the ground truth label, and returns an output."
+msgstr ""
+
+#: ../../pipeline/task.rst:16
+msgid ""
+"Currently we will implement evaluation metrics for node classification "
+"and link prediction."
+msgstr ""
+
+#: ../../pipeline/task.rst:17
+msgid ""
+"Training Loss, a callable object which takes in the prediction and the "
+"ground truth as well as any other necessary information and returns an "
+"output. It must be differentiable."
+msgstr ""
+
+#: ../../pipeline/task.rst:19
+msgid ""
+"Ranking loss for self-supervision, or contrastive learning losses, all "
+"fall into this category."
+msgstr ""
+
+#: ../../pipeline/task.rst:20
+msgid "Training-validation-test Split."
+msgstr ""
+
+#: ../../pipeline/task.rst:23 ../../pipeline/trainerFlow.rst:22
+msgid "Method:"
+msgstr ""
+
+#: ../../pipeline/task.rst:25
+msgid "..func:``get_graph()``"
+msgstr ""
+
+#: ../../pipeline/task.rst:27
+msgid "return the DGLGraph"
+msgstr ""
+
+#: ../../pipeline/task.rst:28
+msgid "get_loss_fn()"
+msgstr ""
+
+#: ../../pipeline/task.rst:30 ../../pipeline/trainerFlow.rst:29
+msgid "train with a full_batch graph"
+msgstr ""
+
+#: ../../pipeline/task.rst:31
+msgid "evaluate()"
+msgstr ""
+
+#: ../../pipeline/task.rst:33
+msgid "Evaluate Metric"
+msgstr ""
+
+#: ../../pipeline/task.rst:34
+msgid "get_labels()"
+msgstr ""
+
+#: ../../pipeline/task.rst:36
+msgid "return labels"
+msgstr ""
+
+#: ../../pipeline/task.rst:39
+msgid "Supported task"
+msgstr ""
+
+#: ../../pipeline/task.rst:41
+msgid "Node classification"
+msgstr ""
+
+#: ../../pipeline/task.rst:42
+msgid "Link prediction"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:4
+msgid "TrainerFlow"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:6
+msgid ""
+"A trainerflow is an abstraction of a predesigned workflow that trains and"
+" evaluate a model on a given dataset for a specific use case. It must "
+"contain a unique training mechanism involving loss calculation and a "
+"specific sampler(sample something used in loss calculation) ."
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:8
+msgid ""
+"Once we select the model and the task, the func `get_trainerflow "
+"<https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/start.py>`_ "
+"will help us select the trainerflow. So the customized trainerflow needed"
+" be added in this func."
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:13
+msgid "task : :ref:`pipeline-task`"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:14
+msgid "model : :ref:`pipeline-models` (built through given args.model)"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:15
+msgid "optimizer : torch.optim.Optimizer"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:16
+msgid "dataloader(if mini_batch_flag is True) :"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:18
+msgid "torch.utils.data.DataLoader"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:19
+msgid ""
+"`dgl.dataloading "
+"<https://docs.dgl.ai/en/latest/api/python/dgl.dataloading.html#>`_"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:24
+msgid "train()"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:26
+msgid "decorated with @abstractmethod, so it must be overridden."
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:27
+msgid "_full_train_setp()"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:30
+msgid "_mini_train_step()"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:32
+msgid "train with a mini_batch seed nodes graph"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:33
+msgid "_test_step()"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:35
+msgid "evaluate in training/validation/testing"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:38
+msgid "Supported trainerflow"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:40
+msgid "Node classification flow"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:42
+msgid "Supported Model: HAN/MAGNN/GTN..."
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:43
+msgid "The task: node classification"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:45
+msgid "The task.dataset must include the splited[train/valid/test.] mask."
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:46
+msgid "The sampler in this flow is supported by dgl.dataloading."
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:47
+msgid ""
+"The flow is the most common in the GNNs cause most GNNs model are "
+"involved in the task semi-supervised node classification. Here the task "
+"is to classify the nodes of HIN(Heterogeneous Information Network)."
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:48
+msgid ""
+"Note: we will set the args.out_dim with num_classes if they are not "
+"equivalent."
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:50
+msgid "Dist Mult"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:52
+msgid ""
+"The same with entity classification except that it is used for link "
+"prediction."
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:53
+msgid "Supported Model: RGCN/CompGCN/RSHN"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:54
+msgid "Supported Task: link prediction"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:55
+msgid "HetGNN trainerflow"
+msgstr ""
+
+#: ../../pipeline/trainerFlow.rst:56
+msgid "NSHE trainerflow"
+msgstr ""
+
