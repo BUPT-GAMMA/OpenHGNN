@@ -1,4 +1,7 @@
-# OpenHGNN 
+# OpenHGNN
+
+[![Documentation Status](https://readthedocs.org/projects/openhgnn-zh-cn/badge/?version=latest)](https://openhgnn.readthedocs.io/zh_CN/latest/?badge=latest)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 | [**中文** ](./README_ZH.md) | [**English**](./README.md)｜
 
