@@ -257,7 +257,7 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         if self.dataset_name == 'academic4HetGNN':
             return None, None, None
         else:
-            super(HIN_LinkPrediction, self).get_idx(val_ratio, test_ratio)
+            return super(HIN_LinkPrediction, self).get_idx(val_ratio, test_ratio)
 
 
 @register_dataset('HGBl_link_prediction')

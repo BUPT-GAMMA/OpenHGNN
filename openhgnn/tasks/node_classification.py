@@ -87,8 +87,8 @@ class NodeClassification(BaseTask):
             result_dict = evaluator.eval(input_dict)
             return result_dict
         elif self.evaluation_metric == 'f1':
-            macro_f1, micro_f1 = self.evaluator.f1_node_classification(self.labels[mask], pred)
-            return dict(Macro_f1=macro_f1, Mirco_f1=micro_f1)
+            f1_dict = self.evaluator.f1_node_classification(self.labels[mask], pred)
+            return f1_dict
         else:
             raise ValueError('The evaluation metric is not supported!')
 

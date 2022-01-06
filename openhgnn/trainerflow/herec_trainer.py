@@ -51,7 +51,7 @@ class HERecTrainer(BaseFlow):
         emb = self.load_embeddings()
 
         # todo: only supports node classification now
-        self.task.evaluate(logits=emb, name='f1_lr')
+        self.task.downstream_evaluate(logits=emb, name='f1_lr')
 
     def load_embeddings(self):
         if not self.load_trained_embeddings or not os.path.exists(self.embeddings_file_path):
@@ -66,7 +66,7 @@ class HERecTrainer(BaseFlow):
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, len(self.dataloader))
 
         for epoch in range(self.max_epoch):
-            print('\n\n\nEpoch: ' + str(epoch + 1))
+            self.logger.train_info('\n\n\nEpoch: ' + str(epoch + 1))
             running_loss = 0.0
             for i, sample_batched in enumerate(tqdm(self.dataloader)):
 
@@ -75,13 +75,13 @@ class HERecTrainer(BaseFlow):
                     pos_v = sample_batched[1].to(self.device)
                     neg_v = sample_batched[2].to(self.device)
 
-                    scheduler.step()
                     optimizer.zero_grad()
                     loss = self.model.forward(pos_u, pos_v, neg_v)
                     loss.backward()
                     optimizer.step()
+                    scheduler.step()
 
                     running_loss = running_loss * 0.9 + loss.item() * 0.1
                     if i > 0 and i % 50 == 0:
-                        print(' Loss: ' + str(running_loss))
+                        self.logger.train_info(' Loss: ' + str(running_loss))
         self.model.save_embedding(self.embeddings_file_path)

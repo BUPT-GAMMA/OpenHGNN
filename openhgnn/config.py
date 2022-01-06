@@ -360,7 +360,7 @@ class Config(object):
 
         elif model == 'DMGI':
             self.lr = conf.getfloat("DMGI", "learning_rate")
-            self.l2_coef = conf.getfloat("DMGI", "l2_coef")
+            self.weight_decay = conf.getfloat("DMGI", "weight_decay")
             self.sc = conf.getint("DMGI", "sc")
             self.seed = conf.getint("DMGI", "seed")
             self.sup_coef = conf.getfloat("DMGI",'sup_coef')

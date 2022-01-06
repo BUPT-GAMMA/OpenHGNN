@@ -100,10 +100,10 @@ class LinkPrediction(BaseFlow):
                 loss = self._full_train_setp()
             if epoch % self.evaluate_interval == 0:
                 val_metric = self._test_step('valid')
-                self.logger.train_info(f"Epoch: {epoch:03d}, train loss: {loss:.4f}" + self.logger.metric2str(val_metric))
+                self.logger.train_info(f"Epoch: {epoch:03d}, train loss: {loss:.4f}. " + self.logger.metric2str(val_metric))
                 early_stop = stopper.step_score(val_metric['valid']['loss'], self.model)
                 if early_stop:
-                    self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}')
+                    self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}.')
                     break
         self.logger.train_info(f"Valid score = {stopper.best_score: .4f}")
         stopper.load_model(self.model)
@@ -118,11 +118,11 @@ class LinkPrediction(BaseFlow):
                 embedding = self.model(self.hg, h_dict)
                 score = th.sigmoid(self.task.ScorePredictor(self.task.test_hg, embedding, self.r_embedding))
                 self.task.dataset.save_results(hg=self.task.test_hg, score=score, file_path=self.args.HGB_results_path)
-            return val_metric, val_metric, epoch
+            return val_metric['valid'], epoch
         test_score = self._test_step(split="test")
-        val_score = self._test_step(split="valid")
-        self.logger.train_info(f"Test score = {test_score:.4f}")
-        return dict(Test_mrr=test_score, Val_mrr=val_score)
+        # val_score = self._test_step(split="valid")
+        self.logger.train_info(self.logger.metric2str(test_score))
+        return test_score
 
     def _full_train_setp(self):
         self.model.train()

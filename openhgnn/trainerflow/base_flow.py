@@ -132,25 +132,25 @@ class BaseFlow(ABC):
     @abstractmethod
     def train(self):
         pass
-
+    
     def _full_train_step(self):
         r"""
         Train with a full_batch graph
         """
         raise NotImplementedError
-
+    
     def _mini_train_step(self):
         r"""
         Train with a mini_batch seed nodes graph
         """
         raise NotImplementedError
-
+    
     def _full_test_step(self):
         r"""
         Test with a full_batch graph
         """
         raise NotImplementedError
-
+    
     def _mini_test_step(self):
         r"""
         Test with a mini_batch seed nodes graph
@@ -158,7 +158,7 @@ class BaseFlow(ABC):
         raise NotImplementedError
 
     def load_from_pretrained(self):
-        if self.args.load_from_pretrained:
+        if hasattr(self.args, 'load_from_pretrained') and self.args.load_from_pretrained:
             try:
                 ck_pt = torch.load(self._checkpoint)
                 self.model.load_state_dict(ck_pt)

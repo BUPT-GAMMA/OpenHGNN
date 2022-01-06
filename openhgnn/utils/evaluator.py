@@ -33,7 +33,7 @@ class Evaluator():
     def f1_node_classification(self, y_label, y_pred):
         macro_f1 = f1_score(y_label, y_pred, average='macro')
         micro_f1 = f1_score(y_label, y_pred, average='micro')
-        return macro_f1, micro_f1
+        return dict(Macro_f1=macro_f1, Micro_f1=micro_f1)
 
     def cal_acc(self, y_true, y_pred):
         return accuracy_score(y_true, y_pred)

@@ -1,12 +1,20 @@
-# OpenHGNN 
+# 异质图神经网络开源工具包 
 
-| [**中文** ](./README_ZH.md) | [**English**](./README.md)｜
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)[![Documentation Status](https://readthedocs.org/projects/openhgnn-zh-cn/badge/?version=latest)](https://openhgnn.readthedocs.io/zh_CN/latest/?badge=latest)![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
 
-OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包, 集成了异质图神经网络的SOTA模型.
+ [**Github Community (English)**](./README.md)
 
-| [**中文文档** ](https://openhgnn.readthedocs.io/zh_CN/latest/index.html) | [**English Documentation** ](https://openhgnn.readthedocs.io/en/latest/index.html) |
+OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包, 集成了异质图神经网络的前沿模型.
 
-| [**Space4HGNN**](./space4hgnn)｜
+## 新闻
+
+我们于启智社区开源了v0.1.1中文版本。
+
+启智社区用户可以享受到如下功能：
+
+- 全新的中文文档
+- 免费的计算资源, 云脑使用教程
+- OpenHGNN最新功能
 
 ## 关键特性
 
