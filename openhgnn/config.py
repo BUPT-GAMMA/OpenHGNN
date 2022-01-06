@@ -495,6 +495,25 @@ class Config(object):
             self.batch_size = conf.getint('HDE', 'batch_size')
             self.max_dist = conf.getint('HDE', 'max_dist')
             self.lr = conf.getfloat('HDE', 'lr')
+        
+        elif model == 'SimpleHGN':
+            self.weight_decay = conf.getfloat("SimpleHGN", "weight_decay")
+            self.lr = conf.getfloat("SimpleHGN", "lr")
+            self.max_epoch = conf.getint("SimpleHGN", "max_epoch")
+            self.seed = conf.getint("SimpleHGN", "seed")
+            self.patience = conf.getint("SimpleHGN", "patience")
+            self.edge_dim = conf.getint("SimpleHGN", "edge_dim")
+            self.slope = conf.getfloat("SimpleHGN", "slope")
+            self.attn_drop_rate = conf.getfloat("SimpleHGN", "attn_drop_rate")
+            self.feats_drop_rate = conf.getfloat("SimpleHGN", "feats_drop_rate")
+            self.num_heads = conf.getint("SimpleHGN", "num_heads")
+            self.h_dim = conf.getint("SimpleHGN", "h_dim")
+            self.num_layers = conf.getint("SimpleHGN", "num_layers")
+            self.num_edge = conf.getint("SimpleHGN", "num_edge")
+            self.beta = conf.getfloat("SimpleHGN", "beta")
+            self.residual = conf.getboolean("SimpleHGN", "residual")
+            self.mini_batch_flag = False
+            self.hidden_dim = self.h_dim * self.num_heads
 
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)
