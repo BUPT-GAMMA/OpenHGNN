@@ -1,6 +1,8 @@
 # 异质图神经网络开源工具包 
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)[![Documentation Status](https://readthedocs.org/projects/openhgnn-zh-cn/badge/?version=latest)](https://openhgnn.readthedocs.io/zh_CN/latest/?badge=latest)![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)
+[![Documentation Status](https://readthedocs.org/projects/openhgnn-zh-cn/badge/?version=latest)](https://openhgnn.readthedocs.io/zh_CN/latest/?badge=latest)
+![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
 
  [**Github Community (English)**](./README.md)
 
