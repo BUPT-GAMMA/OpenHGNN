@@ -141,7 +141,7 @@ The link will give some basic usage.
 
 ## Contributors
 
-OpenHGNN Team[GAMMA LAB] & DGL Team.
+OpenHGNN Team[GAMMA LAB], DGL Team and Peng Cheng Laboratory.
 
 See more in [CONTRIBUTING](./CONTRIBUTING.md).
 

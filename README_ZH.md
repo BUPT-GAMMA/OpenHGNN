@@ -6,7 +6,7 @@
 
 [**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)｜ [**Github Community (English)**](https://github.com/BUPT-GAMMA/OpenHGNN)
 
-OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包, 集成了异质图神经网络的前沿模型.
+OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包，集成了异质图神经网络的前沿模型。
 
 ## 新闻
 
@@ -23,9 +23,9 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 
 ## 关键特性
 
-- 易用: OpenHGNN提供了了易用的接口在给定的模型和数据集上运行实验, 且集成了 [optuna](https://optuna.org/) 进行超参数优化.
-- 可扩展: 用户可以定义定制化的任务/模型/数据集来对新的场景应用新的模型.
-- 高效: 底层的DGL框架提供了提供了高效的API.
+- 易用：OpenHGNN提供了了易用的接口在给定的模型和数据集上运行实验，且集成了 [optuna](https://optuna.org/) 进行超参数优化。
+- 可扩展：用户可以定义定制化的任务/模型/数据集来对新的场景应用新的模型。
+- 高效：底层的DGL框架提供了提供了高效的API。
 
 ## 开始使用
 
@@ -44,21 +44,21 @@ conda create -n openhgnn python=3.7
 source activate openhgnn
 ```
 
-**2. Pytorch:** 安装Pytorch, 参考[PyTorch安装文档](https://pytorch.org/get-started/locally/).
+**2. Pytorch:** 安装Pytorch，参考[PyTorch安装文档](https://pytorch.org/get-started/locally/)。
 
 ```bash
 # CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
 pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
-**3. DGL:** 安装 DGL, 参考[DGL安装文档](https://www.dgl.ai/pages/start.html).
+**3. DGL:**安装 DGL，参考[DGL安装文档](https://www.dgl.ai/pages/start.html)。
 
 ```bash
 # CUDA versions: cpu, cu101, cu102, cu110, cu111
 pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
 ```
 
-**4. 下载OpenHGNN, 安装依赖:**
+**4. 下载OpenHGNN，安装依赖:**
 
 ```bash
 git clone https://github.com/BUPT-GAMMA/OpenHGNN
@@ -85,13 +85,13 @@ python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 
 ``--dataset -d``    数据集名
 
-``--gpu -g``	控制你使用哪一个GPU, 如果没有GPU, 设定 -g -1.
+``--gpu -g``	控制你使用哪一个GPU，如果没有GPU，设定 -g -1。
 
-``--use_best_config``	use_best_config 意味着你使用该模型在该数据集下最优的配置, 如果你想要设定不同的超参数,请手动修改 [配置文件](./openhgnn/config.ini) . 使用最佳配置会覆盖配置文件中的参数。
+``--use_best_config``	use_best_config 意味着你使用该模型在该数据集下最优的配置，如果你想要设定不同的超参数,请手动修改 [配置文件](./openhgnn/config.ini)。使用最佳配置会覆盖配置文件中的参数。
 
-``--use_hpo`` 除了 use_best_config, 我们还提供了一个超参数的 [样例](./openhgnn/auto) 来自动查找最佳超参数.
+``--use_hpo`` 除了 use_best_config，我们还提供了一个超参数的 [样例](./openhgnn/auto) 来自动查找最佳超参数。
 
-``--load_from_pretrained`` 从默认检查点加载模型.
+``--load_from_pretrained`` 从默认检查点加载模型。
 
 示例: 
 
@@ -99,9 +99,9 @@ python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 ```
 
-**提示**: 如果你对某个模型感兴趣,你可以参考下列的模型列表.
+**提示**: 如果你对某个模型感兴趣,你可以参考下列的模型列表。
 
-请参考 [文档](https://openhgnn.readthedocs.io/en/latest/index.html) 了解更多的基础和进阶的使用方法.
+请参考 [文档](https://openhgnn.readthedocs.io/en/latest/index.html) 了解更多的基础和进阶的使用方法。
 
 ## [模型](./openhgnn/models/#Model)
 
@@ -142,7 +142,7 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 ## 贡献者
 
-OpenHGNN 团队 [北邮 GAMMA 实验室] 和 DGL 团队.
+OpenHGNN团队[北邮 GAMMA 实验室]、DGL 团队和鹏城实验室。
 
-[贡献者名单](./CONTRIBUTING.md).
+[贡献者名单](./CONTRIBUTING.md)
 

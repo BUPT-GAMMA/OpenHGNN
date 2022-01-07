@@ -52,7 +52,7 @@ class LinkPrediction(BaseFlow):
         self.target_link = self.task.dataset.target_link
         self.args.out_node_type = self.task.get_out_ntype()
         self.train_hg = self.task.get_train().to(self.device)
-        if hasattr(self.args, 'flag_add_reverse_edges'):
+        if hasattr(self.args, 'flag_add_reverse_edges') or self.args.dataset == 'MTWM':
             self.train_hg = add_reverse_edges(self.train_hg)
         if not hasattr(self.args, 'out_dim'):
             self.args.out_dim = self.args.hidden_dim
@@ -89,7 +89,7 @@ class LinkPrediction(BaseFlow):
         The positive graph and the negative graph will contain the same set of nodes as the original graph.
         """
         super(LinkPrediction, self).preprocess()
-
+        
     def train(self):
         self.preprocess()
         stopper = EarlyStopping(self.patience, self._checkpoint)
@@ -101,19 +101,18 @@ class LinkPrediction(BaseFlow):
             if epoch % self.evaluate_interval == 0:
                 val_metric = self._test_step('valid')
                 self.logger.train_info(f"Epoch: {epoch:03d}, train loss: {loss:.4f}. " + self.logger.metric2str(val_metric))
-                early_stop = stopper.step_score(val_metric['valid']['loss'], self.model)
+                early_stop = stopper.loss_step(val_metric['valid']['loss'], self.model)
                 if early_stop:
                     self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}.')
                     break
-        self.logger.train_info(f"Valid score = {stopper.best_score: .4f}")
         stopper.load_model(self.model)
-
         # Test
         if self.args.dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
             # Test in HGB datasets.
             self.model.eval()
             with torch.no_grad():
                 val_metric = self._test_step('valid')
+                self.logger.train_info(self.logger.metric2str(val_metric))
                 h_dict = self.model.input_feature()
                 embedding = self.model(self.hg, h_dict)
                 score = th.sigmoid(self.task.ScorePredictor(self.task.test_hg, embedding, self.r_embedding))
