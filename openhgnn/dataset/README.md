@@ -141,9 +141,9 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 
 - MTWM
 
-  |      | user    | poi   | Sup    |      | poi-contain-spu | user-buy-poi | user-buy-spu | user-click-poi |
-| ---- | ------- | ----- | ------ | ---- | --------------- | ------------ | ------------ | -------------- |
-  | MTWM | 188,155 | 3,474 | 16,889 |      | 92,024          | 542,915      | 1,797,283    | 1,477,316      |
+  |      | user    | poi   | Sup    | poi-contain-spu | user-buy-poi | user-buy-spu | user-click-poi |
+| ---- | ------- | ----- | ------ | --------------- | ------------ | ------------ | -------------- |
+  | MTWM | 188,155 | 3,474 | 16,889 | 92,024          | 542,915      | 1,797,283    | 1,477,316      |
 
 - 
 

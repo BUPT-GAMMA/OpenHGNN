@@ -129,11 +129,10 @@ The link will give some basic usage.
 | [HGSL](./openhgnn/output/HGSL)[AAAI 2021]                | :heavy_check_mark:  |                    |                    |
 | [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]           | :heavy_check_mark:  |                    |                    |
 | [HeCo](./openhgnn/output/HeCo)[KDD 2021]                 | :heavy_check_mark:  |                    |                    |
-| SimpleHGN[KDD 2021]                                      |                     |                    |                    |
+| [SimpleHGN](./openhgnn/output/SimpleHGN)[KDD 2021]       | :heavy_check_mark:  |                    |                    |
 | [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
 | [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
-|                                                          |                     |                    |                    |
 
 ### Candidate models
 

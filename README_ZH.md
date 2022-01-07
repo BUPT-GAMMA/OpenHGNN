@@ -4,7 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/openhgnn-zh-cn/badge/?version=latest)](https://openhgnn.readthedocs.io/zh_CN/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
 
- [**Github Community (English)**](./README.md)
+[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)｜ [**Github Community (English)**](https://github.com/BUPT-GAMMA/OpenHGNN)
 
 OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包, 集成了异质图神经网络的前沿模型.
 
@@ -15,8 +15,11 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 启智社区用户可以享受到如下功能：
 
 - 全新的中文文档
-- 免费的计算资源, 云脑使用教程
+- 免费的计算资源—— [云脑使用教程](https://git.openi.org.cn/GAMMALab/OpenHGNN/src/branch/main/yunnao_tutorial.md)
 - OpenHGNN最新功能
+  - 新增模型：【KDD2017】Metapath2vec、【TKDE2018】HERec、【KDD2021】HeCo、【KDD2021】SimpleHGN、【TKDE2021】HPN、【ICDM2021】HDE、fastGTN
+  - 新增日志功能
+  - 新增美团外卖数据集
 
 ## 关键特性
 
@@ -108,30 +111,29 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 | 模型                                                      | 节点分类             | 链路预测             | 推荐               |
 | -------------------------------------------------------- | ------------------- | ------------------ | ------------------ |
-| [Metapath2vec](./openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark:  |                    |                    |
-| [RGCN](./openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [HERec](./openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark:  |                    |                    |
-| [HAN](./openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark:  |                    |                    |
-| [KGCN](./openhgnn/output/KGCN)[WWW 2019]                 |                     |                    | :heavy_check_mark: |
-| [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| HGAT[EMNLP 2019]                                         |                     |                    |                    |
-| [GTN](./openhgnn/output/GTN)[NeurIPS 2019]               | :heavy_check_mark:  |                    |                    |
-| [RSHN](./openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark:  |                    |                    |
-| [DMGI](./openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark:  |                    |                    |
-| [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark:  |                    |                    |
-| HGT[WWW 2020]                                            |                     |                    |                    |
-| [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020]          | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]               | :heavy_check_mark:  |                    |                    |
-| [NARS](./openhgnn/output/NARS)[arxiv]                    | :heavy_check_mark:  |                    |                    |
-| [MHNF](./openhgnn/output/MHNF)[arxiv]                    | :heavy_check_mark:  |                    |                    |
-| [HGSL](./openhgnn/output/HGSL)[AAAI 2021]                | :heavy_check_mark:  |                    |                    |
-| [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]           | :heavy_check_mark:  |                    |                    |
-| [HeCo](./openhgnn/output/HeCo)[KDD 2021]                 | :heavy_check_mark:  |                    |                    |
-| SimpleHGN[KDD 2021]                                      |                     |                    |                    |
-| [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  |                    |                    |
-| [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
-| [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
-|                                                          |                     |                    |                    |
+| [Metapath2vec](./openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark: |                    |                    |
+| [RGCN](./openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [HERec](./openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark: |                    |                    |
+| [HAN](./openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [KGCN](./openhgnn/output/KGCN)[WWW 2019]                 |                    |                    | :heavy_check_mark: |
+| [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark: | :heavy_check_mark: |                    |
+| HGAT[EMNLP 2019]                                         |                    |                    |                    |
+| [GTN](./openhgnn/output/GTN)[NeurIPS 2019] & fastGTN     | :heavy_check_mark: |                    |                    |
+| [RSHN](./openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [DMGI](./openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark: |                    |                    |
+| [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark: |                    |                    |
+| HGT[WWW 2020]                                            |                    |                    |                    |
+| [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020]          | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]               | :heavy_check_mark: |                    |                    |
+| [NARS](./openhgnn/output/NARS)[arxiv]                    | :heavy_check_mark: |                    |                    |
+| [MHNF](./openhgnn/output/MHNF)[arxiv]                    | :heavy_check_mark: |                    |                    |
+| [HGSL](./openhgnn/output/HGSL)[AAAI 2021]                | :heavy_check_mark: |                    |                    |
+| [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]           | :heavy_check_mark: |                    |                    |
+| [HeCo](./openhgnn/output/HeCo)[KDD 2021]                 | :heavy_check_mark: |                    |                    |
+| [SimpleHGN](./openhgnn/output/SimpleHGN)[KDD 2021]       | :heavy_check_mark: |                    |                    |
+| [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark: |                    |                    |
+| [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                    | :heavy_check_mark: |                    |
 
 ### 候选模型
 
