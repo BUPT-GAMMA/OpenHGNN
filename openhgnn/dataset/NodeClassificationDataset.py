@@ -293,6 +293,9 @@ class HIN_NodeClassification(NodeClassificationDataset):
                 if 'val_mask' in self.g.nodes[self.category].data:
                     val_mask = self.g.nodes[self.category].data.pop('val_mask').squeeze()
                     val_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
+                elif 'valid_mask' in self.g.nodes[self.category].data:
+                    val_mask = self.g.nodes[self.category].data.pop('valid_mask').squeeze()
+                    val_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
                 else:
                     random_int = th.randperm(len(train_idx))
                     val_idx = train_idx[random_int[:len(train_idx) // 10]]

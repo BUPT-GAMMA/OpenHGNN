@@ -113,7 +113,6 @@ class NeighborSampler(object):
         self.sampler = dgl.dataloading.MultiLayerFullNeighborSampler(1)
         self.device = device
 
-
     def build_hetero_graph(self, heads, tails):
         edge_dict = {}
         num_ntypes = len(self.ntypes)
