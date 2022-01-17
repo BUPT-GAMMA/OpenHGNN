@@ -18,7 +18,7 @@ class SimpleHGN(BaseModel):
                    args.num_edge * 2,
                    [args.hidden_dim],
                    args.h_dim,
-                   len(hg.ntypes),
+                   args.out_dim,
                    args.num_layers,
                    heads,
                    args.feats_drop_rate,
@@ -53,7 +53,7 @@ class SimpleHGN(BaseModel):
             )
         )
         # hidden layers
-        for l in range(1, num_layers):  # noqa E741
+        for l in range(1, num_layers-1):  # noqa E741
             # due to multi-head, the in_dim = num_hidden * num_heads
             self.gat_layers.append(
                 SimpleHGNConv(
@@ -193,6 +193,7 @@ class SimpleHGNConv(nn.Module):
         if self.residual:
             res = self.residual(h)
             h_output += res
-        h_output = self.activation(h_output)
+        if self.activation is not None:
+            h_output = self.activation(h_output)
 
         return h_output
