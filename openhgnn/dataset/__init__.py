@@ -3,6 +3,8 @@ from .base_dataset import BaseDataset
 from .utils import load_acm, load_acm_raw
 from .academic_graph import AcademicDataset
 from .hgb_dataset import HGBDataset
+from .ohgb_dataset import OHGBDataset
+
 
 DATASET_REGISTRY = {}
 
@@ -43,7 +45,7 @@ def try_import_task_dataset(task):
     return True
 
 
-def build_dataset(dataset, task):
+def build_dataset(dataset, task, *args, **kwargs):
     if not try_import_task_dataset(task):
         exit(1)
     if dataset in ['aifb', 'mutag', 'bgs', 'am']:
@@ -52,6 +54,9 @@ def build_dataset(dataset, task):
                      'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie', 'Book-Crossing',
                      'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB']:
         _dataset = 'hin_' + task
+    elif dataset in ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase',
+                     'ohgbn-Freebase', 'ohgbn-yelp2']:
+        _dataset = 'ohgb_' + task
     elif dataset in ['ogbn-mag']:
         _dataset = 'ogbn_' + task
     elif dataset in ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']:
@@ -67,7 +72,7 @@ def build_dataset(dataset, task):
         _dataset = 'hin_' + task
     elif dataset == 'demo':
         _dataset = 'demo_' + task
-    return DATASET_REGISTRY[_dataset](dataset)
+    return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
 SUPPORTED_DATASETS = {
@@ -75,3 +80,6 @@ SUPPORTED_DATASETS = {
     "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
     "recommendation": "openhgnn.dataset.RecommendationDataset"
 }
+
+from . import NodeClassificationDataset
+from . import LinkPredictionDataset

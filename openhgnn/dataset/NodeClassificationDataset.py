@@ -8,7 +8,7 @@ import scipy.sparse as sp
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
 from . import BaseDataset, register_dataset
-from . import AcademicDataset, HGBDataset
+from . import AcademicDataset, HGBDataset, OHGBDataset
 from .utils import sparse_mx_to_torch_sparse_tensor
 from ..utils import add_reverse_edges
 
@@ -36,8 +36,8 @@ class NodeClassificationDataset(BaseDataset):
         Whether the node has multi label. Default ``False``. For now, only HGBn-IMDB has multi-label.
     """
 
-    def __init__(self):
-        super(NodeClassificationDataset, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(NodeClassificationDataset, self).__init__(*args, **kwargs)
         self.g = None
         self.category = None
         self.num_classes = None
@@ -52,23 +52,87 @@ class NodeClassificationDataset(BaseDataset):
         ------------
         The subclass of dataset should overwrite the function. We can get labels of target nodes through it.
 
+        Notes
+        ------
+        In general, the labels are th.LongTensor.
+        But for multi-label dataset, they should be th.FloatTensor. Or it will raise
+        RuntimeError: Expected object of scalar type Long but got scalar type Float for argument #2 target' in call to _thnn_nll_loss_forward
+        
         return
         -------
         labels : torch.Tensor
         """
-        raise NotImplemented
+        if 'labels' in self.g.nodes[self.category].data:
+            labels = self.g.nodes[self.category].data.pop('labels').long()
+        elif 'label' in self.g.nodes[self.category].data:
+            labels = self.g.nodes[self.category].data.pop('label').long()
+        else:
+            raise ValueError('Labels of nodes are not in the hg.nodes[category].data.')
+        labels = labels.float() if self.multi_label else labels
+        return labels
 
-    def get_idx(self, ):
+    def get_idx(self, validation=True):
         r"""
+        
+        Parameters
+        ----------
+        validation : bool
+            Whether to split dataset. Default ``True``. If it is False, val_idx will be same with train_idx.
+
         Description
         ------------
-        The subclass of dataset should overwrite the function. We can get idx of train, validation and test through it.
+        We can get idx of train, validation and test through it.
 
         return
         -------
         train_idx, val_idx, test_idx : torch.Tensor, torch.Tensor, torch.Tensor
         """
-        raise NotImplemented
+        if 'train_mask' not in self.g.nodes[self.category].data:
+            self.logger.dataset_info("The dataset has no train mask. "
+                  "So split the category nodes randomly. And the ratio of train/test is 8:2.")
+            num_nodes = self.g.number_of_nodes(self.category)
+            n_test = int(num_nodes * 0.2)
+            n_train = num_nodes - n_test
+    
+            train, test = th.utils.data.random_split(range(num_nodes), [n_train, n_test])
+            train_idx = th.tensor(train.indices)
+            test_idx = th.tensor(test.indices)
+            if validation:
+                self.logger.dataset_info("Split train into train/valid with the ratio of 8:2 ")
+                random_int = th.randperm(len(train_idx))
+                valid_idx = train_idx[random_int[:len(train_idx) // 5]]
+                train_idx = train_idx[random_int[len(train_idx) // 5:]]
+            else:
+                self.logger.dataset_info("Set valid set with train set.")
+                valid_idx = train_idx
+                train_idx = train_idx
+        else:
+            train_mask = self.g.nodes[self.category].data.pop('train_mask')
+            test_mask = self.g.nodes[self.category].data.pop('test_mask')
+            train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
+            test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
+            if validation:
+                if 'val_mask' in self.g.nodes[self.category].data:
+                    val_mask = self.g.nodes[self.category].data.pop('val_mask')
+                    valid_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
+                elif 'valid_mask' in self.g.nodes[self.category].data:
+                    val_mask = self.g.nodes[self.category].data.pop('valid_mask').squeeze()
+                    valid_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
+                else:
+                    # RDF_NodeClassification has train_mask, no val_mask
+                    self.logger.dataset_info("Split train into train/valid with the ratio of 8:2 ")
+                    random_int = th.randperm(len(train_idx))
+                    valid_idx = train_idx[random_int[:len(train_idx) // 5]]
+                    train_idx = train_idx[random_int[len(train_idx) // 5:]]
+            else:
+                self.logger.dataset_info("Set valid set with train set.")
+                valid_idx = train_idx
+                train_idx = train_idx
+        self.train_idx = train_idx
+        self.valid_idx = valid_idx
+        self.test_idx = test_idx
+        # Here set test_idx as attribute of dataset to save results of HGB
+        return self.train_idx, self.valid_idx, self.test_idx
 
 
 @register_dataset('rdf_node_classification')
@@ -86,8 +150,8 @@ class RDF_NodeClassification(NodeClassificationDataset):
     They are all have no feature.
     """
 
-    def __init__(self, dataset_name):
-        super(RDF_NodeClassification, self).__init__()
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(RDF_NodeClassification, self).__init__(*args, **kwargs)
         self.g, self.category, self.num_classes = self.load_RDF_dgl(dataset_name)
         self.has_feature = False
 
@@ -110,38 +174,6 @@ class RDF_NodeClassification(NodeClassificationDataset):
         num_classes = kg_dataset.num_classes
         return kg, category, num_classes
 
-    def get_idx(self, validation=True):
-        r"""
-
-        Parameters
-        ----------
-        validation : bool
-            Whether to split dataset. Default ``True``. If it is False, val_idx will be same with train_idx.
-
-        Returns
-        -------
-            train_idx, val_idx, test_idx
-        """
-        train_mask = self.g.nodes[self.category].data.pop('train_mask')
-        test_mask = self.g.nodes[self.category].data.pop('test_mask')
-        train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
-        test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
-        if validation:
-            random_int = th.randperm(len(train_idx))
-            val_idx = train_idx[random_int[:len(train_idx) // 5]]
-            train_idx = train_idx[random_int[len(train_idx) // 5:]]
-        else:
-            val_idx = train_idx
-            train_idx = train_idx
-        return train_idx, val_idx, test_idx
-
-    def get_labels(self):
-        if 'labels' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('labels')
-        else:
-            raise ValueError('label in not in the hg.nodes[category].data')
-        return labels
-
 
 @register_dataset('hin_node_classification')
 class HIN_NodeClassification(NodeClassificationDataset):
@@ -155,8 +187,8 @@ class HIN_NodeClassification(NodeClassificationDataset):
     acm4NSHE/ acm4GTN/ acm4NARS/ acm_han_raw/ academic4HetGNN/ dblp4MAGNN/ imdb4MAGNN/ ...
     """
 
-    def __init__(self, dataset_name):
-        super(HIN_NodeClassification, self).__init__()
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(HIN_NodeClassification, self).__init__(*args, **kwargs)
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
 
     def load_HIN(self, name_dataset):
@@ -266,54 +298,27 @@ class HIN_NodeClassification(NodeClassificationDataset):
         # g = g[0]
         return g, category, num_classes
 
-    def get_idx(self, validation=True):
-        if 'train_mask' not in self.g.nodes[self.category].data:
-            print("The dataset has no train mask. "
-                  "So split the category nodes randomly. And the ratio of train/test is 9:1.")
-            num_nodes = self.g.number_of_nodes(self.category)
-            n_test = int(num_nodes * 0.2)
-            n_train = num_nodes - n_test
 
-            train, test = th.utils.data.random_split(range(num_nodes), [n_train, n_test])
-            train_idx = th.tensor(train.indices)
-            test_idx = th.tensor(test.indices)
-            if validation:
-                random_int = th.randperm(len(train_idx))
-                val_idx = train_idx[random_int[:len(train_idx) // 10]]
-                train_idx = train_idx[random_int[len(train_idx) // 10:]]
-            else:
-                val_idx = train_idx
-                train_idx = train_idx
-        else:
-            train_mask = self.g.nodes[self.category].data.pop('train_mask').squeeze()
-            test_mask = self.g.nodes[self.category].data.pop('test_mask').squeeze()
-            train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
-            test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
-            if validation:
-                if 'val_mask' in self.g.nodes[self.category].data:
-                    val_mask = self.g.nodes[self.category].data.pop('val_mask').squeeze()
-                    val_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
-                elif 'valid_mask' in self.g.nodes[self.category].data:
-                    val_mask = self.g.nodes[self.category].data.pop('valid_mask').squeeze()
-                    val_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
-                else:
-                    random_int = th.randperm(len(train_idx))
-                    val_idx = train_idx[random_int[:len(train_idx) // 10]]
-                    train_idx = train_idx[random_int[len(train_idx) // 10:]]
-            else:
-                val_idx = train_idx
-                train_idx = train_idx
-        return train_idx, val_idx, test_idx
-
-    def get_labels(self):
-        if 'labels' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('labels').long()
-        elif 'label' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('label').long()
-        else:
-            raise ValueError('label in not in the hg.nodes[category].data')
-        return labels
-
+@register_dataset('ohgb_node_classification')
+class OHGB_NodeClassification(NodeClassificationDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(OHGB_NodeClassification, self).__init__(*args, **kwargs)
+        self.dataset_name = dataset_name
+        self.has_feature = True
+        if dataset_name == 'ohgbn-Freebase':
+            dataset = OHGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            category = 'BOOK'
+            num_classes = 8
+        elif dataset_name == 'ohgbn-yelp2':
+            dataset = OHGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            g = add_reverse_edges(g)
+            category = 'business'
+            num_classes = 16
+            self.multi_label = True
+        self.g, self.category, self.num_classes = g, category, num_classes
+    
 
 @register_dataset('HGBn_node_classification')
 class HGB_NodeClassification(NodeClassificationDataset):
@@ -329,9 +334,8 @@ class HGB_NodeClassification(NodeClassificationDataset):
     `HGB datasets <https://github.com/THUDM/HGB>`_
     """
 
-
-    def __init__(self, dataset_name, **kwargs):
-        super(HGB_NodeClassification, self).__init__()
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(HGB_NodeClassification, self).__init__(*args, **kwargs)
         self.dataset_name = dataset_name
         self.has_feature = True
         if dataset_name == 'HGBn-ACM':
@@ -420,63 +424,6 @@ class HGB_NodeClassification(NodeClassificationDataset):
             raise ValueError
         self.g, self.category, self.num_classes = g, category, num_classes
 
-    def get_idx(self, validation=True):
-        if 'train_mask' not in self.g.nodes[self.category].data:
-            num_nodes = self.g.number_of_nodes(self.category)
-
-            n_test = int(num_nodes * 0.2)
-            n_train = num_nodes - n_test
-
-            train, test = th.utils.data.random_split(range(num_nodes), [n_train, n_test])
-            train_idx = th.tensor(train.indices)
-            test_idx = th.tensor(test.indices)
-            if validation:
-                random_int = th.randperm(len(train_idx))
-                valid_idx = train_idx[random_int[:len(train_idx) // 5]]
-                train_idx = train_idx[random_int[len(train_idx) // 5:]]
-            else:
-                valid_idx = train_idx
-                train_idx = train_idx
-        else:
-            train_mask = self.g.nodes[self.category].data.pop('train_mask')
-            test_mask = self.g.nodes[self.category].data.pop('test_mask')
-            train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
-            test_idx = th.nonzero(test_mask, as_tuple=False).squeeze()
-            if validation:
-                if 'val_mask' in self.g.nodes[self.category].data:
-                    val_mask = self.g.nodes[self.category].data.pop('val_mask')
-                    valid_idx = th.nonzero(val_mask, as_tuple=False).squeeze()
-                    pass
-                else:
-                    random_int = th.randperm(len(train_idx))
-                    valid_idx = train_idx[random_int[:len(train_idx) // 5]]
-                    train_idx = train_idx[random_int[len(train_idx) // 5:]]
-            else:
-                valid_idx = train_idx
-                train_idx = train_idx
-        self.train_idx = train_idx
-        self.valid_idx = valid_idx
-        self.test_idx = test_idx
-        return self.train_idx, self.valid_idx, self.test_idx
-
-    def get_labels(self):
-        r"""
-        Notes
-        ------
-        In general, the labels are th.FloatTensor.
-        But for multi-label dataset, they should be th.LongTensor. Or it will raise
-        RuntimeError: Expected object of scalar type Long but got scalar type Float for argument #2 target' in call to _thnn_nll_loss_forward
-        """
-
-        if 'labels' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('labels').long()
-        elif 'label' in self.g.nodes[self.category].data:
-            labels = self.g.nodes[self.category].data.pop('label').long()
-        else:
-            raise ValueError('label in not in the hg.nodes[category].data')
-        self.labels = labels.float() if self.dataset_name == 'HGBn-IMDB' else labels
-        return self.labels
-
     def save_results(self, logits, file_path):
         r"""
         To save test results of HGBn.
@@ -509,8 +456,8 @@ class HGB_NodeClassification(NodeClassificationDataset):
 
 @register_dataset('ogbn_node_classification')
 class OGB_NodeClassification(NodeClassificationDataset):
-    def __init__(self, dataset_name):
-        super(OGB_NodeClassification, self).__init__()
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(OGB_NodeClassification, self).__init__(*args, **kwargs)
         if dataset_name == 'ogbn-mag':
             dataset = DglNodePropPredDataset(name='ogbn-mag')
             self.category = 'paper'  # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)

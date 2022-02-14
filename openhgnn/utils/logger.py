@@ -179,7 +179,10 @@ class Logger:
             for metric, score in score_dict.items():
                 out += f"{metric}: {score:.4f}; "
         return out
-                
+    
+    def dataset_info(self, s):
+        self.logger.info('[Dataset Process] ' + s)
+        
     def feature_info(self, s):
         self.logger.info('[Feature Transformation] ' + s)
     
