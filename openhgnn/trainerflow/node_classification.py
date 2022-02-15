@@ -53,6 +53,12 @@ class NodeClassification(BaseFlow):
             self.train_loader = dgl.dataloading.NodeDataLoader(
                 self.hg.to('cpu'), {self.category: self.train_idx.to('cpu')}, sampler,
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+            self.val_loader = dgl.dataloading.NodeDataLoader(
+                self.hg.to('cpu'), {self.category: self.valid_idx.to('cpu')}, sampler,
+                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+            self.test_loader = dgl.dataloading.NodeDataLoader(
+                self.hg.to('cpu'), {self.category: self.test_idx.to('cpu')}, sampler,
+                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
     def preprocess(self):
         r"""
@@ -222,9 +228,10 @@ class NodeClassification(BaseFlow):
                 y_predicts = []
                 for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
                     blocks = [blk.to(self.device) for blk in blocks]
+                    emb = extract_embed(self.model.input_feature(), input_nodes)
                     seeds = seeds[self.category]
                     lbl = self.labels[seeds].to(self.device)
-                    logits = self.model(blocks)[self.category]
+                    logits = self.model(blocks, emb)[self.category]
                     loss = self.loss_fn(logits, lbl)
     
                     loss_all += loss.item()

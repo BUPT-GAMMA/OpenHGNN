@@ -30,7 +30,8 @@ class LinkPrediction(BaseTask):
     def __init__(self, args):
         super(LinkPrediction, self).__init__()
         self.n_dataset = args.dataset
-        self.dataset = build_dataset(args.dataset, 'link_prediction')
+        self.logger = args.logger
+        self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger)
         # self.evaluator = Evaluator()
         self.train_hg, self.val_hg, self.test_hg = self.dataset.get_idx()
         if self.val_hg is None and self.test_hg is None:

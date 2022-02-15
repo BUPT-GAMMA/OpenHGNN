@@ -3,7 +3,7 @@ import numpy as np
 import torch as th
 from dgl.data.knowledge_graph import load_data
 from . import BaseDataset, register_dataset
-from . import AcademicDataset, HGBDataset
+from . import AcademicDataset, HGBDataset, OHGBDataset
 from ..utils import add_reverse_edges
 
 
@@ -13,8 +13,8 @@ class LinkPredictionDataset(BaseDataset):
     metric: Accuracy, multi-label f1 or multi-class f1. Default: `accuracy`
     """
 
-    def __init__(self, ):
-        super(LinkPredictionDataset, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(LinkPredictionDataset, self).__init__(*args, **kwargs)
         self.target_link = None
         self.target_link_r = None
 
@@ -150,8 +150,8 @@ class Test_LinkPrediction(LinkPredictionDataset):
 
 @register_dataset('hin_link_prediction')
 class HIN_LinkPrediction(LinkPredictionDataset):
-    def __init__(self, dataset_name):
-        super(HIN_LinkPrediction, self).__init__()
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(HIN_LinkPrediction, self).__init__(*args, **kwargs)
         self.g = self.load_HIN(dataset_name)
 
     def load_link_pred(self, path):
@@ -280,8 +280,8 @@ class HGB_LinkPrediction(LinkPredictionDataset):
 
     """
 
-    def __init__(self, dataset_name):
-        super(HGB_LinkPrediction, self).__init__()
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(HGB_LinkPrediction, self).__init__(*args, **kwargs)
         self.dataset_name = dataset_name
         self.target_link_r = None
         if dataset_name == 'HGBl-amazon':
@@ -407,6 +407,33 @@ class HGB_LinkPrediction(LinkPredictionDataset):
                     f.write(f"{l}\t{r}\t{edge_type}\t{round(float(c), 4)}\n")
 
 
+@register_dataset('ohgb_link_prediction')
+class OHGB_LinkPrediction(LinkPredictionDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(OHGB_LinkPrediction, self).__init__(*args, **kwargs)
+        self.dataset_name = dataset_name
+        self.has_feature = True
+        if dataset_name == 'ohgbl-MTWM':
+            dataset = OHGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            self.target_link = [('user', 'user-buy-spu', 'spu')]
+            self.target_link_r = [('spu', 'user-buy-spu-rev', 'user')]
+            self.node_type = ['user', 'spu']
+        elif dataset_name == 'ohgbl-yelp1':
+            dataset = OHGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            g = add_reverse_edges(g)
+            self.target_link = [('user', 'user-buy-business', 'business')]
+            self.target_link_r = [('business', 'user-buy-business-rev', 'user')]
+        elif dataset_name == 'ohgbl-yelp2':
+            dataset = OHGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            g = add_reverse_edges(g)
+            self.target_link = [('business', 'described-with', 'phrase')]
+            self.target_link_r = [('business', 'described-with-rev', 'phrase')]
+        self.g = g
+    
+    
 def build_graph_from_triplets(num_nodes, num_rels, triplets):
     """ Create a DGL graph. The graph is bidirectional because RGCN authors
         use reversed relations.
