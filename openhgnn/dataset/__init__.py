@@ -55,7 +55,7 @@ def build_dataset(dataset, task, *args, **kwargs):
                      'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB']:
         _dataset = 'hin_' + task
     elif dataset in ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase',
-                     'ohgbn-Freebase', 'ohgbn-yelp2']:
+                     'ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']:
         _dataset = 'ohgb_' + task
     elif dataset in ['ogbn-mag']:
         _dataset = 'ogbn_' + task

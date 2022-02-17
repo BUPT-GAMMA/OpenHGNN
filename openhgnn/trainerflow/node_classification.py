@@ -138,13 +138,13 @@ class NodeClassification(BaseFlow):
                 h_dict = self.model.input_feature()
                 logits = self.model(self.hg, h_dict)[self.category]
                 self.task.dataset.save_results(logits=logits, file_path=self.args.HGB_results_path)
-            return metric_dict, epoch
+            return dict(metric=metric_dict, epoch=epoch)
         if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
             metric_dict, _ = self._mini_test_step(modes=['valid', 'test'])
         else:
             metric_dict, _ = self._full_test_step(modes=['valid', 'test'])
         self.logger.train_info('[Test Info]' + self.logger.metric2str(metric_dict))
-        return metric_dict, epoch
+        return dict(metric=metric_dict, epoch=epoch)
 
     def _full_train_step(self):
         self.model.train()

@@ -4,82 +4,109 @@ A dataset is related to a task, so it is a part of task.
 
 So dataset should load not only a heterograph[DGLGraph], but also some index involving training, validation and testing. In OpenHGNN, we preprocess the feature of dataset outside of model. Specifically, we use a linear layer with bias for each node type to map all node features to a shared feature space. And for no feature nodes, we give a embedding as its feature. Refer to [HeteroFeature](https://openhgnn.readthedocs.io/en/latest/api/layer.html#heterofeature).
 
+### Open Heterogeneous Graph Benchmark
+
+We release a benchmark of heterogeneou graph for link prediction and node classification task.
+
+| Dataset  | # node types | # nodes    | # link types | # links    | # attributes | # attributed nodes | # tasks                            | # label types | # label nodes |
+| -------- | ------------ | ---------- | ------------ | ---------- | ------------ | ------------------ | ---------------------------------- | ------------- | ------------- |
+| MTWM     | 3            | 208,518    | 4            | 3,909,538  | None         | None               | Link prediction                    | None          | None          |
+| YELP_1   | 4            | 2,353,365  | 4            | 10,417,742 | None         | None               | Link prediction                    | business      | 5484          |
+| YELP_2   | 4            | 82,465     | 4            | 31,206,253 | None         | None               | Link prediction                    | None          | None          |
+| Freebase | 8            | 12,164,758 | 36           | 63,906,230 | None         | None               | Classification and Link prediction | book          | 47,190        |
+
+#### For link prediction task
+
+##### ohgbl-MTWM
+
+| Dataset | # node types | # nodes | # user (node) | # poi (node) | # spu (node) | # link types | # links   | # attributes |     | task            | target link                |     |
+| ------- | ------------ | ------- | ------------- | ------------ | ------------ | ------------ | --------- | ------------ | --- | --------------- | -------------------------- | --- |
+| MTWM    | 3            | 208,518 | 188,155       | 3,474        | 16,889       | 4            | 3,909,538 | None         |     | Link prediction | (user, user-buy-spu, user) |     |
+
+###### **Graph:**
+
+##### ohgbl-yelp1
+
+| Dataset | # node types | # nodes   | # link types | # links    | # attributes | # attributed nodes | # tasks         | # label types | # label nodes |
+| ------- | ------------ | --------- | ------------ | ---------- | ------------ | ------------------ | --------------- | ------------- | ------------- |
+| YELP_1  | 4            | 2,353,365 | 4            | 10,417,742 | None         | None               | Link prediction | business      | 5484          |
+
+
+
 ### NodeClassificationDataset
 
 - ##### RDF_NodeCLassification
-
+  
   - [AIFB/MUTAG/BGS/AM](https://github.com/dmlc/dgl/tree/master/examples/pytorch/rgcn-hetero)
 
 - ##### HIN_NodeCLassification
-
+  
   - ###### ACM
-
-    |             | author | paper | Subject | Paper-Author | Paper-Subject | Features                      | Train | Val  | Test  |
-    | ----------- | ------ | ----- | ------- | ------------ | ------------- | ----------------------------- | ----- | ---- | ----- |
-    | acm4GTN     | 5,912  | 3,025 | 57      | 9,936        | 3,025         | 1,902                         | 600   | 300  | 2,125 |
-    | acm_han_raw | 17,351 | 4,025 | 72      | 13,407       | 4,025         | 1,903                         | 808   | 401  | 2,816 |
-    | acm4NSHE    | 7,167  | 4,019 | 60      | 13,407       | 4,019         | 128(Embedding from deep walk) | -     | -    | -     |
-
+    
+    |             | author | paper | Subject | Paper-Author | Paper-Subject | Features                      | Train | Val | Test  |
+    | ----------- | ------ | ----- | ------- | ------------ | ------------- | ----------------------------- | ----- | --- | ----- |
+    | acm4GTN     | 5,912  | 3,025 | 57      | 9,936        | 3,025         | 1,902                         | 600   | 300 | 2,125 |
+    | acm_han_raw | 17,351 | 4,025 | 72      | 13,407       | 4,025         | 1,903                         | 808   | 401 | 2,816 |
+    | acm4NSHE    | 7,167  | 4,019 | 60      | 13,407       | 4,019         | 128(Embedding from deep walk) | -     | -   | -     |
+  
   - ###### academic4HetGNN
-
+    
     |                 | author | paper  | Venue | Paper-Author | Paper-venue | Paper-paper |
     | --------------- | ------ | ------ | ----- | ------------ | ----------- | ----------- |
     | academic4HetGNN | 28,646 | 21,044 | 18    | 69,311       | 21,044      | 21,357      |
-
+  
   - ###### DBLP
-
-    |            | author | paper  | Conf | Venue | Paper-Author | Paper-Conf | Paper-Term | Train | Val  | Test  |
-    | ---------- | ------ | ------ | ---- | ----- | ------------ | ---------- | ---------- | ----- | ---- | ----- |
-    | dblp4HAN   | 4,057  | 14,328 | 20   | 8,789 | 19,645       | 14,328     | 88,420     | 800   | 400  | 2,857 |
-    | dblp4GTN   |        |        |      |       |              |            |            |       |      |       |
-    | dblp4MAGNN | 4,057  | 14,328 | 20   | 7,723 | 19,645       | 14,328     | 85,810     | 400   | 400  | 3257  |
-
     
+    |            | author | paper  | Conf | Venue | Paper-Author | Paper-Conf | Paper-Term | Train | Val | Test  |
+    | ---------- | ------ | ------ | ---- | ----- | ------------ | ---------- | ---------- | ----- | --- | ----- |
+    | dblp4HAN   | 4,057  | 14,328 | 20   | 8,789 | 19,645       | 14,328     | 88,420     | 800   | 400 | 2,857 |
+    | dblp4GTN   |        |        |      |       |              |            |            |       |     |       |
+    | dblp4MAGNN | 4,057  | 14,328 | 20   | 7,723 | 19,645       | 14,328     | 85,810     | 400   | 400 | 3257  |
 
-  - ###### IMDB
-
-    |            | Movie | Actor | Director | Movie-Actor | Movie-Director | Train | Val  | Test  |
-    | ---------- | ----- | ----- | -------- | ----------- | -------------- | ----- | ---- | ----- |
-    | imdb4HAN   | 4,780 | 5,841 | 2,269    | 14,340      | 4,780          | 300   | 300  | 2,687 |
-    | imdb4GTN   | 4,661 | 5,841 | 2,270    | 13,983      | 4,661          | 300   | 300  | 2,339 |
-    | imdb4MAGNN | 4,278 | 5,257 | 2,081    | 12,828      | 4,278          | 400   | 400  | 3,478 |
+- ###### IMDB
+  
+  |            | Movie | Actor | Director | Movie-Actor | Movie-Director | Train | Val | Test  |
+  | ---------- | ----- | ----- | -------- | ----------- | -------------- | ----- | --- | ----- |
+  | imdb4HAN   | 4,780 | 5,841 | 2,269    | 14,340      | 4,780          | 300   | 300 | 2,687 |
+  | imdb4GTN   | 4,661 | 5,841 | 2,270    | 13,983      | 4,661          | 300   | 300 | 2,339 |
+  | imdb4MAGNN | 4,278 | 5,257 | 2,081    | 12,828      | 4,278          | 400   | 400 | 3,478 |
 
 - **HGBn **
-
+  
   The datasets are HGB for Node Classification
-
+  
   **Note**：The test data labels are randomly replaced to prevent data leakage issues, refer to [HGB](https://github.com/THUDM/HGB).
-
+  
   In OpenHGNN, you will get the test results in `./openhgnn/output/{model_name}/`.  If you want to obtain test scores, you need to submit your prediction to HGB's [website](https://www.biendata.xyz/hgb/).
-
+  
   - HGBn-ACM
-
-  | paper | author | subject | term | paper-author | paper-paper | paper-subject | paper-term | Val  | Test |
-  | ----- | ------ | ------- | ---- | ------------ | ----------- | ------------- | ---------- | ---- | ---- |
-  | 3025  | 5959   | 56      | 1902 | 9949         | 5343        | 3025          | 255619     | 907  | 2118 |
-
+  
+  | paper | author | subject | term | paper-author | paper-paper | paper-subject | paper-term | Val | Test |
+  | ----- | ------ | ------- | ---- | ------------ | ----------- | ------------- | ---------- | --- | ---- |
+  | 3025  | 5959   | 56      | 1902 | 9949         | 5343        | 3025          | 255619     | 907 | 2118 |
+  
   - HGBn-IMDB
-
+  
   | movie | actor | director | keyword | actor-movie | director-movie | keyword-movie | train | test |
   | ----- | ----- | -------- | ------- | ----------- | -------------- | ------------- | ----- | ---- |
   | 4932  | 6124  | 2393     | 7971    | 14779       | 4932           | 23610         | 1371  | 3202 |
-
+  
   - HGBn-Freebase: no feature
-
+  
   | BOOK  | BUSINESS | FILM  | LOCATION | MUSIC | ORGANIZATION | PEOPLE | SPORTS | train | test |
   | ----- | -------- | ----- | -------- | ----- | ------------ | ------ | ------ | ----- | ---- |
   | 40402 | 7153     | 19427 | 9368     | 82351 | 2731         | 17641  | 1025   | 2386  | 5568 |
-
+  
   - HGBn-DBLP
-
+  
   | author | paper | term | venue | author-paper | paper-term | paper-venue | train | test |
   | ------ | ----- | ---- | ----- | ------------ | ---------- | ----------- | ----- | ---- |
   | 4057   | 14328 | 7723 | 20    | 19645        | 85810      | 14328       | 1217  | 2840 |
 
 - ##### OGB_NodeClassification
-
+  
   - ###### [ogbn-mag](https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)
-
+    
     - Train 629,571 predict venue labels of all papers published before 2018
     - Validation: 64879 papers published in 2018
     - Test: 41939 papers published since 2019
@@ -87,68 +114,65 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 ### LinkPredictionDataset
 
 - ##### HIN_LinkPrediction
-
+  
   - ###### academic4HetGNN
 
 - **HGBl**
-
+  
   The datasets are HGB for Link Prediction.
-
+  
   **Note**：The test data labels are randomly replaced to prevent data leakage issues, refer to [HGB](https://github.com/THUDM/HGB).
-
+  
   In OpenHGNN, you will get the test results in `./openhgnn/output/{model_name}/`.  If you want to obtain test scores, you need to submit your prediction to HGB's [website](https://www.biendata.xyz/hgb/).
-
+  
   - HGBl-amazon
-
+    
     |             | product | features | product-product0 | product-product1 | test : product-product0 | test : product-product1 |
     | ----------- | ------- | -------- | ---------------- | ---------------- | ----------------------- | ----------------------- |
     | HGBl-amazon | 10099   | 1156     | 76924            | 71735            | 7609                    | 7137                    |
-
+  
   - HGBl-LastFM
-
+    
     |             | user | artist | tag  | feature | user-artist | user-user | artist-tag | test:user-artist |
     | ----------- | ---- | ------ | ---- | ------- | ----------- | --------- | ---------- | ---------------- |
     | HGBL-LastFM | 1892 | 17632  | 1088 | 0       | 92834       | 25434     | 23253      | 18567            |
-
+  
   - HGBl-PubMed
-
+    
     |             | node0 | node1 | node2 | node3 | feature | node0- node0 | node0-node1 | node1-node1 | node2-node0 | node2-node1 | node2-node2 | node2-node3 | node3-node0 | node3-node1 | node3-node2 | test:node1-node1 |
     | ----------- | ----- | ----- | ----- | ----- | ------- | ------------ | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ---------------- |
     | HGBL-LastFM | 13168 | 19507 | 25691 | 2783  | 200     | 16105        | 25962       | 42637       | 31277       | 51323       | 62187       | 6297        | 3155        | 5245        | 798         | 8528             |
 
 - ##### KG_LinkPrediction
-
+  
   - 'wn18', 'FB15k', 'FB15k-237'
 
 ### RecommendationDataset
 
 - **Amazon**
-
+  
   (Containing rating and timestamp information)
-
+  
   (Source : http://jmcauley.ucsd.edu/data/amazon/)
-
+  
   Edata['rate'] in user-item edge is the rating.
-
+  
   It addresses the two most common scenarios in collaborative filtering:
-
+  
   - rating prediction (e.g. on a scale of 1 to 5 stars), and
   - item prediction from positive-only feedback.
-
+  
   |        | User  | Item  | View  | Category | Brand | User-Item | Item-View | Item-Category | Item-Brand | Test(20%)<br />User-Item |
   | ------ | ----- | ----- | ----- | -------- | ----- | --------- | --------- | ------------- | ---------- | ------------------------ |
   | Amazon | 6,170 | 2,753 | 3,857 | 22       | 334   | 195,791   | 5,694     | 5,508         | 2,753      | 39,159                   |
 
 - MTWM
-
+  
   |      | user    | poi   | Sup    | poi-contain-spu | user-buy-poi | user-buy-spu | user-click-poi |
-| ---- | ------- | ----- | ------ | --------------- | ------------ | ------------ | -------------- |
+  | ---- | ------- | ----- | ------ | --------------- | ------------ | ------------ | -------------- |
   | MTWM | 188,155 | 3,474 | 16,889 | 92,024          | 542,915      | 1,797,283    | 1,477,316      |
 
 - 
-
-  
-
 
 ### How to build a new dataset
 

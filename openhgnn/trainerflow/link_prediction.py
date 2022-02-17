@@ -52,7 +52,8 @@ class LinkPrediction(BaseFlow):
         self.target_link = self.task.dataset.target_link
         self.args.out_node_type = self.task.get_out_ntype()
         self.train_hg = self.task.get_train().to(self.device)
-        if hasattr(self.args, 'flag_add_reverse_edges') or self.args.dataset == 'MTWM':
+        if hasattr(self.args, 'flag_add_reverse_edges') \
+                or self.args.dataset in ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2']:
             self.train_hg = add_reverse_edges(self.train_hg)
         if not hasattr(self.args, 'out_dim'):
             self.args.out_dim = self.args.hidden_dim
@@ -81,7 +82,19 @@ class LinkPrediction(BaseFlow):
         self.max_epoch = args.max_epoch
         
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
-
+        if self.args.mini_batch_flag:
+            train_eid_dict = {
+                etype: self.train_hg.edges(etype=etype, form='eid').cpu()
+                for etype in self.target_link}
+            sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
+            self.dataloader = dgl.dataloading.EdgeDataLoader(
+                self.train_hg.cpu(), train_eid_dict, sampler,
+                negative_sampler=dgl.dataloading.negative_sampler.Uniform(1),
+                batch_size=1024,
+                shuffle=True,
+                drop_last=False,
+                num_workers=4)
+            
     def preprocess(self):
         """
         In link prediction, you will have a positive graph consisting of all the positive examples as edges,
@@ -117,12 +130,21 @@ class LinkPrediction(BaseFlow):
                 embedding = self.model(self.hg, h_dict)
                 score = th.sigmoid(self.task.ScorePredictor(self.task.test_hg, embedding, self.r_embedding))
                 self.task.dataset.save_results(hg=self.task.test_hg, score=score, file_path=self.args.HGB_results_path)
-            return val_metric['valid'], epoch
+            return dict(metric=val_metric, epoch=epoch)
         test_score = self._test_step(split="test")
         # val_score = self._test_step(split="valid")
         self.logger.train_info(self.logger.metric2str(test_score))
-        return test_score
+        return dict(metric=test_score, epoch=epoch)
 
+    def construct_negative_graph(self, hg):
+        e_dict = {
+            etype: hg.edges(etype=etype, form='eid')
+            for etype in hg.canonical_etypes}
+        neg_srcdst = self.negative_sampler(hg, e_dict)
+        neg_pair_graph = dgl.heterograph(neg_srcdst,
+                                         {ntype: hg.number_of_nodes(ntype) for ntype in hg.ntypes})
+        return neg_pair_graph
+    
     def _full_train_setp(self):
         self.model.train()
         h_dict = self.model.input_feature()
@@ -140,14 +162,15 @@ class LinkPrediction(BaseFlow):
     def _mini_train_step(self,):
         self.model.train()
         all_loss = 0
-        for input_nodes, positive_graph, negative_graph, blocks in self.dataloader:
+        loader_tqdm = tqdm(self.dataloader, ncols=120)
+        for input_nodes, positive_graph, negative_graph, blocks in loader_tqdm:
             blocks = [b.to(self.device) for b in blocks]
             positive_graph = positive_graph.to(self.device)
             negative_graph = negative_graph.to(self.device)
             if type(input_nodes) == th.Tensor:
                 input_nodes = {self.category: input_nodes}
-            input_features = extract_embed(self.model.embed_layer(), input_nodes)
-            logits = self.model(blocks, input_features)[self.category]
+            input_features = extract_embed(self.model.input_feature(), input_nodes)
+            logits = self.model(blocks, input_features)
             loss = self.loss_calculation(positive_graph, negative_graph, logits)
             all_loss += loss.item()
             self.optimizer.zero_grad()

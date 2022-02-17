@@ -12,7 +12,8 @@ class OHGBDataset(DGLDataset):
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
-        assert name in ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase', 'ohgbn-Freebase', 'ohgbn-yelp2']
+        assert name in ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase',
+                        'ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
         self.data_path = './openhgnn/dataset/{}.zip'.format(name)
         self.g_path = './openhgnn/dataset/{}/graph.bin'.format(name)
         raw_dir = './openhgnn/dataset'

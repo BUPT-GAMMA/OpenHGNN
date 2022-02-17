@@ -317,6 +317,23 @@ class OHGB_NodeClassification(NodeClassificationDataset):
             category = 'business'
             num_classes = 16
             self.multi_label = True
+        elif dataset_name == 'ohgbn-acm':
+            dataset = OHGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            category = 'paper'
+            num_classes = 3
+            self.meta_paths_dict = {'PAPSP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
+                                              ('paper', 'paper-subject', 'subject'),
+                                              ('subject', 'subject-paper', 'paper')]
+                                    }
+            self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
+                                ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper'))]
+        elif dataset_name == 'ohgbn-imdb':
+            dataset = OHGBDataset(name=dataset_name, raw_dir='')
+            category = 'movie'
+            g = dataset[0].long()
+            num_classes = 3
+            
         self.g, self.category, self.num_classes = g, category, num_classes
     
 

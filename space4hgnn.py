@@ -22,7 +22,9 @@ def Space4HGNN(args):
         args.HGB_results_path = '{}/{}_{}.txt'.format(path, args.dataset[5:], str(i+1))
         print(args)
         flow = build_flow(args, args.task)
-        metric, epoch = flow.train()
+        result = flow.train()
+        metric = result['metric']
+        epoch = result['epoch']
         metric_list.append(metric)
         epoches.append(epoch)
     out_dict = {}
