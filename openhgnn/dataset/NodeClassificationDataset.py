@@ -310,6 +310,23 @@ class OHGB_NodeClassification(NodeClassificationDataset):
             g = dataset[0].long()
             category = 'BOOK'
             num_classes = 8
+            g = add_reverse_edges(g)
+            self.meta_paths_dict = {'BB': [('BOOK', 'BOOK-and-BOOK', 'BOOK')],
+                                    'BFB': [('BOOK', 'BOOK-to-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')],
+                                    'BOFB': [('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                             ('ORGANIZATION', 'ORGANIZATION-in-FILM', 'FILM'),
+                                             ('FILM', 'BOOK-to-FILM-rev', 'BOOK')],
+                                    'BLMB': [('BOOK', 'BOOK-on-LOCATION', 'LOCATION'),
+                                             ('LOCATION', 'MUSIC-on-LOCATION-rev', 'MUSIC'),
+                                             ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')],
+                                    'BPB': [('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'),
+                                            ('PEOPLE', 'PEOPLE-to-BOOK', 'BOOK')],
+                                    'BPSB': [('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'),
+                                             ('PEOPLE', 'PEOPLE-to-SPORTS', 'SPORTS'),
+                                             ('SPORTS', 'BOOK-on-SPORTS-rev', 'BOOK')],
+                                    'BBuB': [('BOOK', 'BUSINESS-about-BOOK-rev', 'BUSINESS'),
+                                             ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK')],
+                                    }
         elif dataset_name == 'ohgbn-yelp2':
             dataset = OHGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()

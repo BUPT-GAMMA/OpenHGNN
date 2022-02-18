@@ -134,6 +134,20 @@ class EarlyStopping(object):
         return self.early_stop
 
     def loss_step(self, loss, model):
+        """
+        
+        Parameters
+        ----------
+        loss Float or torch.Tensor
+        
+        model torch.nn.Module
+
+        Returns
+        -------
+
+        """
+        if isinstance(loss, th.Tensor):
+            loss = loss.item()
         if self.best_loss is None:
             self.best_loss = loss
             self.save_model(model)

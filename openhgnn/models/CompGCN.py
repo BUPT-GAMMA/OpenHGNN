@@ -152,7 +152,7 @@ class CompGraphConvLayer(nn.Module):
 
             wdict = {}
             for i, etype in enumerate(self.rel_names):
-                if etype[1][:4] == 'rev-':
+                if etype[:4] == 'rev-' or etype[-4:] == '-rev':
                     W = self.W_I
                 else:
                     W = self.W_O
