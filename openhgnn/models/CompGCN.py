@@ -180,7 +180,8 @@ class CompGraphConvLayer(nn.Module):
 
                 # Use batch norm
                 if self.batchnorm:
-                    h_self = self.bn(h_self)
+                    if h_self.shape[0] > 1:
+                        h_self = self.bn(h_self)
 
                 # Use drop out
                 n_out_feats = self.dropout(h_self)

@@ -366,7 +366,7 @@ class Config(object):
             self.sup_coef = conf.getfloat("DMGI",'sup_coef')
             self.reg_coef = conf.getfloat("DMGI", "reg_coef")
             self.dropout = conf.getfloat("DMGI", "dropout")
-            self.hid_unit = conf.getint('DMGI', 'hid_unit')
+            self.hidden_dim = conf.getint('DMGI', 'hidden_dim')
             self.num_heads = conf.getint('DMGI', 'num_heads')
             self.patience = conf.getint('DMGI', 'patience')
             self.max_epoch = conf.getint('DMGI', 'max_epoch')

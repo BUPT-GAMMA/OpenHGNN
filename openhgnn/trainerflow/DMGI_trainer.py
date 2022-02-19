@@ -23,7 +23,7 @@ class DMGI_trainer(BaseFlow):
         if hasattr(self.task.dataset, 'in_dim'):
             self.args.in_dim = self.task.dataset.in_dim
         else:
-            self.args.in_dim = self.args.hidden_dim
+            self.args.in_dim = self.hg.ndata['h'][self.category].shape[1]
         # get category num_classes
         self.num_classes = self.task.dataset.num_classes
         self.args.num_classes = self.task.dataset.num_classes
