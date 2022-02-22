@@ -19,10 +19,9 @@ class HERecTrainer(BaseFlow):
 
         self.dataloader = None
 
-        self.metapath = self.task.dataset.meta_paths_dict[self.args.meta_path_keys[0]]
-        self.output_dir = './openhgnn/output/' + self.model_name
-        self.embeddings_file_path = os.path.join(self.output_dir, self.args.dataset + '_' +
-                                                 self.args.meta_path_keys[0] + '_herec_embeddings.npy')
+        self.metapath = self.task.dataset.meta_paths_dict[self.args.meta_path_key]
+        self.embeddings_file_path = os.path.join(self.args.output_dir, self.args.dataset + '_' +
+                                                 self.args.meta_path_key + '_herec_embeddings.npy')
         self.load_trained_embeddings = False
 
     def preprocess(self):

@@ -28,9 +28,7 @@ class Config(object):
         self.task = task
         self.model = model
         self.dataset = dataset
-        self.path = {'output_modelfold': './output/models/',
-                     'input_fold': './dataset/'+self.dataset+'/',
-                     'temp_fold': './output/temp/'+self.model+'/'}
+        self.output_dir = './openhgnn/output/{}'.format(self.model)
         self.optimizer = 'Adam'
         if model == "NSHE":
             self.dim_size = {}
@@ -179,8 +177,7 @@ class Config(object):
             self.neg_size = conf.getint("HERec", "neg_size")
             self.rw_length = conf.getint("HERec", "rw_length")
             self.rw_walks = conf.getint("HERec", "rw_walks")
-            meta_path_keys = conf.get("HERec", "meta_path_keys")
-            self.meta_path_keys = meta_path_keys.split(',')
+            self.meta_path_key = conf.get("HERec", "meta_path_key")
 
         elif model == 'HAN':
             self.lr = conf.getfloat("HAN", "learning_rate")
