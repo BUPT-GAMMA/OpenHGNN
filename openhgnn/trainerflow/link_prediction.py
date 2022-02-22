@@ -51,7 +51,7 @@ class LinkPrediction(BaseFlow):
         
         self.target_link = self.task.dataset.target_link
         self.args.out_node_type = self.task.get_out_ntype()
-        self.train_hg = self.task.get_train().to(self.device)
+        self.train_hg = self.task.get_train()
         if hasattr(self.args, 'flag_add_reverse_edges') \
                 or self.args.dataset in ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2']:
             self.train_hg = add_reverse_edges(self.train_hg)
@@ -81,18 +81,18 @@ class LinkPrediction(BaseFlow):
         self.patience = args.patience
         self.max_epoch = args.max_epoch
         
-        self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
+        self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link).to(self.device)
         if self.args.mini_batch_flag:
+            self.train_hg = self.train_hg.cpu()
             train_eid_dict = {
-                etype: self.train_hg.edges(etype=etype, form='eid').cpu()
+                etype: self.train_hg.edges(etype=etype, form='eid')
                 for etype in self.target_link}
             sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
-            self.train_hg = self.train_hg.cpu()
             self.dataloader = dgl.dataloading.EdgeDataLoader(
                 self.train_hg, train_eid_dict, sampler,
                 negative_sampler=dgl.dataloading.negative_sampler.Uniform(2),
                 # device = th.device('cpu'),
-                batch_size=10240,
+                batch_size=102400,
                 shuffle=True,
                 drop_last=False,
                 num_workers=4)
@@ -104,6 +104,8 @@ class LinkPrediction(BaseFlow):
         The positive graph and the negative graph will contain the same set of nodes as the original graph.
         """
         super(LinkPrediction, self).preprocess()
+        # to('cpu') & to('self.device')
+        self.train_hg = self.train_hg.to(self.device)
         
     def train(self):
         self.preprocess()
