@@ -45,7 +45,7 @@ class AutoML(object):
         for key, value in cur_params.items():
             args.__setattr__(key, value)
         flow = build_flow(args, self.trainerflow)
-        result = flow.train()['metric']
+        result = flow.train()['metric']['test']
         if isinstance(result, tuple):
             score = (result[0] + result[1]) / 2
         elif isinstance(result, dict):

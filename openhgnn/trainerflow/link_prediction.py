@@ -92,7 +92,7 @@ class LinkPrediction(BaseFlow):
                 self.train_hg, train_eid_dict, sampler,
                 negative_sampler=dgl.dataloading.negative_sampler.Uniform(2),
                 # device = th.device('cpu'),
-                batch_size=102400,
+                batch_size=self.args.batch_size,
                 shuffle=True,
                 drop_last=False,
                 num_workers=4)

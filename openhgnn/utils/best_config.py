@@ -39,6 +39,10 @@ BEST_CONFIGS = {
                 'n_layers': 5, 'hidden_dim': 16, 'dropout': 0.5
             },
             'HGBn-IMDB': {
+            },
+            'ohgbn-Freebase': {
+                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 3, 'batch_size': 256, 'fanout': 4, 'dropout': 0.1,
+                'mini_batch_flag': True,
             }
         },
         'CompGCN': {
@@ -63,6 +67,9 @@ BEST_CONFIGS = {
                 'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
                 'mini_batch_flag': True, 'validation': True
             },
+            'ohgbn-Freebase': {
+                'mini_batch_flag': True, 'batch_size': 128,
+            }
         },
         'GTN': {
             'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 64, 'max_epoch': 100, 'patience': 20,
@@ -231,6 +238,12 @@ BEST_CONFIGS = {
                 'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
                 'validation': True
             },
+            'ohgbl-yelp1': {
+                'mini_batch_flag': True, 'n_layers': 2, 'batch_size': 102400
+            },
+            'ohgbl-yelp2': {
+                'mini_batch_flag': False, 'n_layers': 2,
+            }
         },
 
     },
