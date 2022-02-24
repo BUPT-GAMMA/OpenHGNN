@@ -237,10 +237,13 @@ class HIN_NodeClassification(NodeClassificationDataset):
             num_classes = 3
             self.meta_paths_dict = {'PAPSP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
                                               ('paper', 'paper-subject', 'subject'),
+                                              ('subject', 'subject-paper', 'paper')],
+                                    'PAP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')],
+                                    'PSP': [('paper', 'paper-subject', 'subject'),
                                               ('subject', 'subject-paper', 'paper')]
                                     }
-            self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
-                                ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper'))]
+            # self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
+            #                     ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper'))]
             self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset == 'acm4NARS':
             dataset = AcademicDataset(name='acm4NARS', raw_dir='')
