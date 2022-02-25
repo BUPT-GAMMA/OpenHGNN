@@ -404,7 +404,6 @@ class Config(object):
             self.weight_decay = conf.getfloat("HPN", "weight_decay")
             self.seed = conf.getint("HPN", "seed")
             self.dropout = conf.getfloat("HPN", "dropout")
-            self.out_embedsize = conf.getint("HPN", "out_embedsize")
             self.hidden_dim = conf.getint('HPN', 'hidden_dim')
             self.k_layer = conf.getint("HPN", "k_layer")
             self.alpha = conf.getfloat("HPN", "alpha")
@@ -504,8 +503,7 @@ class Config(object):
             self.feats_drop_rate = conf.getfloat("SimpleHGN", "feats_drop_rate")
             self.num_heads = conf.getint("SimpleHGN", "num_heads")
             self.h_dim = conf.getint("SimpleHGN", "h_dim")
-            self.num_layers = conf.getint("SimpleHGN", "num_layers")
-            self.num_edge = conf.getint("SimpleHGN", "num_edge")
+            self.n_layers = conf.getint("SimpleHGN", "n_layers")
             self.beta = conf.getfloat("SimpleHGN", "beta")
             self.residual = conf.getboolean("SimpleHGN", "residual")
             self.mini_batch_flag = False

@@ -342,12 +342,12 @@ class OHGB_NodeClassification(NodeClassificationDataset):
             g = dataset[0].long()
             category = 'paper'
             num_classes = 3
-            self.meta_paths_dict = {'PAPSP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
-                                              ('paper', 'paper-subject', 'subject'),
+            self.meta_paths_dict = {
+                                    'PAP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')],
+                                    'PSP': [('paper', 'paper-subject', 'subject'),
                                               ('subject', 'subject-paper', 'paper')]
                                     }
-            self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
-                                ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper'))]
+                                    
         elif dataset_name == 'ohgbn-imdb':
             dataset = OHGBDataset(name=dataset_name, raw_dir='')
             category = 'movie'

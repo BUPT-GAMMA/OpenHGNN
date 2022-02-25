@@ -49,8 +49,6 @@ class HPN(BaseModel):
         out dimension.
     dropout : float
         Dropout probability.
-    out_embedsizes : int
-        Dimension of the final embedding Z.
     k_layer : int
         propagation times.
     alpha : float
@@ -72,18 +70,17 @@ class HPN(BaseModel):
                     in_size=args.hidden_dim,
                     out_size=args.out_dim,
                     dropout=args.dropout,
-                    out_embedsize=args.out_embedsize,
                     k_layer=args.k_layer,
                     alpha=args.alpha,
                     edge_drop=args.edge_drop
                    )
 
-    def __init__(self, meta_paths, category, in_size,  out_size,  dropout, out_embedsize, k_layer, alpha, edge_drop):
+    def __init__(self, meta_paths, category, in_size,  out_size,  dropout, k_layer, alpha, edge_drop):
         super(HPN, self).__init__()
         self.category = category
         self.layers = nn.ModuleList()
-        self.layers.append(HPNLayer(meta_paths, in_size,  dropout, k_layer, alpha, edge_drop, out_embedsize))
-        self.linear = nn.Linear(out_embedsize, out_size)
+        self.layers.append(HPNLayer(meta_paths, in_size,  dropout, k_layer, alpha, edge_drop))
+        self.linear = nn.Linear(in_size, out_size)
 
     def forward(self, g, h_dict):
     
@@ -96,13 +93,13 @@ class HPN(BaseModel):
 
 class HPNLayer(nn.Module):
 
-    def __init__(self, meta_paths_dict, in_size, dropout, k_layer, alpha, edge_drop, out_embedsize):
+    def __init__(self, meta_paths_dict, in_size, dropout, k_layer, alpha, edge_drop):
         super(HPNLayer, self).__init__()
 
         # semantic projection function fΦ projects node into semantic space
 
         self.hidden = nn.Sequential(
-            nn.Linear(in_features=in_size, out_features=out_embedsize, bias=True),
+            nn.Linear(in_features=in_size, out_features=in_size, bias=True),
             nn.ReLU()
         )
         self.meta_paths_dict = meta_paths_dict

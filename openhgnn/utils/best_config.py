@@ -43,11 +43,15 @@ BEST_CONFIGS = {
             'ohgbn-Freebase': {
                 'hidden_dim': 16, 'n_bases': 40, 'n_layers': 3, 'batch_size': 256, 'fanout': 4, 'dropout': 0.1,
                 'mini_batch_flag': True,
-            }
+            },
+            'ohgbn-acm': {
+                'lr': 0.01, 'hidden_dim': 64, 'dropout': 0.4, 'n_layers': 2, 'evaluation_metric': 'f1'
+            },
+            'ohgbn-yelp2': {'lr': 0.001, 'hidden_dim': 64, 'dropout': 0.3696343130196993, 'n_layers': 3, 'use_self_loop': True, 'n_bases': 3}
         },
         'CompGCN': {
             'general': {
-                'seed': 0, 'patience': 50, 'validation': True, 'evaluation_metric': 'acc'
+                'seed': 0, 'patience': 100, 'validation': True, 'evaluation_metric': 'acc'
             },
             'aifb': {
                 'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
@@ -69,7 +73,9 @@ BEST_CONFIGS = {
             },
             'ohgbn-Freebase': {
                 'mini_batch_flag': True, 'batch_size': 128,
-            }
+            },
+            'ohgbn-acm': {'lr': 0.005, 'hidden_dim': 128, 'dropout': 0.1596131840413769, 'n_layers': 2,
+                          'comp_fn': 'sub', 'evaluation_metric': 'f1'}
         },
         'GTN': {
             'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 128, 'max_epoch': 100, 'patience': 20,
@@ -83,6 +89,9 @@ BEST_CONFIGS = {
             'dblp4GTN': {
                 'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,
             },
+            'ohgbn-acm': {
+                'num_layers': 2, 'num_channels': 2, 'adaptive_lr_flag': True,
+            }
         },
         'fastGTN': {
             'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 64, 'max_epoch': 100, 'patience': 20,
@@ -109,6 +118,10 @@ BEST_CONFIGS = {
             'dblp4GTN': {
                 'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,
             },
+            'ohgbn-acm': {
+                'lr': 0.005, 'hidden_dim': 64, 'weight_decay': 0.005, 'num_layers': 2, 'num_channels': 3,
+                'norm_emd_flag': False, 'identity': False, 'adaptive_lr_flag': True,
+            }
         },
         'HAN': {
             'general': {},
@@ -124,9 +137,14 @@ BEST_CONFIGS = {
             },
             'HGBn-ACM': {
             },
-            'HGBn-DBLP': {
-            }
+            'ohgbn-acm': {'num_heads': [8, 8]}
 
+        },
+        'HPN': {
+          'general': {},
+          'ohgbn-acm': {
+'lr': 0.01, 'hidden_dim': 64, 'dropout': 0.18847454282168496, 'n_layers': 2, 'out_embedsize': 64, 'k_layer': 3, 'alpha': 0.2, 'edge_drop': 0
+          }
         },
         'NARS': {
             'general': {},
@@ -146,6 +164,8 @@ BEST_CONFIGS = {
                 'lr': 0.001, 'num_heads': [8], 'num_hops': 2, 'hidden_dim': 64, 'dropout': 0.5, 'weight_decay': 0.001,
                 'num_epochs': 200, 'patience': 100, 'metric': 'acc', 'ff_layer': 2,
             },
+            'ohgbn-acm': {'lr': 0.001, 'hidden_dim': 32, 'dropout': 0.3550535171614572, 'num_heads': 2,
+                          'num_node_layer': 2, 'num_hops': 2, 'evaluation_metric': 'f1'}
 
 
         },
@@ -207,12 +227,20 @@ BEST_CONFIGS = {
             },
             'am': {'hidden_dim': 16, 'num_node_layer': 2, 'num_edge_layer': 2, 'rw_len': 4, 'batch_size': 5000
                    },
+            'ohgbn-acm': {'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.4, 'n_layers': 2,
+                          'num_channels': 2, 'num_node_layer': 2, 'num_edge_layer': 2}
         },
         'HGSL': {
             'general': {},
             'acm4GTN': {
                 'undirected_relations': 'author-paper,paper-subject', 'gnn_dropout': 0, 'fs_eps': 0.8,
                 'fp_eps': 0.2, 'mp_eps': 0.6,
+            }
+        },
+        'SimpleHGN': {
+            'general': {},
+            'ohgn-acm': {
+
             }
         }
 
