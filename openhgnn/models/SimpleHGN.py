@@ -8,7 +8,6 @@ import torch.nn.functional as F
 
 from . import BaseModel, register_model
 
-
 @register_model('SimpleHGN')
 class SimpleHGN(BaseModel):
     @classmethod
@@ -177,17 +176,26 @@ class SimpleHGNConv(nn.Module):
             res_attn = g.edata['alpha']
             edge_attention = edge_attention * \
                              (1 - self.beta) + res_attn * self.beta
+        if self.num_heads == 1:
+            edge_attention = edge_attention[:, 0]
+            edge_attention = edge_attention.unsqueeze(1)
 
         with g.local_scope():
-            h_prime = []
-            emb = emb.permute(1, 0, 2).contiguous()
-            for i in range(self.num_heads):
-                g.edata['alpha'] = edge_attention[:, i]
-                g.srcdata.update({'emb': emb[i]})
-                g.update_all(Fn.u_mul_e('emb', 'alpha', 'm'),
-                             Fn.sum('m', 'emb'))
-                h_prime.append(g.ndata['emb'])
-            h_output = torch.cat(h_prime, dim=1)
+            emb = emb.permute(0, 2, 1).contiguous()
+            g.edata['alpha'] = edge_attention
+            g.srcdata['emb'] = emb
+            g.update_all(Fn.u_mul_e('emb', 'alpha', 'm'),
+                         Fn.sum('m', 'emb'))
+            # g.apply_edges(Fn.u_mul_e('emb', 'alpha', 'm'))
+            h_output = g.ndata['emb'].view(-1, self.out_features * self.num_heads)
+            # h_prime = []
+            # for i in range(self.num_heads):
+            #     g.edata['alpha'] = edge_attention[:, i]
+            #     g.srcdata.update({'emb': emb[i]})
+            #     g.update_all(Fn.u_mul_e('emb', 'alpha', 'm'),
+            #                  Fn.sum('m', 'emb'))
+            #     h_prime.append(g.ndata['emb'])
+            # h_output = torch.cat(h_prime, dim=1)
 
         g.edata['alpha'] = edge_attention
         if self.residual:
