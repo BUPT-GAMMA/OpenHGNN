@@ -80,4 +80,5 @@ SUPPORTED_MODELS = {
     'general_HGNN': 'openhgnn.models.general_HGNN',
     'HDE': 'openhgnn.models.HDE',
     'SimpleHGN': 'openhgnn.models.SimpleHGN',
+    'GATNE-T': 'openhgnn.models.GATNE',
 }

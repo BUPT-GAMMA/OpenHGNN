@@ -34,4 +34,5 @@ SpecificTrainerflow = {
     'SLiCE':'slicetrainer',
     'HeGAN': 'HeGAN_trainer',
     'HDE': 'hde_trainer',
+    'GATNE-T': 'GATNE_trainer',
 }
