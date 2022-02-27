@@ -276,6 +276,11 @@ BEST_CONFIGS = {
                 'mini_batch_flag': False, 'n_layers': 2,
             }
         },
+        'CompGCN': {
+            'ohgbl-MTWM': {
+                'weight_decay': 0.00001, 'max_epoch':50，'patience': 50
+            }
+        },
 
     },
     "recommendation": {
