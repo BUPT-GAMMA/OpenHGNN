@@ -266,6 +266,9 @@ BEST_CONFIGS = {
                 'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
                 'validation': True
             },
+            'ohgbl-MTWM': {
+                'mini_batch_flag': True, 'n_layers': 2, 'batch_size': 12800
+            },
             'ohgbl-yelp1': {
                 'mini_batch_flag': True, 'n_layers': 2, 'batch_size': 102400
             },
