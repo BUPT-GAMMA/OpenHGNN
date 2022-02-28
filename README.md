@@ -4,13 +4,21 @@
 [![Documentation Status](https://readthedocs.org/projects/openhgnn/badge/?version=latest)](https://openhgnn.readthedocs.io/en/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
 
-[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)
+[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN) | [**Space4HGNN**](./space4hgnn) | [**Benchmark&Leaderboard**](./openhgnn/dataset/ohgb.md)
 
 This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https://pytorch.org/). We integrate SOTA models of heterogeneous graph.
 
 ## News
 
-We release the latest version v0.1.1 on OpenI with Chinese. 
+**2021-02-28**
+
+We release the latest version v0.2.
+
+- New Models
+- [Space4HGNN](./space4hgnn)
+- [Benchmark&Leaderboard](./openhgnn/dataset/ohgb.md)
+
+**2021-01-07**
 
 启智社区用户可以享受到如下功能：
 
@@ -29,7 +37,9 @@ We release the latest version v0.1.1 on OpenI with Chinese.
 #### Requirements and Installation
 
 - Python  >= 3.6
+
 - [PyTorch](https://pytorch.org/get-started/locally/)  >= 1.7.1
+
 - [DGL](https://github.com/dmlc/dgl) >= 0.7.0
 
 - CPU or NVIDIA GPU, Linux, Python3
@@ -76,17 +86,17 @@ usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
 
 *optional arguments*:
 
-``-h, --help``	show this help message and exit
+``-h, --help``    show this help message and exit
 
-``--model -m ``	name of models
+``--model -m ``    name of models
 
-``--task -t``	name of task
+``--task -t``    name of task
 
-``--dataset -d``	name of datasets
+``--dataset -d``    name of datasets
 
-``--gpu -g``	controls which gpu you will use. If you do not have gpu, set -g -1.
+``--gpu -g``    controls which gpu you will use. If you do not have gpu, set -g -1.
 
-``--use_best_config``	use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. The best_config will override the parameter in config.ini.
+``--use_best_config``    use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. The best_config will override the parameter in config.ini.
 
 ``--use_hpo`` Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
 
@@ -144,4 +154,3 @@ The link will give some basic usage.
 OpenHGNN Team[GAMMA LAB], DGL Team and Peng Cheng Laboratory.
 
 See more in [CONTRIBUTING](./CONTRIBUTING.md).
-

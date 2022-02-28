@@ -6,32 +6,7 @@ So dataset should load not only a heterograph[DGLGraph], but also some index inv
 
 ### Open Heterogeneous Graph Benchmark
 
-We release a benchmark of heterogeneou graph for link prediction and node classification task.
-
-| Dataset  | # node types | # nodes    | # link types | # links    | # attributes | # attributed nodes | # tasks                            | # label types | # label nodes |
-| -------- | ------------ | ---------- | ------------ | ---------- | ------------ | ------------------ | ---------------------------------- | ------------- | ------------- |
-| MTWM     | 3            | 208,518    | 4            | 3,909,538  | None         | None               | Link prediction                    | None          | None          |
-| YELP_1   | 4            | 2,353,365  | 4            | 10,417,742 | None         | None               | Link prediction                    | business      | 5484          |
-| YELP_2   | 4            | 82,465     | 4            | 31,206,253 | None         | None               | Link prediction                    | None          | None          |
-| Freebase | 8            | 12,164,758 | 36           | 63,906,230 | None         | None               | Classification and Link prediction | book          | 47,190        |
-
-#### For link prediction task
-
-##### ohgbl-MTWM
-
-| Dataset | # node types | # nodes | # user (node) | # poi (node) | # spu (node) | # link types | # links   | # attributes |     | task            | target link                |     |
-| ------- | ------------ | ------- | ------------- | ------------ | ------------ | ------------ | --------- | ------------ | --- | --------------- | -------------------------- | --- |
-| MTWM    | 3            | 208,518 | 188,155       | 3,474        | 16,889       | 4            | 3,909,538 | None         |     | Link prediction | (user, user-buy-spu, user) |     |
-
-###### **Graph:**
-
-##### ohgbl-yelp1
-
-| Dataset | # node types | # nodes   | # link types | # links    | # attributes | # attributed nodes | # tasks         | # label types | # label nodes |
-| ------- | ------------ | --------- | ------------ | ---------- | ------------ | ------------------ | --------------- | ------------- | ------------- |
-| YELP_1  | 4            | 2,353,365 | 4            | 10,417,742 | None         | None               | Link prediction | business      | 5484          |
-
-
+We release a benchmark of heterogeneou graph named [Open Heterogeneous Graph Benchmark (OHGB)](./ohgb.md) and leaderboard for link prediction and node classification task. 
 
 ### NodeClassificationDataset
 

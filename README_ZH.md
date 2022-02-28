@@ -1,16 +1,24 @@
-# 异质图神经网络开源工具包 
+# 异质图神经网络开源工具包
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)
 [![Documentation Status](https://readthedocs.org/projects/openhgnn-zh-cn/badge/?version=latest)](https://openhgnn.readthedocs.io/zh_CN/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
 
-[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)｜ [**Github Community (English)**](https://github.com/BUPT-GAMMA/OpenHGNN)
+[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)｜ [**Github Community (English)**](https://github.com/BUPT-GAMMA/OpenHGNN) ｜[**Space4HGNN**](./space4hgnn) ｜[**Benchmark&Leaderboard**](./openhgnn/dataset/ohgb.md)
 
 OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包，集成了异质图神经网络的前沿模型。
 
 ## 新闻
 
-我们于启智社区开源了v0.1.1中文版本。
+**2021-02-28**
+
+我们开源了0.2版本。
+
+- 新增模型
+- 异质图神经网络的设计空间：[Space4HGNN](./space4hgnn)
+- 基准数据集以及排行榜：[Benchmark&Leaderboard](./openhgnn/dataset/ohgb.md)
+
+**2021-01-07**
 
 启智社区用户可以享受到如下功能：
 
@@ -32,7 +40,9 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 #### 环境要求
 
 - Python  >= 3.6
+
 - [PyTorch](https://pytorch.org/get-started/locally/)  >= 1.7.1
+
 - [DGL](https://github.com/dmlc/dgl) >= 0.7.0
 
 - CPU 或者 NVIDIA GPU, Linux, Python3
@@ -77,17 +87,17 @@ python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 
 *可选参数*:
 
-``-h, --help``	展示帮助信息并退出
+``-h, --help``    展示帮助信息并退出
 
-``--model -m ``	模型名
+``--model -m ``    模型名
 
-``--task -t``	任务名
+``--task -t``    任务名
 
 ``--dataset -d``    数据集名
 
-``--gpu -g``	控制你使用哪一个GPU，如果没有GPU，设定 -g -1。
+``--gpu -g``    控制你使用哪一个GPU，如果没有GPU，设定 -g -1。
 
-``--use_best_config``	use_best_config 意味着你使用该模型在该数据集下最优的配置，如果你想要设定不同的超参数,请手动修改 [配置文件](./openhgnn/config.ini)。使用最佳配置会覆盖配置文件中的参数。
+``--use_best_config``    use_best_config 意味着你使用该模型在该数据集下最优的配置，如果你想要设定不同的超参数,请手动修改 [配置文件](./openhgnn/config.ini)。使用最佳配置会覆盖配置文件中的参数。
 
 ``--use_hpo`` 除了 use_best_config，我们还提供了一个超参数的 [样例](./openhgnn/auto) 来自动查找最佳超参数。
 
@@ -109,8 +119,8 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 表格中的链接给出了模型的基本使用方法.
 
-| 模型                                                      | 节点分类             | 链路预测             | 推荐               |
-| -------------------------------------------------------- | ------------------- | ------------------ | ------------------ |
+| 模型                                                       | 节点分类               | 链路预测               | 推荐                 |
+| -------------------------------------------------------- | ------------------ | ------------------ | ------------------ |
 | [Metapath2vec](./openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark: |                    |                    |
 | [RGCN](./openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark: | :heavy_check_mark: |                    |
 | [HERec](./openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark: |                    |                    |
@@ -145,4 +155,3 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 OpenHGNN团队[北邮 GAMMA 实验室]、DGL 团队和鹏城实验室。
 
 [贡献者名单](./CONTRIBUTING.md)
-

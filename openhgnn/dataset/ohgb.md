@@ -29,15 +29,15 @@ Evaluation metric is Macro-F1 and Micro-F1.
 
 | `ohgbn-acm` | Macro-F1 | Micro-F1 |
 | ----------- | -------- | -------- |
-| RGCN        | 0.9242   | 0.9242   |
-| RSHN        | 0.9226   | 0.9233   |
-| GTN         | 0.9203   | 0.9200   |
-| CompGCN     | 0.9128   | 0.9125   |
 | MHNF        | 0.9259   | 0.9252   |
+| RGCN        | 0.9242   | 0.9242   |
 | NARS        | 0.9241   | 0.9233   |
-| HAN         | 0.9191   | 0.9181   |
+| RSHN        | 0.9226   | 0.9233   |
 | HPN         | 0.9214   | 0.9200   |
+| GTN         | 0.9203   | 0.9200   |
+| HAN         | 0.9191   | 0.9181   |
 | SimpleHGN   | 0.9189   | 0.9181   |
+| CompGCN     | 0.9128   | 0.9125   |
 | HGT         | 0.8946   | 0.8941   |
 
 ### Dataset `ohgbn-imdb`
@@ -61,12 +61,12 @@ Evaluation metric is Macro-F1 and Micro-F1.
 | ------------ | -------- | -------- |
 | RGCN         | 0.5757   | 0.6366   |
 | RSHN         | 0.5914   | 0.6127   |
-| GTN          | 0.5791   | 0.6003   |
-| CompGCN      | 0.5869   | 0.6148   |
 | MHNF         | 0.5913   | 0.6114   |
+| CompGCN      | 0.5869   | 0.6148   |
+| GTN          | 0.5791   | 0.6003   |
 | NARS         | 0.5470   | 0.6259   |
-| HAN          | 0.5530   | 0.5605   |
 | HPN          | 0.5596   | 0.5703   |
+| HAN          | 0.5530   | 0.5605   |
 | SimpleHGN    |          |          |
 | HGT          | 0.5440   | 0.5519   |
 
@@ -86,7 +86,7 @@ Evaluation metric is Macro-F1 and Micro-F1.
 
 | `ohgbn-yelp2` | Macro_f1 | Micro_f1 |
 | ------------- | -------- | -------- |
-| RGCN          |          |          |
+| RGCN          | 0.0504   | 0.4044   |
 | SimpleHGN     | 0.0504   | 0.4044   |
 
 ### Dataset `ohgbn-Freebase`
@@ -109,11 +109,10 @@ Evaluation metric is Macro-F1 and Micro-F1.
 
 ## Link Prediction Task
 
-| **Dataset**   | #node types | #nodes | #link types | #links     | #attributes dimension | #attributed nodes | #label types | #labeled nodes |
-| ------------- | ----------- | ------ | ----------- | ---------- | --------------------- | ----------------- | ------------ | -------------- |
-| `ohgbl-MTWM`  | 3           | 8,994  | 2           | 25,922     | 1,902                 | 8,994             | 3            | 3,025          |
-| `ohgbl-yelp1` | 3           | 12,772 | 4           | 37,288     | 1,256                 | 12,772            | 3            | 2,939          |
-| `ohgbl-yelp2` | 4           | 82,465 | 4           | 30,542,675 | N/A                   | N/A               | 16           | 5,484          |
+| **Dataset**   | #node types | #nodes    | #link types | #links     | #attributes dimension |
+| ------------- | ----------- | --------- | ----------- | ---------- | --------------------- |
+| `ohgbl-MTWM`  | 3           | 208,518   | 4           | 3,909,538  | N/A                   |
+| `ohgbl-yelp1` | 3           | 2,353,365 | 4           | 10,417,742 | N/A                   |
 
 ### Dataset `ohgbl-MTWM`
 
@@ -133,7 +132,7 @@ Evaluation metric is roc_auc.
 | `ohgbl-MTWM` | roc_auc |
 | ------------ | ------- |
 | RGCN         | 0.7044  |
-| CompGCN      | 0.6908  |
+| CompGCN      | 0.6988  |
 
 ### Dataset `ohgbl-yelp1`
 
@@ -148,9 +147,8 @@ Evaluation metric is roc_auc.
 
 **Leaderboard:**
 
-Evaluation metric is roc_auc.
+Evaluation metric is roc_auc
 
 | `ohgbl-yelp1` | roc_auc |
 | ------------- | ------- |
-| RGCN          |         |
 | CompGCN       | 0.6121  |
