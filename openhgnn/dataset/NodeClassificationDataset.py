@@ -353,6 +353,9 @@ class OHGB_NodeClassification(NodeClassificationDataset):
             category = 'movie'
             g = dataset[0].long()
             num_classes = 3
+            self.meta_paths_dict = {
+                'MAM': [('movie', 'movie-actor', 'actor'), ('actor', 'actor-movie', 'movie')],
+                'MDM': [('movie', 'movie-director', 'director'), ('director', 'director-movie', 'movie')]}
             
         self.g, self.category, self.num_classes = g, category, num_classes
     
