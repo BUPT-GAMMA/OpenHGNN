@@ -1,5 +1,7 @@
 # Design Space for Heterogeneous Graph Neural Network
 
+Paper: [Space4HGNN: A Novel, Modularized and Reproducible Platform to Evaluate Heterogeneous Graph Neural Network](https://arxiv.org/abs/2202.09177)
+
 Following [GraphGym](https://github.com/snap-stanford/GraphGym), we release a platform Space4HGNN for designing and evaluating Heterogeneous Graph Neural Networks (HGNN). It is implemented with PyTorch and DGL, using the OpenHGNN package.
 
 ## How to run
@@ -122,7 +124,7 @@ If you encounter the error ``bash: ./space4hgnn/parallel.sh: Permission denied``
 
 ### 3 Analyze the results
 
-#### 3.1 Gather all results 
+#### 3.1 Gather all results
 
 To gather all experiments results, we should run the following command to gather all results into one ``.csv`` file.
 

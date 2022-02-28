@@ -66,8 +66,8 @@ Evaluation metric is Macro-F1 and Micro-F1.
 | GTN          | 0.5791   | 0.6003   |
 | NARS         | 0.5470   | 0.6259   |
 | HPN          | 0.5596   | 0.5703   |
+| SimpleHGN    | 0.5521   | 0.5635   |
 | HAN          | 0.5530   | 0.5605   |
-| SimpleHGN    |          |          |
 | HGT          | 0.5440   | 0.5519   |
 
 ### Dataset `ohgbn-yelp2`
