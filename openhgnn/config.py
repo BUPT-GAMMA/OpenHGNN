@@ -232,7 +232,7 @@ class Config(object):
             if self.mini_batch_flag:
                 self.batch_size = conf.getint("MAGNN", "batch_size")
                 self.num_samples = conf.getint("MAGNN", "num_samples")
-
+            self.hidden_dim = self.h_dim * self.num_heads
         
         elif model == 'RHGNN':
             self.lr = conf.getfloat("RHGNN", "learning_rate")

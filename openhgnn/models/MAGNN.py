@@ -12,6 +12,10 @@ from dgl.utils import expand_as_pair
 from operator import itemgetter
 from . import BaseModel, register_model
 
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import f1_score
+from sklearn.svm import LinearSVC
+
 '''
 model
 '''
@@ -38,6 +42,9 @@ class MAGNN(BaseModel):
             in_feats = {'A': 334, 'P': 14328, 'T': 7723, 'V': 20}
             metapath_idx_dict = mp_instance_sampler(hg, metapath_list, 'dblp4MAGNN')
 
+        else:
+            raise NotImplementedError("MAGNN on dataset {} has not been implemented".format(args.dataset))
+
         return cls(ntypes=ntypes,
                    h_feats=args.h_dim,
                    inter_attn_feats=args.inter_attn_feats,
@@ -51,7 +58,8 @@ class MAGNN(BaseModel):
                    metapath_idx_dict=metapath_idx_dict)
 
     def __init__(self, ntypes, h_feats, inter_attn_feats, num_heads, num_classes, num_layers,
-                 metapath_list, edge_type_list, dropout_rate, mp_instances, encoder_type='RotateE', activation=F.elu):
+                 metapath_list, edge_type_list, dropout_rate, metapath_idx_dict, encoder_type='RotateE',
+                 activation=F.elu):
         r"""
 
         Description
@@ -153,7 +161,7 @@ class MAGNN(BaseModel):
         Other Parameters like weight matrix don't need to be updated.
 
         '''
-        if not self.is_backup: # the params of the original graph has not been stored
+        if not self.is_backup:  # the params of the original graph has not been stored
             self.backup['metapath_idx_dict'] = self.metapath_idx_dict
             self.backup['metapath_list'] = self.metapath_list
             self.backup['dst_ntypes'] = self.dst_ntypes
@@ -198,22 +206,15 @@ class MAGNN(BaseModel):
         dict
             The embeddings before the output projection. e.g dict['M'] contains embeddings of every node of M type.
         """
-        with g.local_scope():
 
-         
-            for ntype in self.ntypes:
-                g.nodes[ntype].data['h'] = feat_dict[ntype]
-            #     print(g.nodes[ntype].data['h'].shape)
-
-            # hidden layer
-            for i in range(self.num_layers - 1):
-                h, _ = self.layers[i](g, self.metapath_idx_dict)
-                for key in h.keys():
-                    h[key] = self.activation(h[key])
-                g.ndata['h'] = h
+        # hidden layer
+        for i in range(self.num_layers - 1):
+            h, _ = self.layers[i](feat_dict, self.metapath_idx_dict)
+            for key in h.keys():
+                h[key] = self.activation(h[key])
 
         # output layer
-        h_output, embedding = self.layers[-1](h, self.metapath_idx_dict)
+        h_output, embedding = self.layers[-1](feat_dict, self.metapath_idx_dict)
 
         # return h_output, embedding
         return h_output
@@ -227,9 +228,9 @@ class MAGNN_layer(nn.Module):
         self.inter_attn_feats = inter_attn_feats
         self.out_feats = out_feats
         self.num_heads = num_heads
-        self.metapath_list = metapath_list # ['M-D-M', 'M-A-M', ...]
-        self.ntypes = ntypes # ['M', 'D', 'A']
-        self.edge_type_list = edge_type_list # ['M-A', 'A-M', ...]
+        self.metapath_list = metapath_list  # ['M-D-M', 'M-A-M', ...]
+        self.ntypes = ntypes  # ['M', 'D', 'A']
+        self.edge_type_list = edge_type_list  # ['M-A', 'A-M', ...]
         self.dst_ntypes = dst_ntypes
         self.encoder_type = encoder_type
         self.last_layer = last_layer
@@ -280,11 +281,12 @@ class MAGNN_layer(nn.Module):
             self._output_projection = nn.Linear(in_features=num_heads * in_feats, out_features=num_heads * out_feats)
         nn.init.xavier_normal_(self._output_projection.weight, gain=1.414)
 
-    def forward(self, g, metapath_idx_dict):
-        with g.local_scope():
-            # Intra-metapath latent transformation
-            for _metapath in self.metapath_list:
-                self.intra_metapath_trans(g, metapath=_metapath, metapath_idx_dict=metapath_idx_dict)
+    def forward(self, feat_dict, metapath_idx_dict):
+        # Intra-metapath latent transformation
+        feat_intra = {}
+        for _metapath in self.metapath_list:
+            feat_intra[_metapath] = \
+                self.intra_metapath_trans(feat_dict, metapath=_metapath, metapath_idx_dict=metapath_idx_dict)
 
         # Inter-metapath latent transformation
         feat_inter = \
@@ -318,8 +320,8 @@ class MAGNN_layer(nn.Module):
         for metapath in metapath_list:
             _metapath = metapath.split('-')
             meta_feat = feat_intra[metapath]
-            meta_feat = th.tanh(self.inter_linear[_metapath[0]](meta_feat)).mean(dim=0) # s_pi
-            meta_s[metapath] = self.inter_attn_vec[_metapath[0]](meta_feat) # e_pi
+            meta_feat = th.tanh(self.inter_linear[_metapath[0]](meta_feat)).mean(dim=0)  # s_pi
+            meta_s[metapath] = self.inter_attn_vec[_metapath[0]](meta_feat)  # e_pi
 
         for ntype in self.ntypes:
             if ntype in self.dst_ntypes:
@@ -342,7 +344,6 @@ class MAGNN_layer(nn.Module):
                 feat_inter[ntype] = feat_dict[ntype]
         return feat_inter
 
-
     def encoder(self, feat_dict, metapath, metapath_idx):
         _metapath = metapath.split('-')
         device = feat_dict[_metapath[0]].device
@@ -356,8 +357,8 @@ class MAGNN_layer(nn.Module):
             temp_r_vec[0, :, 0] = 1
 
             for i in range(1, len(_metapath), 1):
-                edge_type = '{}-{}'.format(_metapath[i-1], _metapath[i])
-                temp_r_vec[i] = self.complex_hada(temp_r_vec[i-1], self.r_vec_dict[edge_type])
+                edge_type = '{}-{}'.format(_metapath[i - 1], _metapath[i])
+                temp_r_vec[i] = self.complex_hada(temp_r_vec[i - 1], self.r_vec_dict[edge_type])
                 feat[i] = self.complex_hada(feat[i], temp_r_vec[i], opt='feat')
 
             feat = feat.reshape(feat.shape[0], feat.shape[1], -1)
@@ -419,34 +420,32 @@ class MAGNN_attn_intra(nn.Module):
     def reset_parameters(self):
         nn.init.xavier_normal_(self.attn_r, gain=1.414)
 
-
     def forward(self, feat, metapath, metapath_idx):
         _metapath = metapath.split('-')
         device = feat[0].device
-        h_meta = self.feat_drop(feat[0]).view(-1, self._num_heads, self._out_feats) # feature matrix of metapath instances
+        h_meta = self.feat_drop(feat[0]).view(-1, self._num_heads,
+                                              self._out_feats)  # feature matrix of metapath instances
 
         # metapath(right) part of attention
         er = (h_meta * self.attn_r).sum(dim=-1).unsqueeze(-1)
 
         graph_data = {
             ('meta_inst', 'meta2{}'.format(_metapath[0]), _metapath[0]): (th.arange(0, metapath_idx.shape[0]),
-                                                      th.tensor(metapath_idx[:, 0]), )
+                                                                          th.tensor(metapath_idx[:, 0]),)
         }
         num_nodes_dict = {'meta_inst': metapath_idx.shape[0], _metapath[0]: feat[1].shape[0]}
 
         g_meta = dgl.heterograph(graph_data, num_nodes_dict=num_nodes_dict).to(device)
 
         # feature vector of metapath instances and nodes
-        g_meta.nodes['meta_inst'].data.update({'feat_src':h_meta, 'er':er})
+        g_meta.nodes['meta_inst'].data.update({'feat_src': h_meta, 'er': er})
         # g_meta.nodes[metapath[0]].data.update({'feat':feat[1]})
-
 
         # compute attention without concat with hv
         g_meta.apply_edges(func=fn.copy_u('er', 'e'), etype='meta2{}'.format(_metapath[0]))
 
         e = self.leaky_relu(g_meta.edata.pop('e'))
         g_meta.edata['a'] = self.attn_drop(edge_softmax(g_meta, e))
-
 
         # message passing, there's only one edge type
         # by default DGL would fill nodes without in-degree with zero
@@ -461,6 +460,7 @@ class MAGNN_attn_intra(nn.Module):
 '''
 methods
 '''
+
 
 def mp_instance_sampler(g, metapath_list, dataset):
     """
@@ -491,9 +491,9 @@ def mp_instance_sampler(g, metapath_list, dataset):
 
     file_dir = 'openhgnn/output/MAGNN/'
     file_addr = file_dir + '{}'.format(dataset) + '_mp_inst.pkl'
-    test = True # TODO
+    test = True  # TODO
 
-    if os.path.exists(file_addr) and test is False: # TODO
+    if os.path.exists(file_addr) and test is False:  # TODO
         with open(file_addr, 'rb') as file:
             res = pickle.load(file)
     else:
@@ -509,10 +509,10 @@ def mp_instance_sampler(g, metapath_list, dataset):
         for metapath in metapath_list:
             res[metapath] = None
             _metapath = metapath.split('-')
-            for i in range(1, len(_metapath)-1):
+            for i in range(1, len(_metapath) - 1):
                 if i == 1:
-                    res[metapath] = etype_idx_dict['-'.join(_metapath[:i+1])]
-                feat_j = etype_idx_dict['-'.join(_metapath[i:i+2])]
+                    res[metapath] = etype_idx_dict['-'.join(_metapath[:i + 1])]
+                feat_j = etype_idx_dict['-'.join(_metapath[i:i + 2])]
                 col_i = res[metapath].columns[-1]
                 col_j = feat_j.columns[0]
                 res[metapath] = pd.merge(res[metapath], feat_j,
@@ -527,6 +527,7 @@ def mp_instance_sampler(g, metapath_list, dataset):
             pickle.dump(res, file)
 
     return res
+
 
 def mini_mp_instance_sampler(seed_nodes, mp_instances, num_samples):
     '''
@@ -576,6 +577,7 @@ def mini_mp_instance_sampler(seed_nodes, mp_instances, num_samples):
 
     return mini_mp_inst
 
+
 def svm_test(X, y, test_sizes=(0.2, 0.4, 0.6, 0.8), repeat=10):
     # This method is implemented by author
     random_states = [182318 + i for i in range(repeat)]
@@ -597,4 +599,3 @@ def svm_test(X, y, test_sizes=(0.2, 0.4, 0.6, 0.8), repeat=10):
         result_macro_f1_list.append((np.mean(macro_f1_list), np.std(macro_f1_list)))
         result_micro_f1_list.append((np.mean(micro_f1_list), np.std(micro_f1_list)))
     return result_macro_f1_list, result_micro_f1_list
-
