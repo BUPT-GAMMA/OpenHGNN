@@ -3,10 +3,10 @@ import torch.nn as nn
 import dgl.nn as dglnn
 import torch.nn.functional as F
 from . import BaseModel, register_model
-from .micro_layer import CompConv
-from openhgnn.utils.dgl_graph import edata_in_out_mask
+from openhgnn.layers.micro_layer import CompConv
+from ..utils.dgl_graph import edata_in_out_mask
 from ..utils import get_nodes_dict
-
+from ..utils.utils import ccorr
 '''
 Here, we present the implementation details for each task used for evaluation in the paper. 
 For all the tasks, we used COMPGCN build on PyTorch geometric framework (Fey & Lenssen, 2019).
@@ -30,7 +30,7 @@ class CompGCN(BaseModel):
 
     @classmethod
     def build_model_from_args(cls, args, hg):
-        return cls(args.in_dim, args.hidden_dim, args.out_dim,
+        return cls(args.hidden_dim, args.hidden_dim, args.out_dim,
                    hg.etypes,
                    get_nodes_dict(hg), len(hg.etypes),
                    args.n_layers, comp_fn=args.comp_fn, dropout=args.dropout
@@ -152,7 +152,7 @@ class CompGraphConvLayer(nn.Module):
 
             wdict = {}
             for i, etype in enumerate(self.rel_names):
-                if etype[1][:4] == 'rev-':
+                if etype[:4] == 'rev-' or etype[-4:] == '-rev':
                     W = self.W_I
                 else:
                     W = self.W_O
@@ -172,7 +172,7 @@ class CompGraphConvLayer(nn.Module):
                 elif self.comp_fn == 'mul':
                     h_self = self.W_S(inputs_dst[n] * r_feats[-1])
                 elif self.comp_fn == 'ccorr':
-                    h_self = self.W_S(inputs_dst[n], r_feats[-1])
+                    h_self = self.W_S(ccorr(inputs_dst[n], r_feats[-1]))
                 else:
                     raise Exception('Only supports sub, mul, and ccorr')
                 h_self.add_(emd)
@@ -180,7 +180,8 @@ class CompGraphConvLayer(nn.Module):
 
                 # Use batch norm
                 if self.batchnorm:
-                    h_self = self.bn(h_self)
+                    if h_self.shape[0] > 1:
+                        h_self = self.bn(h_self)
 
                 # Use drop out
                 n_out_feats = self.dropout(h_self)

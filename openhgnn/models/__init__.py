@@ -1,8 +1,8 @@
 import importlib
-from.NEW_model import MLP_follow_model
+from .NEW_model import MLP_follow_model
 from .base_model import BaseModel
-from .EmbedLayer import HeteroEmbedLayer, hetero_linear, multi_2Linear
-from .layers import HeteroLinearLayer, HeteroMLPLayer
+import sys
+sys.path.append("..")
 
 MODEL_REGISTRY = {}
 
@@ -54,17 +54,30 @@ SUPPORTED_MODELS = {
     "CompGCN": "openhgnn.models.CompGCN",
     "HetGNN": "openhgnn.models.HetGNN",
     'RGCN': 'openhgnn.models.RGCN',
+    "RGAT": 'openhgnn.models.RGAT',
     'RSHN': 'openhgnn.models.RSHN',
-    'Metapath2vec': 'openhgnn.models.Metapath2vec',
+    'Metapath2vec': 'openhgnn.models.SkipGram',
+    'HERec': 'openhgnn.models.SkipGram',
     'HAN': 'openhgnn.models.HAN',
     #'HGT': 'openhgnn.models.HGT',
+    'HeCo': 'openhgnn.models.HeCo',
     'HGT': 'openhgnn.models.HGT_hetero',
     'GTN': 'openhgnn.models.GTN_sparse',
+    'fastGTN': 'openhgnn.models.fastGTN',
     'MHNF': 'openhgnn.models.MHNF',
     'MAGNN': 'openhgnn.models.MAGNN',
+    'HeGAN':'openhgnn.models.HeGAN',
     'NSHE': 'openhgnn.models.NSHE',
     'NARS': 'openhgnn.models.NARS',
+    'RHGNN': 'openhgnn.models.RHGNN',
+    'HPN': 'openhgnn.models.HPN',
+    'KGCN': 'openhgnn.models.KGCN',
+    'SLiCE':'openhgnn.models.SLiCE',
+    'HGSL': 'openhgnn.models.HGSL',
     'GCN': 'space4hgnn.homo_models.GCN',
     'GAT': 'space4hgnn.homo_models.GAT',
-    'RHGNN': 'openhgnn.models.RHGNN'
+    'homo_GNN': 'openhgnn.models.homo_GNN',
+    'general_HGNN': 'openhgnn.models.general_HGNN',
+    'HDE': 'openhgnn.models.HDE',
+    'SimpleHGN': 'openhgnn.models.SimpleHGN',
 }

@@ -9,6 +9,6 @@ class BaseTask(ABC):
         self.evaluator = None
 
     @abstractmethod
-    def evaluate(self):
+    def evaluate(self, *args, **kwargs):
         pass
 

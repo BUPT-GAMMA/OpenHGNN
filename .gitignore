@@ -1,0 +1,27 @@
+*.mo
+
+# IDE
+.idea
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# downloaded data
+*.zip
+*.bin
+*.pt
+*.log
+# numpy files
+*.npy
+*.npz
+
+# yaml files
+*.yaml
+
+.DS_Store
+*.txt
+
+# visualization figure files
+*.jpg

@@ -1,19 +1,20 @@
-# GTN[NeurIPS2019]
+# GTN[NeurIPS2019] & fastGTN
 
-Paper: [Graph Transformer Networks](https://arxiv.org/abs/1911.06455)
+Paper: [[GTN] Graph Transformer Networks](https://arxiv.org/abs/1911.06455)
 
-Extension Paper: [Graph Transformer Networks: Learning Meta-path Graphs to Improve GNNs](https://arxiv.org/abs/2106.06218.pdf)
+Extension Paper: [[fastGTN] Graph Transformer Networks: Learning Meta-path Graphs to Improve GNNs](https://arxiv.org/abs/2106.06218.pdf)
 
 Code from author: https://github.com/seongjunyun/Graph_Transformer_Networks
 
-Note: [TODO]The authors proposed the FastGTN recently and it will be supported in future.
-
 ### How to run
 
-Clone the Openhgnn-DGL
+Clone the OpenHGNN
 
 ```bash
+# Run GTN
 python main.py -m GTN -t node_classification -d acm4GTN -g 0 --use_best_config
+# Run the fastGTN
+python main.py -m fastGTN -t node_classification -d acm4GTN -g 0 --use_best_config
 ```
 
 If you do not have gpu, set -gpu -1.
@@ -28,8 +29,9 @@ Node classification
 
 | Node classification | acm4GTN | imdb4GTN |
 | ------------------- | ------- | -------- |
-| paper               | 92.68   | 60.92    |
-| OpenHGNN            | 92.22   | 61.58    |
+| paper[GTN]          | 92.68   | 60.92    |
+| OpenHGNN[GTN]       | 92.22   | 61.58    |
+| OpenHGNN[fastGTN]   | 91.80   | 58.90    |
 
 ### TrainerFlow: node_classification
 

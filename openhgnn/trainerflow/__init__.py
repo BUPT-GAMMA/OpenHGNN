@@ -49,12 +49,19 @@ def build_flow(args, flow_name):
 SUPPORTED_FLOWS = {
     'entity_classification': 'openhgnn.trainerflow.entity_classification',
     'node_classification': 'openhgnn.trainerflow.node_classification',
-    'semi_supervised_node_classification': 'openhgnn.trainerflow.semi_node_classification',
     'distmult': 'openhgnn.trainerflow.dist_mult',
     'link_prediction': 'openhgnn.trainerflow.link_prediction',
+    'recommendation': 'openhgnn.trainerflow.recommendation',
     'hetgnntrainer': 'openhgnn.trainerflow.hetgnn_trainer',
     'hgttrainer': 'openhgnn.trainerflow.hgt_trainer',
     'nshetrainer': 'openhgnn.trainerflow.nshe_trainer',
-    'demo': 'openhgnn.trainerflow.demo'
-
+    'demo': 'openhgnn.trainerflow.demo',
+    'kgcntrainer': 'openhgnn.trainerflow.kgcn_trainer',
+    'HeGAN_trainer': 'openhgnn.trainerflow.HeGAN_trainer',
+    'mp2vec_trainer': 'openhgnn.trainerflow.mp2vec_trainer',
+    'herec_trainer': 'openhgnn.trainerflow.herec_trainer',
+    'HeCo_trainer': 'openhgnn.trainerflow.HeCo_trainer',
+    'DMGI_trainer': 'openhgnn.trainerflow.DMGI_trainer',
+    'slicetrainer': 'openhgnn.trainerflow.slice_trainer',
+    'hde_trainer':  'openhgnn.trainerflow.hde_trainer',
 }

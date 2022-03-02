@@ -17,12 +17,14 @@
 
 ## Performance: Node classification
 
-| Method               | AIFB      | MUTAG     | BGS       | AM        |
-| -------------------- | --------- | --------- | --------- | --------- |
-| **RSHN**             | **97.22** | **82.35** | **93.10** | **90.40** |
-| **RSHN(dgl)**（best) | **97.22** | **85.29** | **93.10** | **89.39** |
+| Method             | AIFB      | MUTAG     | BGS       | AM        |
+| ------------------ | --------- | --------- | --------- | --------- |
+| **RSHN**           | **97.22** | **82.35** | **93.10** | **90.40** |
+| **RSHN(openhgnn)** | **97.22** | **85.29** | **93.10** | **89.39** |
 
-## TrainerFlow: [entity classification flow](../../trainerflow/#Entity classification flow)
+The experiments in RSHN have serious problems according to the official code. First, it does not use validation set, and just tune hyperparameters on test set. Second, it reports the accuracy at the epoch with best accuracy on test set in the paper. And in this setting, we give our performance.
+
+## TrainerFlow: [node classification flow](../../trainerflow/#Node classification flow)
 
 ### Model
 

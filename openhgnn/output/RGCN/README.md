@@ -11,20 +11,43 @@
 - Clone the Openhgnn-DGL
 
   ```bash
-  python main.py -m RGCN -t node_classification -d aifb -g 0
+  # For node classification task
+  python main.py -m RGCN -t node_classification -d aifb -g 0 --use_best_config
+  # For link prediction task
+  python main.py -m RGCN -t link_prediction -d HGBl-amazon -g 0 --use_best_config
   ```
-
+  
   If you do not have gpu, set -gpu -1.
+  
+  ##### Supported dataset
+  
+  ###### Node classification:
+  
+  [RDFDataset](../../dataset/#RDF_NodeCLassification)[aifb/mutag/bgs/am], [HGBn](../../dataset/#HGBn) and other datasets for node classification.
+  
+  ###### Link prediction:
+  
+  
 
-  Supported Dataset: [RDFDataset](../../dataset/#RDF_NodeCLassification)
+## Performance
 
-## Performance: Node classification
+#### Task: Node classification
+
+Evaluation metric: accuracy
+
+| Method   | AIFB  | MUTAG | BGS   | AM    |
+| -------- | ----- | ----- | ----- | ----- |
+| **RGCN** | 97.22 | 72.06 | 96.55 | 88.89 |
+
+#### Task: Link prediction
+
+Evaluation metric: roc_auc
 
 | Method               | AIFB  | MUTAG | BGS   | AM    |
 | -------------------- | ----- | ----- | ----- | ----- |
-| **RGCN(dgl)**（best) | 97.22 | 72.05 | 93.10 | 89.90 |
+| **RGCN(dgl)**（best) | 97.22 | 72.06 | 96.55 | 88.89 |
 
-## TrainerFlow: [entity classification flow](../../trainerflow/#Entity_classification_flow)
+## TrainerFlow: [node classification flow](../../trainerflow/#Node_classification_flow)
 
 ### Model
 
@@ -33,16 +56,9 @@
 
 ## Hyper-parameter specific to the model
 
-You can modify the parameters in openhgnn/config.ini
+You can modify the parameters[RGCN] in openhgnn/config.ini. 
 
-#### Description
-
-```python
-hidden_dim
-batch_size
-```
-
-Best config can be found in [best_config](../../utils/best_config.py)
+Best config can be found in [best_config](../../utils/best_config.py). 
 
 ## More
 

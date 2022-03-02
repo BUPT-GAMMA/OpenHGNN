@@ -5,27 +5,82 @@ import torch as th
 from scipy.sparse import coo_matrix
 import numpy as np
 import random
-from . import load_HIN, load_KG, load_OGB, BEST_CONFIGS
-import datetime
+from . import load_HIN, load_KG, load_OGB
+from .best_config import BEST_CONFIGS
+
+
+def sum_up_params(model):
+    """ Count the model parameters """
+    n = []
+    n.append(model.u_embeddings.weight.cpu().data.numel() * 2)
+    n.append(model.lookup_table.cpu().numel())
+    n.append(model.index_emb_posu.cpu().numel() * 2)
+    n.append(model.grad_u.cpu().numel() * 2)
+
+    try:
+        n.append(model.index_emb_negu.cpu().numel() * 2)
+    except:
+        pass
+    try:
+        n.append(model.state_sum_u.cpu().numel() * 2)
+    except:
+        pass
+    try:
+        n.append(model.grad_avg.cpu().numel())
+    except:
+        pass
+    try:
+        n.append(model.context_weight.cpu().numel())
+    except:
+        pass
+
+    print("#params " + str(sum(n)))
+    exit()
+
+
+def add_reverse_edges(hg, copy_ndata=True, copy_edata=True, ignore_one_type=True):
+    # get node cnt for each ntype
+
+    canonical_etypes = hg.canonical_etypes
+    num_nodes_dict = {ntype: hg.number_of_nodes(ntype) for ntype in hg.ntypes}
+
+    edge_dict = {}
+    for etype in canonical_etypes:
+        u, v = hg.edges(form='uv', order='eid', etype=etype)
+        edge_dict[etype] = (u, v)
+        edge_dict[(etype[2], etype[1] + '-rev', etype[0])] = (v, u)
+    new_hg = dgl.heterograph(edge_dict, num_nodes_dict=num_nodes_dict)
+
+    # handle features
+    if copy_ndata:
+        node_frames = dgl.utils.extract_node_subframes(hg, None)
+        dgl.utils.set_new_frames(new_hg, node_frames=node_frames)
+
+    if copy_edata:
+        for etype in canonical_etypes:
+            edge_frame = hg.edges[etype].data
+            for data_name, value in edge_frame.items():
+                new_hg.edges[etype].data[data_name] = value
+    return new_hg
 
 
 def set_best_config(args):
     configs = BEST_CONFIGS.get(args.task)
     if configs is None:
-        print('The task do not have a best_config!')
+        args.logger.load_best_config('The task: {} do not have a best_config!'.format(args.task))
         return args
     if args.model not in configs:
-        print('The model is not in the best config.')
+        args.logger.load_best_config('The model: {} is not in the best config.'.format(args.model))
         return args
     configs = configs[args.model]
     for key, value in configs["general"].items():
         args.__setattr__(key, value)
     if args.dataset not in configs:
-        print('The dataset is not in the best config.')
+        args.logger.load_best_config('The dataset: {} is not in the best config of model: {}.'.format(args.dataset, args.model))
         return args
     for key, value in configs[args.dataset].items():
         args.__setattr__(key, value)
-    print('Use the best config.')
+    args.logger.load_best_config('Load the best config of model: {} for dataset: {}.'.format(args.model, args.dataset))
     return args
 
 
@@ -61,7 +116,7 @@ class EarlyStopping(object):
             self.counter = 0
         return self.early_stop
 
-    def step_value(self, score, model):
+    def step_score(self, score, model):
         if self.best_score is None:
             self.best_score = score
             self.save_model(model)
@@ -79,16 +134,30 @@ class EarlyStopping(object):
         return self.early_stop
 
     def loss_step(self, loss, model):
+        """
+        
+        Parameters
+        ----------
+        loss Float or torch.Tensor
+        
+        model torch.nn.Module
+
+        Returns
+        -------
+
+        """
+        if isinstance(loss, th.Tensor):
+            loss = loss.item()
         if self.best_loss is None:
             self.best_loss = loss
             self.save_model(model)
-        elif loss > self.best_loss:
+        elif loss >= self.best_loss:
             self.counter += 1
-            #print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            # print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
-            if loss <= self.best_loss:
+            if loss < self.best_loss:
                 self.save_model(model)
             self.best_loss = np.min((loss, self.best_loss))
             self.counter = 0
@@ -116,7 +185,6 @@ def get_nodes_dict(hg):
 
 def extract_embed(node_embed, input_nodes):
     emb = {}
-
     for ntype, nid in input_nodes.items():
         nid = input_nodes[ntype]
         emb[ntype] = node_embed[ntype][nid]
@@ -141,6 +209,7 @@ def set_random_seed(seed):
     th.manual_seed(seed)
     th.cuda.manual_seed(seed)
     dgl.seed(seed)
+
 
 def com_mult(a, b):
     r1, i1 = a[..., 0], a[..., 1]
@@ -167,21 +236,42 @@ def ccorr(a, b):
     -------
     Tensor, having the same dimension as the input a.
     """
-    import torch.fft as fft
-    return th.irfft(com_mult(conj(th.rfft(a, 1)), th.rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
+    try:
+        from torch import irfft
+        from torch import rfft
+    except ImportError:
+        from torch.fft import irfft2
+        from torch.fft import rfft2
+        
+        def rfft(x, d):
+            t = rfft2(x, dim=(-d))
+            return th.stack((t.real, t.imag), -1)
+        
+        def irfft(x, d, signal_sizes):
+            return irfft2(th.complex(x[:, :, 0], x[:, :, 1]), s=signal_sizes, dim=(-d))
+
+    return irfft(com_mult(conj(rfft(a, 1)), rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
 
 
 def transform_relation_graph_list(hg, category, identity=True):
-    '''
-    input a heterogensous graph
-    return graph list where every graph just contains a relation.
-    '''
+    r"""
+        extract subgraph :math:`G_i` from :math:`G` in which
+        only edges whose type :math:`R_i` belongs to :math:`\mathcal{R}`
+
+        Parameters
+        ----------
+            hg : dgl.heterograph
+                Input heterogeneous graph
+            category : string
+                Type of predicted nodes.
+            identity : bool
+                If True, the identity matrix will be added to relation matrix set.
+    """
 
     # get target category id
     for i, ntype in enumerate(hg.ntypes):
         if ntype == category:
             category_id = i
-
     g = dgl.to_homogeneous(hg, ndata='h')
     # find out the target node ids in g
     loc = (g.ndata[dgl.NTYPE] == category_id)
@@ -193,15 +283,20 @@ def transform_relation_graph_list(hg, category, identity=True):
     ctx = g.device
     #g.edata['w'] = th.ones(g.num_edges(), device=ctx)
     num_edge_type = th.max(etype).item()
+
+    # norm = EdgeWeightNorm(norm='right')
+    # edata = norm(g.add_self_loop(), th.ones(g.num_edges() + g.num_nodes(), device=ctx))
     graph_list = []
     for i in range(num_edge_type + 1):
-        e_ids = th.nonzero(etype == i).squeeze()
+        e_ids = th.nonzero(etype == i).squeeze(-1)
         sg = dgl.graph((edges[0][e_ids], edges[1][e_ids]), num_nodes=g.num_nodes())
+        # sg.edata['w'] = edata[e_ids]
         sg.edata['w'] = th.ones(sg.num_edges(), device=ctx)
         graph_list.append(sg)
     if identity == True:
         x = th.arange(0, g.num_nodes(), device=ctx)
         sg = dgl.graph((x, x))
+        # sg.edata['w'] = edata[g.num_edges():]
         sg.edata['w'] = th.ones(g.num_nodes(), device=ctx)
         graph_list.append(sg)
     return graph_list, g.ndata['h'], category_idx
@@ -253,3 +348,43 @@ def print_dict(d, end_string='\n\n'):
         else:
             print('{}: {}'.format(key, d[key]), end=', ')
     print(end_string, end='')
+
+
+def extract_metapaths(category, canonical_etypes, self_loop=False):
+    meta_paths_dict = {}
+    for etype in canonical_etypes:
+        if etype[0] in category:
+            for dst_e in canonical_etypes:
+                if etype[0] == dst_e[2] and etype[2] == dst_e[0]:
+                    if self_loop:
+                        mp_name = 'mp' + str(len(meta_paths_dict))
+                        meta_paths_dict[mp_name] = [etype, dst_e]
+                    else:
+                        if etype[0] != etype[2]:
+                            mp_name = 'mp' + str(len(meta_paths_dict))
+                            meta_paths_dict[mp_name] = [etype, dst_e]
+    return meta_paths_dict
+
+# for etype in self.model.hg.etypes:
+# g = self.model.hg[etype]
+# for etype in ['paper-ref-paper','paper-cite-paper']:
+#     g = self.hg[etype]
+#     r = []
+#     for i in self.train_idx:
+#         neigh = g.predecessors(i)
+#         cen_label = self.labels[i]
+#         neigh_label = self.labels[neigh]
+#         if len(neigh) == 0:
+#             pass
+#         else:
+#             r.append((cen_label == neigh_label).sum() / len(neigh))
+#     for i in self.valid_idx:
+#         neigh = g.predecessors(i)
+#         cen_label = self.labels[i]
+#         neigh_label = self.labels[neigh]
+#         if len(neigh) == 0:
+#             pass
+#         else:
+#             r.append((cen_label == neigh_label).sum() / len(neigh))
+#     he = torch.stack(r).mean()
+#     print(etype+ str(he))

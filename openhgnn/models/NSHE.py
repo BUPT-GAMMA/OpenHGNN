@@ -1,18 +1,8 @@
-"""
-NSHE[IJCAI2020]
-Network Schema Preserving Heterogeneous Information Network Embedding
-Paper: http://www.shichuan.org/doc/87.pdf
-Code: https://github.com/Andy-Border/NSHE
-
-We use two dataset acm imdb
-
-"""
-import torch as th
-import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv
 import dgl
-from . import BaseModel, register_model, HeteroMLPLayer, HeteroLinearLayer
+from . import BaseModel, register_model
+from ..layers.HeteroLinear import HeteroMLPLayer, HeteroLinearLayer
 
 '''
 In paper repo performance		
@@ -34,6 +24,13 @@ IMDB<Classification>     Micro-F1 = 0.6209, Macro-F1 = 0.6053
 
 @register_model('NSHE')
 class NSHE(BaseModel):
+    r"""
+    NSHE[IJCAI2020]
+    Network Schema Preserving Heterogeneous Information Network Embedding
+    `Paper Link <http://www.shichuan.org/doc/87.pdf>`
+    `Code Link https://github.com/Andy-Border/NSHE`
+
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         return cls(hg, 'GCN', project_dim=args.dim_size['project'],
@@ -48,17 +45,17 @@ class NSHE(BaseModel):
         self.emd_dim = emd_dim
         self.context_dim = context_dim
         # * ================== encoder config==================
-        linear_list1 = []
-        linear_list2 = []
-        linear_list3 = []
+        linear_dict1 = {}
+        linear_dict2 = {}
+        linear_dict3 = {}
         cla_dim = self.emd_dim + self.context_dim * (len(g.ntypes) - 1)
         for ntype in g.ntypes:
             in_dim = g.nodes[ntype].data['h'].shape[1]
-            linear_list1.append((ntype, in_dim, self.project_dim))
-            linear_list2.append((ntype, self.emd_dim, self.context_dim))
-            linear_list3.append((ntype, cla_dim, 1))
+            linear_dict1[ntype] = (in_dim, self.project_dim)
+            linear_dict2[ntype] = (self.emd_dim, self.context_dim)
+            linear_dict3[ntype] = (cla_dim, 1)
         # * ================== Project feature Layer==================
-        self.feature_proj = HeteroLinearLayer(linear_list1, has_l2norm=False, has_bn=False)
+        self.feature_proj = HeteroLinearLayer(linear_dict1, has_l2norm=False, has_bn=False)
         # * ================== Neighborhood Agg(gnn_model)==================
         if self.gnn_model == "GCN":
             self.gnn1 = GraphConv(self.project_dim, self.emd_dim, norm="none", activation=F.relu)
@@ -68,9 +65,9 @@ class NSHE(BaseModel):
             self.gnn2 = GraphConv(self.emd_dim, self.emd_dim, activation=None)
 
         # * ================== Context encoder(called CE in the paper)=================
-        self.context_encoder = HeteroLinearLayer(linear_list2, has_l2norm=False, has_bn=False)
+        self.context_encoder = HeteroLinearLayer(linear_dict2, has_l2norm=False, has_bn=False)
         # * ================== NSI Classification================
-        self.linear_classifier = HeteroMLPLayer(linear_list3, has_l2norm=False, has_bn=False)
+        self.linear_classifier = HeteroMLPLayer(linear_dict3, has_l2norm=False, has_bn=False)
 
     def forward(self, hg, h):
         with hg.local_scope():
