@@ -210,6 +210,7 @@ def set_random_seed(seed):
     th.cuda.manual_seed(seed)
     dgl.seed(seed)
 
+
 def com_mult(a, b):
     r1, i1 = a[..., 0], a[..., 1]
     r2, i2 = b[..., 0], b[..., 1]
@@ -235,8 +236,21 @@ def ccorr(a, b):
     -------
     Tensor, having the same dimension as the input a.
     """
-    import torch.fft as fft
-    return th.irfft(com_mult(conj(th.rfft(a, 1)), th.rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
+    try:
+        from torch import irfft
+        from torch import rfft
+    except ImportError:
+        from torch.fft import irfft2
+        from torch.fft import rfft2
+        
+        def rfft(x, d):
+            t = rfft2(x, dim=(-d))
+            return th.stack((t.real, t.imag), -1)
+        
+        def irfft(x, d, signal_sizes):
+            return irfft2(th.complex(x[:, :, 0], x[:, :, 1]), s=signal_sizes, dim=(-d))
+
+    return irfft(com_mult(conj(rfft(a, 1)), rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
 
 
 def transform_relation_graph_list(hg, category, identity=True):

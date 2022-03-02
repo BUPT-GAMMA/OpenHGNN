@@ -6,7 +6,7 @@ from . import BaseModel, register_model
 from openhgnn.layers.micro_layer import CompConv
 from ..utils.dgl_graph import edata_in_out_mask
 from ..utils import get_nodes_dict
-
+from ..utils.utils import ccorr
 '''
 Here, we present the implementation details for each task used for evaluation in the paper. 
 For all the tasks, we used COMPGCN build on PyTorch geometric framework (Fey & Lenssen, 2019).
@@ -172,7 +172,7 @@ class CompGraphConvLayer(nn.Module):
                 elif self.comp_fn == 'mul':
                     h_self = self.W_S(inputs_dst[n] * r_feats[-1])
                 elif self.comp_fn == 'ccorr':
-                    h_self = self.W_S(inputs_dst[n], r_feats[-1])
+                    h_self = self.W_S(ccorr(inputs_dst[n], r_feats[-1]))
                 else:
                     raise Exception('Only supports sub, mul, and ccorr')
                 h_self.add_(emd)
