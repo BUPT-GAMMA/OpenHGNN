@@ -61,7 +61,7 @@ BEST_CONFIGS = {
                 'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
                 'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
                 'mini_batch_flag': False, 'validation': True
-                     },
+            },
             'mutag': {
                 'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
                 'hidden_dim': 32, 'n_layers': 3, 'dropout': 0.5, 'comp_fn': 'sub',
@@ -81,7 +81,7 @@ BEST_CONFIGS = {
             'ohgbn-acm': {'lr': 0.005, 'hidden_dim': 128, 'dropout': 0.16, 'n_layers': 2,
                           'comp_fn': 'sub', 'evaluation_metric': 'f1'},
             'ohgbn-imdb': {'lr': 0.001, 'hidden_dim': 64, 'n_layers': 3,
-                          'comp_fn': 'sub', 'evaluation_metric': 'f1'}
+                           'comp_fn': 'sub', 'evaluation_metric': 'f1'}
         },
         'GTN': {
             'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 128, 'max_epoch': 100, 'patience': 20,
@@ -152,13 +152,13 @@ BEST_CONFIGS = {
             },
             'ohgbn-acm': {'num_heads': [8, 8]},
             'ohgbn-imdb': {'lr': 0.005, 'hidden_dim': 32, 'dropout': 0.5}
-    
+
         },
         'HPN': {
             'general': {},
             'ohgbn-acm': {
                 'lr': 0.01, 'hidden_dim': 64, 'dropout': 0.2, 'k_layer': 3, 'alpha': 0.2, 'edge_drop': 0
-          },
+            },
             'ohgbn-imdb': {
                 'lr': 0.005, 'hidden_dim': 128, 'dropout': 0.25
             }
@@ -186,7 +186,6 @@ BEST_CONFIGS = {
             'ohgbn-imdb': {'lr': 0.01, 'hidden_dim': 128, 'dropout': 0.4, 'num_heads': 1, 'num_hops': 2,
                            'evaluation_metric': 'f1'}
 
-
         },
         'HetGNN': {
             'general': {'max_epoch': 500, 'patience': 20, 'mini_batch_flag': True},
@@ -196,11 +195,16 @@ BEST_CONFIGS = {
             }
         },
         'MAGNN': {
-            'general': {'mini_batch_flag': False, 'max_epoch': 500, 'patience': 30},
-            'imdb': {
-                'lr': 0.005, 'weight_decay': 0.001, 'dropout': 0.5, 'hidden_dim': 64, 'encoder_type': 'RotateE',
-                'inter_attn_feats': 128, 'num_heads': 8, 'num_layers': 2,
+            'general': {'lr': 0.005, 'weight_decay': 0.001, 'dropout': 0.5,
+                        'h_dim': 64, 'encoder_type': 'RotateE', 'inter_attn_feats': 128, 'num_heads': 8,
+                        'num_layers': 2},
+            'imdb4MAGNN': {
+                'max_epoch': 100, 'patience': 30, 'out_dim': 3, 'mini_batch_flag': False
             },
+            'dblp4MAGNN': {
+                'max_epoch': 10, 'patience': 5, 'mini_batch_flag': True, 'batch_size': 8, 'num_samples': 5,
+                'num_workers': 24, 'out_dim': 4
+            }
         },
         'NSHE': {
             'general': {},
@@ -210,25 +214,25 @@ BEST_CONFIGS = {
         },
         'HeCo': {
             'general': {
-                'hidden_dim': 64, 'max_epoch' : 10000, 'mini_batch_flag' : False
+                'hidden_dim': 64, 'max_epoch': 10000, 'mini_batch_flag': False
             },
-            'acm4HeCo': {'seed': 84,  'eva_lr': 0.05, 'eva_wd': 0, 'patience': 5, 'learning_rate': 0.0008,
+            'acm4HeCo': {'seed': 84, 'eva_lr': 0.05, 'eva_wd': 0, 'patience': 5, 'learning_rate': 0.0008,
                          'weight_decay': 0, 'tau': 0.8, 'feat_drop': 0.3, 'attn_drop': 0.5,
                          'sample_rate': {'author': 7, "subject": 3}, 'lam': 0.5
-            }
+                         }
         },
         'DMGI': {
             'general': {
-                'seed': 0,  'sc': 3, 'learning_rate' : 0.0005
+                'seed': 0, 'sc': 3, 'learning_rate': 0.0005
             },
-            'acm_han_raw': {'weight_decay': 0.0001, 'dropout': 0.5,'reg_coef': 0.001,
-                            'patience': 20,'sup_coef': 0.1, 'hid_unit': 64,
-                            'isSemi': False,'isBias': False,'isAttn': False
-            },
-            'imdb4GTN': {'weight_decay': 0.0001, 'dropout': 0.5,'reg_coef': 0.1,
-                         'patience': 50,'sup_coef': 0.1, 'hid_unit': 64,
-                         'isSemi': False,'isBias': False,'isAttn': False
-            }
+            'acm_han_raw': {'weight_decay': 0.0001, 'dropout': 0.5, 'reg_coef': 0.001,
+                            'patience': 20, 'sup_coef': 0.1, 'hid_unit': 64,
+                            'isSemi': False, 'isBias': False, 'isAttn': False
+                            },
+            'imdb4GTN': {'weight_decay': 0.0001, 'dropout': 0.5, 'reg_coef': 0.1,
+                         'patience': 50, 'sup_coef': 0.1, 'hid_unit': 64,
+                         'isSemi': False, 'isBias': False, 'isAttn': False
+                         }
         },
         'RSHN': {
             'general': {},
@@ -248,7 +252,7 @@ BEST_CONFIGS = {
             'ohgbn-acm': {'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.4, 'num_channels': 2, 'num_node_layer': 2,
                           'num_edge_layer': 2},
             'ohgbn-imdb': {'lr': 0.01, 'hidden_dim': 128, 'dropout': 0.09, 'num_node_layer': 2, 'num_edge_layer': 2
-            }
+                           }
         },
         'HGSL': {
             'general': {},
@@ -263,7 +267,7 @@ BEST_CONFIGS = {
                 'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.1, 'n_layers': 2, 'num_heads': 1
             },
             'ohgbn-imdb': {'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.3, 'n_layers': 2, 'num_heads': 4},
-    
+
         },
         'SimpleHGN': {
             'general': {},
@@ -272,14 +276,15 @@ BEST_CONFIGS = {
                 'attn_drop_rate': 0.1, 'feats_drop_rate': 0.5, 'beta': 0.05, 'residual': False, 'slope': 0.01,
                 'max_epoch': 200, 'patience': 50
             },
-            'ohgbn-imdb': {'lr': 0.001, 'hidden_dim': 32, 'num_layers': 2, 'edge_dim': 32, 'num_heads': 8, 'num_edge': 8,
-                'attn_drop_rate': 0.34, 'feats_drop_rate': 0.4, 'beta': 0.01,
-                'residual': False, 'slope': 0.1, 'max_epoch': 100, 'patience': 50},
+            'ohgbn-imdb': {'lr': 0.001, 'hidden_dim': 32, 'num_layers': 2, 'edge_dim': 32, 'num_heads': 8,
+                           'num_edge': 8,
+                           'attn_drop_rate': 0.34, 'feats_drop_rate': 0.4, 'beta': 0.01,
+                           'residual': False, 'slope': 0.1, 'max_epoch': 100, 'patience': 50},
 
         }
 
     },
-    
+
     "link_prediction": {
         'NARS': {
             'general': {'num_hops': 3},
@@ -292,8 +297,8 @@ BEST_CONFIGS = {
             }
         },
         'HAN': {
-            'general':{
-            
+            'general': {
+
             },
             'HGBl-PubMed': {
                 'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 400,
@@ -301,7 +306,7 @@ BEST_CONFIGS = {
                 'validation': True, 'feat': 2, 'seed': 4,
             },
         },
-        'CompGCN':{
+        'CompGCN': {
             'general': {
             },
             'ohgbl-yelp1': {
@@ -355,7 +360,7 @@ BEST_CONFIGS = {
             "general": {},
             'LastFM4KGCN': {
                 'in_dim': 16, 'hidden_dim': 16, 'n_relation': 60,
-                'batch_size': 128, 'lr' : 0.002
+                'batch_size': 128, 'lr': 0.002
             },
         }
     },

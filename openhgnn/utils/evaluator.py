@@ -8,7 +8,6 @@ from sklearn.linear_model import LogisticRegression
 import sklearn.metrics as Metric
 from ogb.nodeproppred import Evaluator
 
-
 class Evaluator():
     def __init__(self, seed):
         self.seed = seed
@@ -155,6 +154,7 @@ def perturb_s_and_get_filtered_rank(embedding, w, s, r, o, test_size, triplets_t
         target_s = s[idx]
         target_r = r[idx]
         target_o = o[idx]
+
         filtered_s = filter_s(triplets_to_filter, target_s, target_r, target_o, num_entities)
         target_s_idx = int((filtered_s == target_s).nonzero())
         emb_s = embedding[filtered_s]
@@ -302,7 +302,6 @@ def cal_loss_f1(y, node_data, loss_func, mode):
     loss = loss_func(y, y_label)
     macro_f1, micro_f1 = f1_node_classification(y_label.cpu(), y_pred.cpu())
     return loss, macro_f1, micro_f1
-
 
 def cal_acc(y_pred, y_true):
     return th.sum(y_pred.argmax(dim=1) == y_true).item() / len(y_true)
