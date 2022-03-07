@@ -333,7 +333,8 @@ class Config(object):
             self.max_epoch = conf.getint('HGT', 'max_epoch')
             self.num_workers = conf.getint("HGT", "num_workers")
             self.mini_batch_flag = conf.getboolean("HGT", "mini_batch_flag")
-            self.n_layers = conf.getint("HGT", "n_layers")
+            self.norm = conf.getboolean("HGT", "norm")
+            self.num_layers = conf.getint("HGT", "num_layers")
             self.num_heads = conf.getint("HGT", "num_heads")
         elif model == 'HeCo':
             self.lr = conf.getfloat("HeCo", "learning_rate")
@@ -502,7 +503,6 @@ class Config(object):
             self.patience = conf.getint("SimpleHGN", "patience")
             self.edge_dim = conf.getint("SimpleHGN", "edge_dim")
             self.slope = conf.getfloat("SimpleHGN", "slope")
-            self.attn_drop_rate = conf.getfloat("SimpleHGN", "attn_drop_rate")
             self.feats_drop_rate = conf.getfloat("SimpleHGN", "feats_drop_rate")
             self.num_heads = conf.getint("SimpleHGN", "num_heads")
             self.h_dim = conf.getint("SimpleHGN", "h_dim")
@@ -511,6 +511,20 @@ class Config(object):
             self.residual = conf.getboolean("SimpleHGN", "residual")
             self.mini_batch_flag = False
             self.hidden_dim = self.h_dim * self.num_heads
-            
+        elif model == 'HetSANN':
+            self.lr = conf.getfloat("HetSANN", "lr")
+            self.weight_decay = conf.getfloat("HetSANN", "weight_decay")
+            self.dropout = conf.getfloat("HetSANN", "dropout")
+            self.seed = conf.getint("HetSANN", "seed")
+            self.h_dim = conf.getint("HetSANN", "h_dim")
+            self.num_layers = conf.getint("HetSANN", "num_layers")
+            self.num_heads = conf.getint("HetSANN", "num_heads")
+            self.max_epoch = conf.getint("HetSANN", "max_epoch")
+            self.patience = conf.getint("HetSANN", "patience")
+            self.slope = conf.getfloat("HetSANN", "slope")
+            self.residual = conf.getboolean("HetSANN", "residual")
+            self.mini_batch_flag = False
+            self.hidden_dim = self.h_dim * self.num_heads
+
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)
