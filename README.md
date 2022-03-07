@@ -131,7 +131,7 @@ The link will give some basic usage.
 | [RSHN](./openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [DMGI](./openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark:  |                    |                    |
 | [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark:  |                    |                    |
-| HGT[WWW 2020]                                            |                     |                    |                    |
+| [HGT](./openhgnn/output/HGT)[WWW 2020]                   |:heavy_check_mark:|                    |                    |
 | [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020]          | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]               | :heavy_check_mark:  |                    |                    |
 | [NARS](./openhgnn/output/NARS)[arxiv]                    | :heavy_check_mark:  |                    |                    |
