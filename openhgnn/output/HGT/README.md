@@ -1,4 +1,4 @@
-# SimpleHGN[WWW 2020]
+# HGT[WWW 2020]
 
 -   paper: [Heterogeneous Graph Transformer](https://arxiv.org/abs/2003.01332)
 
