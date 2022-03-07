@@ -96,13 +96,12 @@ class HGT(BaseModel):
         dict
             The embeddings after the output projection.
         """
-        preordered = True
         with hg.local_scope():
             hg.ndata['h'] = h_dict
             g = dgl.to_homogeneous(hg, ndata = 'h')
             h = g.ndata['h']
             for l in range(self.num_layers):
-                h = self.hgt_layers[l](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], preordered)
+                h = self.hgt_layers[l](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], presorted = True)
                 
         g.ndata['h'] = h
         hg = dgl.to_heterogeneous(g, hg.ntypes, hg.etypes)
