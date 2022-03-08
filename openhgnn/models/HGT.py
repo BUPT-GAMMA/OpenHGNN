@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from dgl.nn.pytorch.conv import HGTConv
 from . import BaseModel, register_model
+from ..utils import to_hetero_feat
 
 
 @register_model('HGT')
@@ -103,8 +104,8 @@ class HGT(BaseModel):
             for l in range(self.num_layers):
                 h = self.hgt_layers[l](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], presorted = True)
                 
-        g.ndata['h'] = h
-        hg = dgl.to_heterogeneous(g, hg.ntypes, hg.etypes)
-        h_dict = hg.ndata['h']
+        h_dict = to_hetero_feat(h, g.ndata['_TYPE'], hg.ntypes)
+        # hg = dgl.to_heterogeneous(g, hg.ntypes, hg.etypes)
+        # h_dict = hg.ndata['h']
 
         return h_dict
