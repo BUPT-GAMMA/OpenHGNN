@@ -152,3 +152,27 @@ Evaluation metric is roc_auc
 | `ohgbl-yelp1` | roc_auc |
 | ------------- | ------- |
 | CompGCN       | 0.6121  |
+
+## How to run
+
+If you want to reproduce the results, you could run it with the following command line.
+
+```bash
+python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --load_from_pretrained
+```
+
+e.g.:
+
+```bash
+python main.py -m RGCN -d ohgbn-acm -t node_classification -g 0 --use_best_config
+```
+
+## How to download
+
+If you just want to download the dataset,
+
+```bash
+# wget https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/{dataset_name}.zip
+
+wget https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/ohgbn-acm.zip
+```
