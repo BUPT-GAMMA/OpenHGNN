@@ -27,6 +27,7 @@ class LinkPrediction(BaseTask):
     get_loss_fn :
         return a loss function
     """
+
     def __init__(self, args):
         super(LinkPrediction, self).__init__()
         self.n_dataset = args.dataset
@@ -48,22 +49,22 @@ class LinkPrediction(BaseTask):
         elif args.score_fn == 'distmult':
             self.ScorePredictor = HeteroDistMultPredictor()
         self.negative_sampler = Uniform(1)
-        
+
         if args.dataset in ['wn18', 'FB15k', 'FB15k-237']:
             self.evaluation_metric = 'mrr'
         else:
             self.evaluation_metric = 'roc_auc'
-            
+
         args.logger.info('[Init Task] The task: link prediction, the dataset: {}, the evaluation metric is {}, '
                          'the score function: {} '.format(self.n_dataset, self.evaluation_metric, args.score_fn))
-        
+
     def get_out_ntype(self):
         ntype = []
         for l in self.dataset.target_link:
             ntype.append(l[0])
             ntype.append(l[2])
         return set(ntype)
-    
+
     def get_graph(self):
         return self.dataset.g
 
@@ -80,7 +81,7 @@ class LinkPrediction(BaseTask):
         elif name == 'roc_auc':
             return self.evaluator.cal_roc_auc
 
-    def evaluate(self, n_embedding, r_embedding=None, mode='test'):
+    def evaluate(self, n_embedding, r_embedding=None, target_etype=None, mode='test'):
         r"""
 
         Parameters
@@ -100,8 +101,8 @@ class LinkPrediction(BaseTask):
             return dict(Accuracy=acc)
         elif self.evaluation_metric == 'mrr':
             mrr = self.evaluator.mrr_(n_embedding['_N'], self.dict2emd(r_embedding), self.dataset.train_triplets,
-                                       self.dataset.valid_triplets, self.dataset.test_triplets,
-                                       hits=[1, 3, 10], eval_bz=100)
+                                      self.dataset.valid_triplets, self.dataset.test_triplets,
+                                      hits=[1, 3, 10], eval_bz=100)
             return dict(MRR=mrr)
         elif self.evaluation_metric == 'roc_auc':
             if mode == 'test':
@@ -111,8 +112,8 @@ class LinkPrediction(BaseTask):
             else:
                 raise ValueError('Mode error, supported test and valid.')
             negative_graph = self.construct_negative_graph(eval_hg)
-            p_score = th.sigmoid(self.ScorePredictor(eval_hg, n_embedding, r_embedding))
-            n_score = th.sigmoid(self.ScorePredictor(negative_graph, n_embedding, r_embedding))
+            p_score = th.sigmoid(self.ScorePredictor(eval_hg, n_embedding, target_etype, r_embedding))
+            n_score = th.sigmoid(self.ScorePredictor(negative_graph, n_embedding, target_etype, r_embedding))
             p_label = th.ones(len(p_score), device=p_score.device)
             n_label = th.zeros(len(n_score), device=p_score.device)
             roc_auc = self.evaluator.cal_roc_auc(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu())
@@ -156,7 +157,8 @@ class HeteroDotProductPredictor(th.nn.Module):
     References: `documentation of dgl <https://docs.dgl.ai/guide/training-link.html#heterogeneous-graphs>_`
     
     """
-    def forward(self, edge_subgraph, x, *args, **kwargs):
+
+    def forward(self, edge_subgraph, x, target_etype=None, *args, **kwargs):
         """
         Parameters
         ----------
@@ -170,14 +172,17 @@ class HeteroDotProductPredictor(th.nn.Module):
         score: th.Tensor
             the prediction of the edges in edge_subgraph
         """
-    
+
         with edge_subgraph.local_scope():
             for ntype in edge_subgraph.ntypes:
                 edge_subgraph.nodes[ntype].data['x'] = x[ntype]
-            for etype in edge_subgraph.canonical_etypes:
-                edge_subgraph.apply_edges(
-                    dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
-                
+
+            if target_etype is None:
+                for etype in edge_subgraph.canonical_etypes:
+                    edge_subgraph.apply_edges(
+                        dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
+            else:
+                edge_subgraph.apply_edges(dgl.function.u_dot_v('x', 'x', 'score'), etype=target_etype)
             score = edge_subgraph.edata['score']
             if isinstance(score, dict):
                 result = []
@@ -185,10 +190,10 @@ class HeteroDotProductPredictor(th.nn.Module):
                     result.append(value)
                 score = th.cat(result)
             return score.squeeze()
-        
-        
+
+
 class HeteroDistMultPredictor(th.nn.Module):
-    
+
     def forward(self, edge_subgraph, x, r_embedding, *args, **kwargs):
         """
         DistMult factorization (Yang et al. 2014) as the scoring function,
@@ -238,4 +243,3 @@ class HeteroDistMultPredictor(th.nn.Module):
             else:
                 score = th.sum(score, dim=1)
             return score
-

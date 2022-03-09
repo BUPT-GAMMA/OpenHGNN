@@ -5,21 +5,23 @@ import torch
 import torch.nn.functional as F
 from torch.nn import Parameter
 import math
+import dgl.function as fn
+
 
 @register_model('GATNE-T')
 class GATNE(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
-        return cls()
+        return cls(hg.num_nodes(), args.dim, args.edge_dim, hg.etypes, len(hg.etypes), args.att_dim)
 
     def __init__(
-        self,
-        num_nodes,
-        embedding_size,
-        embedding_u_size,
-        edge_types,
-        edge_type_count,
-        dim_a,
+            self,
+            num_nodes,
+            embedding_size,
+            embedding_u_size,
+            edge_types,
+            edge_type_count,
+            att_dim,
     ):
         super(GATNE, self).__init__()
         self.num_nodes = num_nodes
@@ -27,7 +29,7 @@ class GATNE(BaseModel):
         self.embedding_u_size = embedding_u_size
         self.edge_types = edge_types
         self.edge_type_count = edge_type_count
-        self.dim_a = dim_a
+        self.att_dim = att_dim
 
         self.node_embeddings = Parameter(torch.FloatTensor(num_nodes, embedding_size))
         self.node_type_embeddings = Parameter(
@@ -37,9 +39,9 @@ class GATNE(BaseModel):
             torch.FloatTensor(edge_type_count, embedding_u_size, embedding_size)
         )
         self.trans_weights_s1 = Parameter(
-            torch.FloatTensor(edge_type_count, embedding_u_size, dim_a)
+            torch.FloatTensor(edge_type_count, embedding_u_size, att_dim)
         )
-        self.trans_weights_s2 = Parameter(torch.FloatTensor(edge_type_count, dim_a, 1))
+        self.trans_weights_s2 = Parameter(torch.FloatTensor(edge_type_count, att_dim, 1))
 
         self.reset_parameters()
 
@@ -74,18 +76,18 @@ class GATNE(BaseModel):
             )
             trans_w = (
                 self.trans_weights.unsqueeze(0)
-                .repeat(batch_size, 1, 1, 1)
-                .view(-1, self.embedding_u_size, self.embedding_size)
+                    .repeat(batch_size, 1, 1, 1)
+                    .view(-1, self.embedding_u_size, self.embedding_size)
             )
             trans_w_s1 = (
                 self.trans_weights_s1.unsqueeze(0)
-                .repeat(batch_size, 1, 1, 1)
-                .view(-1, self.embedding_u_size, self.dim_a)
+                    .repeat(batch_size, 1, 1, 1)
+                    .view(-1, self.embedding_u_size, self.att_dim)
             )
             trans_w_s2 = (
                 self.trans_weights_s2.unsqueeze(0)
-                .repeat(batch_size, 1, 1, 1)
-                .view(-1, self.dim_a, 1)
+                    .repeat(batch_size, 1, 1, 1)
+                    .view(-1, self.att_dim, 1)
             )
 
             attention = (
@@ -94,12 +96,12 @@ class GATNE(BaseModel):
                         torch.tanh(torch.matmul(tmp_node_type_embed, trans_w_s1)),
                         trans_w_s2,
                     )
-                    .squeeze(2)
-                    .view(-1, self.edge_type_count),
+                        .squeeze(2)
+                        .view(-1, self.edge_type_count),
                     dim=1,
                 )
-                .unsqueeze(1)
-                .repeat(1, self.edge_type_count, 1)
+                    .unsqueeze(1)
+                    .repeat(1, self.edge_type_count, 1)
             )
 
             node_type_embed = torch.matmul(attention, node_type_embed).view(
@@ -153,5 +155,3 @@ class NSLoss(nn.Module):
 
         loss = log_target + sum_log_sampled
         return -loss.sum() / n
-
-

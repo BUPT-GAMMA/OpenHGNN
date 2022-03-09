@@ -527,6 +527,8 @@ class Config(object):
             self.rw_walks = conf.getint("GATNE-T", "rw_walks")
             self.window_size = conf.getint("GATNE-T", "window_size")
             self.neg_size = conf.getint("GATNE-T", "neg_size")
+            self.neighbor_samples = conf.getint("GATNE-T", "neighbor_samples")
+            self.score_fn = conf.get("GATNE-T", "score_fn")
 
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)
