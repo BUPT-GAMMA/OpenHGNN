@@ -51,7 +51,7 @@ class LinkPrediction(BaseFlow):
         
         self.target_link = self.task.dataset.target_link
         self.args.out_node_type = self.task.get_out_ntype()
-        self.train_hg = self.task.get_train().to(self.device)
+        self.train_hg = self.task.get_train()
         if hasattr(self.args, 'flag_add_reverse_edges') \
                 or self.args.dataset in ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2']:
             self.train_hg = add_reverse_edges(self.train_hg)
@@ -68,7 +68,7 @@ class LinkPrediction(BaseFlow):
             General models do not generate the representations of edge types, so we generate the embeddings of edge types.
             """
             self.r_embedding = nn.ParameterDict({etype[1]: nn.Parameter(th.Tensor(1, self.args.out_dim))
-                                                for etype in self.hg.canonical_etypes}).to(self.device)
+                                                for etype in self.train_hg.canonical_etypes}).to(self.device)
             for _, para in self.r_embedding.items():
                 nn.init.xavier_uniform_(para)
         else:
@@ -81,16 +81,18 @@ class LinkPrediction(BaseFlow):
         self.patience = args.patience
         self.max_epoch = args.max_epoch
         
-        self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link)
+        self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link).to(self.device)
         if self.args.mini_batch_flag:
+            self.train_hg = self.train_hg.cpu()
             train_eid_dict = {
-                etype: self.train_hg.edges(etype=etype, form='eid').cpu()
+                etype: self.train_hg.edges(etype=etype, form='eid')
                 for etype in self.target_link}
             sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
             self.dataloader = dgl.dataloading.EdgeDataLoader(
-                self.train_hg.cpu(), train_eid_dict, sampler,
-                negative_sampler=dgl.dataloading.negative_sampler.Uniform(1),
-                batch_size=1024,
+                self.train_hg, train_eid_dict, sampler,
+                negative_sampler=dgl.dataloading.negative_sampler.Uniform(2),
+                # device = th.device('cpu'),
+                batch_size=self.args.batch_size,
                 shuffle=True,
                 drop_last=False,
                 num_workers=4)
@@ -102,6 +104,8 @@ class LinkPrediction(BaseFlow):
         The positive graph and the negative graph will contain the same set of nodes as the original graph.
         """
         super(LinkPrediction, self).preprocess()
+        # to('cpu') & to('self.device')
+        self.train_hg = self.train_hg.to(self.device)
         
     def train(self):
         self.preprocess()
@@ -127,7 +131,7 @@ class LinkPrediction(BaseFlow):
                 val_metric = self._test_step('valid')
                 self.logger.train_info(self.logger.metric2str(val_metric))
                 h_dict = self.model.input_feature()
-                embedding = self.model(self.hg, h_dict)
+                embedding = self.model(self.train_hg, h_dict)
                 score = th.sigmoid(self.task.ScorePredictor(self.task.test_hg, embedding, self.r_embedding))
                 self.task.dataset.save_results(hg=self.task.test_hg, score=score, file_path=self.args.HGB_results_path)
             return dict(metric=val_metric, epoch=epoch)

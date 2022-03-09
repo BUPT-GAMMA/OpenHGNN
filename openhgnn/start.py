@@ -20,7 +20,6 @@ def OpenHGNN(args):
         return result
 
 
-
 SpecificTrainerflow = {
     'HetGNN': 'hetgnntrainer',
     'HGNN_AC': 'node_classification_ac',

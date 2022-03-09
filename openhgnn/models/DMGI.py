@@ -34,7 +34,7 @@ class DMGI(BaseModel):
             The category of the nodes to be classificated
         in_size : int
             Input feature size
-        hid_unit : int
+        hidden_dim : int
             Hidden units size
         dropout : float
             Dropout rate on feature. Defaults: ``0.5``.
@@ -82,39 +82,39 @@ class DMGI(BaseModel):
 
         return cls(meta_paths=mps, sc=args.sc,
                    category=args.category, in_size=args.in_dim,
-                   hid_unit=args.hid_unit, nheads=args.num_heads,dropout=args.dropout,
+                   hidden_dim=args.hidden_dim, nheads=args.num_heads,dropout=args.dropout,
                    num_nodes=num_nodes, num_classes=args.num_classes,
                    isSemi=args.isSemi,isAttn=args.isAttn, isBias=args.isBias)
 
-    def __init__(self, meta_paths, sc, category, in_size, hid_unit,nheads,
+    def __init__(self, meta_paths, sc, category, in_size, hidden_dim, nheads,
                  dropout, num_nodes, num_classes, isBias, isAttn, isSemi):
         super(DMGI, self).__init__()
         self.category = category
         # self.layers = nn.ModuleList()
-        self.hid = hid_unit
+        self.hidden_dim = hidden_dim
         self.meta_paths = meta_paths
         self.nheads = nheads
         self.isAttn = isAttn
         self.isSemi = isSemi
         self.sc = sc
         self.gcn = nn.ModuleList([dglnn.GraphConv(in_feats=in_size,
-                                                  out_feats=hid_unit,
+                                                  out_feats=hidden_dim,
                                                   activation=nn.ReLU(),
                                                   bias=isBias,
                                                   allow_zero_in_degree=True) for _ in range(len(meta_paths))])
 
-        self.disc = Discriminator(hid_unit)
+        self.disc = Discriminator(hidden_dim)
         self.readout = AvgReadout()
         self.readout_act_func = nn.Sigmoid()
         self.dropout = dropout
         self.num_nodes = num_nodes
         # num_head = 1
-        self.H = nn.Parameter(torch.FloatTensor(1, num_nodes, hid_unit))
+        self.H = nn.Parameter(torch.FloatTensor(1, num_nodes, hidden_dim))
 
-        self.logistic = LogReg(hid_unit, num_classes)
+        self.logistic = LogReg(hidden_dim, num_classes)
 
         if self.isAttn:
-            self.attn = nn.ModuleList(Attention(hid_units=hid_unit,
+            self.attn = nn.ModuleList(Attention(hid_units=hidden_dim,
                                                 num_mps=len(meta_paths),
                                                 num_ndoes=num_nodes) for _ in range(nheads))
             # self.attn = Attention(hid_units=hid_unit, num_mps=len(meta_paths), num_ndoes=num_nodes)
@@ -265,12 +265,12 @@ class DMGI(BaseModel):
 certain downstream task than others. Therefore, we can adopt the 
 attention mechanism'''
 class Attention(nn.Module):
-    def __init__(self, hid_units, num_mps, num_ndoes):
+    def __init__(self, hidden_dim, num_mps, num_ndoes):
         super(Attention, self).__init__()
         self.num_mps = num_mps
-        self.hid_units = hid_units
+        self.hidden_dim = hidden_dim
         self.num_nodes = num_ndoes
-        self.A = nn.ModuleList([nn.Linear(hid_units, 1) for _ in range(num_mps)])
+        self.A = nn.ModuleList([nn.Linear(hidden_dim, 1) for _ in range(num_mps)])
         self.weight_init()
     def weight_init(self):
         for i in range(self.num_mps):

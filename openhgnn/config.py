@@ -28,9 +28,7 @@ class Config(object):
         self.task = task
         self.model = model
         self.dataset = dataset
-        self.path = {'output_modelfold': './output/models/',
-                     'input_fold': './dataset/'+self.dataset+'/',
-                     'temp_fold': './output/temp/'+self.model+'/'}
+        self.output_dir = './openhgnn/output/{}'.format(self.model)
         self.optimizer = 'Adam'
         if model == "NSHE":
             self.dim_size = {}
@@ -179,8 +177,7 @@ class Config(object):
             self.neg_size = conf.getint("HERec", "neg_size")
             self.rw_length = conf.getint("HERec", "rw_length")
             self.rw_walks = conf.getint("HERec", "rw_walks")
-            meta_path_keys = conf.get("HERec", "meta_path_keys")
-            self.meta_path_keys = meta_path_keys.split(',')
+            self.meta_path_key = conf.get("HERec", "meta_path_key")
 
         elif model == 'HAN':
             self.lr = conf.getfloat("HAN", "learning_rate")
@@ -230,8 +227,11 @@ class Config(object):
 
             self.patience = conf.getint('MAGNN', 'patience')
             self.max_epoch = conf.getint('MAGNN', 'max_epoch')
-            self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
             self.encoder_type = conf.get('MAGNN', 'encoder_type')
+            self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
+            if self.mini_batch_flag:
+                self.batch_size = conf.getint("MAGNN", "batch_size")
+                self.num_samples = conf.getint("MAGNN", "num_samples")
             self.hidden_dim = self.h_dim * self.num_heads
         
         elif model == 'RHGNN':
@@ -333,7 +333,8 @@ class Config(object):
             self.max_epoch = conf.getint('HGT', 'max_epoch')
             self.num_workers = conf.getint("HGT", "num_workers")
             self.mini_batch_flag = conf.getboolean("HGT", "mini_batch_flag")
-            self.n_layers = conf.getint("HGT", "n_layers")
+            self.norm = conf.getboolean("HGT", "norm")
+            self.num_layers = conf.getint("HGT", "num_layers")
             self.num_heads = conf.getint("HGT", "num_heads")
         elif model == 'HeCo':
             self.lr = conf.getfloat("HeCo", "learning_rate")
@@ -366,7 +367,7 @@ class Config(object):
             self.sup_coef = conf.getfloat("DMGI",'sup_coef')
             self.reg_coef = conf.getfloat("DMGI", "reg_coef")
             self.dropout = conf.getfloat("DMGI", "dropout")
-            self.hid_unit = conf.getint('DMGI', 'hid_unit')
+            self.hidden_dim = conf.getint('DMGI', 'hidden_dim')
             self.num_heads = conf.getint('DMGI', 'num_heads')
             self.patience = conf.getint('DMGI', 'patience')
             self.max_epoch = conf.getint('DMGI', 'max_epoch')
@@ -407,7 +408,6 @@ class Config(object):
             self.weight_decay = conf.getfloat("HPN", "weight_decay")
             self.seed = conf.getint("HPN", "seed")
             self.dropout = conf.getfloat("HPN", "dropout")
-            self.out_embedsize = conf.getint("HPN", "out_embedsize")
             self.hidden_dim = conf.getint('HPN', 'hidden_dim')
             self.k_layer = conf.getint("HPN", "k_layer")
             self.alpha = conf.getfloat("HPN", "alpha")
@@ -503,12 +503,10 @@ class Config(object):
             self.patience = conf.getint("SimpleHGN", "patience")
             self.edge_dim = conf.getint("SimpleHGN", "edge_dim")
             self.slope = conf.getfloat("SimpleHGN", "slope")
-            self.attn_drop_rate = conf.getfloat("SimpleHGN", "attn_drop_rate")
             self.feats_drop_rate = conf.getfloat("SimpleHGN", "feats_drop_rate")
             self.num_heads = conf.getint("SimpleHGN", "num_heads")
             self.h_dim = conf.getint("SimpleHGN", "h_dim")
-            self.num_layers = conf.getint("SimpleHGN", "num_layers")
-            self.num_edge = conf.getint("SimpleHGN", "num_edge")
+            self.n_layers = conf.getint("SimpleHGN", "n_layers")
             self.beta = conf.getfloat("SimpleHGN", "beta")
             self.residual = conf.getboolean("SimpleHGN", "residual")
             self.mini_batch_flag = False
@@ -529,6 +527,21 @@ class Config(object):
             self.neg_size = conf.getint("GATNE-T", "neg_size")
             self.neighbor_samples = conf.getint("GATNE-T", "neighbor_samples")
             self.score_fn = conf.get("GATNE-T", "score_fn")
+
+        elif model == 'HetSANN':
+            self.lr = conf.getfloat("HetSANN", "lr")
+            self.weight_decay = conf.getfloat("HetSANN", "weight_decay")
+            self.dropout = conf.getfloat("HetSANN", "dropout")
+            self.seed = conf.getint("HetSANN", "seed")
+            self.h_dim = conf.getint("HetSANN", "h_dim")
+            self.num_layers = conf.getint("HetSANN", "num_layers")
+            self.num_heads = conf.getint("HetSANN", "num_heads")
+            self.max_epoch = conf.getint("HetSANN", "max_epoch")
+            self.patience = conf.getint("HetSANN", "patience")
+            self.slope = conf.getfloat("HetSANN", "slope")
+            self.residual = conf.getboolean("HetSANN", "residual")
+            self.mini_batch_flag = False
+            self.hidden_dim = self.h_dim * self.num_heads
 
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)

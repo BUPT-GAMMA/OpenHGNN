@@ -5,6 +5,7 @@ from dgl.utils import expand_as_pair
 from openhgnn.utils.utils import ccorr
 from dgl import DGLError
 
+
 class CompConv(nn.Module):
     """
     Description

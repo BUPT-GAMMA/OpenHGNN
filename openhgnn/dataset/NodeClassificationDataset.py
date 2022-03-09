@@ -237,10 +237,13 @@ class HIN_NodeClassification(NodeClassificationDataset):
             num_classes = 3
             self.meta_paths_dict = {'PAPSP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
                                               ('paper', 'paper-subject', 'subject'),
+                                              ('subject', 'subject-paper', 'paper')],
+                                    'PAP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')],
+                                    'PSP': [('paper', 'paper-subject', 'subject'),
                                               ('subject', 'subject-paper', 'paper')]
                                     }
-            self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
-                                ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper'))]
+            # self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
+            #                     ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper'))]
             self.in_dim = g.ndata['h'][category].shape[1]
         elif name_dataset == 'acm4NARS':
             dataset = AcademicDataset(name='acm4NARS', raw_dir='')
@@ -310,6 +313,23 @@ class OHGB_NodeClassification(NodeClassificationDataset):
             g = dataset[0].long()
             category = 'BOOK'
             num_classes = 8
+            g = add_reverse_edges(g)
+            self.meta_paths_dict = {'BB': [('BOOK', 'BOOK-and-BOOK', 'BOOK')],
+                                    'BFB': [('BOOK', 'BOOK-to-FILM', 'FILM'), ('FILM', 'BOOK-to-FILM-rev', 'BOOK')],
+                                    'BOFB': [('BOOK', 'BOOK-about-ORGANIZATION', 'ORGANIZATION'),
+                                             ('ORGANIZATION', 'ORGANIZATION-in-FILM', 'FILM'),
+                                             ('FILM', 'BOOK-to-FILM-rev', 'BOOK')],
+                                    'BLMB': [('BOOK', 'BOOK-on-LOCATION', 'LOCATION'),
+                                             ('LOCATION', 'MUSIC-on-LOCATION-rev', 'MUSIC'),
+                                             ('MUSIC', 'MUSIC-in-BOOK', 'BOOK')],
+                                    'BPB': [('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'),
+                                            ('PEOPLE', 'PEOPLE-to-BOOK', 'BOOK')],
+                                    'BPSB': [('BOOK', 'PEOPLE-to-BOOK-rev', 'PEOPLE'),
+                                             ('PEOPLE', 'PEOPLE-to-SPORTS', 'SPORTS'),
+                                             ('SPORTS', 'BOOK-on-SPORTS-rev', 'BOOK')],
+                                    'BBuB': [('BOOK', 'BUSINESS-about-BOOK-rev', 'BUSINESS'),
+                                             ('BUSINESS', 'BUSINESS-about-BOOK', 'BOOK')],
+                                    }
         elif dataset_name == 'ohgbn-yelp2':
             dataset = OHGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
@@ -322,17 +342,20 @@ class OHGB_NodeClassification(NodeClassificationDataset):
             g = dataset[0].long()
             category = 'paper'
             num_classes = 3
-            self.meta_paths_dict = {'PAPSP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
-                                              ('paper', 'paper-subject', 'subject'),
+            self.meta_paths_dict = {
+                                    'PAP': [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper')],
+                                    'PSP': [('paper', 'paper-subject', 'subject'),
                                               ('subject', 'subject-paper', 'paper')]
                                     }
-            self.meta_paths = [(('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
-                                ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper'))]
+                                    
         elif dataset_name == 'ohgbn-imdb':
             dataset = OHGBDataset(name=dataset_name, raw_dir='')
             category = 'movie'
             g = dataset[0].long()
             num_classes = 3
+            self.meta_paths_dict = {
+                'MAM': [('movie', 'movie-actor', 'actor'), ('actor', 'actor-movie', 'movie')],
+                'MDM': [('movie', 'movie-director', 'director'), ('director', 'director-movie', 'movie')]}
             
         self.g, self.category, self.num_classes = g, category, num_classes
     

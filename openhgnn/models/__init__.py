@@ -61,7 +61,7 @@ SUPPORTED_MODELS = {
     'HAN': 'openhgnn.models.HAN',
     #'HGT': 'openhgnn.models.HGT',
     'HeCo': 'openhgnn.models.HeCo',
-    'HGT': 'openhgnn.models.HGT_hetero',
+    'HGT': 'openhgnn.models.HGT',
     'GTN': 'openhgnn.models.GTN_sparse',
     'fastGTN': 'openhgnn.models.fastGTN',
     'MHNF': 'openhgnn.models.MHNF',
@@ -81,4 +81,6 @@ SUPPORTED_MODELS = {
     'HDE': 'openhgnn.models.HDE',
     'SimpleHGN': 'openhgnn.models.SimpleHGN',
     'GATNE-T': 'openhgnn.models.GATNE',
+    'HetSANN': 'openhgnn.models.HetSANN',
+    'HGAT': 'openhgnn.models.HGAT',
 }

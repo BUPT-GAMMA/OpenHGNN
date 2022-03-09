@@ -134,6 +134,20 @@ class EarlyStopping(object):
         return self.early_stop
 
     def loss_step(self, loss, model):
+        """
+        
+        Parameters
+        ----------
+        loss Float or torch.Tensor
+        
+        model torch.nn.Module
+
+        Returns
+        -------
+
+        """
+        if isinstance(loss, th.Tensor):
+            loss = loss.item()
         if self.best_loss is None:
             self.best_loss = loss
             self.save_model(model)
@@ -196,6 +210,7 @@ def set_random_seed(seed):
     th.cuda.manual_seed(seed)
     dgl.seed(seed)
 
+
 def com_mult(a, b):
     r1, i1 = a[..., 0], a[..., 1]
     r2, i2 = b[..., 0], b[..., 1]
@@ -221,8 +236,21 @@ def ccorr(a, b):
     -------
     Tensor, having the same dimension as the input a.
     """
-    import torch.fft as fft
-    return th.irfft(com_mult(conj(th.rfft(a, 1)), th.rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
+    try:
+        from torch import irfft
+        from torch import rfft
+    except ImportError:
+        from torch.fft import irfft2
+        from torch.fft import rfft2
+        
+        def rfft(x, d):
+            t = rfft2(x, dim=(-d))
+            return th.stack((t.real, t.imag), -1)
+        
+        def irfft(x, d, signal_sizes):
+            return irfft2(th.complex(x[:, :, 0], x[:, :, 1]), s=signal_sizes, dim=(-d))
+
+    return irfft(com_mult(conj(rfft(a, 1)), rfft(b, 1)), 1, signal_sizes=(a.shape[-1],))
 
 
 def transform_relation_graph_list(hg, category, identity=True):
@@ -360,3 +388,51 @@ def extract_metapaths(category, canonical_etypes, self_loop=False):
 #             r.append((cen_label == neigh_label).sum() / len(neigh))
 #     he = torch.stack(r).mean()
 #     print(etype+ str(he))
+
+def to_hetero_feat(h, type, name):
+    """Feature convert API.
+    
+    It uses information about the type of the specified node
+    to convert features ``h`` in homogeneous graph into a heteorgeneous
+    feature dictionay ``h_dict``.
+    
+    Parameters
+    ----------
+    h: Tensor
+        Input features of homogeneous graph
+    type: Tensor
+        Represent the type of each node or edge with a number.
+        It should correspond to the parameter ``name``.
+    name: list
+        The node or edge types list.
+    
+    Return
+    ------
+    h_dict: dict
+        output feature dictionary of heterogeneous graph
+    
+    Example
+    -------
+    
+    >>> h = torch.tensor([[1, 2, 3],
+                          [1, 1, 1],
+                          [0, 2, 1],
+                          [1, 3, 3],
+                          [2, 1, 1]])
+    >>> print(h.shape)
+    torch.Size([5, 3])
+    >>> type = torch.tensor([0, 1, 0, 0, 1])
+    >>> name = ['author', 'paper']
+    >>> h_dict = to_hetero_feat(h, type, name)
+    >>> print(h_dict)
+    {'author': tensor([[1, 2, 3],
+    [0, 2, 1],
+    [1, 3, 3]]), 'paper': tensor([[1, 1, 1],
+    [2, 1, 1]])}
+    
+    """
+    h_dict = {}
+    for index, ntype in enumerate(name):
+        h_dict[ntype] = h[th.where(type == index)]
+
+    return h_dict

@@ -422,13 +422,11 @@ class OHGB_LinkPrediction(LinkPredictionDataset):
         elif dataset_name == 'ohgbl-yelp1':
             dataset = OHGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
-            g = add_reverse_edges(g)
             self.target_link = [('user', 'user-buy-business', 'business')]
             self.target_link_r = [('business', 'user-buy-business-rev', 'user')]
         elif dataset_name == 'ohgbl-yelp2':
             dataset = OHGBDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
-            g = add_reverse_edges(g)
             self.target_link = [('business', 'described-with', 'phrase')]
             self.target_link_r = [('business', 'described-with-rev', 'phrase')]
         self.g = g
