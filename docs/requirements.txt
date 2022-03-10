@@ -5,5 +5,5 @@ recommonmark
 sphinx_copybutton==0.4.0
 ogb>=1.1.0
 torch>=1.8.1
-dgl==0.8.0
+dgl
 sphinx-intl
