@@ -81,7 +81,7 @@ class LinkPrediction(BaseTask):
         elif name == 'roc_auc':
             return self.evaluator.cal_roc_auc
 
-    def evaluate(self, n_embedding, r_embedding=None, target_etype=None, mode='test'):
+    def evaluate(self, n_embedding, r_embedding=None, mode='test'):
         r"""
 
         Parameters
@@ -112,8 +112,8 @@ class LinkPrediction(BaseTask):
             else:
                 raise ValueError('Mode error, supported test and valid.')
             negative_graph = self.construct_negative_graph(eval_hg)
-            p_score = th.sigmoid(self.ScorePredictor(eval_hg, n_embedding, target_etype, r_embedding))
-            n_score = th.sigmoid(self.ScorePredictor(negative_graph, n_embedding, target_etype, r_embedding))
+            p_score = th.sigmoid(self.ScorePredictor(eval_hg, n_embedding, r_embedding))
+            n_score = th.sigmoid(self.ScorePredictor(negative_graph, n_embedding, r_embedding))
             p_label = th.ones(len(p_score), device=p_score.device)
             n_label = th.zeros(len(n_score), device=p_score.device)
             roc_auc = self.evaluator.cal_roc_auc(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu())
@@ -124,7 +124,8 @@ class LinkPrediction(BaseTask):
 
     def downstream_evaluate(self, logits, evaluation_metric):
         if evaluation_metric == 'academic_lp':
-            auc, macro_f1, micro_f1 = self.evaluator.author_link_prediction(logits, self.dataset.train_batch, self.dataset.test_batch)
+            auc, macro_f1, micro_f1 = self.evaluator.author_link_prediction(logits, self.dataset.train_batch,
+                                                                            self.dataset.test_batch)
             return dict(AUC=auc, Macro_f1=macro_f1, Mirco_f1=micro_f1)
 
     def get_batch(self):
@@ -158,7 +159,7 @@ class HeteroDotProductPredictor(th.nn.Module):
     
     """
 
-    def forward(self, edge_subgraph, x, target_etype=None, *args, **kwargs):
+    def forward(self, edge_subgraph, x, *args, **kwargs):
         """
         Parameters
         ----------
@@ -176,13 +177,9 @@ class HeteroDotProductPredictor(th.nn.Module):
         with edge_subgraph.local_scope():
             for ntype in edge_subgraph.ntypes:
                 edge_subgraph.nodes[ntype].data['x'] = x[ntype]
-
-            if target_etype is None:
                 for etype in edge_subgraph.canonical_etypes:
                     edge_subgraph.apply_edges(
                         dgl.function.u_dot_v('x', 'x', 'score'), etype=etype)
-            else:
-                edge_subgraph.apply_edges(dgl.function.u_dot_v('x', 'x', 'score'), etype=target_etype)
             score = edge_subgraph.edata['score']
             if isinstance(score, dict):
                 result = []

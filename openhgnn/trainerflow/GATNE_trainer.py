@@ -10,6 +10,9 @@ import dgl
 from ..sampler.GATNE_sampler import NeighborSampler, generate_pairs
 
 
+# INFO  [Train Info] product-product-0[Evaluation metric] Mode:test, roc_auc: 0.6137; loss: 0.7489;       Mode:valid, roc_auc: 0.8931; loss: 0.7447;
+# INFO  [Train Info] product-product-1[Evaluation metric] Mode:test, roc_auc: 0.8328; loss: 0.7463;       Mode:valid, roc_auc: 0.9714; loss: 0.7445;
+
 @register_flow("GATNE_trainer")
 class GATNE(BaseFlow):
     def __init__(self, args):
@@ -20,6 +23,9 @@ class GATNE(BaseFlow):
         self.train_dataloader = None
         self.nsloss = None
         self.neighbor_sampler = None
+
+        self.orig_val_hg = self.task.val_hg
+        self.orig_test_hg = self.task.test_hg
 
         self.preprocess()
         self.train()
@@ -63,7 +69,7 @@ class GATNE(BaseFlow):
             else:
                 patience += 1
                 if patience > self.args.patience:
-                    print("Early Stopping")
+                    self.logger.train_info(f'Early Stop!\tEpoch:{self.epoch:03d}.')
                     break
 
     def _full_train_step(self):
@@ -104,7 +110,8 @@ class GATNE(BaseFlow):
     def _full_test_step(self):
         self.model.eval()
         # {'1': {}, '2': {}}
-        final_model = dict(zip(self.hg.etypes, [list() for _ in range(len(self.hg.etypes))]))
+        final_model = dict(
+            zip(self.hg.etypes, [th.empty(self.hg.num_nodes(), self.args.dim) for _ in range(len(self.hg.etypes))]))
         for i in range(self.hg.num_nodes()):
             train_inputs = (
                 torch.tensor([i for _ in range(len(self.hg.etypes))])
@@ -133,12 +140,20 @@ class GATNE(BaseFlow):
             )[:, 0]
 
             for j in range(len(self.hg.etypes)):
-                final_model[self.hg.etypes[j]].append(node_emb[j].cpu().detach().numpy())
-
+                final_model[self.hg.etypes[j]][i] = node_emb[j].cpu().detach()
+        metric = {}
         score = []
         for i in range(len(self.hg.etypes)):
-            n_embedding = {self.hg.ntypes[0]: th.tensor(final_model[self.hg.etypes[i]])}
-            res = self.task.evaluate(n_embedding=n_embedding, target_etype=self.hg.etypes[i])
-            score.append(res.get('roc_auc'))
+            self.task.val_hg = dgl.edge_type_subgraph(self.orig_val_hg, [self.hg.etypes[i]])
+            self.task.test_hg = dgl.edge_type_subgraph(self.orig_test_hg, [self.hg.etypes[i]])
+
+            for split in ['test', 'valid']:
+                n_embedding = {self.hg.ntypes[0]: final_model[self.hg.etypes[i]]}
+                res = self.task.evaluate(n_embedding=n_embedding, mode=split)
+                metric[split] = res
+                if split == 'valid':
+                    score.append(res.get('roc_auc'))
+            self.logger.train_info(self.hg.etypes[i] + self.logger.metric2str(metric))
+
         avg_score = sum(score) / len(score)
         return avg_score
