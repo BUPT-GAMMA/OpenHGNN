@@ -22,11 +22,13 @@ HGBl-amazon
 
 ### Performance
 
-Node classification 
+Link Prediction
 
-| Link Prediction     | HGBl-amazon | 
-| ------------------- | ----------- | 
+Evaluation metric: roc_auc
 
+| HGBl-amazon                                                          | 
+|----------------------------------------------------------------------|
+| 0.7300(product-product-0) 0.8866(product-product-1) 0.8083(avgerage) |
 
 #### Contirbutor
 

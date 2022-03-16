@@ -119,7 +119,7 @@ Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get
 The link will give some basic usage.
 
 | Model                                                    | Node classification | Link prediction    | Recommendation     |
-| -------------------------------------------------------- | ------------------- | ------------------ | ------------------ |
+|----------------------------------------------------------| ------------------- | ------------------ | ------------------ |
 | [Metapath2vec](./openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark:  |                    |                    |
 | [RGCN](./openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [HERec](./openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark:  |                    |                    |
@@ -143,6 +143,7 @@ The link will give some basic usage.
 | [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
 | [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
+| [GATNE-T](./openhgnn/output/GANTE-T)[KDD 2019]           |                     | :heavy_check_mark: |                    |
 
 ### Candidate models
 

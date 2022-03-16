@@ -144,6 +144,7 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 | [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark: | :heavy_check_mark: |                    |
 | [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark: |                    |                    |
 | [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                    | :heavy_check_mark: |                    |
+| [GATNE-T](./openhgnn/output/GANTE-T)[KDD 2019]           |                    | :heavy_check_mark: |                    |
 
 ### 候选模型
 
