@@ -143,7 +143,7 @@ The link will give some basic usage.
 | [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
 | [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
-| [GATNE-T](./openhgnn/output/GANTE-T)[KDD 2019]           |                     | :heavy_check_mark: |                    |
+| [GATNE-T](./openhgnn/output/GATNE-T)[KDD 2019]           |                     | :heavy_check_mark: |                    |
 
 ### Candidate models
 
