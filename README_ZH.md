@@ -41,9 +41,9 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 
 - Python  >= 3.6
 
-- [PyTorch](https://pytorch.org/get-started/locally/)  >= 1.7.1
+- [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
 
-- [DGL](https://github.com/dmlc/dgl) >= 0.7.0
+- [DGL](https://github.com/dmlc/dgl) >= 0.8.0
 
 - CPU 或者 NVIDIA GPU, Linux, Python3
 
@@ -54,18 +54,16 @@ conda create -n openhgnn python=3.7
 source activate openhgnn
 ```
 
-**2. Pytorch:** 安装Pytorch，参考[PyTorch安装文档](https://pytorch.org/get-started/locally/)。
+**2. 安装Pytorch:** 参考 [PyTorch安装文档](https://pytorch.org/get-started/) 根据你的操作系统和CUDA版本选择合适的安装命令。例如：
 
 ```bash
-# CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
-pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+pip install torch torchvision torchaudio
 ```
 
-**3. DGL:**安装 DGL，参考[DGL安装文档](https://www.dgl.ai/pages/start.html)。
+**3. 安装DGL:** 参考 [DGL安装文档](https://www.dgl.ai/pages/start.html) 根据你的操作系统和CUDA版本选择合适的安装命令。例如：
 
 ```bash
-# CUDA versions: cpu, cu101, cu102, cu110, cu111
-pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
+pip install dgl dglgo -f https://data.dgl.ai/wheels/repo.html
 ```
 
 **4. 下载OpenHGNN，安装依赖:**

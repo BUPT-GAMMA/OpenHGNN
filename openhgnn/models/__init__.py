@@ -59,7 +59,6 @@ SUPPORTED_MODELS = {
     'Metapath2vec': 'openhgnn.models.SkipGram',
     'HERec': 'openhgnn.models.SkipGram',
     'HAN': 'openhgnn.models.HAN',
-    #'HGT': 'openhgnn.models.HGT',
     'HeCo': 'openhgnn.models.HeCo',
     'HGT': 'openhgnn.models.HGT',
     'GTN': 'openhgnn.models.GTN_sparse',

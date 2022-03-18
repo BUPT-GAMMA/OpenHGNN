@@ -38,9 +38,9 @@ We release the latest version v0.2.
 
 - Python  >= 3.6
 
-- [PyTorch](https://pytorch.org/get-started/locally/)  >= 1.7.1
+- [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
 
-- [DGL](https://github.com/dmlc/dgl) >= 0.7.0
+- [DGL](https://github.com/dmlc/dgl) >= 0.8.0
 
 - CPU or NVIDIA GPU, Linux, Python3
 
@@ -51,18 +51,16 @@ conda create -n openhgnn python=3.7
 source activate openhgnn
 ```
 
-**2. Pytorch:** Install [PyTorch](https://pytorch.org/). For example:
+**2. Install Pytorch:** Follow their [tutorial](https://pytorch.org/get-started) to run the proper command according to your OS and CUDA version. For example:
 
 ```bash
-# CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
-pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+pip install torch torchvision torchaudio
 ```
 
-**3. DGL:** Install [DGL](https://www.dgl.ai/pages/start.html), follow their instructions. For example:
+**3. Install DGL:** Follow their [tutorial](https://www.dgl.ai/pages/start.html) to run the proper command according to your OS and CUDA version. For example:
 
 ```bash
-# CUDA versions: cpu, cu101, cu102, cu110, cu111
-pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
+pip install dgl dglgo -f https://data.dgl.ai/wheels/repo.html
 ```
 
 **4. OpenHGNN and other dependencies:**
