@@ -2,9 +2,9 @@ import argparse
 import os
 
 # script for running batch experiments
-# python script/run_experiments.py -g 2
+# python tests/scripts/run_experiments.py -g 0
 # or
-# nohup python script/run_experiments.py -g 2
+# nohup python tests/scripts/run_experiments.py -g 0
 
 # from readme of every model
 # python main.py -m CompGCN -t node_classification -d aifb -g 0
