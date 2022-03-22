@@ -108,7 +108,8 @@ class GATNE(BaseFlow):
         # {'1': {}, '2': {}}
         final_model = dict(
             zip(self.hg.etypes, [th.empty(self.hg.num_nodes(), self.args.dim) for _ in range(len(self.hg.etypes))]))
-        for i in range(self.hg.num_nodes()):
+
+        for i in tqdm(range(self.hg.num_nodes()), desc='Evaluating...'):
             train_inputs = (
                 torch.tensor([i for _ in range(len(self.hg.etypes))])
                     .unsqueeze(1)
