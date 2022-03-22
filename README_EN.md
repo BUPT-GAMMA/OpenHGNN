@@ -4,8 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/openhgnn/badge/?version=latest)](https://openhgnn.readthedocs.io/en/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
 
-[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN) | [**Space4HGNN**](../space4hgnn) | [**
-Benchmark&Leaderboard**](../openhgnn/dataset/ohgb.md)
+[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN) | [**Space4HGNN**](../space4hgnn) | [**Benchmark&Leaderboard**](../openhgnn/dataset/ohgb.md)
 
 This is an open-source toolkit for Heterogeneous Graph Neural Network(../openhgnn) based
 on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https://pytorch.org/). We integrate SOTA models

@@ -118,7 +118,7 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 表格中的链接给出了模型的基本使用方法.
 
 | 模型                                                       | 节点分类               | 链路预测               | 推荐                 |
-| -------------------------------------------------------- | ------------------ | ------------------ | ------------------ |
+|----------------------------------------------------------|--------------------|--------------------|--------------------|
 | [Metapath2vec](./openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark: |                    |                    |
 | [RGCN](./openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark: | :heavy_check_mark: |                    |
 | [HERec](./openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark: |                    |                    |
@@ -130,7 +130,7 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 | [RSHN](./openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark: | :heavy_check_mark: |                    |
 | [DMGI](./openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark: |                    |                    |
 | [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark: |                    |                    |
-| HGT[WWW 2020]                                            |                    |                    |                    |
+| [HGT](./openhgnn/output/HGT)[WWW 2020]                   |                    |                    |                    |
 | [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020]          | :heavy_check_mark: | :heavy_check_mark: |                    |
 | [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]               | :heavy_check_mark: |                    |                    |
 | [NARS](./openhgnn/output/NARS)[arxiv]                    | :heavy_check_mark: |                    |                    |
