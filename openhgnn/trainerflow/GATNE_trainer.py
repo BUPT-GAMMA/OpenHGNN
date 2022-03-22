@@ -137,7 +137,7 @@ class GATNE(BaseFlow):
             )[:, 0]
 
             for j in range(len(self.hg.etypes)):
-                final_model[self.hg.etypes[j]][i] = node_emb[j].cpu().detach()
+                final_model[self.hg.etypes[j]][i] = node_emb[j].detach()
         metric = {}
         score = []
         for etype in self.hg.etypes:
@@ -145,7 +145,7 @@ class GATNE(BaseFlow):
             self.task.test_hg = dgl.edge_type_subgraph(self.orig_test_hg, [etype])
 
             for split in ['test', 'valid']:
-                n_embedding = {self.hg.ntypes[0]: final_model[etype]}
+                n_embedding = {self.hg.ntypes[0]: final_model[etype].to(self.device)}
                 res = self.task.evaluate(n_embedding=n_embedding, mode=split)
                 metric[split] = res
                 if split == 'valid':
