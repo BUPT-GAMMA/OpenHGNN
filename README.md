@@ -1,40 +1,43 @@
-# OpenHGNN
+# 异质图神经网络开源工具包
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)
-[![Documentation Status](https://readthedocs.org/projects/openhgnn/badge/?version=latest)](https://openhgnn.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/openhgnn-zh-cn/badge/?version=latest)](https://openhgnn.readthedocs.io/zh_CN/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
 
-[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN) | [**Space4HGNN**](./space4hgnn) | [**Benchmark&Leaderboard**](./openhgnn/dataset/ohgb.md)
+[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)｜ [**Github Community (English)**](https://github.com/BUPT-GAMMA/OpenHGNN) ｜[**Space4HGNN**](./space4hgnn) ｜[**Benchmark&Leaderboard**](./openhgnn/dataset/ohgb.md)
 
-This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https://pytorch.org/). We integrate SOTA models of heterogeneous graph.
+OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包，集成了异质图神经网络的前沿模型。
 
-## News
+## 新闻
 
 **2021-02-28**
 
-We release the latest version v0.2.
+我们开源了0.2版本。
 
-- New Models
-- [Space4HGNN](./space4hgnn)
-- [Benchmark&Leaderboard](./openhgnn/dataset/ohgb.md)
+- 新增模型
+- 异质图神经网络的设计空间：[Space4HGNN](./space4hgnn)
+- 基准数据集以及排行榜：[Benchmark&Leaderboard](./openhgnn/dataset/ohgb.md)
 
 **2021-01-07**
 
 启智社区用户可以享受到如下功能：
 
 - 全新的中文文档
-- 免费的计算资源
+- 免费的计算资源—— [云脑使用教程](https://git.openi.org.cn/GAMMALab/OpenHGNN/src/branch/main/yunnao_tutorial.md)
 - OpenHGNN最新功能
+  - 新增模型：【KDD2017】Metapath2vec、【TKDE2018】HERec、【KDD2021】HeCo、【KDD2021】SimpleHGN、【TKDE2021】HPN、【ICDM2021】HDE、fastGTN
+  - 新增日志功能
+  - 新增美团外卖数据集
 
-## Key Features
+## 关键特性
 
-- Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and dataset. Besides, we also integrate [optuna](https://optuna.org/) to get hyperparameter optimization.
-- Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
-- Efficiency: The backend dgl provides efficient APIs.
+- 易用：OpenHGNN提供了了易用的接口在给定的模型和数据集上运行实验，且集成了 [optuna](https://optuna.org/) 进行超参数优化。
+- 可扩展：用户可以定义定制化的任务/模型/数据集来对新的场景应用新的模型。
+- 高效：底层的DGL框架提供了提供了高效的API。
 
-## Get Started
+## 开始使用
 
-#### Requirements and Installation
+#### 环境要求
 
 - Python  >= 3.6
 
@@ -42,114 +45,112 @@ We release the latest version v0.2.
 
 - [DGL](https://github.com/dmlc/dgl) >= 0.8.0
 
-- CPU or NVIDIA GPU, Linux, Python3
+- CPU 或者 NVIDIA GPU, Linux, Python3
 
-**1. Python environment (Optional):** We recommend using Conda package manager
+**1. Python 环境 (可选):** 推荐使用 Conda 包管理
 
 ```bash
 conda create -n openhgnn python=3.7
 source activate openhgnn
 ```
 
-**2. Install Pytorch:** Follow their [tutorial](https://pytorch.org/get-started) to run the proper command according to your OS and CUDA version. For example:
+**2. 安装Pytorch:** 参考 [PyTorch安装文档](https://pytorch.org/get-started/) 根据你的操作系统和CUDA版本选择合适的安装命令。例如：
 
 ```bash
 pip install torch torchvision torchaudio
 ```
 
-**3. Install DGL:** Follow their [tutorial](https://www.dgl.ai/pages/start.html) to run the proper command according to your OS and CUDA version. For example:
+**3. 安装DGL:** 参考 [DGL安装文档](https://www.dgl.ai/pages/start.html) 根据你的操作系统和CUDA版本选择合适的安装命令。例如：
 
 ```bash
 pip install dgl dglgo -f https://data.dgl.ai/wheels/repo.html
 ```
 
-**4. OpenHGNN and other dependencies:**
+**4. 下载OpenHGNN，安装依赖:**
 
 ```bash
 git clone https://github.com/BUPT-GAMMA/OpenHGNN
-# If you encounter a network error, try git clone from openi as following.
-# git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
 cd OpenHGNN
 pip install -r requirements.txt
 ```
 
-#### Running an existing baseline model on an existing benchmark [dataset](./openhgnn/dataset/#Dataset)
+#### 在已有的评测上运行已有的基线模型 [数据集](./openhgnn/dataset/#Dataset)
 
 ```bash
 python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --load_from_pretrained
 ```
 
-usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
+使用方法: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
                [--gpu GPU] [--use_best_config]
 
-*optional arguments*:
+*可选参数*:
 
-``-h, --help``    show this help message and exit
+``-h, --help``    展示帮助信息并退出
 
-``--model -m ``    name of models
+``--model -m ``    模型名
 
-``--task -t``    name of task
+``--task -t``    任务名
 
-``--dataset -d``    name of datasets
+``--dataset -d``    数据集名
 
-``--gpu -g``    controls which gpu you will use. If you do not have gpu, set -g -1.
+``--gpu -g``    控制你使用哪一个GPU，如果没有GPU，设定 -g -1。
 
-``--use_best_config``    use_best_config means you can use the best config in the dataset with the model. If you want to set the different hyper-parameter, modify the [openhgnn.config.ini](./openhgnn/config.ini) manually. The best_config will override the parameter in config.ini.
+``--use_best_config``    use_best_config 意味着你使用该模型在该数据集下最优的配置，如果你想要设定不同的超参数,请手动修改 [配置文件](./openhgnn/config.ini)。使用最佳配置会覆盖配置文件中的参数。
 
-``--use_hpo`` Besides use_best_config, we give a hyper-parameter [example](./openhgnn/auto) to search the best hyper-parameter automatically.
+``--use_hpo`` 除了 use_best_config，我们还提供了一个超参数的 [样例](./openhgnn/auto) 来自动查找最佳超参数。
 
-``--load_from_pretrained`` will load the model from a default checkpoint.
+``--load_from_pretrained`` 从默认检查点加载模型。
 
-e.g.: 
+示例: 
 
 ```bash
 python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 ```
 
-**Note**: If you are interested in some model, you can refer to the below models list.
+**提示**: 如果你对某个模型感兴趣,你可以参考下列的模型列表。
 
-Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get more basic and depth usage.
+请参考 [文档](https://openhgnn.readthedocs.io/en/latest/index.html) 了解更多的基础和进阶的使用方法。
 
-## [Models](./openhgnn/models/#Model)
+## [模型](./openhgnn/models/#Model)
 
-### Supported Models with specific task
+### 特定任务下支持的模型
 
-The link will give some basic usage.
+表格中的链接给出了模型的基本使用方法.
 
-| Model                                                    | Node classification | Link prediction    | Recommendation     |
-|----------------------------------------------------------| ------------------- | ------------------ | ------------------ |
-| [Metapath2vec](./openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark:  |                    |                    |
-| [RGCN](./openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [HERec](./openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark:  |                    |                    |
-| [HAN](./openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [KGCN](./openhgnn/output/KGCN)[WWW 2019]                 |                     |                    | :heavy_check_mark: |
-| [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| HGAT[EMNLP 2019]                                         |                     |                    |                    |
-| [GTN](./openhgnn/output/GTN)[NeurIPS 2019] & fastGTN     | :heavy_check_mark:  |                    |                    |
-| [RSHN](./openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [DMGI](./openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark:  |                    |                    |
-| [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark:  |                    |                    |
-| [HGT](./openhgnn/output/HGT)[WWW 2020]                   |:heavy_check_mark:|                    |                    |
-| [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020]          | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]               | :heavy_check_mark:  |                    |                    |
-| [NARS](./openhgnn/output/NARS)[arxiv]                    | :heavy_check_mark:  |                    |                    |
-| [MHNF](./openhgnn/output/MHNF)[arxiv]                    | :heavy_check_mark:  |                    |                    |
-| [HGSL](./openhgnn/output/HGSL)[AAAI 2021]                | :heavy_check_mark:  |                    |                    |
-| [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]           | :heavy_check_mark:  |                    |                    |
-| [HeCo](./openhgnn/output/HeCo)[KDD 2021]                 | :heavy_check_mark:  |                    |                    |
-| [SimpleHGN](./openhgnn/output/SimpleHGN)[KDD 2021]       | :heavy_check_mark:  |                    |                    |
-| [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
-| [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
-| [GATNE-T](./openhgnn/output/GATNE-T)[KDD 2019]           |                     | :heavy_check_mark: |                    |
+| 模型                                                       | 节点分类               | 链路预测               | 推荐                 |
+| -------------------------------------------------------- | ------------------ | ------------------ | ------------------ |
+| [Metapath2vec](./openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark: |                    |                    |
+| [RGCN](./openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [HERec](./openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark: |                    |                    |
+| [HAN](./openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [KGCN](./openhgnn/output/KGCN)[WWW 2019]                 |                    |                    | :heavy_check_mark: |
+| [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark: | :heavy_check_mark: |                    |
+| HGAT[EMNLP 2019]                                         |                    |                    |                    |
+| [GTN](./openhgnn/output/GTN)[NeurIPS 2019] & fastGTN     | :heavy_check_mark: |                    |                    |
+| [RSHN](./openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [DMGI](./openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark: |                    |                    |
+| [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark: |                    |                    |
+| HGT[WWW 2020]                                            |                    |                    |                    |
+| [CompGCN](./openhgnn/output/CompGCN)[ICLR 2020]          | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]               | :heavy_check_mark: |                    |                    |
+| [NARS](./openhgnn/output/NARS)[arxiv]                    | :heavy_check_mark: |                    |                    |
+| [MHNF](./openhgnn/output/MHNF)[arxiv]                    | :heavy_check_mark: |                    |                    |
+| [HGSL](./openhgnn/output/HGSL)[AAAI 2021]                | :heavy_check_mark: |                    |                    |
+| [HGNN-AC](./openhgnn/output/HGNN_AC)[WWW 2021]           | :heavy_check_mark: |                    |                    |
+| [HeCo](./openhgnn/output/HeCo)[KDD 2021]                 | :heavy_check_mark: |                    |                    |
+| [SimpleHGN](./openhgnn/output/SimpleHGN)[KDD 2021]       | :heavy_check_mark: |                    |                    |
+| [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark: |                    |                    |
+| [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                    | :heavy_check_mark: |                    |
+| [GATNE-T](./openhgnn/output/GATNE-T)[KDD 2019]           |                    | :heavy_check_mark: |                    |
 
-### Candidate models
+### 候选模型
 
 - Heterogeneous Graph Attention Networks for Semi-supervised Short Text Classification[EMNLP 2019]
 - [Heterogeneous Information Network Embedding with Adversarial Disentangler[TKDE 2021]](https://ieeexplore.ieee.org/document/9483653)
 
-## Contributors
+## 贡献者
 
-OpenHGNN Team[GAMMA LAB], DGL Team and Peng Cheng Laboratory.
+OpenHGNN团队[北邮 GAMMA 实验室]、DGL 团队和鹏城实验室。
 
-See more in [CONTRIBUTING](./CONTRIBUTING.md).
+[贡献者名单](./CONTRIBUTING.md)
