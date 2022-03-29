@@ -17,8 +17,8 @@ Install
 Python environment requirments
 
 - `Python <https://www.python.org/>`_ >= 3.6
-- `PyTorch <https://pytorch.org/get-started/locally/>`_  >= 1.7.1
-- `DGL <https://github.com/dmlc/dgl>`_ >= 0.7.0
+- `PyTorch <https://pytorch.org/get-started/>`_  >= 1.9.0
+- `DGL <https://github.com/dmlc/dgl>`_ >= 0.8.0
 
 
 **1. Python environment (Optional):** We recommend using Conda package manager
@@ -33,7 +33,7 @@ Python environment requirments
 
 .. code:: bash
 
-    # CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
+
     pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
 
@@ -42,8 +42,8 @@ follow their instructions. For example:
 
 .. code:: bash
 
-    # CUDA versions: cpu, cu101, cu102, cu110, cu111
-    pip install --pre dgl-cu101 -f https://data.dgl.ai/wheels-test/repo.html
+
+    pip install dgl dglgo -f https://data.dgl.ai/wheels/repo.html
 
 **4. OpenHGNN and other dependencies:**
 

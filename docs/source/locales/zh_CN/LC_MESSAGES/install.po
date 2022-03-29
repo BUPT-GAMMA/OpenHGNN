@@ -58,11 +58,11 @@ msgid "`Python <https://www.python.org/>`_ >= 3.6"
 msgstr ""
 
 #: ../../install/index.rst:20
-msgid "`PyTorch <https://pytorch.org/get-started/locally/>`_  >= 1.7.1"
+msgid "`PyTorch <https://pytorch.org/get-started/>`_  >= 1.9.0"
 msgstr ""
 
 #: ../../install/index.rst:21
-msgid "`DGL <https://github.com/dmlc/dgl>`_ >= 0.7.0"
+msgid "`DGL <https://github.com/dmlc/dgl>`_ >= 0.8.0"
 msgstr ""
 
 #: ../../install/index.rst:24
@@ -73,7 +73,7 @@ msgstr "**1. Python 环境 (可选):** 推荐使用 Conda 包管理 "
 
 #: ../../install/index.rst:32
 msgid "**2. Pytorch:** Install `PyTorch <https://pytorch.org/>`_. For example:"
-msgstr "**2. Pytorch:** 安装Pytorch, 参考 `PyTorch安装文档 <https://pytorch.org/get-started/locally/>`_ . "
+msgstr "**2. Pytorch:** 安装Pytorch, 参考 `PyTorch安装文档 <https://pytorch.org/get-started/>`_ . "
 
 #: ../../install/index.rst:40
 msgid ""

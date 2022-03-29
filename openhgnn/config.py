@@ -511,6 +511,23 @@ class Config(object):
             self.residual = conf.getboolean("SimpleHGN", "residual")
             self.mini_batch_flag = False
             self.hidden_dim = self.h_dim * self.num_heads
+
+        elif model == 'GATNE-T':
+            self.learning_rate = conf.getfloat("GATNE-T", "learning_rate")
+            self.patience = conf.getint("GATNE-T", "patience")
+            self.max_epoch = conf.getint("GATNE-T", "max_epoch")
+            self.batch_size = conf.getint("GATNE-T", "batch_size")
+            self.num_workers = conf.getint("GATNE-T", "num_workers")
+            self.dim = conf.getint("GATNE-T", "dim")
+            self.edge_dim = conf.getint("GATNE-T", "edge_dim")
+            self.att_dim = conf.getint("GATNE-T", "att_dim")
+            self.rw_length = conf.getint("GATNE-T", "rw_length")
+            self.rw_walks = conf.getint("GATNE-T", "rw_walks")
+            self.window_size = conf.getint("GATNE-T", "window_size")
+            self.neg_size = conf.getint("GATNE-T", "neg_size")
+            self.neighbor_samples = conf.getint("GATNE-T", "neighbor_samples")
+            self.score_fn = conf.get("GATNE-T", "score_fn")
+
         elif model == 'HetSANN':
             self.lr = conf.getfloat("HetSANN", "lr")
             self.weight_decay = conf.getfloat("HetSANN", "weight_decay")
