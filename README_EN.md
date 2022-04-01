@@ -17,7 +17,7 @@ of heterogeneous graph.
 We release the latest version v0.2.
 
 - New Models
-- [Space4HGNN](space4hgnn)
+- [Space4HGNN](../space4hgnn)
 - [Benchmark&Leaderboard](../openhgnn/dataset/ohgb.md)
 
 **2021-01-07**
