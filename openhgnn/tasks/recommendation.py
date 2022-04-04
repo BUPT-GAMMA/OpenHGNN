@@ -9,8 +9,9 @@ class Recommendation(BaseTask):
     """Recommendation tasks."""
     def __init__(self, args):
         super(Recommendation, self).__init__()
+        self.logger = args.logger
         self.n_dataset = args.dataset
-        self.dataset = build_dataset(args.dataset, 'recommendation')
+        self.dataset = build_dataset(args.dataset, 'recommendation', logger=self.logger)
         # self.evaluator = Evaluator()
         self.train_hg, self.val_hg, self.test_hg = self.dataset.get_idx()
         self.evaluator = Evaluator(args.seed)
