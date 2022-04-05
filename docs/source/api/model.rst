@@ -207,3 +207,48 @@ RHGNN
    :members:
    :undoc-members:
    :show-inheritance:
+
+SimpleHGN
+-----------------------------
+
+.. automodule:: openhgnn.models.SimpleHGN
+
+
+SimpleHGN Model
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.SimpleHGN.SimpleHGN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+SimpleHGNConv
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.SimpleHGN.SimpleHGNConv
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+HetSANN
+-----------------------------
+
+.. automodule:: openhgnn.models.HetSANN
+
+
+HetSANN Model
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.HetSANN.HetSANN
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+HetSANNConv
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.models.HetSANN.HetSANNConv
+   :members:
+   :undoc-members:
+   :show-inheritance:
