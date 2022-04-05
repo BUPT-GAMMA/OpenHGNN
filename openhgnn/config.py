@@ -542,6 +542,19 @@ class Config(object):
             self.residual = conf.getboolean("HetSANN", "residual")
             self.mini_batch_flag = False
             self.hidden_dim = self.h_dim * self.num_heads
+        elif model =='ieHGCN':
+            self.weight_decay = conf.getfloat("ieHGCN", "weight_decay")
+            self.lr = conf.getfloat("ieHGCN", "lr")
+            self.max_epoch = conf.getint("ieHGCN", "max_epoch")
+            self.seed = conf.getint("ieHGCN", "seed")
+            self.num_heads = conf.getint("ieHGCN", "num_heads")
+            self.h_dim = conf.getint("ieHGCN", "h_dim")
+            self.n_layers = conf.getint("ieHGCN","num_layers")
+            self.mini_batch_flag = False
+            self.type_att_size = conf.getint("ieHGCN","type_att_size")
+            self.type_fusion = conf.get("ieHGCN","type_fusion")
+            self.hidden_dim = conf.getint("ieHGCN", "hidden_dim")
+            self.patience = conf.getint("ieHGCN", "patience")
 
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)
