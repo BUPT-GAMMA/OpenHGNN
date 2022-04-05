@@ -44,8 +44,9 @@ class KGCNTrainer(BaseFlow):
         inputData = np.delete(inputData, deleteindex, axis=0)
         self.renew_weight(inputData)
         sampler = dgl.dataloading.MultiLayerNeighborSampler(self.neighborList)
-        dataloader = dgl.dataloading.NodeDataLoader(
-            self.hg, list(inputData[:, 1]), sampler,
+        dataloader = dgl.dataloading.DataLoader(
+            self.hg, th.LongTensor(inputData[:, 1]).to(device=self.hg.device), sampler,
+            device=self.hg.device,
             batch_size=1024,
             shuffle=True,
             drop_last=False,

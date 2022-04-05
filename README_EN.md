@@ -4,7 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/openhgnn/badge/?version=latest)](https://openhgnn.readthedocs.io/en/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
 
-[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN) | [**Space4HGNN**](../space4hgnn) | [**Benchmark&Leaderboard**](../openhgnn/dataset/ohgb.md)
+[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN) | [**Space4HGNN [SIGIR2022]**](../space4hgnn) | [**Benchmark&Leaderboard**](../openhgnn/dataset/ohgb.md)
 
 This is an open-source toolkit for Heterogeneous Graph Neural Network(../openhgnn) based
 on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https://pytorch.org/). We integrate SOTA models
@@ -17,7 +17,7 @@ of heterogeneous graph.
 We release the latest version v0.2.
 
 - New Models
-- [Space4HGNN](space4hgnn)
+- [Space4HGNN [SIGIR2022]](../space4hgnn)
 - [Benchmark&Leaderboard](../openhgnn/dataset/ohgb.md)
 
 **2021-01-07**
@@ -125,7 +125,7 @@ Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get
 The link will give some basic usage.
 
 | Model                                                     | Node classification | Link prediction    | Recommendation     |
-|-----------------------------------------------------------|---------------------|--------------------|--------------------|
+| --------------------------------------------------------- | ------------------- | ------------------ | ------------------ |
 | [Metapath2vec](../openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark:  |                    |                    |
 | [RGCN](../openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [HERec](../openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark:  |                    |                    |
