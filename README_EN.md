@@ -6,7 +6,7 @@
 
 [**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN) | [**Space4HGNN [SIGIR2022]**](../space4hgnn) | [**Benchmark&Leaderboard**](../openhgnn/dataset/ohgb.md)
 
-This is an open-source toolkit for Heterogeneous Graph Neural Network(../openhgnn) based
+This is an open-source toolkit for Heterogeneous Graph Neural Network based
 on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https://pytorch.org/). We integrate SOTA models
 of heterogeneous graph.
 
