@@ -52,7 +52,7 @@ class LinkPredictionDataset(BaseDataset):
                 random_int = th.randperm(num_edges)
                 val_index = random_int[:int(num_edges * val_ratio)]
                 val_edge = self.g.find_edges(val_index, etype)
-                test_index = random_int[int(num_edges * test_ratio):int(num_edges * (test_ratio + val_ratio))]
+                test_index = random_int[int(num_edges * val_ratio):int(num_edges * (test_ratio + val_ratio))]
                 test_edge = self.g.find_edges(test_index, etype)
 
                 val_edge_dict[etype] = val_edge
