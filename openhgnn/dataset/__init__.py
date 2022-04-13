@@ -52,7 +52,7 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'rdf_' + task
     elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp', 'dblp4MAGNN',
                      'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie', 'Book-Crossing',
-                     'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB']:
+                     'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB', 'twitter']:
         _dataset = 'hin_' + task
     elif dataset in ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase',
                      'ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']:
@@ -61,7 +61,7 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'ogbn_' + task
     elif dataset in ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']:
         _dataset = 'HGBn_node_classification'
-    elif dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
+    elif dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed', 'HGBl-twitter', 'HGBl-twitter_test']:
         _dataset = 'HGBl_link_prediction'
     elif dataset in ['wn18', 'FB15k', 'FB15k-237']:
         assert task == 'link_prediction'

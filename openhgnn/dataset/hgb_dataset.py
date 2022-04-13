@@ -13,7 +13,7 @@ class HGBDataset(DGLDataset):
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
         assert name in ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB',
-                        'HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']
+                        'HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed', 'HGBl-twitter', 'HGBl-twitter_test']
         self.prefix_task = name[:4]
         # HGBn means node classification
         # HGBl means link prediction

@@ -91,8 +91,13 @@ class LinkPredictionDataset(BaseDataset):
                 out_ntypes.append(etype[0])
                 out_ntypes.append(etype[2])
                 #self.val_label = train_graph.edges[etype[1]].data['label'][val_index]
-                self.test_label = train_graph.edges[etype[1]].data['label'][test_index]
-                train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
+
+                #self.test_label = train_graph.edges[etype[1]].data['label'][test_index]
+
+                if test_index.numel() == 0:
+                    train_graph = dgl.remove_edges(train_graph, val_index, etype)
+                else:
+                    train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
 
         # train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), 'item-user')
         self.out_ntypes = set(out_ntypes)
@@ -251,6 +256,23 @@ class HIN_LinkPrediction(LinkPredictionDataset):
                 'AMDMA': [('actor', 'actor->movie', 'movie'), ('movie', 'movie->director', 'director'),
                           ('director', 'director->movie', 'movie'), ('movie', 'movie->actor', 'actor')]
                                     }
+        elif dataset_name == 'twitter':
+            dataset = AcademicDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = False
+            self.target_link = [('_N', '1', '_N'),
+                                ('_N', '2', '_N'),
+                                ('_N', '3', '_N'),
+                                ('_N', '4', '_N')]
+            self.target_link_r = None
+            self.link = [0, 1, 2, 3]
+            self.node_type = ["_N"]
+            self.test_edge_type = {'1': 0, '2': 1, '3': 2, '4': 3}
+            self.meta_paths_dict = {
+                'P0P': [('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')],
+                'P1P': [('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')]
+            }
+
         return g
     
     def get_idx(self, val_ratio=0.1, test_ratio=0.2):
@@ -258,6 +280,7 @@ class HIN_LinkPrediction(LinkPredictionDataset):
             return None, None, None
         else:
             return super(HIN_LinkPrediction, self).get_idx(val_ratio, test_ratio)
+
 
 
 @register_dataset('HGBl_link_prediction')
@@ -294,6 +317,23 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             self.link = [0, 1]
             self.node_type = ["product"]
             self.test_edge_type = {'product-product-0': 0, 'product-product-1': 1}
+            self.meta_paths_dict = {
+                'P0P': [('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')],
+                'P1P': [('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')]
+            }
+
+        elif dataset_name == 'HGBl-twitter' or dataset_name == 'HGBl-twitter_test':
+            dataset = HGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = False
+            self.target_link = [('_N', '1', '_N'),
+                                ('_N', '2', '_N'),
+                                ('_N', '3', '_N'),
+                                ('_N', '4', '_N')]
+            self.target_link_r = None
+            self.link = [0, 1, 2, 3]
+            self.node_type = ["_N"]
+            self.test_edge_type = {'1': 0, '2': 1, '3': 2, '4': 3}
             self.meta_paths_dict = {
                 'P0P': [('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')],
                 'P1P': [('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')]
@@ -358,10 +398,14 @@ class HGB_LinkPrediction(LinkPredictionDataset):
         train_graph = self.g
         val_ratio = 0.1
         for i, etype in enumerate(self.target_link):
-            train_mask = self.g.edges[etype].data['train_mask'].squeeze()
-            train_index = th.nonzero(train_mask).squeeze()
-            random_int = th.randperm(len(train_index))[:int(len(train_index) * val_ratio)]
-            val_index = train_index[random_int]
+            if 'val_mask' in self.g.edges[etype].data:
+                val_mask = self.g.edges[etype].data['val_mask'].squeeze()
+                val_index = th.nonzero(val_mask).squeeze()
+            else:
+                train_mask = self.g.edges[etype].data['train_mask'].squeeze()
+                train_index = th.nonzero(train_mask).squeeze()
+                random_int = th.randperm(len(train_index))[:int(len(train_index) * val_ratio)]
+                val_index = train_index[random_int]
             val_edge = self.g.find_edges(val_index, etype)
 
             test_mask = self.g.edges[etype].data['test_mask'].squeeze()
