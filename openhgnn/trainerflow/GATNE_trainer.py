@@ -140,7 +140,8 @@ class GATNE(BaseFlow):
                 final_model[self.hg.etypes[j]][i] = node_emb[j].detach()
         metric = {}
         score = []
-        for etype in self.hg.etypes:
+        for canonical_etype in self.task.dataset.target_link:
+            etype = canonical_etype[1]
             self.task.val_hg = dgl.edge_type_subgraph(self.orig_val_hg, [etype])
             self.task.test_hg = dgl.edge_type_subgraph(self.orig_test_hg, [etype])
 

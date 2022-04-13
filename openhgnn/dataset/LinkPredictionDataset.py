@@ -262,7 +262,7 @@ class HIN_LinkPrediction(LinkPredictionDataset):
             self.has_feature = False
             self.target_link = [('_N', '1', '_N'),
                                 ('_N', '2', '_N'),
-                                ('_N', '3', '_N'),
+                                # ('_N', '3', '_N'),
                                 ('_N', '4', '_N')]
             self.target_link_r = None
             self.link = [0, 1, 2, 3]
