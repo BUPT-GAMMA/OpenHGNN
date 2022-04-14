@@ -18,7 +18,7 @@ __pycache__/
 *.npz
 
 # yaml files
-*.yaml
+#*.yaml
 
 .DS_Store
 *.txt
