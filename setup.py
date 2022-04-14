@@ -28,7 +28,7 @@ setup(
     url = "https://github.com/BUPT-GAMMA/OpenHGNN",
     download_url = "https://github.com/BUPT-GAMMA/OpenHGNN",
 
-    python_requires='>=3.7',
+    python_requires='>=3.8',
 
     packages = find_packages(),
     
