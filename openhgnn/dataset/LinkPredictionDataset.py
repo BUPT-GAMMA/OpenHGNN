@@ -59,8 +59,8 @@ class LinkPredictionDataset(BaseDataset):
                 test_edge_dict[etype] = test_edge
                 out_ntypes.append(etype[0])
                 out_ntypes.append(etype[2])
-                # train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
-                train_graph = dgl.remove_edges(train_graph, val_index, etype)
+                train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
+                # train_graph = dgl.remove_edges(train_graph, val_index, etype)
                 if self.target_link_r is None:
                     pass
                 else:
