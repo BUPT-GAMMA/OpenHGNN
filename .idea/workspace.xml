@@ -2,11 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="63f95243-523f-4469-9bed-59418bdf37c6" name="Changes" comment="fix a bug in LinkPredictionDataset">
+      <change beforePath="$PROJECT_DIR$/.idea/OpenHGNN.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/OpenHGNN.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/openhgnn/config.ini" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/config.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openhgnn/dataset/LinkPredictionDataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/dataset/LinkPredictionDataset.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openhgnn/dataset/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/dataset/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openhgnn/dataset/academic_graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/dataset/academic_graph.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/openhgnn/dataset/hgb_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/dataset/hgb_dataset.py" afterDir="false" />
     </list>
     <list id="1d9cff87-d280-4441-8e2c-c9d85fd5092f" name="test" comment="" />
     <option name="SHOW_DIALOG" value="false" />
@@ -37,10 +40,11 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/openhgnn/dataset/twitter" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/openhgnn/dataset/youtube" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\GithubProject\OpenHGNN\openhgnn\dataset\youtube" />
       <recent name="E:\GithubProject\OpenHGNN\openhgnn\dataset\twitter" />
       <recent name="E:\GithubProject\OpenHGNN\openhgnn\dataset\HGBl" />
     </key>
@@ -53,14 +57,14 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="" />
+      <option name="SDK_HOME" value="D:\Anaconda3\envs\openhgnn\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="-m GATNE-T -t link_prediction -d twitter -g 0 --use_best_config" />
+      <option name="PARAMETERS" value="-m GATNE-T -t link_prediction -d youtube -g 0 --use_best_config" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -85,6 +89,10 @@
       <updated>1649422096995</updated>
       <workItem from="1649422101012" duration="1595000" />
       <workItem from="1649812827478" duration="14239000" />
+      <workItem from="1649846377097" duration="1082000" />
+      <workItem from="1649848403894" duration="2850000" />
+      <workItem from="1650003929636" duration="64000" />
+      <workItem from="1650288916460" duration="3469000" />
     </task>
     <task id="LOCAL-00001" summary="fix a bug in LinkPredictionDataset.py">
       <created>1649422289296</created>
@@ -173,7 +181,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/openhgnn/dataset/academic_graph.py</url>
-          <line>44</line>
+          <line>45</line>
           <option name="timeStamp" value="9" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -183,28 +191,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/openhgnn/dataset/LinkPredictionDataset.py</url>
-          <line>419</line>
+          <line>438</line>
           <option name="timeStamp" value="11" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/openhgnn/dataset/LinkPredictionDataset.py</url>
-          <line>278</line>
+          <line>297</line>
           <option name="timeStamp" value="12" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/openhgnn/dataset/LinkPredictionDataset.py</url>
-          <line>96</line>
-          <option name="timeStamp" value="15" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/openhgnn/dataset/LinkPredictionDataset.py</url>
-          <line>45</line>
-          <option name="timeStamp" value="16" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/OpenHGNN$main.coverage" NAME="main Coverage Results" MODIFIED="1649836406493" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/OpenHGNN$main.coverage" NAME="main Coverage Results" MODIFIED="1650289462124" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

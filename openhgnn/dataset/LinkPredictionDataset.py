@@ -256,6 +256,7 @@ class HIN_LinkPrediction(LinkPredictionDataset):
                 'AMDMA': [('actor', 'actor->movie', 'movie'), ('movie', 'movie->director', 'director'),
                           ('director', 'director->movie', 'movie'), ('movie', 'movie->actor', 'actor')]
                                     }
+
         elif dataset_name == 'twitter':
             dataset = AcademicDataset(name=dataset_name, raw_dir='')
             g = dataset[0].long()
@@ -268,6 +269,24 @@ class HIN_LinkPrediction(LinkPredictionDataset):
             self.link = [0, 1, 2, 3]
             self.node_type = ["_N"]
             self.test_edge_type = {'1': 0, '2': 1, '3': 2, '4': 3}
+            self.meta_paths_dict = {
+                'P0P': [('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')],
+                'P1P': [('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')]
+            }
+
+        elif dataset_name == 'youtube':
+            dataset = AcademicDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            self.has_feature = False
+            self.target_link = [('_N', '1', '_N'),
+                                ('_N', '2', '_N'),
+                                ('_N', '3', '_N'),
+                                ('_N', '4', '_N'),
+                                ('_N', '5', '_N')]
+            self.target_link_r = None
+            self.link = [0, 1, 2, 3, 4]
+            self.node_type = ["_N"]
+            self.test_edge_type = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
             self.meta_paths_dict = {
                 'P0P': [('product', 'product-product-0', 'product'), ('product', 'product-product-1', 'product')],
                 'P1P': [('product', 'product-product-1', 'product'), ('product', 'product-product-0', 'product')]

@@ -22,13 +22,14 @@ class AcademicDataset(DGLDataset):
         'HNE-PubMed': 'dataset/HNE-PubMed.zip',
         'MTWM': 'dataset/MTWM.zip',
         'amazon4SLICE': 'dataset/amazon4SLICE.zip',
-        'twitter': 'dataset/twitter.zip'
+        'twitter': 'dataset/twitter.zip',
+        'youtube': 'dataset/youtube.zip'
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
         assert name in ['acm4GTN', 'acm4NSHE', 'academic4HetGNN', 'imdb4MAGNN', 'imdb4GTN', 'HNE-PubMed', 'MTWM',
                         'DoubanMovie', 'dblp4MAGNN', 'acm4NARS', 'acm4HeCo', 'yelp4rec', 'yelp4HeGAN', 'amazon4SLICE',
-                        'twitter']
+                        'twitter', 'youtube']
         self.data_path = './openhgnn/' + self._urls[name]
         self.g_path = './openhgnn/dataset/' + name + '/graph.bin'
         raw_dir = './openhgnn/dataset'
