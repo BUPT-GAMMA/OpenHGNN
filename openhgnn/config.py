@@ -486,6 +486,7 @@ class Config(object):
             self.validation = conf.getboolean('HeGAN', 'validation')
             self.emb_size = conf.getint("HeGAN", 'emb_size')
             self.patience = conf.getint("HeGAN", 'patience')
+            self.label_smooth = conf.getfloat("HeGAN", 'label_smooth')
         elif model == 'HDE':
             self.emb_dim = conf.getint('HDE', 'emb_dim')
             self.num_neighbor = conf.getint('HDE', 'num_neighbor')
