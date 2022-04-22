@@ -132,6 +132,7 @@ The link will give some basic usage.
 | [HAN](../openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [KGCN](../openhgnn/output/KGCN)[WWW 2019]                 |                     |                    | :heavy_check_mark: |
 | [HetGNN](../openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [HeGAN](../openhgnn/output/HeGAN)[KDD 2019]               | :heavy_check_mark:  |                    |                    |
 | HGAT[EMNLP 2019]                                          |                     |                    |                    |
 | [GTN](../openhgnn/output/GTN)[NeurIPS 2019] & fastGTN     | :heavy_check_mark:  |                    |                    |
 | [RSHN](../openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
