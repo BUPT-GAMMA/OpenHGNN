@@ -1,6 +1,6 @@
 from ..trainerflow import build_flow
 import optuna
-
+from ..utils import set_random_seed
 
 def func_search(trial):
     return {
@@ -13,11 +13,10 @@ def func_search(trial):
 
 
 def hpo_experiment(args, trainerflow, **kwargs):
-
-    tool = AutoML(args, trainerflow, n_trials=10, func_search=func_search)
+    logger = args.logger
+    tool = AutoML(args, trainerflow, n_trials=100, func_search=func_search, logger=logger)
     result = tool.run()
-    print("\nFinal results:\n")
-    print(result)
+    logger.info("[Hyper-parameter optimization] Final results:{}".format(result))
     return result
 
 
@@ -34,6 +33,7 @@ class AutoML(object):
         assert "func_search" in kwargs
         self.func_search = kwargs["func_search"]
         self.metric = kwargs["metric"] if "metric" in kwargs else None
+        self.logger = kwargs['logger']
         self.n_trials = n_trials
         self.best_score = None
         self.best_params = None
@@ -44,6 +44,8 @@ class AutoML(object):
         cur_params = self.func_search(trials)
         for key, value in cur_params.items():
             args.__setattr__(key, value)
+        # Set random seed each time, or the initialization of the weight will be different.
+        set_random_seed(args.seed)
         flow = build_flow(args, self.trainerflow)
         result = flow.train()['metric']['test']
         if isinstance(result, tuple):
@@ -61,5 +63,5 @@ class AutoML(object):
     def run(self):
         study = optuna.create_study(direction="maximize")
         study.optimize(self._objective, n_trials=self.n_trials, n_jobs=1)
-        print(study.best_params)
+        self.logger.info("[Hyper-parameter optimization] Best parameter: {}".format(self.best_params))
         return self.best_score
