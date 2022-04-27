@@ -143,10 +143,10 @@ BEST_CONFIGS = {
                 'num_epochs': 200, 'patience': 100
             },
             'acm4GTN': {
-                'lr': 0.001, 'weight_decay': 0.00001, 'num_heads': [8, 8],
+                'lr': 0.01, 'hidden_dim': 128, 'dropout': 0.46, 'num_heads': [1]
             },
             'imdb4GTN': {
-                'lr': 0.001, 'weight_decay': 0.00001, 'num_heads': [2, 2, 2]
+                'lr': 0.01, 'hidden_dim': 64, 'dropout': 0.24, 'num_heads': [2, 2]
             },
             'HGBn-ACM': {
             },
