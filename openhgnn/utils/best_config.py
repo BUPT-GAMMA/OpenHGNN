@@ -122,7 +122,7 @@ BEST_CONFIGS = {
                 'num_layers': 2, 'num_channels': 2, 'adaptive_lr_flag': True,
             },
             'imdb4GTN': {
-                'num_layers': 2, 'num_channels': 2, 'adaptive_lr_flag': True,
+				'lr': 0.001, 'hidden_dim': 128, 'num_layers': 4, 'num_channels': 4
             },
             'dblp4GTN': {
                 'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,
