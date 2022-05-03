@@ -117,7 +117,7 @@ class HeGANTrainer(BaseFlow):
         self.loss_fn = torch.nn.BCEWithLogitsLoss(reduction='sum')
         self.optim_dis = torch.optim.Adam(self.model.discriminator.parameters(), lr=args.lr_dis, weight_decay=args.wd_dis)
         self.optim_gen = torch.optim.Adam(self.model.generator.parameters(), lr=args.lr_gen, weight_decay=args.wd_gen)
-        self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
+        self.train_idx, self.val_idx, self.test_idx = self.task.get_split()
         self.labels = self.task.get_labels().to(self.device)
         self.sampler = GraphSampler(self.hg, self.args.n_sample)
 

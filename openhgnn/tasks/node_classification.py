@@ -3,7 +3,7 @@ import torch.nn as nn
 from . import BaseTask, register_task
 from ..dataset import build_dataset
 from ..utils import Evaluator
-
+from openhgnn.dataset.adapter import AsNodeClassificationDataset
 
 @register_task("node_classification")
 class NodeClassification(BaseTask):
@@ -33,9 +33,9 @@ class NodeClassification(BaseTask):
         # self.evaluator = Evaluator()
         self.logger = args.logger
         if hasattr(args, 'validation'):
-            self.train_idx, self.val_idx, self.test_idx = self.dataset.get_idx(args.validation)
+            self.train_idx, self.val_idx, self.test_idx = self.dataset.get_split(args.validation)
         else:
-            self.train_idx, self.val_idx, self.test_idx = self.dataset.get_idx()
+            self.train_idx, self.val_idx, self.test_idx = self.dataset.get_split()
         self.evaluator = Evaluator(args.seed)
         self.labels = self.dataset.get_labels()
         self.multi_label = self.dataset.multi_label
@@ -98,7 +98,7 @@ class NodeClassification(BaseTask):
             micro_f1, macro_f1 = self.evaluator.nc_with_LR(logits, self.labels, self.train_idx, self.test_idx)
             return dict(Macro_f1=macro_f1, Mirco_f1=micro_f1)
     
-    def get_idx(self):
+    def get_split(self):
         return self.train_idx, self.val_idx, self.test_idx
 
     def get_labels(self):

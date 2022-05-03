@@ -53,7 +53,7 @@ class HGTTrainer(BaseFlow):
         self.max_epoch = args.max_epoch
 
         self.category = self.task.dataset.category
-        self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
+        self.train_idx, self.val_idx, self.test_idx = self.task.get_split()
         self.labels = self.task.get_labels().to(self.device)
 
 

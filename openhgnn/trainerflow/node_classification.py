@@ -44,7 +44,7 @@ class NodeClassification(BaseFlow):
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),
                                                                   lr=args.lr, weight_decay=args.weight_decay)
 
-        self.train_idx, self.valid_idx, self.test_idx = self.task.get_idx()
+        self.train_idx, self.valid_idx, self.test_idx = self.task.get_split()
         self.labels = self.task.get_labels().to(self.device)
 
         if self.args.mini_batch_flag:

@@ -18,7 +18,7 @@ class LinkPredictionDataset(BaseDataset):
         self.target_link = None
         self.target_link_r = None
 
-    def get_idx(self, val_ratio=0.1, test_ratio=0.2):
+    def get_split(self, val_ratio=0.1, test_ratio=0.2):
         """
         Get subgraphs for train, valid and test.
         Generally, the original will have train_mask and test_mask in edata, or we will split it automatically.
@@ -101,7 +101,9 @@ class LinkPredictionDataset(BaseDataset):
         test_graph = dgl.heterograph(test_edge_dict,
                                      {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
 
-        return train_graph, val_graph, test_graph
+        # todo: val/test negative graphs should be created before training rather than
+        #  create them dynamically in every evaluation.
+        return train_graph, val_graph, test_graph, None, None
 
 
 @register_dataset('demo_link_prediction')
@@ -253,11 +255,11 @@ class HIN_LinkPrediction(LinkPredictionDataset):
                                     }
         return g
     
-    def get_idx(self, val_ratio=0.1, test_ratio=0.2):
+    def get_split(self, val_ratio=0.1, test_ratio=0.2):
         if self.dataset_name == 'academic4HetGNN':
             return None, None, None
         else:
-            return super(HIN_LinkPrediction, self).get_idx(val_ratio, test_ratio)
+            return super(HIN_LinkPrediction, self).get_split(val_ratio, test_ratio)
 
 
 @register_dataset('HGBl_link_prediction')
@@ -346,7 +348,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             count += self.g.num_nodes(type)
         return node_shift_dict
 
-    def get_idx(self):
+    def get_split(self):
         r"""
         Get graphs for train, valid or test.
 
@@ -510,7 +512,7 @@ class KG_LinkPrediction(LinkPredictionDataset):
         test_data = th.LongTensor(dataset.test)
         return train_data, valid_data, test_data
 
-    def get_idx(self):
+    def get_split(self):
         return self.train_hg, self.valid_hg, self.test_hg
 
     def split_graph(self, g, mode='train'):
