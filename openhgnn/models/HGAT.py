@@ -67,7 +67,6 @@ class HGAT(BaseModel):
         )
         
         
-        
     def forward(self, hg, h_dict):
         with hg.local_scope():
             hg.ndata['h'] = h_dict
@@ -80,67 +79,9 @@ class HGAT(BaseModel):
                 hg.ndata['h'] = h_dict
 
         return h_dict
-    
-# class HGATConv(nn.Module):
-#     def __init__(self, in_dim, out_dim, attn_dim, ntypes, num_etypes, slope):
-#         super(HGATConv, self).__init__()
-        
-#         self.leakyrelu = nn.LeakyRelU(slope)
-#         self.conv = GraphConv(in_dim, in_dim, bias = False, weight = False)
-#         attn_vector = {}
-#         for ntype in ntypes:
-#             attn_vector[ntype] = in_dim
-#         self.mu_l = HeteroLinear(attn_vector, attn_dim)
-#         self.mu_r = HeteroLinear(attn_vector, attn_dim)
-#         self.leakyrelu = nn.LeakyReLU(slope)
-    
-    
-#     def forward(self, hg, h_dict):
-#         with hg.local_scope():
-            
-#             hg.ndata['h'] = h_dict
-#             g = dgl.to_homogeneous(hg, ndata = 'h')
-#             h = self.conv(g, g.ndata['h'])
-#             h_t = to_hetero_feat(h, g.ndata['_TYPE'], hg.ntypes)
-#             h_l = self.mu_l(h_dict)
-#             h_r = self.mu_r(h_t)
-#             a = {}
-#             for dsttype in hg.dsttypes:
-#                 a[dsttype] = self.leakyrelu(h_l + h_r)
-#                 attention = 
-                
-            
-#             ntype = g.ndata['_TYPE']
-#             etype = g.edata['_TYPE']
-#             degs = g.out_degree().float()
-#             norm = torch.pow(degs, -0.5)
-#             feat_src = g.ndata['h'] * norm
-            
-#             g.srcdata['h'] = feat_src
-#             g.update_all(Fn.copy_src('h', 'm'), Fn.sum('m', 't'))
-#             rst = g.dstdata['t']
-            
-#             degs = g.in_degree().float()
-#             norm = torch.pow(degs, -0.5)
-#             rst = rst * norm
-            
-#             h_l = self.mu_l(g.ndata['h'], ntype, True)
-#             h_r = self.mu_r(rst, ntype, True)
-            
-#             type_attention = self.leakyrelu(h_l + h_r)
-#             type_attention = edge_softmax(hg, hg.etypes)
-            
-            
-#             for etype in hg.canonical_etypes:
-#                 src = etype[0]
-#                 dst = etype[2]
-#                 in_degree = hg.in_degree(ntype = dst).float()
-#                 out_degree = hg.out_degree(ntype = src).float()
-            
-#         return h_dict
 
 class TypeAttention(nn.Module):
-    def __init__(self, in_dim, attn_dim, ntypes, slope):
+    def __init__(self, in_dim, ntypes, slope):
         super(TypeAttention, self).__init__()
         attn_vector = {}
         for ntype in ntypes:
@@ -197,11 +138,10 @@ class TypeAttention(nn.Module):
         return attention
     
 class NodeAttention(nn.Module):
-    def __init__(self, in_dim, attn_dim, out_dim, slope):
+    def __init__(self, in_dim, out_dim, slope):
         super(NodeAttention, self).__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
-        self.attn_dim = attn_dim
         self.Mu_l = nn.Linear(in_dim, in_dim)
         self.Mu_r = nn.Linear(in_dim, in_dim)
         self.leakyrelu = nn.LeakyReLU(slope)
