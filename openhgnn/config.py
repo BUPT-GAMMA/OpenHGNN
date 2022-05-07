@@ -542,19 +542,31 @@ class Config(object):
             self.residual = conf.getboolean("HetSANN", "residual")
             self.mini_batch_flag = False
             self.hidden_dim = self.h_dim * self.num_heads
-        elif model =='ieHGCN':
+        elif model == 'ieHGCN':
             self.weight_decay = conf.getfloat("ieHGCN", "weight_decay")
             self.lr = conf.getfloat("ieHGCN", "lr")
             self.max_epoch = conf.getint("ieHGCN", "max_epoch")
             self.seed = conf.getint("ieHGCN", "seed")
-            self.num_heads = conf.getint("ieHGCN", "num_heads")
-            self.h_dim = conf.getint("ieHGCN", "h_dim")
-            self.n_layers = conf.getint("ieHGCN","num_layers")
+            self.attn_dim = conf.getint("ieHGCN", "attn_dim")
+            self.num_layers = conf.getint("ieHGCN","num_layers")
             self.mini_batch_flag = False
-            self.type_att_size = conf.getint("ieHGCN","type_att_size")
-            self.type_fusion = conf.get("ieHGCN","type_fusion")
             self.hidden_dim = conf.getint("ieHGCN", "hidden_dim")
+            self.in_dim = conf.getint("ieHGCN", "in_dim")
+            self.out_dim = conf.getint("ieHGCN", "out_dim")
             self.patience = conf.getint("ieHGCN", "patience")
+        elif model == 'HGAT':
+            self.weight_decay = conf.getfloat("HGAT", "weight_decay")
+            self.lr = conf.getfloat("HGAT", "lr")
+            self.max_epoch = conf.getint("HGAT", "max_epoch")
+            self.seed = conf.getint("HGAT", "seed")
+            self.attn_dim = conf.getint("HGAT", "attn_dim")
+            self.num_layers = conf.getint("HGAT","num_layers")
+            self.mini_batch_flag = False
+            self.hidden_dim = conf.getint("HGAT", "hidden_dim")
+            self.in_dim = conf.getint("HGAT", "in_dim")
+            self.num_classes = conf.getint("HGAT", "num_classes")
+            self.patience = conf.getint("HGAT", "patience")
+            self.negative_slope = conf.getfloat("HGAT", "negative_slope")
 
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)
