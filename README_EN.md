@@ -12,7 +12,7 @@ of heterogeneous graph.
 
 ## News
 
-**2021-02-28**
+**2022-02-28**
 
 We release the latest version v0.2.
 
@@ -20,7 +20,7 @@ We release the latest version v0.2.
 - [Space4HGNN [SIGIR2022]](../space4hgnn)
 - [Benchmark&Leaderboard](../openhgnn/dataset/ohgb.md)
 
-**2021-01-07**
+**2022-01-07**
 
 启智社区用户可以享受到如下功能：
 
@@ -136,6 +136,7 @@ The link will give some basic usage.
 | HGAT[EMNLP 2019]                                          |                     |                    |                    |
 | [GTN](../openhgnn/output/GTN)[NeurIPS 2019] & fastGTN     | :heavy_check_mark:  |                    |                    |
 | [RSHN](../openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [GATNE-T](../openhgnn/output/GATNE-T)[KDD 2019]           |                     | :heavy_check_mark: |                    |
 | [DMGI](../openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark:  |                    |                    |
 | [MAGNN](../openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark:  |                    |                    |
 | [HGT](../openhgnn/output/HGT)[WWW 2020]                   | :heavy_check_mark:  |                    |                    |
@@ -150,7 +151,6 @@ The link will give some basic usage.
 | [HPN](../openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [RHGNN](../openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
 | [HDE](../openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
-| [GATNE-T](../openhgnn/output/GATNE-T)[KDD 2019]           |                     | :heavy_check_mark: |                    |
 
 ### Candidate models
 
