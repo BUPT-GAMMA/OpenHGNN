@@ -543,6 +543,24 @@ class Config(object):
             self.residual = conf.getboolean("HetSANN", "residual")
             self.mini_batch_flag = False
             self.hidden_dim = self.h_dim * self.num_heads
+        
+        elif model == 'TransE':
+            self.seed = conf.getint("TransE", "seed")
+            self.patience = conf.getint("TransE", "patience")
+            self.batch_size = conf.getint("TransE", "batch_size")
+            self.neg_size = conf.getint("TransE", "neg_size")
+            self.dis_norm = conf.getint("TransE", "dis_norm")
+            self.margin = conf.getfloat("TransE", "margin")
+            self.hidden_dim = conf.getint("TransE", "hidden_dim")
+            self.optimizer = conf.get("TransE", "optimizer")
+            self.lr = conf.getfloat("TransE", "lr")
+            self.weight_decay = conf.getfloat("TransE", "weight_decay")
+            self.max_epoch = conf.getint("TransE", "max_epoch")
+            self.score_fn = conf.get("TransE", "score_fn")
+            self.filtered = conf.get("TransE", "filtered")
+            self.valid_percent = conf.getfloat("TransE", "valid_percent")
+            self.test_percent = conf.getfloat("TransE", "test_percent")
+            self.mini_batch_flag = True
 
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)

@@ -1,4 +1,6 @@
 import dgl
+import math
+import random
 import numpy as np
 import torch as th
 from dgl.data.knowledge_graph import load_data
@@ -464,22 +466,41 @@ class KG_LinkPrediction(LinkPredictionDataset):
     """
     From `RGCN <https://arxiv.org/abs/1703.06103>`_, WN18 & FB15k face a data leakage.
     """
-    def __init__(self, dataset_name):
-        super(KG_LinkPrediction, self).__init__()
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(KG_LinkPrediction, self).__init__(*args, **kwargs)
         if dataset_name in ['wn18', 'FB15k', 'FB15k-237']:
             dataset = load_data(dataset_name)
-            self.category = '_N'
-            self.num_rels = dataset.num_rels * 2
-            # include inverse edge
+            g = dataset[0]
+            self.num_rels = dataset.num_rels
             self.num_nodes = dataset.num_nodes
-            self.train_hg = self.get_graph_directed_from_triples(dataset.train, 'graph')
-            self.valid_hg = self.get_graph_directed_from_triples(dataset.valid, 'graph')
-            self.test_hg = self.get_graph_directed_from_triples(dataset.test, 'graph')
-            self.train_triplets, self.valid_triplets, self.test_triplets = self.get_all_triplets(dataset)
-            self.target_link = self.test_hg.canonical_etypes
+
+            self.train_hg, self.train_triplets = self._build_hg(g, 'train')
+            self.valid_hg, self.valid_triplets = self._build_hg(g, 'valid')
+            self.test_hg, self.test_triplets = self._build_hg(g, 'test')
+
             self.g = self.train_hg
-            # self.g = self.build_g(dataset.train)
-            # self.dataset = dataset
+            self.category = '_N'
+            self.target_link = self.test_hg.canonical_etypes
+
+    def _build_hg(self, g, mode):
+        sub_g = dgl.edge_subgraph(g, g.edata[mode+'_edge_mask'], relabel_nodes=False) #filtered
+        src, dst = sub_g.edges()
+        etype = sub_g.edata['etype']
+
+        edge_dict = {}
+        for i in range(self.num_rels):
+            mask = (etype == i)
+            edge_name = ('_N', str(i), '_N')
+            edge_dict[edge_name] = (src[mask], dst[mask])
+        hg = dgl.heterograph(edge_dict, {'_N': self.num_nodes})
+
+        return hg, th.stack((src, etype, dst)).T
+
+    def modify_size(self, eval_percent, dataset_type):
+        if dataset_type == 'valid':
+            self.valid_triplets = th.tensor(random.sample(self.valid_triplets.tolist(), math.ceil(self.valid_triplets.shape[0]*eval_percent)))
+        elif dataset_type == 'test':
+            self.test_triplets = th.tensor(random.sample(self.test_triplets.tolist(), math.ceil(self.test_triplets.shape[0]*eval_percent)))
 
     def get_graph_directed_from_triples(self, triples, format='graph'):
         s = th.LongTensor(triples[:, 0])
