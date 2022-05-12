@@ -257,26 +257,5 @@ class HeteroTransEPredictor(th.nn.Module):
         h = F.normalize(h, 2, -1)
         r = F.normalize(r, 2, -1)
         t = F.normalize(t, 2, -1)
-        dist = self.cal_dist(h ,r, t)
+        dist = th.norm(h+r-t, self.dis_norm, dim=-1)
         return dist
-    
-    def cal_dist(self, h, r, t):
-        if self.dis_norm == 1:
-            dist = batched_l1_dist(h+r, t)
-        elif self.dis_norm == 2:
-            dist = batched_l2_dist(h+r, t)
-        return dist
-
-def batched_l2_dist(a, b):
-    a_squared = a.norm(dim=-1).pow(2)
-    b_squared = b.norm(dim=-1).pow(2)
-
-    squared_res = th.baddbmm(
-        b_squared.unsqueeze(-2), a, b.transpose(-2, -1), alpha=-2
-    ).add_(a_squared.unsqueeze(-1))
-    res = squared_res.clamp_min_(1e-30).sqrt_()
-    return res
-
-def batched_l1_dist(a, b):
-    res = th.norm(a-b, 1, -1)
-    return res

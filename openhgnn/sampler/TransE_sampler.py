@@ -1,7 +1,6 @@
 import torch as th
 import math
 import random
-from random import sample
 
 class TransE_Sampler():
     def __init__(self, hg, args):
@@ -47,7 +46,7 @@ class TransE_Sampler():
 
     def _random_select_triplets(self, src, rel, dst, num):
         l = list(range(len(src)))
-        idx = sample(l, num)
+        idx = random.sample(l, num)
         return src[idx], rel[idx], dst[idx]
 
     def get_pos(self):
@@ -63,7 +62,7 @@ class TransE_Sampler():
         srcs, rels, dsts = self.pos_g
         srcs, rels, dsts = srcs.tolist(), rels.tolist(), dsts.tolist()
         node_list = list(range(self.num_nodes))
-        replace_node = sample(node_list, self.neg_size)
+        replace_node = random.sample(node_list, self.neg_size)
         
         new_rel = [x for x in rels for i in range(self.neg_size)]
         new_src = [x for x in srcs for i in range(self.neg_size)]
