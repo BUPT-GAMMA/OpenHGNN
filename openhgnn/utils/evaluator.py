@@ -157,6 +157,7 @@ def cal_mrr(n_embedding, r_embedding, valid_triplets, test_triplets, triplets_to
         ranks = th.cat([ranks_s, ranks_o])
         ranks += 1 # change to 1-indexed
         mrr_matrix = {
+            'Mode': filtered,
             'MR': th.mean(ranks.float()).item(),
             'MRR': th.mean(1.0 / ranks.float()).item(),
         }
