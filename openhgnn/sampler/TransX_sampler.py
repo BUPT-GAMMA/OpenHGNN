@@ -2,7 +2,7 @@ import torch as th
 import math
 import random
 
-class TransE_Sampler():
+class TransX_Sampler():
     def __init__(self, hg, args):
         random.seed(None)
         

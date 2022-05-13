@@ -357,10 +357,10 @@ BEST_CONFIGS = {
             'general':{
             },
             'FB15k':{
-                'lr':1, 'weight_decay': 0.0001, 'hidden_dim': 400, 'neg_size': 13,'margin': 4, 'batch_size': 100, 'valid_percent':0.01, 'test_percent': 0.1,'optimizer': 'SGD'
+                'lr':1, 'weight_decay': 0.0001, 'hidden_dim': 400, 'neg_size': 13,'margin': 4, 'batch_size': 100, 'valid_percent':0.01, 'test_percent': 0.1
             },
             'wn18':{
-                'lr': 0.25, 'weight_decay': 0.0001, 'hidden_dim': 100, 'neg_size': 20, 'margin': 5, 'batch_size': 100, 'valid_percent':0.2, 'test_percent': 1,'optimizer': 'SGD'
+                'lr': 0.7048, 'weight_decay': 0.0001, 'hidden_dim': 200, 'neg_size': 106, 'margin': 9.9105, 'batch_size': 100, 'valid_percent':0.4, 'test_percent': 1
             } # testing
         }
 

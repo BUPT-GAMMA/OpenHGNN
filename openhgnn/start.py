@@ -34,5 +34,8 @@ SpecificTrainerflow = {
     'HeGAN': 'HeGAN_trainer',
     'HDE': 'hde_trainer',
     'GATNE-T': 'GATNE_trainer',
-    'TransE': 'TransE_trainer',
+    'TransE': 'TransX_trainer',
+    'TransH': 'TransX_trainer',
+    'TransR': 'TransX_trainer',
+    'TransD': 'TransX_trainer',
 }

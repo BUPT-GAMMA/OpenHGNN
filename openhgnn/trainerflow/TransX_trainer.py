@@ -3,14 +3,14 @@ from tqdm import tqdm
 from . import BaseFlow, register_flow
 from ..models import build_model
 from ..utils import EarlyStopping
-from ..sampler.TransE_sampler import TransE_Sampler
+from ..sampler.TransX_sampler import TransX_Sampler
 
-@register_flow("TransE_trainer")
-class TransETrainer(BaseFlow):
+@register_flow("TransX_trainer")
+class TransXTrainer(BaseFlow):
     """TransE flows."""
 
     def __init__(self, args):
-        super(TransETrainer, self).__init__(args)
+        super(TransXTrainer, self).__init__(args)
 
         self.args = args
         self.model_name = args.model
@@ -35,7 +35,7 @@ class TransETrainer(BaseFlow):
 
     def preprocess(self):
         self.train_hg.to(self.device)
-        self.train_sampler = TransE_Sampler(self.train_hg, self.args)
+        self.train_sampler = TransX_Sampler(self.train_hg, self.args)
         self.node_range = th.arange(0, self.num_nodes).to(self.device)
         self.rel_range = th.arange(0, self.num_rels).to(self.device)
 

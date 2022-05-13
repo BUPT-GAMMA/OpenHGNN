@@ -48,8 +48,8 @@ class LinkPrediction(BaseTask):
             self.ScorePredictor = HeteroDotProductPredictor()
         elif args.score_fn == 'distmult':
             self.ScorePredictor = HeteroDistMultPredictor()
-        elif args.score_fn == 'transe':
-            self.ScorePredictor = HeteroTransEPredictor(args.dis_norm)
+        elif args.score_fn in ['transe', 'transh', 'transr', 'transd'] :
+            self.ScorePredictor = HeteroTransXPredictor(args.dis_norm)
 
         self.negative_sampler = Uniform(1)
 
@@ -248,9 +248,9 @@ class HeteroDistMultPredictor(th.nn.Module):
             else:
                 score = th.sum(score, dim=1)
             return score
-class HeteroTransEPredictor(th.nn.Module):
+class HeteroTransXPredictor(th.nn.Module):
     def __init__(self, dis_norm):
-        super(HeteroTransEPredictor, self).__init__()
+        super(HeteroTransXPredictor, self).__init__()
         self.dis_norm = dis_norm
     
     def forward(self, h, r, t):

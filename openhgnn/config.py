@@ -562,5 +562,61 @@ class Config(object):
             self.test_percent = conf.getfloat("TransE", "test_percent")
             self.mini_batch_flag = True
 
+        elif model == 'TransH':
+            self.seed = conf.getint("TransH", "seed")
+            self.patience = conf.getint("TransH", "patience")
+            self.batch_size = conf.getint("TransH", "batch_size")
+            self.neg_size = conf.getint("TransH", "neg_size")
+            self.dis_norm = conf.getint("TransH", "dis_norm")
+            self.margin = conf.getfloat("TransH", "margin")
+            self.hidden_dim = conf.getint("TransH", "hidden_dim")
+            self.optimizer = conf.get("TransH", "optimizer")
+            self.lr = conf.getfloat("TransH", "lr")
+            self.weight_decay = conf.getfloat("TransH", "weight_decay")
+            self.max_epoch = conf.getint("TransH", "max_epoch")
+            self.score_fn = conf.get("TransH", "score_fn")
+            self.filtered = conf.get("TransH", "filtered")
+            self.valid_percent = conf.getfloat("TransH", "valid_percent")
+            self.test_percent = conf.getfloat("TransH", "test_percent")
+            self.mini_batch_flag = True
+        
+        elif model == 'TransR':
+            self.seed = conf.getint("TransR", "seed")
+            self.patience = conf.getint("TransR", "patience")
+            self.batch_size = conf.getint("TransR", "batch_size")
+            self.neg_size = conf.getint("TransR", "neg_size")
+            self.dis_norm = conf.getint("TransR", "dis_norm")
+            self.margin = conf.getfloat("TransR", "margin")
+            self.ent_dim = conf.getint("TransR", "ent_dim")
+            self.rel_dim = conf.getint("TransR", "rel_dim")
+            self.optimizer = conf.get("TransR", "optimizer")
+            self.lr = conf.getfloat("TransR", "lr")
+            self.weight_decay = conf.getfloat("TransR", "weight_decay")
+            self.max_epoch = conf.getint("TransR", "max_epoch")
+            self.score_fn = conf.get("TransR", "score_fn")
+            self.filtered = conf.get("TransR", "filtered")
+            self.valid_percent = conf.getfloat("TransR", "valid_percent")
+            self.test_percent = conf.getfloat("TransR", "test_percent")
+            self.mini_batch_flag = True
+        
+        elif model == 'TransD':
+            self.seed = conf.getint("TransD", "seed")
+            self.patience = conf.getint("TransD", "patience")
+            self.batch_size = conf.getint("TransD", "batch_size")
+            self.neg_size = conf.getint("TransD", "neg_size")
+            self.dis_norm = conf.getint("TransD", "dis_norm")
+            self.margin = conf.getfloat("TransD", "margin")
+            self.ent_dim = conf.getint("TransD", "ent_dim")
+            self.rel_dim = conf.getint("TransD", "rel_dim")
+            self.optimizer = conf.get("TransD", "optimizer")
+            self.lr = conf.getfloat("TransD", "lr")
+            self.weight_decay = conf.getfloat("TransD", "weight_decay")
+            self.max_epoch = conf.getint("TransD", "max_epoch")
+            self.score_fn = conf.get("TransD", "score_fn")
+            self.filtered = conf.get("TransD", "filtered")
+            self.valid_percent = conf.getfloat("TransD", "valid_percent")
+            self.test_percent = conf.getfloat("TransD", "test_percent")
+            self.mini_batch_flag = True
+
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)
