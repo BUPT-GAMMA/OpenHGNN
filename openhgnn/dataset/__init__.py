@@ -4,7 +4,7 @@ from .utils import load_acm, load_acm_raw
 from .academic_graph import AcademicDataset
 from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
-
+from .gtn_dataset import *
 
 DATASET_REGISTRY = {}
 

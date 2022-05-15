@@ -25,3 +25,5 @@ __pycache__/
 
 # visualization figure files
 *.jpg
+
+*.pkl
