@@ -25,13 +25,13 @@ If you do not have gpu, set -gpu -1.
 
 ### Performance
 
-Node classification 
+Node classification
 
-| Node classification | acm4GTN | imdb4GTN |
-| ------------------- | ------- | -------- |
-| paper[GTN]          | 92.68   | 60.92    |
-| OpenHGNN[GTN]       | 92.22   | 61.58    |
-| OpenHGNN[fastGTN]   | 91.80   | 58.90    |
+| Node classification | acm4GTN | imdb4GTN | dblp4GTN  |
+| ------------------- |---------|----------|-----------|
+| paper[GTN]          | 92.68   | 60.92    | 94.18     |
+| OpenHGNN[GTN]       | 92.22   | 61.58    | OOM(todo) |
+| OpenHGNN[fastGTN]   | 91.80   | 58.90    | 89.08     |
 
 ### TrainerFlow: node_classification
 

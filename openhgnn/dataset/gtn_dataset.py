@@ -11,7 +11,7 @@ __all__ = ['IMDB4GTNDataset', 'ACM4GTNDataset', 'DBLP4GTNDataset']
 
 class _GTNDataset(DGLBuiltinDataset):
     r"""GTN Dataset.
-    
+
     It contains three datasets used in a NeurIPS'19 paper Graph Transformer Networks <https://arxiv.org/abs/1911.06455>,
     which includes two citation network datasets DBLP and ACM, and a movie dataset
     IMDB. DBLP contains three types of nodes (papers (P), authors (A), conferences (C)), four types of edges
@@ -26,7 +26,7 @@ class _GTNDataset(DGLBuiltinDataset):
     ACM 8994 25922 4 1902 600 300 2125
     IMDB 12772 37288 4 1256 300 300 2339
     Data source link: <https://drive.google.com/file/d/1qOZ3QjqWMIIvWjzrIdRe3EA4iKzPi6S5/view?usp=sharing>
-    
+
     Examples
     --------
     >>> dataset = IMDB4GTNDataset()
@@ -100,7 +100,7 @@ class _GTNDataset(DGLBuiltinDataset):
             all_label[node] = label
             g.nodes[target_ntype].data['{}_mask'.format(split)] = \
                 th.from_numpy(idx2mask(node, g.num_nodes(target_ntype))).type(th.bool)
-        g.nodes[target_ntype].data['label'] = th.from_numpy(all_label).type(th.int)
+        g.nodes[target_ntype].data['label'] = th.from_numpy(all_label).type(th.long)
 
         # node feature
         node_features = th.from_numpy(node_features).type(th.FloatTensor)
@@ -109,6 +109,7 @@ class _GTNDataset(DGLBuiltinDataset):
             g.nodes[ntype].data['h'] = node_features[idx]
 
         self._num_classes = len(th.unique(g.nodes[self.target_ntype].data['label']))
+        self._in_dim = g.ndata['h'][target_ntype].shape[1]
         self._g = g
 
     def save(self):
@@ -132,6 +133,10 @@ class _GTNDataset(DGLBuiltinDataset):
     def num_classes(self):
         return self._num_classes
 
+    @property
+    def in_dim(self):
+        return self._in_dim
+
     def __getitem__(self, idx):
         assert idx == 0
         return self._g
@@ -149,6 +154,16 @@ class DBLP4GTNDataset(_GTNDataset):
         super(DBLP4GTNDataset, self).__init__(name, canonical_etypes, target_ntype, raw_dir=raw_dir,
                                               force_reload=force_reload, verbose=verbose, transform=transform)
 
+    @property
+    def meta_paths_dict(self):
+        return {'APCPA': [('author', 'author-paper', 'paper'),
+                          ('paper', 'paper-conference', 'conference'),
+                          ('conference', 'conference-paper', 'paper'),
+                          ('paper', 'paper-author', 'author')],
+                'APA': [('author', 'author-paper', 'paper'),
+                        ('paper', 'paper-author', 'author')],
+                }
+
 
 class ACM4GTNDataset(_GTNDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
@@ -159,6 +174,18 @@ class ACM4GTNDataset(_GTNDataset):
         super(ACM4GTNDataset, self).__init__(name, canonical_etypes, target_ntype, raw_dir=raw_dir,
                                              force_reload=force_reload, verbose=verbose, transform=transform)
 
+    @property
+    def meta_paths_dict(self):
+        return {'PAPSP': [('paper', 'paper-author', 'author'),
+                          ('author', 'author-paper', 'paper'),
+                          ('paper', 'paper-subject', 'subject'),
+                          ('subject', 'subject-paper', 'paper')],
+                'PAP': [('paper', 'paper-author', 'author'),
+                        ('author', 'author-paper', 'paper')],
+                'PSP': [('paper', 'paper-subject', 'subject'),
+                        ('subject', 'subject-paper', 'paper')]
+                }
+
 
 class IMDB4GTNDataset(_GTNDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
@@ -168,3 +195,11 @@ class IMDB4GTNDataset(_GTNDataset):
         target_ntype = 'movie'
         super(IMDB4GTNDataset, self).__init__(name, canonical_etypes, target_ntype, raw_dir=raw_dir,
                                               force_reload=force_reload, verbose=verbose, transform=transform)
+
+    @property
+    def meta_paths_dict(self):
+        return {'MAM': [('movie', 'movie-actor', 'actor'),
+                        ('actor', 'actor-movie', 'movie')],
+                'MDM': [('movie', 'movie-director', 'subject'),
+                        ('subject', 'subject-movie', 'movie')]
+                }

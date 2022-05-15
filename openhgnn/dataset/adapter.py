@@ -135,7 +135,7 @@ class AsNodeClassificationDataset(DGLDataset):
             self.num_classes = info['num_classes']
             self.meta_paths_dict = info['meta_paths_dict']
             self.meta_paths = info['meta_paths']
-
+            self.multi_label = info['multi_label']
         gs, _ = utils.load_graphs(os.path.join(self.save_path, 'graph_{}.bin'.format(self.hash)))
         self.g = gs[0]
         self._set_split_index()
@@ -147,6 +147,7 @@ class AsNodeClassificationDataset(DGLDataset):
                 'split_ratio': self.split_ratio,
                 'target_ntype': self.target_ntype,
                 'num_classes': self.num_classes,
+                'multi_label': self.multi_label,
                 'meta_paths_dict': self.meta_paths_dict,
                 'meta_paths': self.meta_paths}, f)
 
