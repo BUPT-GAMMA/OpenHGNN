@@ -21,17 +21,17 @@ If you do not have gpu, set -gpu -1.
 
 ##### Candidate dataset: 
 
-​	acm4GTN/imdb4GTN
+​	acm4GTN/imdb4GTN/dblp4GTN
 
 ### Performance
 
 Node classification
 
-| Node classification | acm4GTN | imdb4GTN | dblp4GTN  |
-| ------------------- |---------|----------|-----------|
-| paper[GTN]          | 92.68   | 60.92    | 94.18     |
-| OpenHGNN[GTN]       | 92.22   | 61.58    | OOM(todo) |
-| OpenHGNN[fastGTN]   | 91.80   | 58.90    | 89.08     |
+| Node classification | acm4GTN | imdb4GTN | dblp4GTN |
+| ------------------- |---------|----------|----------|
+| paper[GTN]          | 92.68   | 60.92    | 94.18    |
+| OpenHGNN[GTN]       | 92.22   | 61.58    | 87.33    |
+| OpenHGNN[fastGTN]   | 91.80   | 58.90    | 89.08    |
 
 ### TrainerFlow: node_classification
 
@@ -49,9 +49,11 @@ The model is  trained in semi-supervisied node classification.
 
 ### Dataset
 
-Supported dataset: acm4GTN, imdb4GTN
+Supported dataset: acm4GTN, imdb4GTN, dblp4ACM
 
 Note: Every node in dataset should have the same features dimension.
+
+[Dataset Description](https://openhgnn.readthedocs.io/en/latest/api/dataset.html#hgb-node-classification-dataset)
 
 #### [acm4GTN](../../dataset/#ACM)/[imdb4GTN](../../dataset/#IMDB)
 

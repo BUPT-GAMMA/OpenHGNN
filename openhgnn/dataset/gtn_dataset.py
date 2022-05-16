@@ -20,11 +20,17 @@ class _GTNDataset(DGLBuiltinDataset):
     Each node in the two datasets is represented as bag-of-words of keywords. On the other hand, IMDB
     contains three types of nodes (movies (M), actors (A), and directors (D)) and labels are genres of
     movies. Node features are given as bag-of-words representations of plots.
+
     Dataset statistics:
+
     Dataset Nodes Edges Edge type Features Training Validation Test
+
     DBLP 18405 67946 4 334 800 400 2857
+
     ACM 8994 25922 4 1902 600 300 2125
+
     IMDB 12772 37288 4 1256 300 300 2339
+
     Data source link: <https://drive.google.com/file/d/1qOZ3QjqWMIIvWjzrIdRe3EA4iKzPi6S5/view?usp=sharing>
 
     Examples
