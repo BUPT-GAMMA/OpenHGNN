@@ -48,7 +48,7 @@ class Config(object):
             self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
             self.mini_batch_flag = conf.getboolean("NSHE", "mini_batch_flag")
 
-        elif model == "GTN":
+        elif model in ["GTN", "fastGTN"]:
             self.lr = conf.getfloat("GTN", "learning_rate")
             self.weight_decay = conf.getfloat("GTN", "weight_decay")
             self.seed = conf.getint("GTN", "seed")
