@@ -173,9 +173,10 @@ class HetGNNCollator(object):
         heads, tails, neg_tails = batches[0]
         # Construct multilayer neighborhood via PinSAGE...
         pos_graph, neg_graph, blocks = self.sampler.sample_from_item_pairs(heads, tails, neg_tails)
-        assign_features_to_blocks(blocks, self.g, self.g.ntypes)
+        # blocks return dict(src_node_feature), dict(dst_node_feature), MFGs
+        assign_features_to_blocks(blocks[2], self.g, self.g.ntypes)
 
-        return pos_graph, neg_graph, blocks
+        return pos_graph, neg_graph, blocks[2]
 
     # def collate_test(self, samples):
     #     batch = th.LongTensor(samples)
