@@ -3,6 +3,7 @@ from openhgnn.dataset import AsNodeClassificationDataset, generate_random_hg
 from dgl import transforms as T
 from dgl import DGLHeteroGraph
 from dgl.data import DGLDataset
+from openhgnn.dataset import ACM4GTNDataset
 
 category = 'author'
 meta_paths_dict = {'APA': [('author', 'author-paper', 'paper'), ('paper', 'rev_author-paper', 'author')]}
@@ -121,3 +122,7 @@ if __name__ == '__main__':
     myMultiLabelNCDataset = AsNodeClassificationDataset(MyMultiLabelNCDataset(), target_ntype=category,
                                                         split_ratio=[0.8, 0.1, 0.1], force_reload=True)
     train_with_custom_nc_dataset(myMultiLabelNCDataset)
+
+    # use a built-in dataset of openhgnn. this is equivalent to using str 'acm4GTN' as dataset parameter.
+    acm4GTNDataset = ACM4GTNDataset()
+    train_with_custom_nc_dataset(AsNodeClassificationDataset(acm4GTNDataset, target_ntype=acm4GTNDataset.target_ntype))
