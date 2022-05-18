@@ -20,7 +20,7 @@ class NodeClassificationDataset(BaseDataset):
     -----------
     The class *NodeClassificationDataset* is a base class for datasets which can be used in task *node classification*.
     So its subclass should contain attributes such as graph, category, num_classes and so on.
-    Besides, it should implement the functions *get_labels()* and *get_idx()*.
+    Besides, it should implement the functions *get_labels()* and *get_split()*.
 
     Attributes
     -------------
@@ -71,7 +71,7 @@ class NodeClassificationDataset(BaseDataset):
         labels = labels.float() if self.multi_label else labels
         return labels
 
-    def get_idx(self, validation=True):
+    def get_split(self, validation=True):
         r"""
         
         Parameters
@@ -516,7 +516,7 @@ class OGB_NodeClassification(NodeClassificationDataset):
         self.has_feature = True
         # pass
 
-    def get_idx(self, validation=True):
+    def get_split(self, validation=True):
         return self.train_idx, self.valid_idx, self.test_idx
 
     def get_labels(self):

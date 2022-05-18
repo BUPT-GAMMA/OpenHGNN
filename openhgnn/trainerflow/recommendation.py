@@ -45,7 +45,7 @@ class Recommendation(BaseFlow):
             for etype in self.hg.canonical_etypes}
 
     def preprocess(self):
-        self.train_hg, self.val_hg, self.test_hg = self.task.get_idx()
+        self.train_hg, self.val_hg, self.test_hg = self.task.get_split()
         self.train_neg_hg = self.task.dataset.construct_negative_graph(self.train_hg)
         self.train_hg = self.train_hg.to(self.device)
         self.val_hg = self.val_hg.to(self.device)

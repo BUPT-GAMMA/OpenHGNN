@@ -41,7 +41,7 @@ class HeCoTrainer(BaseFlow):
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
-        self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
+        self.train_idx, self.val_idx, self.test_idx = self.task.get_split()
         self.labels = self.task.get_labels().to(self.device)
 
     def preprocess(self):

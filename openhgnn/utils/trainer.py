@@ -131,7 +131,7 @@ def run_GTN(model, g, config):
     print('Test -  Macro_F1: {}'.format(best_test_f1))
 
 
-def get_idx(hg, g, category):
+def get_split(hg, g, category):
     train_mask = hg.nodes[category].data.pop('train_mask')
     test_mask = hg.nodes[category].data.pop('test_mask')
     train_idx = th.nonzero(train_mask, as_tuple=False).squeeze()
@@ -154,7 +154,7 @@ def run_RSHN(model, hg, cl_graph, config):
 
     optimizer = th.optim.Adam(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
     g = dgl.to_homogeneous(hg)
-    target_idx, train_idx, test_idx, labels = get_idx(hg, g, config.category)
+    target_idx, train_idx, test_idx, labels = get_split(hg, g, config.category)
     if config.validation == True:
         val_idx = train_idx[:len(train_idx) // 5]
         train_idx = train_idx[len(train_idx) // 5:]
@@ -210,7 +210,7 @@ def run_CompGCN(model, hg, config):
     edata_in_out_mask(hg)
     g = dgl.to_homogeneous(hg, edata=['in_edges_mask', 'out_edges_mask'])
 
-    target_idx, train_idx, test_idx, labels = get_idx(hg, g, config.category)
+    target_idx, train_idx, test_idx, labels = get_split(hg, g, config.category)
     if config.validation:
         val_idx = train_idx[:len(train_idx) // 5]
         train_idx = train_idx[len(train_idx) // 5:]
@@ -276,7 +276,7 @@ def run_RGCN(model, hg, config):
     edge_type = g.edata[dgl.ETYPE].long()
     edge_norm = g.edata['norm']
 
-    target_idx, train_idx, test_idx, labels = get_idx(hg, g, config.category)
+    target_idx, train_idx, test_idx, labels = get_split(hg, g, config.category)
     if config.validation:
         val_idx = train_idx[:len(train_idx) // 5]
         train_idx = train_idx[len(train_idx) // 5:]

@@ -39,6 +39,13 @@ HGB Node Classification Dataset
     :members:
     :show-inheritance:
 
+GTN Dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.dataset.gtn_dataset._GTNDataset
+    :members:
+    :show-inheritance:
+
 Link Prediction Dataset
 ---------------------------------------------
 
@@ -67,5 +74,24 @@ KGCN Recommendation Dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: openhgnn.dataset.RecommendationDataset.KGCN_Recommendation
+    :members:
+    :show-inheritance:
+
+Dataset Adapter
+---------------------------------------------
+
+.. automodule:: openhgnn.dataset.adapter
+
+Node Classification Dataset Adapter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.dataset.adapter.AsNodeClassificationDataset
+    :members:
+    :show-inheritance:
+
+Link Prediction Dataset Adapter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: openhgnn.dataset.adapter.AsLinkPredictionDataset
     :members:
     :show-inheritance:
