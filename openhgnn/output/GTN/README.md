@@ -27,11 +27,11 @@ If you do not have gpu, set -gpu -1.
 
 Node classification
 
-| Node classification | acm4GTN | imdb4GTN | dblp4GTN |
-| ------------------- |---------|----------|----------|
-| paper[GTN]          | 92.68   | 60.92    | 94.18    |
-| OpenHGNN[GTN]       | 92.22   | 61.58    | 87.33    |
-| OpenHGNN[fastGTN]   | 91.80   | 58.90    | 89.08    |
+| Node classification(F1 score) | acm4GTN                   | imdb4GTN                  | dblp4GTN                                 |
+|-------------------------------|---------------------------|---------------------------|------------------------------------------|
+| paper[GTN]                    | 92.68                     | 60.92                     | 94.18                                    |
+| OpenHGNN[GTN]                 | Macro: 92.03 Micro: 92.00 | Macro: 56.97 Micro: 58.61 | 87.33(OOM on Tesla T4(16GB), cpu result) |
+| OpenHGNN[fastGTN]             | Macro: 92.92 Micro: 92.85 | Macro: 60.62 Micro: 62.59 | Macro: 90.39 Micro: 91.39                |
 
 ### TrainerFlow: node_classification
 
