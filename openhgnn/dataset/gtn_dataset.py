@@ -94,8 +94,8 @@ class _GTNDataset(DGLBuiltinDataset):
             src_ntype = etype[0]
             dst_ntype = etype[2]
             data_dict[etype] = \
-                (th.from_numpy(ntype_idmap[src_ntype][src_nodes]),
-                 th.from_numpy(ntype_idmap[dst_ntype][dst_nodes]))
+                (th.from_numpy(ntype_idmap[src_ntype][src_nodes]).type(th.int64),
+                 th.from_numpy(ntype_idmap[dst_ntype][dst_nodes]).type(th.int64))
         g = dgl.heterograph(data_dict)
 
         # split and label
@@ -114,9 +114,9 @@ class _GTNDataset(DGLBuiltinDataset):
             idx = ntype_mask[ntype].nonzero()[0]
             g.nodes[ntype].data['h'] = node_features[idx]
 
-        self._num_classes = len(th.unique(g.nodes[self.target_ntype].data['label']))
-        self._in_dim = g.ndata['h'][target_ntype].shape[1]
         self._g = g
+        self._num_classes = len(th.unique(self._g.nodes[self.target_ntype].data['label']))
+        self._in_dim = self._g.ndata['h'][self.target_ntype].shape[1]
 
     def save(self):
         graph_path = os.path.join(self.save_path, 'graph.bin')
@@ -126,6 +126,8 @@ class _GTNDataset(DGLBuiltinDataset):
         graph_path = os.path.join(self.save_path, 'graph.bin')
         gs, _ = load_graphs(graph_path)
         self._g = gs[0]
+        self._num_classes = len(th.unique(self._g.nodes[self.target_ntype].data['label']))
+        self._in_dim = self._g.ndata['h'][self.target_ntype].shape[1]
 
     @property
     def target_ntype(self):
