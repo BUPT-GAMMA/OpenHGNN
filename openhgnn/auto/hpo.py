@@ -4,17 +4,21 @@ from ..utils import set_random_seed
 
 def func_search(trial):
     return {
-        "lr": trial.suggest_categorical("lr", [1e-3, 5e-3, 1e-2]),
-        "hidden_dim": trial.suggest_categorical("hidden_dim", [32, 64]),
-        "num_heads": trial.suggest_categorical("num_heads",[1, 2, 4]),
-        "dropout": trial.suggest_uniform("dropout", 0.0, 0.5),
-        'n_layers': trial.suggest_int('n_layers', 2, 3)
+        "lr": trial.suggest_float("lr", 0.3, 0.7),
+        "weight_decay": trial.suggest_categorical("weight_decay", [0, 0.0001]),
+        # "hidden_dim": trial.suggest_categorical("hidden_dim", [200, 400]),
+        # "ent_dim": trial.suggest_categorical("ent_dim", [200, 400]),
+        # "rel_dim": trial.suggest_categorical("rel_dim", [200, 400]),
+        "neg_size": trial.suggest_int("neg_size", 70, 130),
+        "margin": trial.suggest_float("margin", 150, 250),
+        # "valid_percent": trial.suggest_categorical("valid_percent", [0.4]),
+        # "test_percent": trial.suggest_categorical("test_percent", [1]),
     }
 
 
 def hpo_experiment(args, trainerflow, **kwargs):
     logger = args.logger
-    tool = AutoML(args, trainerflow, n_trials=100, func_search=func_search, logger=logger)
+    tool = AutoML(args, trainerflow, n_trials=15, func_search=func_search, logger=logger)
     result = tool.run()
     logger.info("[Hyper-parameter optimization] Final results:{}".format(result))
     return result
@@ -51,10 +55,10 @@ class AutoML(object):
         if isinstance(result, tuple):
             score = (result[0] + result[1]) / 2
         elif isinstance(result, dict):
-            score = 0
-            for _, v in result.items():
-                score += v
-            score /= len(result)
+            score = -result['MR']
+            # for _, v in result.items():
+            #     score += v
+            # score /= len(result)
         if self.best_score is None or score > self.best_score:
             self.best_score = score
             self.best_params = cur_params

@@ -23,33 +23,46 @@ class TransR(BaseModel):
         self.ent_dim = args.ent_dim
         self.rel_dim = args.rel_dim
         self.margin = args.margin
+        self.dis_norm = args.dis_norm
 
         self.n_emb = nn.Embedding(self.ent_num, self.ent_dim)
         self.r_emb = nn.Embedding(self.rel_num, self.rel_dim)
-        self.rel_transfer = nn.Embedding(self.rel_num, self.ent_dim * self.rel_dim)
-        self.n_emb.weight.data = F.normalize(nn.init.xavier_uniform_(self.n_emb.weight.data), p=2.0, dim=-1)
-        self.r_emb.weight.data = F.normalize(nn.init.xavier_uniform_(self.r_emb.weight.data), p=2.0, dim=-1)
-        self.rel_transfer.weight.data = F.normalize(nn.init.xavier_uniform_(self.rel_transfer.weight.data), p=2.0, dim=-1)
+        self.r_emb_p = nn.Embedding(self.rel_num, self.ent_dim * self.rel_dim)
+        
+        nn.init.xavier_uniform_(self.n_emb.weight.data)
+        nn.init.xavier_uniform_(self.r_emb.weight.data)
+        nn.init.xavier_uniform_(self.r_emb_p.weight.data)
 
-    def _transfer(self, e, r_transfer):
-        r_transfer = r_transfer.view(-1, self.ent_dim, self.rel_dim)
-        if e.shape[0] != r_transfer.shape[0]:
-            e = e.view(-1, r_transfer.shape[0], self.ent_dim).permute(1, 0, 2)
-            e = th.matmul(e, r_transfer).permute(1, 0, 2)
+    def _transfer(self, n, r_emb_p):
+        r_emb_p = r_emb_p.view(-1, self.ent_dim, self.rel_dim)
+        if n.shape[0] != r_emb_p.shape[0]:
+            n = n.view(-1, r_emb_p.shape[0], self.ent_dim).permute(1, 0, 2)
+            n = th.matmul(n, r_emb_p).permute(1, 0, 2)
         else:
-            e = e.view(-1, 1, self.ent_dim)
-            e = th.matmul(e, r_transfer)
-        return e.view(-1, self.rel_dim)
+            n = n.view(-1, 1, self.ent_dim)
+            n = th.matmul(n, r_emb_p)
+        return n.view(-1, self.rel_dim)
 
     def forward(self, h, r, t):
-        self.n_emb.weight.data = F.normalize(self.n_emb.weight.data, p=2.0, dim=-1)
-        self.r_emb.weight.data = F.normalize(self.r_emb.weight.data, p=2.0, dim=-1)
-        self.rel_transfer.weight.data = F.normalize(self.rel_transfer.weight.data, p=2.0, dim=-1)
+        if self.training:
+            self.n_emb.weight.data = F.normalize(self.n_emb.weight.data, p=2.0, dim=-1)
+            self.r_emb.weight.data = F.normalize(self.r_emb.weight.data, p=2.0, dim=-1)
+            self.r_emb_p.weight.data = F.normalize(self.r_emb_p.weight.data, p=2.0, dim=-1)
+        if h.shape == th.Size([]):
+            h = h.view(1)
+        if r.shape == th.Size([]):
+            r = r.view(1)
+        if t.shape == th.Size([]):
+            t = t.view(1)
         r = r.to(self.device)
         h_emb = self.n_emb(h.to(self.device))
         r_emb = self.r_emb(r)
         t_emb = self.n_emb(t.to(self.device))
-        r_transfer = self.rel_transfer(r)
-        h_emb = self._transfer(h_emb, r_transfer)
-        t_emb = self._transfer(t_emb, r_transfer)
-        return h_emb, r_emb, t_emb
+        r_emb_p = self.r_emb_p(r)
+        h_emb = self._transfer(h_emb, r_emb_p)
+        t_emb = self._transfer(t_emb, r_emb_p)
+        h_emb = F.normalize(h_emb, 2.0, -1)
+        r_emb = F.normalize(r_emb, 2.0, -1)
+        t_emb = F.normalize(t_emb, 2.0, -1)
+        score = th.norm(h_emb+r_emb-t_emb, self.dis_norm, dim=-1)
+        return score

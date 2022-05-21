@@ -28,7 +28,8 @@ class TransXTrainer(BaseFlow):
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),
                             lr=args.lr, weight_decay=args.weight_decay)
 
-        self.patience = args.patience
+        self.stopper = EarlyStopping(args.patience, self._checkpoint)
+        self.task.ScorePredictor = self.model.forward # new score prdictor here
 
         self.num_nodes = self.task.dataset.num_nodes
         self.num_rels = self.task.dataset.num_rels
@@ -39,15 +40,20 @@ class TransXTrainer(BaseFlow):
         self.node_range = th.arange(0, self.num_nodes).to(self.device)
         self.rel_range = th.arange(0, self.num_rels).to(self.device)
 
+        if self.args.score_fn == 'transr': # load transe data when training transr
+            transe_state_dict = th.load(self.stopper.save_path.replace("TransR", "TransE"))
+            self.model.n_emb.weight.data = transe_state_dict['n_emb.weight']
+            self.model.r_emb.weight.data = transe_state_dict['r_emb.weight']
+            print("load")
+            
     def train(self):
         self.preprocess()
-        stopper = EarlyStopping(self.patience, self._checkpoint)
-        epoch = self._train(stopper)
-        # stopper.load_model(self.model)
+        epoch = self._train()
+        self.stopper.load_model(self.model)
         test_matrix = self._test()
         return dict(metric=test_matrix, epoch=epoch)
 
-    def _train(self, stopper):
+    def _train(self):
         batch_num = self.train_sampler.batch_num
         for epoch in range(self.max_epoch):
             self.logger.info(f"[Train Info] epoch {epoch:03d}")
@@ -58,7 +64,7 @@ class TransXTrainer(BaseFlow):
                 self.optimizer.zero_grad()
                 pos_g = self.train_sampler.get_pos()
                 neg_g = self.train_sampler.get_neg()
-                h_emb, r_emb, t_emb = self.model(th.cat((pos_g[0],neg_g[0]),-1), th.cat((pos_g[1], neg_g[1]),-1), th.cat((pos_g[2], neg_g[2]),-1))
+                h_emb, r_emb, t_emb = th.cat((pos_g[0],neg_g[0]),-1), th.cat((pos_g[1], neg_g[1]),-1), th.cat((pos_g[2], neg_g[2]),-1)
                 loss = self.loss_calculation(h_emb, r_emb, t_emb)
                 loss.backward()
                 self.optimizer.step()
@@ -69,7 +75,7 @@ class TransXTrainer(BaseFlow):
             if epoch % self.evaluate_interval == 0:
                 val_metric = self._test_step('valid')
                 self.logger.info("[Evaluation metric] " + str(val_metric)) # out test result
-                early_stop = stopper.loss_step(val_metric['valid']['MR'], self.model) # less is better
+                early_stop = self.stopper.loss_step(val_metric['valid']['MR'], self.model) # less is better
                 if early_stop:
                     self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}.')
                     break
@@ -103,8 +109,9 @@ class TransXTrainer(BaseFlow):
     def _test_step(self, mode):
         self.model.eval()
         with th.no_grad():
-            n_emb = self.model.n_emb(self.node_range)
-            r_emb_pre = self.model.r_emb(self.rel_range)
+            n_emb = th.arange(self.num_nodes)
+            r_emb_pre = th.arange(self.num_rels)
+            # n_emb, r_emb_pre, _ = self.model(self.node_range, self.rel_range, th.tensor(0))
             r_emb = {}
             for i in range(self.num_rels):
                 r_emb[i] = r_emb_pre[i]
