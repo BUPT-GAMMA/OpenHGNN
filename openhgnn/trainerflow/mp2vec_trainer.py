@@ -12,7 +12,7 @@ from ..sampler import random_walk_sampler
 class Metapath2VecTrainer(BaseFlow):
     def __init__(self, args):
         super(Metapath2VecTrainer, self).__init__(args)
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
         self.model = self.model.to(self.device)
         self.mp2vec_sampler = None
         self.dataloader = None

@@ -19,7 +19,7 @@ class Recommendation(BaseFlow):
         self.args.out_node_type = self.task.dataset.out_ntypes
         self.args.out_dim = self.args.hidden_dim
 
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
         self.reg_weight = 0.1
 

@@ -14,7 +14,7 @@ import dgl
 class HERecTrainer(BaseFlow):
     def __init__(self, args):
         super(HERecTrainer, self).__init__(args)
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
         self.random_walk_sampler = None
 
         self.dataloader = None

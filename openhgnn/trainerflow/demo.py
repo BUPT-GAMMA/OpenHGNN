@@ -27,7 +27,7 @@ class Demo(BaseFlow):
         self.task = build_task(args)
         self.hg = self.task.get_graph().to(self.device)
 
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
     def preprocess(self):
 
