@@ -24,7 +24,7 @@ class HetGNNTrainer(BaseFlow):
         super(HetGNNTrainer, self).__init__(args)
 
         self.category = self.task.dataset.category
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
 
         self.optimizer = (
             th.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)

@@ -39,11 +39,12 @@ class BaseFlow(ABC):
                 self._checkpoint = None
 
         if not hasattr(args, 'HGB_results_path') and args.dataset[:3] == 'HGB':
-            args.HGB_results_path = os.path.join("./openhgnn/output/{}/{}_{}.txt".format(args.model, args.dataset[5:], args.seed))
+            args.HGB_results_path = os.path.join("./openhgnn/output/{}/{}_{}.txt".format(args.model_name, args.dataset[5:], args.seed))
 
         self.args = args
         self.logger = self.args.logger
-        self.model_name = args.model
+        self.model_name = args.model_name
+        self.model = args.model
         self.device = args.device
         self.task = build_task(args)
         self.hg = self.task.get_graph().to(self.device)

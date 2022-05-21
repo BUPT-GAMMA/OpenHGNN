@@ -36,7 +36,7 @@ class HGTTrainer(BaseFlow):
         if args.out_dim != self.num_classes:
             print('Modify the out_dim with num_classes')
             args.out_dim = self.num_classes
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg)
         if not hasattr(args, 'out_dim') or args.out_dim == self.num_classes:
             pass
         else:

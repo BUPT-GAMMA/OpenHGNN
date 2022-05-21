@@ -14,7 +14,7 @@ from ..sampler.GATNE_sampler import NeighborSampler, generate_pairs
 class GATNE(BaseFlow):
     def __init__(self, args):
         super(GATNE, self).__init__(args)
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
 
         self.train_pairs = None
         self.train_dataloader = None

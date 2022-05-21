@@ -44,8 +44,7 @@ class NodeClassificationAC(BaseFlow):
 
         self.args.category = self.task.dataset.category
         self.category = self.args.category
-        self.model = build_model(
-            self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
         self.hgnn_ac = build_model(
             "HGNN_AC").build_model_from_args(self.args, self.hg).to(self.device)
         self.optimizer = torch.optim.Adam([{'params': self.model.parameters()},

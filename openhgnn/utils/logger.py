@@ -117,11 +117,11 @@ class Logger:
             >>> logger.info(train_result)
         """
         init(autoreset=True)
-        LOGROOT = f'./openhgnn/output/{config.model}/'
+        LOGROOT = f'./openhgnn/output/{config.model_name}/'
         dir_name = os.path.dirname(LOGROOT)
         ensure_dir(dir_name)
 
-        logfilename = '{}-{}.log'.format(config.model, get_local_time())
+        logfilename = '{}-{}.log'.format(config.model_name, get_local_time())
 
         logfilepath = os.path.join(LOGROOT, logfilename)
 
