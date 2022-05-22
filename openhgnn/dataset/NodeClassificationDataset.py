@@ -16,8 +16,6 @@ from ..utils import add_reverse_edges
 @register_dataset('node_classification')
 class NodeClassificationDataset(BaseDataset):
     r"""
-    Description
-    -----------
     The class *NodeClassificationDataset* is a base class for datasets which can be used in task *node classification*.
     So its subclass should contain attributes such as graph, category, num_classes and so on.
     Besides, it should implement the functions *get_labels()* and *get_split()*.
@@ -48,8 +46,6 @@ class NodeClassificationDataset(BaseDataset):
 
     def get_labels(self):
         r"""
-        Description
-        ------------
         The subclass of dataset should overwrite the function. We can get labels of target nodes through it.
 
         Notes
@@ -79,8 +75,6 @@ class NodeClassificationDataset(BaseDataset):
         validation : bool
             Whether to split dataset. Default ``True``. If it is False, val_idx will be same with train_idx.
 
-        Description
-        ------------
         We can get idx of train, validation and test through it.
 
         return
@@ -138,8 +132,6 @@ class NodeClassificationDataset(BaseDataset):
 @register_dataset('rdf_node_classification')
 class RDF_NodeClassification(NodeClassificationDataset):
     r"""
-    Description
-    ------------
     The RDF dataset will be used in task *entity classification*.
     Dataset Name : aifb/ mutag/ bgs/ am.
     We download from dgl and process it, refer to
@@ -178,8 +170,6 @@ class RDF_NodeClassification(NodeClassificationDataset):
 @register_dataset('hin_node_classification')
 class HIN_NodeClassification(NodeClassificationDataset):
     r"""
-    Description
-    ------------
     The HIN dataset are all used in different papers. So we preprocess them and store them as form of dgl.DGLHeteroGraph.
     The dataset name combined with paper name through 4(for).
 
@@ -363,8 +353,6 @@ class OHGB_NodeClassification(NodeClassificationDataset):
 @register_dataset('HGBn_node_classification')
 class HGB_NodeClassification(NodeClassificationDataset):
     r"""
-    Description
-    ------------
     The HGB dataset will be used in task *node classification*.
 
     Dataset Name :

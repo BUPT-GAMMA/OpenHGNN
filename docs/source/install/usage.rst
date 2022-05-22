@@ -3,7 +3,7 @@ Basic Usage
 
 Run experiments
 ------------------
-Running an existing baseline model on an existing benchmark :ref:`task <api_dataset>`
+Running an existing baseline model on an existing benchmark :ref:`task <api-dataset>`
 
 .. code:: bash
 

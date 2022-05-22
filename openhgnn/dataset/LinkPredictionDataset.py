@@ -6,6 +6,7 @@ from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset, OHGBDataset
 from ..utils import add_reverse_edges
 
+__all__ = ['LinkPredictionDataset', 'HGB_LinkPrediction']
 
 @register_dataset('link_prediction')
 class LinkPredictionDataset(BaseDataset):

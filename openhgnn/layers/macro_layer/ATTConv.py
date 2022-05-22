@@ -10,6 +10,12 @@ class ATTConv(nn.Module):
     '''
     It is macro_layer of the models [HetGNN].
     It presents in the 3.3.2 Types Combination of the paper.
+    
+    In this framework, to make embedding dimension consistent and models tuning easy,
+    we use the same dimension d for content embedding in Section 3.2,
+    aggregated content embedding in Section 3.3, and output node embedding in Section 3.3.
+        
+    So just give one dim parameter.
 
     Parameters
     ----------
@@ -17,14 +23,6 @@ class ATTConv(nn.Module):
         Input feature dimension.
     ntypes : list
         Node types.
-
-
-    ''
-    In this framework, to make embedding dimension consistent and models tuning easy,
-        we use the same dimension d for content embedding in Section 3.2,
-        aggregated content embedding in Section 3.3, and output node embedding in Section 3.3.
-        ''
-    So just give one dim parameter.
 
     Note:
         We don't implement multi-heads version.

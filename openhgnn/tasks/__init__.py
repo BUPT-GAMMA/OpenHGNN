@@ -53,3 +53,16 @@ SUPPORTED_TASKS = {
     'recommendation': 'openhgnn.tasks.recommendation',
     'demo': 'openhgnn.tasks.demo'
 }
+
+from .node_classification import NodeClassification
+from .link_prediction import LinkPrediction
+from .recommendation import Recommendation
+
+__all__ = [
+    'BaseTask',
+    'NodeClassification',
+    'LinkPrediction',
+    'Recommendation',
+]
+
+classes = __all__

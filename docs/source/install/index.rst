@@ -17,7 +17,7 @@ Install
 Python environment requirments
 
 - `Python <https://www.python.org/>`_ >= 3.6
-- `PyTorch <https://pytorch.org/get-started/>`_  >= 1.9.0
+- `PyTorch <https://pytorch.org/>`_  >= 1.9.0
 - `DGL <https://github.com/dmlc/dgl>`_ >= 0.8.0
 
 

@@ -9,6 +9,39 @@ import dgl.function as fn
 
 @register_model('fastGTN')
 class fastGTN(BaseModel):
+    r"""
+        fastGTN from paper `Graph Transformer Networks: Learning Meta-path Graphs to Improve GNNs
+        <https://arxiv.org/abs/2106.06218>`__.
+        It is the extension paper  of GTN.
+        `Code from author <https://github.com/seongjunyun/Graph_Transformer_Networks>`__.
+
+        Given a heterogeneous graph :math:`G` and its edge relation type set :math:`\mathcal{R}`.Then we extract
+        the single relation adjacency matrix list. In that, we can generate combination adjacency matrix by conv
+        the single relation adjacency matrix list. We can generate :math:'l-length' meta-path adjacency matrix
+        by multiplying combination adjacency matrix. Then we can generate node representation using a GCN layer.
+
+        Parameters
+        ----------
+        num_edge_type : int
+            Number of relations.
+        num_channels : int
+            Number of conv channels.
+        in_dim : int
+            The dimension of input feature.
+        hidden_dim : int
+            The dimension of hidden layer.
+        num_class : int
+            Number of classification type.
+        num_layers : int
+            Length of hybrid metapath.
+        category : string
+            Type of predicted nodes.
+        norm : bool
+            If True, the adjacency matrix will be normalized.
+        identity : bool
+            If True, the identity matrix will be added to relation matrix set.
+
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         if args.identity:
@@ -22,42 +55,6 @@ class fastGTN(BaseModel):
 
     def __init__(self, num_edge_type, num_channels, in_dim, hidden_dim, num_class, num_layers, category, norm,
                  identity):
-        r"""
-
-            Description
-            -----------
-            fastGTN from paper `Graph Transformer Networks: Learning Meta-path Graphs to Improve GNNs
-            <https://arxiv.org/abs/2106.06218>`__.
-            It is the extension paper  of GTN.
-            `Code from author <https://github.com/seongjunyun/Graph_Transformer_Networks>`__.
-
-            Given a heterogeneous graph :math:`G` and its edge relation type set :math:`\mathcal{R}`.Then we extract
-            the single relation adjacency matrix list. In that, we can generate combination adjacency matrix by conv
-            the single relation adjacency matrix list. We can generate :math:'l-length' meta-path adjacency matrix
-            by multiplying combination adjacency matrix. Then we can generate node representation using a GCN layer.
-
-            Parameters
-            ----------
-                num_edge_type : int
-                    Number of relations.
-                num_channels : int
-                    Number of conv channels.
-                in_dim : int
-                    The dimension of input feature.
-                hidden_dim : int
-                    The dimension of hidden layer.
-                num_class : int
-                    Number of classification type.
-                num_layers : int
-                    Length of hybrid metapath.
-                category : string
-                    Type of predicted nodes.
-                norm : bool
-                    If True, the adjacency matrix will be normalized.
-                identity : bool
-                    If True, the identity matrix will be added to relation matrix set.
-
-        """
         super(fastGTN, self).__init__()
         self.num_edge_type = num_edge_type
         self.num_channels = num_channels
@@ -145,9 +142,6 @@ class GCNConv(nn.Module):
 
 class GTConv(nn.Module):
     r"""
-        Description
-        -----------
-
         We conv each sub adjacency matrix :math:`A_{R_{i}}` to a combination adjacency matrix :math:`A_{1}`:
 
         .. math::
