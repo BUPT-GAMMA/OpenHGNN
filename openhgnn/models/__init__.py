@@ -82,4 +82,5 @@ SUPPORTED_MODELS = {
     'GATNE-T': 'openhgnn.models.GATNE',
     'HetSANN': 'openhgnn.models.HetSANN',
     'HGAT': 'openhgnn.models.HGAT',
+    'MeiREC': 'openhgnn.models.MeiREC',
 }

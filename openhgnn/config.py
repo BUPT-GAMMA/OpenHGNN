@@ -544,5 +544,11 @@ class Config(object):
             self.mini_batch_flag = False
             self.hidden_dim = self.h_dim * self.num_heads
 
+        elif model == 'MeiREC':
+            self.lr = conf.getfloat("MeiREC", "lr")
+            self.weight_decay = conf.getfloat("MeiREC", "weight_decay")
+            self.vocab = conf.getint("MeiREC", "vocab_size")
+            self.max_epoch = conf.getint("MeiREC", "train_epochs")
+            self.batch_num = conf.getint("MeiREC", "batch_num")
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)

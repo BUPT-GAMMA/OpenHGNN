@@ -65,4 +65,5 @@ SUPPORTED_FLOWS = {
     'slicetrainer': 'openhgnn.trainerflow.slice_trainer',
     'hde_trainer':  'openhgnn.trainerflow.hde_trainer',
     'GATNE_trainer': 'openhgnn.trainerflow.GATNE_trainer',
+    'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
 }

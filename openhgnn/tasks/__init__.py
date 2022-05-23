@@ -51,5 +51,6 @@ SUPPORTED_TASKS = {
     'node_classification': 'openhgnn.tasks.node_classification',
     'link_prediction': 'openhgnn.tasks.link_prediction',
     'recommendation': 'openhgnn.tasks.recommendation',
+    'meirec': 'openhgnn.tasks.meirec',
     'demo': 'openhgnn.tasks.demo'
 }

@@ -1,5 +1,6 @@
 import importlib
 from dgl.data import DGLDataset
+from torch.utils.data import Dataset
 from .base_dataset import BaseDataset
 from .utils import load_acm, load_acm_raw, generate_random_hg
 from .academic_graph import AcademicDataset
@@ -7,6 +8,7 @@ from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
 from .gtn_dataset import *
 from .adapter import *
+from .meirec_dataset import MeiRECDataset, get_data_loader
 
 DATASET_REGISTRY = {}
 
@@ -50,6 +52,10 @@ def try_import_task_dataset(task):
 def build_dataset(dataset, task, *args, **kwargs):
     if isinstance(dataset, DGLDataset):
         return dataset
+    if dataset == 'meirec':
+        train_dataloader = get_data_loader("train", batch_size=args[0])
+        test_dataloader = get_data_loader("test", batch_size=args[0])
+        return train_dataloader, test_dataloader
     if dataset in CLASS_DATASETS:
         return build_dataset_v2(dataset, task)
     if not try_import_task_dataset(task):
@@ -84,7 +90,7 @@ def build_dataset(dataset, task, *args, **kwargs):
 SUPPORTED_DATASETS = {
     "node_classification": "openhgnn.dataset.NodeClassificationDataset",
     "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
-    "recommendation": "openhgnn.dataset.RecommendationDataset"
+    "recommendation": "openhgnn.dataset.RecommendationDataset",
 }
 
 from . import NodeClassificationDataset
