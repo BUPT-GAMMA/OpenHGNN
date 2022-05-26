@@ -18,9 +18,6 @@ def get_norm_id(id_map, some_id):
         id_map[some_id] = len(id_map)
     return id_map[some_id]
 
-"""
-从大图中根据一组边获得一个子图
-"""
 def norm_graph(node_id_map, edge_id_map, edge_list):
     norm_edge_list = []
     for e in edge_list:
