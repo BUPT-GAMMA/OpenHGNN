@@ -3,40 +3,14 @@
 Task
 =================================
 
-BaseTask
----------
+.. currentmodule:: openhgnn.tasks
 
-.. automodule:: openhgnn.tasks.base_task
+.. autosummary::
+    :nosignatures:
+    {% for cls in openhgnn.tasks.classes %}
+      {{ cls }}
+    {% endfor %}
+
+.. automodule:: openhgnn.tasks
     :members:
-    :undoc-members:
-    :show-inheritance:
-
-Node classification Task
---------------------------
-
-.. autoclass:: openhgnn.tasks.node_classification.NodeClassification
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Link prediction Task
----------------------
-
-.. automodule::  openhgnn.tasks.link_prediction
-
-Link prediction Model
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: openhgnn.models.link_prediction.LinkPrediction
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Recommendation Task
----------------------
-
-.. autoclass:: openhgnn.tasks.recommendation.Recommendation
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+    :exclude-members:

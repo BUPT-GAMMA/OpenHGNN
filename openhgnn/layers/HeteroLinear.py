@@ -5,8 +5,6 @@ import torch.nn.functional as F
 
 class GeneralLinear(nn.Module):
     r"""
-    Description
-    ------------
     General Linear, combined with activation, normalization(batch and L2), dropout and so on.
 
     Parameters
@@ -47,8 +45,6 @@ class GeneralLinear(nn.Module):
 
     def forward(self, batch_h: torch.Tensor) -> torch.Tensor:
         r"""
-        Description
-        ------------
         Apply Linear, BatchNorm1d, Dropout and normalize(if need).
         """
         batch_h = self.layer(batch_h)
@@ -60,8 +56,6 @@ class GeneralLinear(nn.Module):
 
 class HeteroLinearLayer(nn.Module):
     r"""
-    Description
-    ------------
     Transform feature with nn.Linear. In general, heterogeneous feature has different dimension as input.
     Even though they may have same dimension, they may have different semantic in every dimension.
     So we use a linear layer for each node type to map all node features to a shared feature space.
@@ -112,8 +106,6 @@ class HeteroLinearLayer(nn.Module):
 
 class HeteroMLPLayer(nn.Module):
     r"""
-    Description
-    -------------
     HeteroMLPLayer contains multiple GeneralLinears, different with HeteroLinearLayer.
     The latter contains only one layer.
 
@@ -156,8 +148,6 @@ class HeteroMLPLayer(nn.Module):
 
 class HeteroFeature(nn.Module):
     r"""
-    Description
-    ------------
     This is a feature preprocessing component which is dealt with various heterogeneous feature situation.
 
     In general, we will face the following three situations.
@@ -232,8 +222,6 @@ class HeteroFeature(nn.Module):
 
     def forward(self):
         r"""
-        Description
-        ------------
         return feature.
 
         Returns

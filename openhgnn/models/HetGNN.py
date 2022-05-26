@@ -216,8 +216,6 @@ class het_content_encoder(nn.Module):
 
 class aggregate_het_neigh(nn.Module):
     r"""
-    Description
-    --------------
     It is a Aggregating Heterogeneous Neighbors(C3)
     Same Type Neighbors Aggregation
 

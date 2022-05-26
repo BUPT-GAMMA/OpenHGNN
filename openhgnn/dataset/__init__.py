@@ -6,10 +6,9 @@ from .academic_graph import AcademicDataset
 from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
 from .gtn_dataset import *
-from .adapter import *
+from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 
 DATASET_REGISTRY = {}
-
 
 def register_dataset(name):
     """
@@ -87,8 +86,9 @@ SUPPORTED_DATASETS = {
     "recommendation": "openhgnn.dataset.RecommendationDataset"
 }
 
-from . import NodeClassificationDataset
-from . import LinkPredictionDataset
+from .NodeClassificationDataset import NodeClassificationDataset
+from .LinkPredictionDataset import LinkPredictionDataset
+from .RecommendationDataset import RecommendationDataset
 
 
 def build_dataset_v2(dataset, task):
@@ -115,3 +115,20 @@ CLASS_DATASETS = {
     "acm4GTN": "openhgnn.dataset.ACM4GTNDataset",
     "imdb4GTN": "openhgnn.dataset.IMDB4GTNDataset",
 }
+
+__all__ = [
+    'BaseDataset',
+    'NodeClassificationDataset',
+    'LinkPredictionDataset',
+    'RecommendationDataset',
+    'AcademicDataset',
+    'HGBDataset',
+    'OHGBDataset',
+    'IMDB4GTNDataset',
+    'ACM4GTNDataset',
+    'DBLP4GTNDataset',
+    'AsLinkPredictionDataset',
+    'AsNodeClassificationDataset'
+]
+
+classes = __all__

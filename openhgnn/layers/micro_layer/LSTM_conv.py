@@ -16,9 +16,6 @@ class LSTMConv(nn.Module):
 
     def reset_parameters(self):
         r"""
-
-        Description
-        -----------
         Reinitialize learnable parameters.
 
         Note

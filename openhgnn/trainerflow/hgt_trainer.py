@@ -6,7 +6,7 @@ import torch
 from tqdm import tqdm
 import torch.nn.functional as F
 from ..models import build_model
-from ..sampler import HGT_preprocess4mag, HGTsampler
+from ..sampler import HGTsampler
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import extract_embed, EarlyStopping

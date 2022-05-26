@@ -10,8 +10,6 @@ from ..layers.macro_layer.SemanticConv import SemanticAttention
 @register_model('HPN')
 class HPN(BaseModel):
     r"""
-    Description
-    ------------
     This model shows an example of using dgl.metapath_reachable_graph on the original heterogeneous
     graph.HPN from paper `Heterogeneous Graph Propagation Network
     <https://ieeexplore.ieee.org/abstract/document/9428609>`__.

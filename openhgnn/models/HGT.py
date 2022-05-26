@@ -8,6 +8,30 @@ from ..utils import to_hetero_feat
 
 @register_model('HGT')
 class HGT(BaseModel):
+    r"""Heterogeneous graph transformer convolution from `Heterogeneous Graph Transformer
+    <https://arxiv.org/abs/2003.01332>`__
+
+    For more details, you may refer to `HGT<https://docs.dgl.ai/en/0.8.x/generated/dgl.nn.pytorch.conv.HGTConv.html>`__
+    
+    Parameters
+    ----------
+    in_dim: int
+        the input dimension
+    out_dim: int
+        the output dimension
+    num_heads: list
+        the list of the number of heads in each layer
+    num_etypes: int
+        the number of the edge type
+    num_ntypes: int
+        the number of the node type
+    num_layers: int
+        the number of layers we used in the computing
+    dropout: float
+        the feature drop rate
+    norm: boolean
+        if we need the norm operation
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         
@@ -22,30 +46,6 @@ class HGT(BaseModel):
                    )
     def __init__(self, in_dim, out_dim, num_heads, num_etypes, num_ntypes, 
                  num_layers, dropout = 0.2, norm = False):
-        r"""Heterogeneous graph transformer convolution from `Heterogeneous Graph Transformer
-        <https://arxiv.org/abs/2003.01332>`__
-
-        For more details, you may refer to `HGT<https://docs.dgl.ai/en/0.8.x/generated/dgl.nn.pytorch.conv.HGTConv.html>`__
-        
-        Parameters
-        ----------
-        in_dim: int
-            the input dimension
-        out_dim: int
-            the output dimension
-        num_heads: list
-            the list of the number of heads in each layer
-        num_etypes: int
-            the number of the edge type
-        num_ntypes: int
-            the number of the node type
-        num_layers: int
-            the number of layers we used in the computing
-        dropout: float
-            the feature drop rate
-        norm: boolean
-            if we need the norm operation
-        """
         super(HGT, self).__init__()
         self.num_layers = num_layers
         self.hgt_layers = nn.ModuleList()
