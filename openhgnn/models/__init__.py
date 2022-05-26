@@ -103,7 +103,6 @@ from .NARS import NARS
 from .RHGNN import RHGNN
 from .HPN import HPN
 from .KGCN import KGCN
-from .SLiCE import SLiCE
 from .HGSL import HGSL
 from .homo_GNN import homo_GNN
 from .general_HGNN import general_HGNN
@@ -132,7 +131,6 @@ __all__ = [
     'RHGNN',
     'HPN',
     'KGCN',
-    'SLiCE',
     'HGSL',
     'homo_GNN',
     'general_HGNN',
