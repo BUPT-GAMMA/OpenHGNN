@@ -52,10 +52,15 @@ class TransX_Sampler():
     def get_pos(self):
         if self.cur_idx + self.batch_size < self.num_edges:
             edge_idx = th.arange(self.cur_idx, self.cur_idx + self.batch_size, dtype=th.int64)
+            shuffle = False
         else:
             edge_idx = th.arange(self.cur_idx, self.num_edges, dtype=th.int64)
+            shuffle = True
         self.cur_idx = (self.cur_idx + self.batch_size)%self.num_edges
         self.pos_g = (self.src[edge_idx], self.rel[edge_idx], self.dst[edge_idx])
+        if shuffle:
+            self._random_select_triplets(self.src, self.rel, self.dst, self.num_edges)
+            edge_idx = 0
         return self.pos_g
     
     def get_neg(self):

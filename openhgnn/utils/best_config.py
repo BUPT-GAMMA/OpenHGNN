@@ -357,11 +357,32 @@ BEST_CONFIGS = {
             'general':{
             },
             'FB15k':{
-                'lr':1, 'weight_decay': 0.0001, 'hidden_dim': 400, 'neg_size': 13,'margin': 4, 'batch_size': 100, 'valid_percent':0.01, 'test_percent': 0.1
+                'lr':1, 'weight_decay': 0.0001, 'hidden_dim': 400, 'neg_size': 13, 'margin': 4, 'batch_size': 100, 'valid_percent':0.01, 'test_percent': 0.1
             },
             'wn18':{
-                'lr': 0.7048, 'weight_decay': 0.0001, 'hidden_dim': 200, 'neg_size': 106, 'margin': 9.9105, 'batch_size': 100, 'valid_percent':0.4, 'test_percent': 1
-            } # testing
+                # 'lr': 0.71, 'weight_decay': 0.0001, 'hidden_dim': 400, 'neg_size': 97, 'margin': 32.8, 'batch_size': 100, 'dis_norm': 1, 'valid_percent':1, 'test_percent': 1
+                'lr': 1, 'weight_decay': 0.0001, 'hidden_dim': 400, 'neg_size': 100, 'margin': 50, 'batch_size': 100, 'dis_norm': 2, 'patience': 3, 'valid_percent':0.05, 'test_percent': 0.05
+            }
+        },
+        'TransH': {
+            'general':{
+            },
+            'FB15k':{
+                'lr': 1, 'weight_decay': 0.0001, 'hidden_dim': 400, 'neg_size': 15, 'margin': 5, 'batch_size': 100, 'valid_percent':0.01, 'test_percent': 0.1
+            },
+            'wn18':{
+                'lr': 0.71, 'weight_decay': 0.0001, 'hidden_dim': 200, 'neg_size': 100, 'margin': 32.8, 'batch_size': 100, 'patience': 5, 'valid_percent':1, 'test_percent': 1
+            }
+        },
+        'TransD': {
+            'general':{
+            },
+            'FB15k':{
+                'lr': 0.6, 'weight_decay': 0.0001, 'ent_dim': 400, 'rel_dim': 400, 'neg_size': 20, 'margin': 5, 'batch_size': 100, 'patience': 3, 'valid_percent':0.01, 'test_percent': 0.1, 
+            },
+            'wn18':{
+                'lr': 0.5, 'weight_decay': 0.0001, 'ent_dim': 400, 'rel_dim': 400, 'neg_size': 98, 'margin': 200, 'batch_size': 100, 'patience':5, 'valid_percent':1, 'test_percent': 1
+            }
         }
 
     },

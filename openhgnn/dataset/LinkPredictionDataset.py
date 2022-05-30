@@ -483,7 +483,7 @@ class KG_LinkPrediction(LinkPredictionDataset):
             self.target_link = self.test_hg.canonical_etypes
 
     def _build_hg(self, g, mode):
-        sub_g = dgl.edge_subgraph(g, g.edata[mode+'_edge_mask'], relabel_nodes=False) #filtered
+        sub_g = dgl.edge_subgraph(g, g.edata[mode+'_edge_mask'], relabel_nodes=False)
         src, dst = sub_g.edges()
         etype = sub_g.edata['etype']
 
