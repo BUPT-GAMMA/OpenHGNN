@@ -90,7 +90,8 @@ BEST_CONFIGS = {
                 'num_layers': 2, 'num_channels': 2, 'adaptive_lr_flag': True,
             },
             'imdb4GTN': {
-                'num_layers': 2, 'num_channels': 2, 'adaptive_lr_flag': True,
+                'lr': 0.01, 'hidden_dim': 128, 'num_layers': 2, 'num_channels': 8, 'adaptive_lr_flag': True,
+                'dropout': 0.1
             },
             'dblp4GTN': {
                 'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,
@@ -106,14 +107,15 @@ BEST_CONFIGS = {
             'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 64, 'max_epoch': 100, 'patience': 20,
                         'norm_emd_flag': True, 'mini_batch_flag': False},
             'acm4GTN': {
-                'num_layers': 2, 'num_channels': 8, 'adaptive_lr_flag': False,
+                'lr': 0.01, 'hidden_dim': 32, 'num_layers': 3, 'num_channels': 8, 'adaptive_lr_flag': False,
+                'dropout': 0.01,
             },
             'imdb4GTN': {
-                'num_layers': 2, 'num_channels': 4, 'adaptive_lr_flag': False,
+                'lr': 0.01, 'num_layers': 3, 'dropout': 0.3, 'num_channels': 4, 'hidden_dim': 128,
+                'adaptive_lr_flag': False,
             },
-            'dblp4GTN': {
-                'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,
-            },
+            'dblp4GTN': {'lr': 0.001, 'hidden_dim': 128, 'num_layers': 3, 'num_channels': 8, 'adaptive_lr_flag': False,
+                         'dropout': 0.5},
         },
         'MHNF': {
             'general': {'lr': 0.005, 'weight_decay': 0.001, 'hidden_dim': 64, 'max_epoch': 50, 'patience': 10,
@@ -122,7 +124,7 @@ BEST_CONFIGS = {
                 'num_layers': 2, 'num_channels': 2, 'adaptive_lr_flag': True,
             },
             'imdb4GTN': {
-				'lr': 0.001, 'hidden_dim': 128, 'num_layers': 4, 'num_channels': 4
+                'lr': 0.001, 'hidden_dim': 128, 'num_layers': 4, 'num_channels': 4
             },
             'dblp4GTN': {
                 'num_layers': 3, 'num_channels': 2, 'adaptive_lr_flag': False,

@@ -7,8 +7,6 @@ from . import BaseModel, register_model
 @register_model('HeGAN')
 class HeGAN(BaseModel):
     r"""
-    Description
-    -----------
     HeGAN was introduced in `Adversarial Learning on Heterogeneous Information Networks <https://dl.acm.org/doi/10.1145/3292500.3330970>`_
 
     It included a **Discriminator** and a **Generator**. For more details please read docs of both.

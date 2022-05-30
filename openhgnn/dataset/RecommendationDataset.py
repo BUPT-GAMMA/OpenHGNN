@@ -29,7 +29,7 @@ class KGCN_Recommendation(RecommendationDataset):
             self.g = dataset[0].long()
             self.g_1 = dataset[1].long()
 
-    def get_idx(self, validation=True):
+    def get_split(self, validation=True):
         ratingsGraph = self.g_1
         n_edges = ratingsGraph.num_edges()
         random_int = th.randperm(n_edges)
@@ -98,7 +98,7 @@ class HINRecommendation(RecommendationDataset):
     #     from dgl.data.utils import save_graphs
     #     save_graphs(f"./openhgnn/dataset/{self.dataset_name}.bin", hg)
 
-    def get_idx(self, validation=True):
+    def get_split(self, validation=True):
         test_mask = self.g.edges[self.target_link].data['test_mask'].squeeze()
         test_index = th.nonzero(test_mask).squeeze()
         test_edge = self.g.find_edges(test_index, self.target_link)

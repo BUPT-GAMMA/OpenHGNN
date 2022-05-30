@@ -25,7 +25,7 @@ class KGCNTrainer(BaseFlow):
         if args.dataset == 'LastFM4KGCN':
             self.ratingsGraph = self.task.dataset.g_1.to(self.device)
             self.neighborList = [8]
-            self.trainIndex, self.evalIndex, self.testIndex = self.task.get_idx()
+            self.trainIndex, self.evalIndex, self.testIndex = self.task.get_split()
 
         self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
         self.optimizer = th.optim.Adam(self.model.parameters(), lr=self.args.lr, weight_decay=self.args.weight_decay)

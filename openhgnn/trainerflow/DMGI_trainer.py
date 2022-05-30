@@ -33,7 +33,7 @@ class DMGI_trainer(BaseFlow):
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),
                                                                   lr=args.lr, weight_decay=args.weight_decay)
 
-        self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
+        self.train_idx, self.val_idx, self.test_idx = self.task.get_split()
         # get label
         self.labels = self.task.get_labels().to(self.device)
         # get category's numbers

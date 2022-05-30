@@ -17,9 +17,9 @@ With that, we can use args and hg to build up a custom model with model-specific
 So it is necessary to implement the func build_model_from_args in your model.
 
 An example from section **how to build a new model**
-.. code-block:: python
 
-    ...
+.. code:: python
+
     class RGAT(BaseModel):
         @classmethod
         def build_model_from_args(cls, args, hg):

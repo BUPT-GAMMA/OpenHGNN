@@ -87,3 +87,61 @@ SUPPORTED_MODELS = {
     'TransR': 'openhgnn.models.TransR',
     'TransD': 'openhgnn.models.TransD',
 }
+
+from .CompGCN import CompGCN
+from .HetGNN import HetGNN
+from .RGCN import RGCN
+from .RGAT import RGAT
+from .RSHN import RSHN
+from .SkipGram import SkipGram
+from .HAN import HAN
+from .HeCo import HeCo
+from .HGT import HGT
+from .GTN_sparse import GTN
+from .fastGTN import fastGTN
+from .MHNF import MHNF
+from .MAGNN import MAGNN
+from .HeGAN import HeGAN
+from .NSHE import  NSHE
+from .NARS import NARS
+from .RHGNN import RHGNN
+from .HPN import HPN
+from .KGCN import KGCN
+from .SLiCE import SLiCE
+from .HGSL import HGSL
+from .homo_GNN import homo_GNN
+from .general_HGNN import general_HGNN
+from .HDE import HDE
+from .SimpleHGN import SimpleHGN
+from .GATNE import GATNE
+
+__all__ = [
+    'BaseModel',
+    'CompGCN',
+    'HetGNN',
+    'RGCN',
+    'RGAT',
+    'RSHN',
+    'SkipGram',
+    'HAN',
+    'HeCo',
+    'HGT',
+    'GTN',
+    'fastGTN',
+    'MHNF',
+    'MAGNN',
+    'HeGAN',
+    'NSHE',
+    'NARS',
+    'RHGNN',
+    'HPN',
+    'KGCN',
+    'SLiCE',
+    'HGSL',
+    'homo_GNN',
+    'general_HGNN',
+    'HDE',
+    'SimpleHGN',
+    'GATNE'
+]
+classes = __all__

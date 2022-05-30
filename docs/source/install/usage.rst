@@ -3,7 +3,7 @@ Basic Usage
 
 Run experiments
 ------------------
-Running an existing baseline model on an existing benchmark :ref:`task <api_dataset>`
+Running an existing baseline model on an existing benchmark :ref:`task <api-dataset>`
 
 .. code:: bash
 
@@ -222,7 +222,7 @@ We should implement the methods involved with evaluation metrics and loss functi
             super(Recommendation, self).__init__()
             self.n_dataset = args.dataset
             self.dataset = build_dataset(args.dataset, 'recommendation')
-            self.train_hg, self.train_neg_hg, self.val_hg, self.test_hg = self.dataset.get_idx()
+            self.train_hg, self.train_neg_hg, self.val_hg, self.test_hg = self.dataset.get_split()
             self.evaluator = Evaluator(args.seed)
 
         def get_loss_fn(self):

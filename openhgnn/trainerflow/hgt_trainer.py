@@ -6,7 +6,7 @@ import torch
 from tqdm import tqdm
 import torch.nn.functional as F
 from ..models import build_model
-from ..sampler import HGT_preprocess4mag, HGTsampler
+from ..sampler import HGTsampler
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import extract_embed, EarlyStopping
@@ -53,7 +53,7 @@ class HGTTrainer(BaseFlow):
         self.max_epoch = args.max_epoch
 
         self.category = self.task.dataset.category
-        self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
+        self.train_idx, self.val_idx, self.test_idx = self.task.get_split()
         self.labels = self.task.get_labels().to(self.device)
 
 
