@@ -6,7 +6,7 @@
 [![visitors](https://visitor-badge.glitch.me/badge?page_id=BUPT-GAMMA.OpenHGNN)](https://github.com/BUPT-GAMMA/OpenHGNN)
 [![Total lines](https://img.shields.io/tokei/lines/github/BUPT-GAMMA/OpenHGNN?color=red)](https://github.com/BUPT-GAMMA/OpenHGNN)
 
-[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)｜ [**Github Community (English)**](https://github.com/BUPT-GAMMA/OpenHGNN) ｜[**Space4HGNN [SIGIR2022]**](./space4hgnn) ｜[**Benchmark&Leaderboard**](./openhgnn/dataset/ohgb.md)
+[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)｜ [**Github Community (English)**](https://github.com/BUPT-GAMMA/OpenHGNN) ｜[**Space4HGNN [SIGIR2022]**](./space4hgnn) ｜[**Benchmark&Leaderboard**](./openhgnn/dataset/ohgb.md) | [**Slack Channel**](https://app.slack.com/client/TDM5126J1/C03J6GND001)
 
 OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包，集成了异质图神经网络的前沿模型。
 
