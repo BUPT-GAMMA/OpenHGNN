@@ -3,6 +3,8 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)
 [![Documentation Status](https://readthedocs.org/projects/openhgnn-zh-cn/badge/?version=latest)](https://openhgnn.readthedocs.io/zh_CN/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
+[![visitors](https://visitor-badge.glitch.me/badge?page_id=BUPT-GAMMA.OpenHGNN)](https://github.com/BUPT-GAMMA/OpenHGNN)
+[![Total lines](https://img.shields.io/tokei/lines/github/BUPT-GAMMA/OpenHGNN?color=red)](https://github.com/BUPT-GAMMA/OpenHGNN)
 
 [**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)｜ [**Github Community (English)**](https://github.com/BUPT-GAMMA/OpenHGNN) ｜[**Space4HGNN [SIGIR2022]**](./space4hgnn) ｜[**Benchmark&Leaderboard**](./openhgnn/dataset/ohgb.md)
 
