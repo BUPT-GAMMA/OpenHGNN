@@ -25,7 +25,7 @@ yL = [[[0, 1], [0, 1], [0, 1],[0, 1], [0, 1],[0, 1],],
 #       [[0.6, 1], [0.6, 1], [0.6, 1],[0.6, 1], [0.6, 1],[0.6, 1],]]
 
 score = 'score'
-dim = 'subgraph'
+dim = 'model_family'
 
 num_data = len(datasets)
 # Detectron colors
