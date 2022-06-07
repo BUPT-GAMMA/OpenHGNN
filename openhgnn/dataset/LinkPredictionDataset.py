@@ -258,7 +258,7 @@ class HIN_LinkPrediction(LinkPredictionDataset):
     
     def get_split(self, val_ratio=0.1, test_ratio=0.2):
         if self.dataset_name == 'academic4HetGNN':
-            return None, None, None
+            return None, None, None, None, None
         else:
             return super(HIN_LinkPrediction, self).get_split(val_ratio, test_ratio)
 
@@ -387,7 +387,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
         test_graph = dgl.heterograph(test_edge_dict,
                                      {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
 
-        return train_graph, val_graph, test_graph
+        return train_graph, val_graph, test_graph, None, None
 
     def save_results(self, hg, score, file_path):
         with hg.local_scope():
@@ -514,7 +514,7 @@ class KG_LinkPrediction(LinkPredictionDataset):
         return train_data, valid_data, test_data
 
     def get_split(self):
-        return self.train_hg, self.valid_hg, self.test_hg
+        return self.train_hg, self.valid_hg, self.test_hg, None, None
 
     def split_graph(self, g, mode='train'):
         """
