@@ -2,6 +2,7 @@ import torch.nn as nn
 import dgl.nn as dglnn
 import torch.nn.functional as F
 from openhgnn.dataset import IMDB4GTNDataset, HGBDataset
+from openhgnn import Experiment
 
 
 # Define a Heterograph Conv model. The example is from https://docs.dgl.ai/guide/training-node.html#heterogeneous-graph
@@ -29,11 +30,8 @@ def node_classification():
     dataset = IMDB4GTNDataset()
     hg = dataset[0]
     model = MyRGCN(64, 64, dataset.num_classes, hg.etypes)
-    from openhgnn.config import Config
-    from openhgnn.start import OpenHGNN
-    config_file = ["../../openhgnn/config.ini"]
-    config = Config(file_path=config_file, model=model, dataset='imdb4GTN', task='node_classification', gpu=-1)
-    OpenHGNN(args=config)
+    experiment = Experiment(model=model, dataset='imdb4GTN', task='node_classification', gpu=-1)
+    experiment.run()
 
 
 def link_prediction():
@@ -41,11 +39,8 @@ def link_prediction():
     dataset = HGBDataset(name='HGBl-amazon')
     hg = dataset[0]
     model = MyRGCN(64, 64, 64, hg.etypes)
-    from openhgnn.config import Config
-    from openhgnn.start import OpenHGNN
-    config_file = ["../../openhgnn/config.ini"]
-    config = Config(file_path=config_file, model=model, dataset='HGBl-amazon', task='link_prediction', gpu=-1)
-    OpenHGNN(args=config)
+    experiment = Experiment(model=model, dataset='HGBl-amazon', task='link_prediction', gpu=-1)
+    experiment.run()
 
 
 if __name__ == '__main__':

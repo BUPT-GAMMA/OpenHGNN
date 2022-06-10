@@ -1,4 +1,5 @@
 import torch as th
+from openhgnn import Experiment
 from openhgnn.dataset import AsLinkPredictionDataset, generate_random_hg
 from dgl import transforms as T
 from dgl import DGLHeteroGraph
@@ -106,11 +107,8 @@ def generate_random_citation_hg() -> DGLHeteroGraph:
 
 
 def train_with_custom_lp_dataset(dataset):
-    from openhgnn.config import Config
-    from openhgnn.start import OpenHGNN
-    config_file = ["../../openhgnn/config.ini"]
-    config = Config(file_path=config_file, model='RGCN', dataset=dataset, task='link_prediction', gpu=-1)
-    OpenHGNN(args=config)
+    experiment = Experiment(model='RGCN', dataset=dataset, task='link_prediction', gpu=-1)
+    experiment.run()
 
 
 if __name__ == '__main__':
