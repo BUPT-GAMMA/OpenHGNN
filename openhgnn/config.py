@@ -1,5 +1,4 @@
 import configparser
-import os
 import numpy as np
 import torch as th
 from .utils.activation import act_dict
@@ -8,7 +7,6 @@ from .utils.activation import act_dict
 class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
         conf = configparser.ConfigParser()
-        data_path = os.getcwd()
         if gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
@@ -28,11 +26,14 @@ class Config(object):
         self.task = task
         self.model = model
         self.dataset = dataset
-        if isinstance(model, th.nn.Module):
-            self.model_name = type(self.model).__name__
+        if isinstance(dataset, str):
+            self.dataset_name = dataset
         else:
+            self.dataset_name = type(self.dataset).__name__
+        if isinstance(model, str):
             self.model_name = model
-        self.output_dir = './openhgnn/output/{}'.format(self.model_name)
+        else:
+            self.model_name = type(self.model).__name__
         self.optimizer = 'Adam'
         # custom model
         if isinstance(model, th.nn.Module):
