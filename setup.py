@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 install_requires = ['numpy>=1.16.5', 'pandas>=1.0.0', 'ogb>=1.1.0',
-                    'torch>=1.8.1', 'optuna']
+                    'torch>=1.8.1', 'optuna', 'colorama']
 setup_requires = []
 tests_require = []
 
