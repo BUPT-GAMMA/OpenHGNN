@@ -17,7 +17,7 @@ classifiers = [
 
 setup(
     name = "openhgnn",
-    version = "0.2.0",
+    version = "0.2.1",
     author = "BUPT-GAMMA LAB",
     author_email = "tyzhao@bupt.edu.cn",
     maintainer = "Tianyu Zhao",
