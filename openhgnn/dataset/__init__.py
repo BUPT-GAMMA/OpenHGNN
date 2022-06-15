@@ -1,13 +1,14 @@
 import importlib
+from dgl.data import DGLDataset
 from .base_dataset import BaseDataset
-from .utils import load_acm, load_acm_raw
+from .utils import load_acm, load_acm_raw, generate_random_hg
 from .academic_graph import AcademicDataset
 from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
-
+from .gtn_dataset import *
+from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 
 DATASET_REGISTRY = {}
-
 
 def register_dataset(name):
     """
@@ -46,6 +47,10 @@ def try_import_task_dataset(task):
 
 
 def build_dataset(dataset, task, *args, **kwargs):
+    if isinstance(dataset, DGLDataset):
+        return dataset
+    if dataset in CLASS_DATASETS:
+        return build_dataset_v2(dataset, task)
     if not try_import_task_dataset(task):
         exit(1)
     if dataset in ['aifb', 'mutag', 'bgs', 'am']:
@@ -81,5 +86,49 @@ SUPPORTED_DATASETS = {
     "recommendation": "openhgnn.dataset.RecommendationDataset"
 }
 
-from . import NodeClassificationDataset
-from . import LinkPredictionDataset
+from .NodeClassificationDataset import NodeClassificationDataset
+from .LinkPredictionDataset import LinkPredictionDataset
+from .RecommendationDataset import RecommendationDataset
+
+
+def build_dataset_v2(dataset, task):
+    if dataset in CLASS_DATASETS:
+        path = ".".join(CLASS_DATASETS[dataset].split(".")[:-1])
+        module = importlib.import_module(path)
+        class_name = CLASS_DATASETS[dataset].split(".")[-1]
+        dataset_class = getattr(module, class_name)
+        d = dataset_class()
+        if task == 'node_classification':
+            target_ntype = getattr(d, 'category')
+            if target_ntype is None:
+                target_ntype = getattr(d, 'target_ntype')
+            res = AsNodeClassificationDataset(d, target_ntype=target_ntype)
+        elif task == 'link_prediction':
+            target_link = getattr(d, 'target_link')
+            target_link_r = getattr(d, 'target_link_r')
+            res = AsLinkPredictionDataset(d, target_link=target_link, target_link_r=target_link_r)
+        return res
+
+
+CLASS_DATASETS = {
+    "dblp4GTN": "openhgnn.dataset.DBLP4GTNDataset",
+    "acm4GTN": "openhgnn.dataset.ACM4GTNDataset",
+    "imdb4GTN": "openhgnn.dataset.IMDB4GTNDataset",
+}
+
+__all__ = [
+    'BaseDataset',
+    'NodeClassificationDataset',
+    'LinkPredictionDataset',
+    'RecommendationDataset',
+    'AcademicDataset',
+    'HGBDataset',
+    'OHGBDataset',
+    'IMDB4GTNDataset',
+    'ACM4GTNDataset',
+    'DBLP4GTNDataset',
+    'AsLinkPredictionDataset',
+    'AsNodeClassificationDataset'
+]
+
+classes = __all__

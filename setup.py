@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 
 install_requires = ['numpy>=1.16.5', 'pandas>=1.0.0', 'ogb>=1.1.0',
-                    'torch>=1.8.1', 'optuna']
+                    'torch>=1.8.1', 'optuna', 'colorama']
 setup_requires = []
 tests_require = []
 
@@ -17,7 +17,7 @@ classifiers = [
 
 setup(
     name = "openhgnn",
-    version = "0.2.0",
+    version = "0.2.1",
     author = "BUPT-GAMMA LAB",
     author_email = "tyzhao@bupt.edu.cn",
     maintainer = "Tianyu Zhao",

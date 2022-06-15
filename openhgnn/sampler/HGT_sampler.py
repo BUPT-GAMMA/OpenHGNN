@@ -1,6 +1,5 @@
 import dgl
 import dgl.function as fn
-import numba
 import numpy as np
 import torch as th
 import scipy.sparse as ssp

@@ -5,8 +5,6 @@ import torch.nn as nn
 
 class MetapathConv(nn.Module):
     r"""
-    Description
-    ------------
     MetapathConv is an aggregation function based on meta-path, which is similar with `dgl.nn.pytorch.HeteroGraphConv`.
     We could choose Attention/ APPNP or any GraphConvLayer to aggregate node features.
     After that we will get embeddings based on different meta-paths and fusion them.

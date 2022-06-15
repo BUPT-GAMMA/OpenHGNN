@@ -9,49 +9,47 @@ import torch.nn.functional as F
 @register_model('KGCN')
 class KGCN(BaseModel):
     r"""
-    Description
-    -----------
     This module KGCN was introduced in `KGCN <https://dl.acm.org/doi/10.1145/3308558.3313417>`__.
 
     It included two parts:
 
-    - Aggregate the entity representation and its neighborhood representation into the entity's embedding.
-        The message function is defined as follow:
+    Aggregate the entity representation and its neighborhood representation into the entity's embedding.
+    The message function is defined as follow:
 
-        :math:`\mathrm{v}_{\mathcal{N}(v)}^{u}=\sum_{e \in \mathcal{N}(v)} \tilde{\pi}_{r_{v, e}}^{u} \mathrm{e}`
+    :math:`\mathrm{v}_{\mathcal{N}(v)}^{u}=\sum_{e \in \mathcal{N}(v)} \tilde{\pi}_{r_{v, e}}^{u} \mathrm{e}`
 
-        where :math:`\mathrm{e}` is the representation of entity,
-        :math:`\tilde{\pi}_{r_{v, e}}^{u}` is the scalar weight on the edge from entity to entity,
-        the result :math:`\mathrm{v}_{\mathcal{N}(v)}^{u}` saves message which is passed from neighbor nodes
+    where :math:`\mathrm{e}` is the representation of entity,
+    :math:`\tilde{\pi}_{r_{v, e}}^{u}` is the scalar weight on the edge from entity to entity,
+    the result :math:`\mathrm{v}_{\mathcal{N}(v)}^{u}` saves message which is passed from neighbor nodes
 
-        There are three types of aggregators.
-        Sum aggregator takes the summation of two representation vectors,
-        Concat aggregator concatenates the two representation vectors and
-        Neighbor aggregator directly takes the neighborhood representation of entity as the output representation
+    There are three types of aggregators.
+    Sum aggregator takes the summation of two representation vectors,
+    Concat aggregator concatenates the two representation vectors and
+    Neighbor aggregator directly takes the neighborhood representation of entity as the output representation
 
-        :math:`a g g_{s u m}=\sigma\left(\mathbf{W} \cdot\left(\mathrm{v}+\mathrm{v}_{\mathcal{S}(v)}^{u}\right)+\mathbf{b}\right)`
+    :math:`a g g_{s u m}=\sigma\left(\mathbf{W} \cdot\left(\mathrm{v}+\mathrm{v}_{\mathcal{S}(v)}^{u}\right)+\mathbf{b}\right)`
 
-        :math:`agg $_{\text {concat }}=\sigma\left(\mathbf{W} \cdot \text{concat}\left(\mathrm{v}, \mathrm{v}_{\mathcal{S}(v)}^{u}\right)+\mathbf{b}\right)$`
+    :math:`agg $_{\text {concat }}=\sigma\left(\mathbf{W} \cdot \text{concat}\left(\mathrm{v}, \mathrm{v}_{\mathcal{S}(v)}^{u}\right)+\mathbf{b}\right)$`
 
-        :math:`\text { agg }_{\text {neighbor }}=\sigma\left(\mathrm{W} \cdot \mathrm{v}_{\mathcal{S}(v)}^{u}+\mathrm{b}\right)`
+    :math:`\text { agg }_{\text {neighbor }}=\sigma\left(\mathrm{W} \cdot \mathrm{v}_{\mathcal{S}(v)}^{u}+\mathrm{b}\right)`
 
-        In the above equations, :math:`\sigma` is the nonlinear function and
-        :math:`\mathrm{W}` and :math:`\mathrm{b}` are transformation weight and bias.
-        the representation of an item is bound up with its neighbors by aggregation
+    In the above equations, :math:`\sigma` is the nonlinear function and
+    :math:`\mathrm{W}` and :math:`\mathrm{b}` are transformation weight and bias.
+    the representation of an item is bound up with its neighbors by aggregation
 
-    - Obtain scores using final entity representation and user representation
-        The final entity representation is denoted as :math:`\mathrm{v}^{u}`,
-        :math:`\mathrm{v}^{u}` do dot product with user representation :math:`\mathrm{u}`
-        can obtain the probability. The math formula for the above function is:
+    Obtain scores using final entity representation and user representation
+    The final entity representation is denoted as :math:`\mathrm{v}^{u}`,
+    :math:`\mathrm{v}^{u}` do dot product with user representation :math:`\mathrm{u}`
+    can obtain the probability. The math formula for the above function is:
 
-        :math:`$\hat{y}_{u v}=f\left(\mathbf{u}, \mathrm{v}^{u}\right)$`
+    :math:`$\hat{y}_{u v}=f\left(\mathbf{u}, \mathrm{v}^{u}\right)$`
 
     Parameters
     ----------
-        g : DGLGraph
-            A knowledge Graph preserves relationships between entities
-        args : Config
-            Model's config
+    g : DGLGraph
+        A knowledge Graph preserves relationships between entities
+    args : Config
+        Model's config
     """
     @classmethod
     def build_model_from_args(cls, args, g):
@@ -78,9 +76,8 @@ class KGCN(BaseModel):
     
     def get_score(self):
         r"""
-        Description
-        -----------
-            Obtain scores using final entity representation and user representation
+        Obtain scores using final entity representation and user representation
+        
         Returns
         -------
 
@@ -95,24 +92,21 @@ class KGCN(BaseModel):
 
     def forward(self, blocks, inputdata):
         r"""
-
-        Description
-        -----------
-            Predict the probability between user and entity
+        Predict the probability between user and entity
 
         Parameters
         ----------
-            blocks : list
-                Blocks saves the information of neighbor nodes in each layer
-            inputdata : numpy.ndarray
-                Inputdata contains the relationship between the user and the entity
+        blocks : list
+            Blocks saves the information of neighbor nodes in each layer
+        inputdata : numpy.ndarray
+            Inputdata contains the relationship between the user and the entity
 
         Returns
         -------
-            labels : torch.Tensor
-                the label between users and entities
-            scores : torch.Tensor
-                Probability of users clicking on entitys
+        labels : torch.Tensor
+            the label between users and entities
+        scores : torch.Tensor
+            Probability of users clicking on entitys
         """
         self.data = inputdata
         self.blocks = blocks
@@ -162,26 +156,23 @@ class KGCN_Aggregate(nn.Module):
         
     def forward(self,blocks,inputdata):
         r"""
-
-        Description
-        -----------
-            Aggregate the entity representation and its neighborhood representation
+        Aggregate the entity representation and its neighborhood representation
 
         Parameters
         ----------
-            blocks : list
-                Blocks saves the information of neighbor nodes in each layer
-            inputdata : numpy.ndarray
-                Inputdata contains the relationship between the user and the entity
+        blocks : list
+            Blocks saves the information of neighbor nodes in each layer
+        inputdata : numpy.ndarray
+            Inputdata contains the relationship between the user and the entity
 
         Returns
         -------
-            item_embeddings : torch.Tensor
-                items' embeddings after aggregated
-            userList : list
-                Users corresponding to items
-            labelList : list
-                Labels corresponding to items
+        item_embeddings : torch.Tensor
+            items' embeddings after aggregated
+        userList : list
+            Users corresponding to items
+        labelList : list
+            Labels corresponding to items
         """
         self.data = inputdata
         self.blocks = blocks

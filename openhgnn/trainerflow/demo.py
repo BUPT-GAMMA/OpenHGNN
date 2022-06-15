@@ -10,7 +10,7 @@ from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import extract_embed, get_nodes_dict
 from collections.abc import Mapping
-from ..models import build_model, HeteroEmbedLayer
+from ..models import build_model
 
 
 @register_flow("demo")

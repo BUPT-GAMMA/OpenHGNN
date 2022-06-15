@@ -23,6 +23,47 @@ model
 
 @register_model('MAGNN')
 class MAGNN(BaseModel):
+    r"""
+    This is the main method of model MAGNN
+
+    Parameters
+    ----------
+    ntypes: list
+        the nodes' types of the dataset
+    h_feats: int
+        hidden dimension
+    inter_attn_feats: int
+        the dimension of attention vector in inter-metapath aggregation
+    num_heads: int
+        the number of heads in intra metapath attention
+    num_classes: int
+        the number of output classes
+    num_layers: int
+        the number of hidden layers
+    metapath_list: list
+        the list of metapaths, e.g ['M-D-M', 'M-A-M', ...],
+    edge_type_list: list
+        the list of edge types, e.g ['M-A', 'A-M', 'M-D', 'D-M'],
+    dropout_rate: float
+        the dropout rate of feat dropout and attention dropout
+    mp_instances : dict
+        the metapath instances indices dict. e.g mp_instances['MAM'] stores MAM instances indices.
+    encoder_type: str
+        the type of encoder, e.g ['RotateE', 'Average', 'Linear']
+    activation: callable activation function
+        the activation function used in MAGNN.  default: F.elu
+
+    Notes
+    -----
+    Please make sure that the please make sure that all the metapath is symmetric, e.g ['MDM', 'MAM' ...] are symmetric,
+    while ['MAD', 'DAM', ...] are not symmetric.
+
+    please make sure that the edge_type_list meets the following form:
+    [edge_type_1, edge_type_1_reverse, edge_type_2, edge_type_2_reverse, ...], like the example above.
+
+    All the activation in MAGNN are the same according to the codes of author.
+
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         ntypes = hg.ntypes
@@ -60,50 +101,6 @@ class MAGNN(BaseModel):
     def __init__(self, ntypes, h_feats, inter_attn_feats, num_heads, num_classes, num_layers,
                  metapath_list, edge_type_list, dropout_rate, metapath_idx_dict, encoder_type='RotateE',
                  activation=F.elu):
-        r"""
-
-        Description
-        -----------
-        This is the main method of model MAGNN
-
-        Parameters
-        ----------
-        ntypes: list
-            the nodes' types of the dataset
-        h_feats: int
-            hidden dimension
-        inter_attn_feats: int
-            the dimension of attention vector in inter-metapath aggregation
-        num_heads: int
-            the number of heads in intra metapath attention
-        num_classes: int
-            the number of output classes
-        num_layers: int
-            the number of hidden layers
-        metapath_list: list
-            the list of metapaths, e.g ['M-D-M', 'M-A-M', ...],
-        edge_type_list: list
-            the list of edge types, e.g ['M-A', 'A-M', 'M-D', 'D-M'],
-        dropout_rate: float
-            the dropout rate of feat dropout and attention dropout
-        mp_instances : dict
-            the metapath instances indices dict. e.g mp_instances['MAM'] stores MAM instances indices.
-        encoder_type: str
-            the type of encoder, e.g ['RotateE', 'Average', 'Linear']
-        activation: callable activation function
-            the activation function used in MAGNN.  default: F.elu
-
-        Notes
-        -----
-        Please make sure that the please make sure that all the metapath is symmetric, e.g ['MDM', 'MAM' ...] are symmetric,
-        while ['MAD', 'DAM', ...] are not symmetric.
-
-        please make sure that the edge_type_list meets the following form:
-        [edge_type_1, edge_type_1_reverse, edge_type_2, edge_type_2_reverse, ...], like the example above.
-
-        All the activation in MAGNN are the same according to the codes of author.
-
-        """
         super(MAGNN, self).__init__()
 
         self.encoder_type = encoder_type
@@ -154,9 +151,6 @@ class MAGNN(BaseModel):
 
     def mini_reset_params(self, new_metapth_idx_dict):
         '''
-
-        Description
-        -----------
         This method is utilized for reset some parameters including metapath_idx_dict, metapath_list, dst_ntypes...
         Other Parameters like weight matrix don't need to be updated.
 
@@ -531,8 +525,6 @@ def mp_instance_sampler(g, metapath_list, dataset):
 
 def mini_mp_instance_sampler(seed_nodes, mp_instances, num_samples):
     '''
-    Description
-    -----------
     Sampling metapath instances with seed_nodes as dst nodes. This method is exclusive to mini batch train/validate/test
     which need to sample subsets of metapath instances of the whole graph.
 

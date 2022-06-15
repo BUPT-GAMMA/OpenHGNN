@@ -8,9 +8,6 @@ import dgl.function as fn
 @register_model('NARS')
 class NARS(BaseModel):
     r"""
-
-        Description
-        -----------
         `SCALABLE GRAPH NEURAL NETWORKS FOR HETEROGENEOUS GRAPHS <https://arxiv.org/pdf/2011.09679.pdf>`_.
 
         Given a heterogeneous graph :math:`G` and its edge relation type set :math:`\mathcal{R}`,
@@ -27,10 +24,6 @@ class NARS(BaseModel):
 
 
         where :math:`N_i(v)` is the set of neighbors of node :math:`v` in :math:`G_i`.
-
-
-        AGGREGATING SIGN FEATURES FROM SAMPLED SUBGRAPHS
-        --------------------------------------------------
 
         For each layer :math:`l`, we let the model adaptively learn which relation-subgraph features to use by aggregating
         features from different subgraphs :math:`G_i` with learnable 1-D convolution. The aggregated :math:`l`-hop
@@ -115,14 +108,11 @@ class NARS(BaseModel):
 
 def preprocess_features(g, mps, args, device, predict):
     """
-        Description
-        -----------
-
         pre-process heterogeneous graph g to generate neighbor-averaged features
         for each relation subsets
 
         Parameters
-        ------
+        -----------
         g :
             heterogeneous graph
         rel_subsets :
@@ -159,14 +149,11 @@ def preprocess_features(g, mps, args, device, predict):
 
 def gen_rel_subset_feature(g, rel_subset, args, device, predict):
     """
-        Description
-        -----------
-
         Build relation subgraph given relation subset and generate multi-hop
         neighbor-averaged feature on this subgraph
 
-
-        ------
+        Parameters
+        ----------
         g :
             Heterogeneous graph
         rel_subset :
@@ -230,9 +217,6 @@ def gen_rel_subset_feature(g, rel_subset, args, device, predict):
 
 class FeedForwardNet(nn.Module):
     """
-        Description
-        -----------
-
         A feedforward net.
 
         Input
@@ -280,9 +264,6 @@ class FeedForwardNet(nn.Module):
 
 class SIGN(nn.Module):
     """
-        Description
-        -----------
-
         The SIGN model.
 
         Parameters
@@ -331,9 +312,6 @@ class SIGN(nn.Module):
 
 class WeightedAggregator(nn.Module):
     """
-        Description
-        -----------
-
         Get new features by multiplying the old features by the weight matrix.
 
         Parameters

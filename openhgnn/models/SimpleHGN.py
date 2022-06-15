@@ -11,6 +11,63 @@ from . import BaseModel, register_model
 
 @register_model('SimpleHGN')
 class SimpleHGN(BaseModel):
+    r"""
+    This is a model SimpleHGN from `Are we really making much progress? Revisiting, benchmarking, and
+    refining heterogeneous graph neural networks
+    <https://dl.acm.org/doi/pdf/10.1145/3447548.3467350>`__
+
+    The model extend the original graph attention mechanism in GAT by including edge type information into attention calculation.
+
+    Calculating the coefficient:
+    
+    .. math::
+        \alpha_{ij} = \frac{exp(LeakyReLU(a^T[Wh_i||Wh_j||W_r r_{\psi(<i,j>)}]))}{\Sigma_{k\in\mathcal{E}}{exp(LeakyReLU(a^T[Wh_i||Wh_k||W_r r_{\psi(<i,k>)}]))}}  (1)
+    
+    Residual connection including Node residual:
+    
+    .. math::
+        h_i^{(l)} = \sigma(\Sigma_{j\in \mathcal{N}_i} {\alpha_{ij}^{(l)}W^{(l)}h_j^{(l-1)}} + h_i^{(l-1)})  (2)
+    
+    and Edge residual:
+        
+    .. math::
+        \alpha_{ij}^{(l)} = (1-\beta)\alpha_{ij}^{(l)}+\beta\alpha_{ij}^{(l-1)}  (3)
+        
+    Multi-heads:
+    
+    .. math::
+        h^{(l+1)}_j = \parallel^M_{m = 1}h^{(l + 1, m)}_j  (4)
+    
+    Residual:
+    
+        .. math::
+            h^{(l+1)}_j = h^{(l)}_j + \parallel^M_{m = 1}h^{(l + 1, m)}_j  (5)
+    
+    Parameters
+    ----------
+    edge_dim: int
+        the edge dimension
+    num_etypes: int
+        the number of the edge type
+    in_dim: int
+        the input dimension
+    hidden_dim: int
+        the output dimension
+    num_classes: int
+        the number of the output classes
+    num_layers: int
+        the number of layers we used in the computing
+    heads: list
+        the list of the number of heads in each layer
+    feat_drop: float
+        the feature drop rate
+    negative_slope: float
+        the negative slope used in the LeakyReLU
+    residual: boolean
+        if we need the residual operation
+    beta: float
+        the hyperparameter used in edge residual
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         heads = [args.num_heads] * args.n_layers + [1]
@@ -30,63 +87,6 @@ class SimpleHGN(BaseModel):
     def __init__(self, edge_dim, num_etypes, in_dim, hidden_dim, num_classes,
                 num_layers, heads, feat_drop, negative_slope,
                 residual, beta):
-        """
-        This is a model SimpleHGN from `Are we really making much progress? Revisiting, benchmarking, and
-        refining heterogeneous graph neural networks
-        <https://dl.acm.org/doi/pdf/10.1145/3447548.3467350>`__
-
-        The model extend the original graph attention mechanism in GAT by including edge type information into attention calculation.
-
-        Calculating the coefficient:
-        
-        ..math::
-            \alpha_{ij} = \frac{exp(LeakyReLU(a^T[Wh_i||Wh_j||W_r r_{\psi(<i,j>)}]))}{\Sigma_{k\in\mathcal{E}}{exp(LeakyReLU(a^T[Wh_i||Wh_k||W_r r_{\psi(<i,k>)}]))}}  (1)
-        
-        Residual connection including Node residual:
-        
-        ..math::
-            h_i^{(l)} = \sigma(\Sigma_{j\in \mathcal{N}_i} {\alpha_{ij}^{(l)}W^{(l)}h_j^{(l-1)}} + h_i^{(l-1)})  (2)
-        
-        and Edge residual:
-            
-        ..math::
-            \alpha_{ij}^{(l)} = (1-\beta)\alpha_{ij}^{(l)}+\beta\alpha_{ij}^{(l-1)}  (3)
-         
-        Multi-heads:
-        
-        ..math::
-            h^{(l+1)}_j = \parallel^M_{m = 1}h^{(l + 1, m)}_j  (4)
-        
-        Residual:
-        
-        ..math::
-            h^{(l+1)}_j = h^{(l)}_j + \parallel^M_{m = 1}h^{(l + 1, m)}_j  (5)
-        
-        Parameters
-        ----------
-        edge_dim: int
-            the edge dimension
-        num_etypes: int
-            the number of the edge type
-        in_dim: int
-            the input dimension
-        hidden_dim: int
-            the output dimension
-        num_classes: int
-            the number of the output classes
-        num_layers: int
-            the number of layers we used in the computing
-        heads: list
-            the list of the number of heads in each layer
-        feat_drop: float
-            the feature drop rate
-        negative_slope: float
-            the negative slope used in the LeakyReLU
-        residual: boolean
-            if we need the residual operation
-        beta: float
-            the hyperparameter used in edge residual
-        """
         super(SimpleHGN, self).__init__()
         self.num_layers = num_layers
         self.hgn_layers = nn.ModuleList()

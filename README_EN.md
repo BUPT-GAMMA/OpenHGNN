@@ -3,8 +3,10 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)
 [![Documentation Status](https://readthedocs.org/projects/openhgnn/badge/?version=latest)](https://openhgnn.readthedocs.io/en/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
+[![visitors](https://visitor-badge.glitch.me/badge?page_id=BUPT-GAMMA.OpenHGNN)](https://github.com/BUPT-GAMMA/OpenHGNN)
+[![Total lines](https://img.shields.io/tokei/lines/github/BUPT-GAMMA/OpenHGNN?color=red)](https://github.com/BUPT-GAMMA/OpenHGNN)
 
-[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN) | [**Space4HGNN [SIGIR2022]**](../space4hgnn) | [**Benchmark&Leaderboard**](../openhgnn/dataset/ohgb.md)
+[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN) | [**Space4HGNN [SIGIR2022]**](../space4hgnn) | [**Benchmark&Leaderboard**](../openhgnn/dataset/ohgb.md) | [**Slack Channel**](https://app.slack.com/client/TDM5126J1/C03J6GND001)
 
 This is an open-source toolkit for Heterogeneous Graph Neural Network based
 on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https://pytorch.org/). We integrate SOTA models
@@ -12,7 +14,7 @@ of heterogeneous graph.
 
 ## News
 
-**2021-02-28**
+**2022-02-28**
 
 We release the latest version v0.2.
 
@@ -20,7 +22,7 @@ We release the latest version v0.2.
 - [Space4HGNN [SIGIR2022]](../space4hgnn)
 - [Benchmark&Leaderboard](../openhgnn/dataset/ohgb.md)
 
-**2021-01-07**
+**2022-01-07**
 
 启智社区用户可以享受到如下功能：
 
@@ -132,9 +134,11 @@ The link will give some basic usage.
 | [HAN](../openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [KGCN](../openhgnn/output/KGCN)[WWW 2019]                 |                     |                    | :heavy_check_mark: |
 | [HetGNN](../openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [HeGAN](../openhgnn/output/HeGAN)[KDD 2019]               | :heavy_check_mark:  |                    |                    |
 | HGAT[EMNLP 2019]                                          |                     |                    |                    |
 | [GTN](../openhgnn/output/GTN)[NeurIPS 2019] & fastGTN     | :heavy_check_mark:  |                    |                    |
 | [RSHN](../openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
+| [GATNE-T](../openhgnn/output/GATNE-T)[KDD 2019]           |                     | :heavy_check_mark: |                    |
 | [DMGI](../openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark:  |                    |                    |
 | [MAGNN](../openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark:  |                    |                    |
 | [HGT](../openhgnn/output/HGT)[WWW 2020]                   | :heavy_check_mark:  |                    |                    |
@@ -149,7 +153,6 @@ The link will give some basic usage.
 | [HPN](../openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [RHGNN](../openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
 | [HDE](../openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
-| [GATNE-T](../openhgnn/output/GATNE-T)[KDD 2019]           |                     | :heavy_check_mark: |                    |
 
 ### Candidate models
 

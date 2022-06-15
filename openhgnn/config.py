@@ -48,7 +48,7 @@ class Config(object):
             self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
             self.mini_batch_flag = conf.getboolean("NSHE", "mini_batch_flag")
 
-        elif model == "GTN":
+        elif model in ["GTN", "fastGTN"]:
             self.lr = conf.getfloat("GTN", "learning_rate")
             self.weight_decay = conf.getfloat("GTN", "weight_decay")
             self.seed = conf.getint("GTN", "seed")
@@ -486,6 +486,7 @@ class Config(object):
             self.validation = conf.getboolean('HeGAN', 'validation')
             self.emb_size = conf.getint("HeGAN", 'emb_size')
             self.patience = conf.getint("HeGAN", 'patience')
+            self.label_smooth = conf.getfloat("HeGAN", 'label_smooth')
         elif model == 'HDE':
             self.emb_dim = conf.getint('HDE', 'emb_dim')
             self.num_neighbor = conf.getint('HDE', 'num_neighbor')

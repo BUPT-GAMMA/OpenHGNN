@@ -20,9 +20,6 @@ def init_drop(dropout):
 @register_model('HeCo')
 class HeCo(BaseModel):
     r"""
-
-    Description
-    -----------
     **Title:** Self-supervised Heterogeneous Graph Neural Network with Co-contrastive Learning
 
     **Authors:** Xiao Wang, Nian Liu, Hui Han, Chuan Shi
@@ -32,24 +29,24 @@ class HeCo(BaseModel):
 
     Parameters
     ----------
-        meta_paths : dict
-            Extract metapaths from graph
-        network_schema : dict
-            Directed edges from other types to target type
-        category : string
-            The category of the nodes to be classificated
-        hidden_size : int
-            Hidden units size
-        feat_drop : float
-            Dropout rate for projected feature
-        attn_drop : float
-            Dropout rate for attentions used in two view guided encoders
-        sample_rate : dict
-            The nuber of neighbors of each type sampled for network schema view
-        tau : float
-            Temperature parameter used for contrastive loss
-        lam : float
-            Balance parameter for two contrastive losses
+    meta_paths : dict
+        Extract metapaths from graph
+    network_schema : dict
+        Directed edges from other types to target type
+    category : string
+        The category of the nodes to be classificated
+    hidden_size : int
+        Hidden units size
+    feat_drop : float
+        Dropout rate for projected feature
+    attn_drop : float
+        Dropout rate for attentions used in two view guided encoders
+    sample_rate : dict
+        The nuber of neighbors of each type sampled for network schema view
+    tau : float
+        Temperature parameter used for contrastive loss
+    lam : float
+        Balance parameter for two contrastive losses
 
     """
 
@@ -79,8 +76,6 @@ class HeCo(BaseModel):
 
     def forward(self, g, h_dict, pos):
         r"""
-        Description
-        -----------
         This is the forward part of model HeCo.
 
         Parameters
@@ -111,8 +106,6 @@ class HeCo(BaseModel):
 
     def get_embeds(self, g, h_dict):
         r"""
-        Description
-        -----------
         This is to get final embeddings of target nodes
 
         """
@@ -124,8 +117,6 @@ class HeCo(BaseModel):
 class SelfAttention(nn.Module):
     def __init__(self, hidden_dim, attn_drop, txt):
         r"""
-        Description
-        -----------
         This part is used to calculate type-level attention and semantic-level attention, and utilize them to generate :math:`z^{sc}` and :math:`z^{mp}`.
 
         .. math::
@@ -174,8 +165,6 @@ class SelfAttention(nn.Module):
 class Mp_encoder(nn.Module):
     def __init__(self, meta_paths_dict, hidden_size, attn_drop):
         r"""
-        Description
-        -----------
         This part is to encode meta-path view.
 
         Returns
@@ -217,8 +206,6 @@ class Mp_encoder(nn.Module):
 class Sc_encoder(nn.Module):
     def __init__(self, network_schema, hidden_size, attn_drop, sample_rate, category):
         r"""
-        Description
-        -----------
         This part is to encode network schema view.
 
         Returns
@@ -264,8 +251,6 @@ class Sc_encoder(nn.Module):
 class Contrast(nn.Module):
     def __init__(self, hidden_dim, tau, lam):
         r"""
-        Description
-        -----------
         This part is used to calculate the contrastive loss.
 
         Returns
@@ -288,8 +273,6 @@ class Contrast(nn.Module):
 
     def sim(self, z1, z2):
         r"""
-        Description
-        -----------
         This part is used to calculate the cosine similarity of each pair of nodes from different views.
 
         """
@@ -302,8 +285,6 @@ class Contrast(nn.Module):
 
     def forward(self, z_mp, z_sc, pos):
         r"""
-        Description
-        -----------
         This is the forward part of contrast part.
 
         We firstly project the embeddings under two views into the space where contrastive loss is calculated. Then, we calculate the contrastive loss with projected embeddings in a cross-view way.

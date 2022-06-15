@@ -3,14 +3,16 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/BUPT-GAMMA/OpenHGNN)
 [![Documentation Status](https://readthedocs.org/projects/openhgnn-zh-cn/badge/?version=latest)](https://openhgnn.readthedocs.io/zh_CN/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/BUPT-GAMMA/OpenHGNN)
+[![visitors](https://visitor-badge.glitch.me/badge?page_id=BUPT-GAMMA.OpenHGNN)](https://github.com/BUPT-GAMMA/OpenHGNN)
+[![Total lines](https://img.shields.io/tokei/lines/github/BUPT-GAMMA/OpenHGNN?color=red)](https://github.com/BUPT-GAMMA/OpenHGNN)
 
-[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)｜ [**Github Community (English)**](https://github.com/BUPT-GAMMA/OpenHGNN) ｜[**Space4HGNN [SIGIR2022]**](./space4hgnn) ｜[**Benchmark&Leaderboard**](./openhgnn/dataset/ohgb.md)
+[**启智社区（中文版）**](https://git.openi.org.cn/GAMMALab/OpenHGNN)｜ [**Github Community (English)**](https://github.com/BUPT-GAMMA/OpenHGNN) ｜[**Space4HGNN [SIGIR2022]**](./space4hgnn) ｜[**Benchmark&Leaderboard**](./openhgnn/dataset/ohgb.md) | [**Slack Channel**](https://app.slack.com/client/TDM5126J1/C03J6GND001)
 
 OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包，集成了异质图神经网络的前沿模型。
 
 ## 新闻
 
-**2021-02-28**
+**2022-02-28**
 
 我们开源了0.2版本。
 
@@ -18,7 +20,7 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 - 异质图神经网络的设计空间：[Space4HGNN [SIGIR2022]](./space4hgnn)
 - 基准数据集以及排行榜：[Benchmark&Leaderboard](./openhgnn/dataset/ohgb.md)
 
-**2021-01-07**
+**2022-01-07**
 
 启智社区用户可以享受到如下功能：
 
@@ -125,9 +127,11 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 | [HAN](./openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark: | :heavy_check_mark: |                    |
 | [KGCN](./openhgnn/output/KGCN)[WWW 2019]                 |                    |                    | :heavy_check_mark: |
 | [HetGNN](./openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [HeGAN](./openhgnn/output/HeGAN)[KDD 2019]               | :heavy_check_mark: |                    |                    |
 | HGAT[EMNLP 2019]                                         |                    |                    |                    |
 | [GTN](./openhgnn/output/GTN)[NeurIPS 2019] & fastGTN     | :heavy_check_mark: |                    |                    |
 | [RSHN](./openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark: | :heavy_check_mark: |                    |
+| [GATNE-T](./openhgnn/output/GATNE-T)[KDD 2019]           |                    | :heavy_check_mark: |                    |
 | [DMGI](./openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark: |                    |                    |
 | [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark: |                    |                    |
 | [HGT](./openhgnn/output/HGT)[WWW 2020]                   |                    |                    |                    |
@@ -142,7 +146,6 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 | [HPN](./openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark: | :heavy_check_mark: |                    |
 | [RHGNN](./openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark: |                    |                    |
 | [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                    | :heavy_check_mark: |                    |
-| [GATNE-T](./openhgnn/output/GATNE-T)[KDD 2019]           |                    | :heavy_check_mark: |                    |
 
 ### 候选模型
 

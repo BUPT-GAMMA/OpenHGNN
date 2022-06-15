@@ -34,7 +34,7 @@ class LinkPrediction(BaseTask):
         self.logger = args.logger
         self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger)
         # self.evaluator = Evaluator()
-        self.train_hg, self.val_hg, self.test_hg = self.dataset.get_idx()
+        self.train_hg, self.val_hg, self.test_hg, self.neg_val_graph, self.neg_test_graph = self.dataset.get_split()
         if self.val_hg is None and self.test_hg is None:
             pass
         else:
@@ -107,13 +107,16 @@ class LinkPrediction(BaseTask):
         elif self.evaluation_metric == 'roc_auc':
             if mode == 'test':
                 eval_hg = self.test_hg
+                neg_hg = self.neg_val_graph
             elif mode == 'valid':
                 eval_hg = self.val_hg
+                neg_hg = self.neg_val_graph
             else:
                 raise ValueError('Mode error, supported test and valid.')
-            negative_graph = self.construct_negative_graph(eval_hg)
+            if neg_hg is None:
+                neg_hg = self.construct_negative_graph(eval_hg)
             p_score = th.sigmoid(self.ScorePredictor(eval_hg, n_embedding, r_embedding))
-            n_score = th.sigmoid(self.ScorePredictor(negative_graph, n_embedding, r_embedding))
+            n_score = th.sigmoid(self.ScorePredictor(neg_hg, n_embedding, r_embedding))
             p_label = th.ones(len(p_score), device=p_score.device)
             n_label = th.zeros(len(n_score), device=p_score.device)
             roc_auc = self.evaluator.cal_roc_auc(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu())

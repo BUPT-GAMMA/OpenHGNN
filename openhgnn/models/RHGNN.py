@@ -13,6 +13,34 @@ import dgl.function as fn
 
 @register_model('RHGNN')
 class RHGNN(BaseModel):
+    r"""
+    This is the main method of model RHGNN
+
+    Parameters
+    ----------
+    graph: dgl.DGLHeteroGraph
+        a heterogeneous graph
+    input_dim_dict: dict
+        node input dimension dictionary
+    hidden_dim: int
+        node hidden dimension
+    relation_input_dim: int
+        relation input dimension
+    relation_hidden_dim: int
+        relation hidden dimension
+    num_layers: int
+        number of stacked layers
+    n_heads: int
+        number of attention heads
+    dropout: float
+        dropout rate
+    negative_slope: float
+        negative slope
+    residual: boolean
+        residual connections or not
+    norm: boolean
+        layer normalization or not
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         input_dim_dict = {ntype: hg.nodes[ntype].data['h'].shape[1] for ntype in hg.ntypes}
@@ -31,42 +59,6 @@ class RHGNN(BaseModel):
                      n_heads: int = 4,
                      dropout: float = 0.2, negative_slope: float = 0.2,
                      residual: bool = True, norm: bool = True):
-
-        r"""
-
-        Description
-        -----------
-        This is the main method of model RHGNN
-
-        Parameters
-        ----------
-        graph: dgl.DGLHeteroGraph
-            a heterogeneous graph
-        input_dim_dict: dict
-            node input dimension dictionary
-        hidden_dim: int
-            node hidden dimension
-        relation_input_dim: int
-            relation input dimension
-        relation_hidden_dim: int
-            relation hidden dimension
-        num_layers: int
-            number of stacked layers
-        n_heads: int
-            number of attention heads
-        dropout: float
-            dropout rate
-        negative_slope: float
-            negative slope
-        residual: boolean
-            residual connections or not
-        norm: boolean
-            layer normalization or not
-
-
-
-        """
-
 
         super(RHGNN, self).__init__()
 
@@ -202,9 +194,6 @@ class RHGNN(BaseModel):
     def inference(self, graph: dgl.DGLHeteroGraph, relation_target_node_features: dict, relation_embedding: dict = None,
                   device: str = 'cuda:0'):
         r"""
-
-        Description
-        -----------
         mini-batch inference of final representation over all node types. Outer loop: Interate the layers, Inner loop: Interate the batches
 
         Parameters
@@ -313,12 +302,7 @@ class RHGNN(BaseModel):
 
 # hetetoConv
 class HeteroGraphConv(nn.Module):
-
-
     r"""
-
-    Description
-    -----------
     A generic module for computing convolution on heterogeneous graphs.
 
     The heterograph convolution applies sub-modules on their associating
@@ -342,8 +326,6 @@ class HeteroGraphConv(nn.Module):
     def forward(self, graph: dgl.DGLHeteroGraph, input_src: dict, input_dst: dict, relation_embedding: dict,
                 node_transformation_weight: nn.ParameterDict, relation_transformation_weight: nn.ParameterDict):
         r"""
-        Description
-        -----------
         call the forward function with each module.
 
         Parameters
@@ -402,9 +384,6 @@ class RelationCrossing(nn.Module):
 
     def __init__(self, in_feats: int, out_feats: int, num_heads: int, dropout: float = 0.0, negative_slope: float = 0.2):
         r"""
-
-        Description
-        ----------
         Relation crossing layer
 
         Parameters
@@ -552,8 +531,6 @@ class RelationGraphConv(nn.Module):
 
     def __init__(self, in_feats: tuple, out_feats: int, num_heads: int, dropout: float = 0.0, negative_slope: float = 0.2):
         r"""
-        Description
-        ----------
         Relation graph convolution layer
 
         Parameters

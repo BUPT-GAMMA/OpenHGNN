@@ -8,8 +8,6 @@ from dgl import DGLError
 
 class CompConv(nn.Module):
     """
-    Description
-    -----------
     Composition-based convolution was introduced in `Composition-based Multi-Relational Graph Convolutional Networks
     <https://arxiv.org/abs/1911.03082>`__
     and mathematically is defined as follows:
@@ -61,8 +59,6 @@ class CompConv(nn.Module):
 
     def forward(self, graph, feat, h_e, Linear=None):
         r"""
-        Description
-        -----------
         Compute Composition-based  convolution.
 
         Parameters
@@ -102,6 +98,7 @@ class CompConv(nn.Module):
         Note
         ----
         The h_e is a tensor of size `(1, D_{in})`
+        
         * Input shape: :math:`(N, *, \text{in_feats})` where * means any number of additional
           dimensions, :math:`N` is the number of nodes.
         * Output shape: :math:`(N, *, \text{out_feats})` where all but the last dimension are

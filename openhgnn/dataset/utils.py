@@ -22,6 +22,7 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     shape = th.Size(sparse_mx.shape)
     return th.sparse.FloatTensor(indices, values, shape)
 
+
 """
 It's the dataset from HAN.
 Refer to https://github.com/dmlc/dgl/blob/master/examples/pytorch/han/utils.py
@@ -142,3 +143,11 @@ def get_binary_mask(total_size, indices):
     mask = th.zeros(total_size)
     mask[indices] = 1
     return mask.to(th.bool)
+
+
+def generate_random_hg(num_nodes_dict, num_edges_dict):
+    data_dict = {}
+    for etype, num in num_edges_dict.items():
+        data_dict[etype] = th.randint(low=0, high=num_nodes_dict[etype[0]], size=(num,)), \
+                           th.randint(low=0, high=num_nodes_dict[etype[2]], size=(num,))
+    return dgl.heterograph(data_dict=data_dict, num_nodes_dict=num_nodes_dict)

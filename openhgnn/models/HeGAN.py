@@ -1,4 +1,5 @@
 import torch
+from collections import OrderedDict
 import torch.nn as nn
 from . import BaseModel, register_model
 
@@ -6,8 +7,6 @@ from . import BaseModel, register_model
 @register_model('HeGAN')
 class HeGAN(BaseModel):
     r"""
-    Description
-    -----------
     HeGAN was introduced in `Adversarial Learning on Heterogeneous Information Networks <https://dl.acm.org/doi/10.1145/3292500.3330970>`_
 
     It included a **Discriminator** and a **Generator**. For more details please read docs of both.
@@ -87,11 +86,14 @@ class Generator(nn.Module):
             rm = nn.init.xavier_normal_(rm)
             self.relation_matrix[et] = nn.Parameter(rm, requires_grad=True)
 
-        self.linear1 = nn.Linear(in_features=self.node_emb_dim, out_features=self.node_emb_dim, bias=True)
-        self.linear1.weight = nn.init.xavier_normal_(self.linear1.weight)
-        self.linear2 = nn.Linear(in_features=self.node_emb_dim, out_features=self.node_emb_dim)
-        nn.init.xavier_normal_(self.linear2.weight)
-        self.leaky_relu = nn.LeakyReLU()
+        self.fc = nn.Sequential(
+            OrderedDict([
+                ("w_1", nn.Linear(in_features=self.node_emb_dim, out_features=self.node_emb_dim, bias=True)),
+                ("a_1", nn.LeakyReLU()),
+                ("w_2", nn.Linear(in_features=self.node_emb_dim, out_features=self.node_emb_dim)),
+                ("a_2", nn.LeakyReLU())
+            ])
+        )
 
     def forward(self, gen_hg, dis_node_emb, dis_relation_matrix, noise_emb):
         r"""
@@ -127,7 +129,7 @@ class Generator(nn.Module):
         for et in hg.canonical_etypes:
             hg.apply_edges(lambda edges: {'g': edges.src['h'].unsqueeze(1).matmul(edges.data['e']).squeeze()}, etype=et)
             hg.apply_edges(lambda edges: {'g': edges.data['g']+noise_emb[et]}, etype=et)
-            hg.apply_edges(lambda edges: {'g': self.leaky_relu(self.linear2(self.leaky_relu((self.linear1(edges.data['g'])))))}, etype=et)
+            hg.apply_edges(lambda edges: {'g': self.fc(edges.data['g'])}, etype=et)
 
         return {et: hg.edata['g'][et] for et in hg.canonical_etypes}
 

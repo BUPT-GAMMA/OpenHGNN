@@ -9,9 +9,7 @@ from . import BaseModel, register_model
 @register_model('HGSL')
 class HGSL(BaseModel):
     r"""
-    Description
-    -----------
-    HGSL, Heterogeneous Graph Structure Learning from paper <http://www.shichuan.org/doc/100.pdf>.
+    HGSL, Heterogeneous Graph Structure Learning from `paper <http://www.shichuan.org/doc/100.pdf>`_.
 
     Parameters
     ----------
@@ -245,8 +243,6 @@ class HGSL(BaseModel):
 
 class MetricCalcLayer(nn.Module):
     r"""
-    Description
-    -----------
     Calculate metric in equation 3 of paper.
 
     Parameters
@@ -271,8 +267,6 @@ class MetricCalcLayer(nn.Module):
 
 class GraphGenerator(nn.Module):
     r"""
-    Description
-    -----------
     Generate a graph using similarity.
     """
     def __init__(self, dim, num_head=2, threshold=0.1, dev=None):
@@ -318,8 +312,6 @@ class GraphGenerator(nn.Module):
 
 class GraphChannelAttLayer(nn.Module):
     r"""
-    Description
-    -----------
     The graph channel attention layer in equation 7, 9 and 10 of paper.
     """
     def __init__(self, num_channel):
@@ -343,8 +335,6 @@ class GraphChannelAttLayer(nn.Module):
 
 class GCN(nn.Module):
     r"""
-    Description
-    -----------
     The downstream GCN model.
     """
     def __init__(self, nfeat, nhid, nclass, dropout):
@@ -370,8 +360,6 @@ class GCN(nn.Module):
 
 class GraphConvolution(nn.Module):
     r"""
-    Description
-    -----------
     The downstream GCN layer.
     """
     def __init__(self, in_features, out_features, bias=True):
