@@ -106,7 +106,7 @@ class BaseFlow(ABC):
                 self.logger.feature_info('feat2, drop features!')
                 self.hg.ndata.pop('h')
             self.input_feature = HeteroFeature({}, get_nodes_dict(self.hg), self.args.hidden_dim,
-                                               act=act).to(self.device)
+                                               act=act)
         elif self.args.feat == 0:
             self.input_feature = self.init_feature(act)
         elif self.args.feat == 1:
@@ -117,18 +117,20 @@ class BaseFlow(ABC):
                 h_dict = self.hg.ndata.pop('h')
                 self.logger.feature_info('feat1, preserve target nodes!')
                 self.input_feature = HeteroFeature({self.category: h_dict[self.category]}, get_nodes_dict(self.hg), self.args.hidden_dim,
-                                                   act=act).to(self.device)
+                                                   act=act)
+        if not getattr(self.args, 'data_cpu', False):
+            self.input_feature = self.input_feature.to(self.device)
 
     def init_feature(self, act):
         self.logger.feature_info("Feat is 0, nothing to do!")
         if isinstance(self.hg.ndata['h'], dict):
             # The heterogeneous contains more than one node type.
             input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg),
-                                               self.args.hidden_dim, act=act).to(self.device)
+                                               self.args.hidden_dim, act=act)
         elif isinstance(self.hg.ndata['h'], torch.Tensor):
             # The heterogeneous only contains one node type.
             input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg),
-                                               self.args.hidden_dim, act=act).to(self.device)
+                                               self.args.hidden_dim, act=act)
         return input_feature
 
     @abstractmethod
