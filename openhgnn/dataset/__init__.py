@@ -6,9 +6,11 @@ from .academic_graph import AcademicDataset
 from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
 from .gtn_dataset import *
+from .gatne_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 
 DATASET_REGISTRY = {}
+
 
 def register_dataset(name):
     """
@@ -55,9 +57,10 @@ def build_dataset(dataset, task, *args, **kwargs):
         exit(1)
     if dataset in ['aifb', 'mutag', 'bgs', 'am']:
         _dataset = 'rdf_' + task
-    elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp', 'dblp4MAGNN',
-                     'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie', 'Book-Crossing',
-                     'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB']:
+    elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp',
+                     'dblp4MAGNN', 'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN',
+                     'DoubanMovie', 'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP',
+                     'HGBl-IMDB']:
         _dataset = 'hin_' + task
     elif dataset in ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase',
                      'ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']:
@@ -105,7 +108,7 @@ def build_dataset_v2(dataset, task):
             res = AsNodeClassificationDataset(d, target_ntype=target_ntype)
         elif task == 'link_prediction':
             target_link = getattr(d, 'target_link')
-            target_link_r = getattr(d, 'target_link_r')
+            target_link_r = getattr(d, 'target_link_r', None)
             res = AsLinkPredictionDataset(d, target_link=target_link, target_link_r=target_link_r)
         return res
 
@@ -114,6 +117,9 @@ CLASS_DATASETS = {
     "dblp4GTN": "openhgnn.dataset.DBLP4GTNDataset",
     "acm4GTN": "openhgnn.dataset.ACM4GTNDataset",
     "imdb4GTN": "openhgnn.dataset.IMDB4GTNDataset",
+    "amazon4GATNE": "openhgnn.dataset.Amazon4GATNEDataset",
+    "twitter4GATNE": "openhgnn.dataset.Twitter4GATNEDataset",
+    "youtube4GATNE": "openhgnn.dataset.Youtube4GATNEDataset",
 }
 
 __all__ = [

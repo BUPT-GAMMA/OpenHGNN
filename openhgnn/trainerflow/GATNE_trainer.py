@@ -23,22 +23,24 @@ class GATNE(BaseFlow):
 
         self.orig_val_hg = self.task.val_hg
         self.orig_test_hg = self.task.test_hg
+        self.dataset = self.task.dataset
+        self.train_hg = self.task.train_hg
 
         self.preprocess()
         self.train()
 
     def preprocess(self):
         assert len(self.hg.ntypes) == 1
-        bidirected_hg = dgl.to_bidirected(dgl.to_simple(self.hg.to('cpu')))
+        train_hg = self.train_hg.to('cpu')
         all_walks = []
         for etype in self.hg.etypes:
-            nodes = torch.unique(bidirected_hg.edges(etype=etype)[0]).repeat(self.args.rw_walks)
+            nodes = torch.unique(train_hg.edges(etype=etype)[0]).repeat(self.args.rw_walks)
             traces, types = dgl.sampling.random_walk(
-                bidirected_hg, nodes, metapath=[etype] * (self.args.rw_length - 1)
+                train_hg, nodes, metapath=[etype] * (self.args.rw_length - 1)
             )
             all_walks.append(traces)
         self.train_pairs = generate_pairs(all_walks, self.args.window_size, self.args.num_workers)
-        self.neighbor_sampler = NeighborSampler(bidirected_hg, [self.args.neighbor_samples])
+        self.neighbor_sampler = NeighborSampler(train_hg, [self.args.neighbor_samples])
         self.train_dataloader = torch.utils.data.DataLoader(
             self.train_pairs,
             batch_size=self.args.batch_size,
@@ -140,7 +142,8 @@ class GATNE(BaseFlow):
                 final_model[self.hg.etypes[j]][i] = node_emb[j].detach()
         metric = {}
         score = []
-        for etype in self.hg.etypes:
+        for canonical_etypes in self.dataset.target_link:
+            etype = canonical_etypes[1]
             self.task.val_hg = dgl.edge_type_subgraph(self.orig_val_hg, [etype])
             self.task.test_hg = dgl.edge_type_subgraph(self.orig_test_hg, [etype])
 
@@ -150,7 +153,7 @@ class GATNE(BaseFlow):
                 metric[split] = res
                 if split == 'valid':
                     score.append(res.get('roc_auc'))
-            self.logger.train_info(etype + self.logger.metric2str(metric))
+            self.logger.train_info('{}: {}'.format(etype, self.logger.metric2str(metric)))
 
         avg_score = sum(score) / len(score)
         return avg_score
