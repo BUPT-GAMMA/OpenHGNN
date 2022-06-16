@@ -6,6 +6,7 @@ from .academic_graph import AcademicDataset
 from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
 from .gtn_dataset import *
+from .icdm2022_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 
 DATASET_REGISTRY = {}
