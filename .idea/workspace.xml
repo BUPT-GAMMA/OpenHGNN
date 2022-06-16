@@ -2,20 +2,27 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="63f95243-523f-4469-9bed-59418bdf37c6" name="Changes" comment="fix a bug in LinkPredictionDataset">
-      <change beforePath="$PROJECT_DIR$/.idea/OpenHGNN.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/OpenHGNN.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openhgnn/dataset/gatne_dataset.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/openhgnn/dataset/test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/customization/custom_link_prediction_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/customization/custom_link_prediction_dataset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/openhgnn/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openhgnn/config.ini" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/config.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openhgnn/dataset/LinkPredictionDataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/dataset/LinkPredictionDataset.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/openhgnn/dataset/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/dataset/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/openhgnn/dataset/academic_graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/dataset/academic_graph.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/openhgnn/dataset/gtn_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/openhgnn/dataset/gtn_dataset.py" afterDir="false" />
     </list>
     <list id="1d9cff87-d280-4441-8e2c-c9d85fd5092f" name="test" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -40,18 +47,106 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/openhgnn/dataset/youtube" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\GithubProject\OpenHGNN" />
       <recent name="E:\GithubProject\OpenHGNN\openhgnn\dataset\youtube" />
       <recent name="E:\GithubProject\OpenHGNN\openhgnn\dataset\twitter" />
       <recent name="E:\GithubProject\OpenHGNN\openhgnn\dataset\HGBl" />
     </key>
   </component>
-  <component name="RunManager">
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.gatne_dataset">
+    <configuration name="custom_link_prediction_dataset (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="OpenHGNN" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/custom_link_prediction_dataset.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="custom_link_prediction_dataset" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="OpenHGNN" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/examples/customization" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/examples/customization/custom_link_prediction_dataset.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="custom_node_classification_dataset" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="OpenHGNN" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/examples/customization" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/examples/customization/custom_node_classification_dataset.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="gatne_dataset" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="D:\Anaconda3\envs\openhgnn\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/openhgnn/dataset" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/openhgnn/dataset/gatne_dataset.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -62,6 +157,7 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
       <option name="PARAMETERS" value="-m GATNE-T -t link_prediction -d youtube -g 0 --use_best_config" />
@@ -72,8 +168,19 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <list>
+      <item itemvalue="Python.main" />
+      <item itemvalue="Python.gatne_dataset" />
+      <item itemvalue="Python.custom_link_prediction_dataset" />
+      <item itemvalue="Python.custom_node_classification_dataset" />
+      <item itemvalue="Python.custom_link_prediction_dataset (1)" />
+    </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.gatne_dataset" />
+        <item itemvalue="Python.custom_link_prediction_dataset (1)" />
+        <item itemvalue="Python.custom_link_prediction_dataset" />
+        <item itemvalue="Python.custom_node_classification_dataset" />
         <item itemvalue="Python.main" />
       </list>
     </recent_temporary>
@@ -93,6 +200,7 @@
       <workItem from="1649848403894" duration="2850000" />
       <workItem from="1650003929636" duration="64000" />
       <workItem from="1650288916460" duration="3469000" />
+      <workItem from="1655341612129" duration="21018000" />
     </task>
     <task id="LOCAL-00001" summary="fix a bug in LinkPredictionDataset.py">
       <created>1649422289296</created>
@@ -166,7 +274,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/openhgnn/dataset/__init__.py</url>
-          <line>48</line>
+          <line>53</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -186,7 +294,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/openhgnn/dataset/LinkPredictionDataset.py</url>
-          <line>174</line>
+          <line>177</line>
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -199,10 +307,41 @@
           <line>297</line>
           <option name="timeStamp" value="12" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/openhgnn/dataset/gtn_dataset.py</url>
+          <line>235</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://D:/Anaconda3/envs/openhgnn/Lib/site-packages/dgl/data/dgl_dataset.py</url>
+          <line>315</line>
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/openhgnn/dataset/gatne_dataset.py</url>
+          <line>317</line>
+          <option name="timeStamp" value="31" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/examples/customization/custom_link_prediction_dataset.py</url>
+          <line>122</line>
+          <option name="timeStamp" value="38" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/openhgnn/dataset/gatne_dataset.py</url>
+          <line>86</line>
+          <option name="timeStamp" value="40" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/OpenHGNN$main.coverage" NAME="main Coverage Results" MODIFIED="1650289462124" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/OpenHGNN$GATNE_trainer.coverage" NAME="GATNE_trainer Coverage Results" MODIFIED="1655346537310" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/openhgnn/trainerflow" />
+    <SUITE FILE_PATH="coverage/OpenHGNN$main.coverage" NAME="main Coverage Results" MODIFIED="1655347650925" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/OpenHGNN$custom_link_prediction_dataset.coverage" NAME="custom_link_prediction_dataset Coverage Results" MODIFIED="1655366284548" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/customization" />
+    <SUITE FILE_PATH="coverage/OpenHGNN$gtn_dataset.coverage" NAME="gtn_dataset Coverage Results" MODIFIED="1655280425321" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/openhgnn/dataset" />
+    <SUITE FILE_PATH="coverage/OpenHGNN$custom_link_prediction_dataset__1_.coverage" NAME="custom_link_prediction_dataset (1) Coverage Results" MODIFIED="1655367341217" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/OpenHGNN$gatne_dataset.coverage" NAME="gatne_dataset Coverage Results" MODIFIED="1655368611520" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/openhgnn/dataset" />
+    <SUITE FILE_PATH="coverage/OpenHGNN$custom_node_classification_dataset.coverage" NAME="custom_node_classification_dataset Coverage Results" MODIFIED="1655365792005" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/customization" />
   </component>
 </project>
