@@ -58,12 +58,15 @@ class GATNEDataset(DGLBuiltinDataset):
             etypes = ['contact', 'shared friends', 'shared subscription', 'shared subscriber',
                       'shared favorite videos']
             ntype = 'user'
-            target_link = None
+            target_link = [('user', 'contact', 'user'), ('user', 'shared friends', 'user'),
+                           ('user', 'shared subscription', 'user'), ('user', 'shared subscriber', 'user'),
+                           ('user', 'shared favorite videos', 'user')]
             meta_paths_dict = {}
         elif name == 'twitter4GATNE':
             etypes = ['re-tweet', 'reply', 'mention', 'friendship']
             ntype = 'user'
-            target_link = None
+            target_link = [('user', 're-tweet', 'user'), ('user', 'reply', 'user'),
+                           ('user', 'mention', 'user'), ('user', 'friendship', 'user')]
             meta_paths_dict = {}
         else:
             raise ValueError('Unsupported dataset name {}'.format(name))
