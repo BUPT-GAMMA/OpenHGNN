@@ -1,35 +1,32 @@
-import pickle
-
 import torch
 import torch as th
 import numpy as np
 import dgl
 import os
 from dgl.data import DGLBuiltinDataset
-from dgl.data.utils import idx2mask, load_graphs, save_graphs
+from dgl.data.utils import load_graphs, save_graphs, save_info, load_info
 import copy
+from dgl import transforms as T
 
-__all__ = ['GATNEDataset', 'AMAZONDataset', 'TWITTERDataset', 'YOUTUBEDataset']
+__all__ = ['GATNEDataset', 'Amazon4GATNEDataset', 'Twitter4GATNEDataset', 'Youtube4GATNEDataset']
 
 
 class GATNEDataset(DGLBuiltinDataset):
     r"""GATNE Dataset.
-
     The network datasets "Amazon", "Twitter" and "YouTube" from the
     `"Representation Learning for Attributed Multiplex Heterogeneous Network"
     <https://arxiv.org/abs/1905.01669>`_ paper.
-
     Dataset statistics:
-
     Dataset  nodes     edges n-types e-types
      Amazon 10,166   148,865       1       2
     Youtube  2,000 1,310,617       1       5
     Twitter 10,000   331,899       1       4
-
     Parameters
     ----------
     name : str
         Name of the dataset. Supported dataset names are 'amazon4GATNE', 'youtube4GATNE' and 'twitter4GATNE'.
+    add_reverse : bool
+        Whether to add reverse edges. Default: True
     raw_dir : str
         Specifying the directory that will store the
         downloaded data or the directory that
@@ -43,34 +40,38 @@ class GATNEDataset(DGLBuiltinDataset):
         A transform that takes in a :class:`~dgl.DGLGraph` object and returns
         a transformed version. The :class:`~dgl.DGLGraph` object will be
         transformed before every access.
-
     Examples
     --------
     >>> dataset = GATNEDataset(name='amazon4GATNE')
     >>> graph = dataset[0]
     """
 
-    def __init__(self, name, raw_dir=None, force_reload=False, verbose=False,
+    def __init__(self, name, add_reverse=True, raw_dir=None, force_reload=False, verbose=False,
                  transform=None):
         assert name in ['amazon4GATNE', 'twitter4GATNE', 'youtube4GATNE']
         if name == 'amazon4GATNE':
-            canonical_etypes = ['co-viewing', 'co-purchasing']
-            target_ntype = 'product'
+            etypes = ['co-viewing', 'co-purchasing']
+            ntype = 'product'
+            target_link = [('product', 'co-viewing', 'product'), ('product', 'co-purchasing', 'product')]
             meta_paths_dict = {}
         elif name == 'youtube4GATNE':
-            canonical_etypes = ['contact', 'shared friends', 'shared subscription', 'shared subscriber',
-                                'shared favorite videos']
-            target_ntype = 'user'
+            etypes = ['contact', 'shared friends', 'shared subscription', 'shared subscriber',
+                      'shared favorite videos']
+            ntype = 'user'
+            target_link = None
             meta_paths_dict = {}
         elif name == 'twitter4GATNE':
-            canonical_etypes = ['re-tweet', 'reply', 'mention', 'friendship']
-            target_ntype = 'user'
+            etypes = ['re-tweet', 'reply', 'mention', 'friendship']
+            ntype = 'user'
+            target_link = None
             meta_paths_dict = {}
         else:
             raise ValueError('Unsupported dataset name {}'.format(name))
 
-        self._canonical_etypes = canonical_etypes
-        self._target_ntype = target_ntype
+        self._add_reverse = add_reverse
+        self._target_link = target_link
+        self._etypes = etypes
+        self._ntype = ntype
         self._meta_paths_dict = meta_paths_dict
 
         super(GATNEDataset, self).__init__(
@@ -117,8 +118,8 @@ class GATNEDataset(DGLBuiltinDataset):
             for edge in tmp_data:
                 src.extend([vocab[edge[0]]])
                 dst.extend([vocab[edge[1]]])
-            neg_val_edges[(self.target_ntype, etype, self.target_ntype)] = (torch.from_numpy(np.array(src)),
-                                                                            torch.from_numpy(np.array(dst)))
+            neg_val_edges[(self._ntype, etype, self._ntype)] = (torch.from_numpy(np.array(src)),
+                                                                torch.from_numpy(np.array(dst)))
         self._neg_val_edges = neg_val_edges
 
         neg_test_edges = {}
@@ -130,8 +131,8 @@ class GATNEDataset(DGLBuiltinDataset):
             for edge in tmp_data:
                 src.extend([vocab[edge[0]]])
                 dst.extend([vocab[edge[1]]])
-            neg_test_edges[(self.target_ntype, etype, self.target_ntype)] = (torch.from_numpy(np.array(src)),
-                                                                             torch.from_numpy(np.array(dst)))
+            neg_test_edges[(self._ntype, etype, self._ntype)] = (torch.from_numpy(np.array(src)),
+                                                                 torch.from_numpy(np.array(dst)))
         self._neg_test_edges = neg_test_edges
 
         # 生成异质图
@@ -161,19 +162,30 @@ class GATNEDataset(DGLBuiltinDataset):
             g.edges[etype].data['val_mask'] = val_mask
             g.edges[etype].data['test_mask'] = test_mask
 
+        if self._add_reverse:
+            transform = T.AddReverse()
+            g = transform(g)
         self._g = g
 
     def has_cache(self):
-        return os.path.exists(self.raw_path + '\\graph.bin')
+        graph_path = os.path.join(self.save_path, 'graph.bin')
+        return os.path.exists(graph_path)
 
     def save(self):
         graph_path = os.path.join(self.save_path, 'graph.bin')
+        info_path = os.path.join(self.save_path, 'info.pkl')
         save_graphs(graph_path, self._g)
+        save_info(info_path, {'neg_val_edges': self.neg_val_edges,
+                              'neg_test_edges': self.neg_test_edges})
 
     def load(self):
         graph_path = os.path.join(self.save_path, 'graph.bin')
+        info_path = os.path.join(self.save_path, 'info.pkl')
         gs, _ = load_graphs(graph_path)
         self._g = gs[0]
+        info = load_info(info_path)
+        self._neg_val_edges = info['neg_val_edges']
+        self._neg_test_edges = info['neg_test_edges']
 
     def load_training_data(self, f_name):
         f_path = os.path.join(self.raw_path, f_name)
@@ -186,7 +198,7 @@ class GATNEDataset(DGLBuiltinDataset):
         with open(f_path, "r") as f:
             for line in f:
                 words = line[:-1].split(" ")  # line[-1] == '\n'
-                etype = self._canonical_etypes[int(words[0]) - 1]
+                etype = self._etypes[int(words[0]) - 1]
                 if etype not in edge_data_by_type:  # 同一类型的边放在一个列表里
                     edge_data_by_type[etype] = list()
                 x, y = words[1], words[2]
@@ -213,7 +225,7 @@ class GATNEDataset(DGLBuiltinDataset):
         with open(f_path, "r") as f:
             for line in f:
                 words = line[:-1].split(" ")
-                etype = self._canonical_etypes[int(words[0]) - 1]
+                etype = self._etypes[int(words[0]) - 1]
                 x, y = words[1], words[2]
                 if int(words[3]) == 1:  # 实边
                     if etype not in true_edge_data_by_type:
@@ -237,7 +249,6 @@ class GATNEDataset(DGLBuiltinDataset):
 
     def get_graph(self, network_data, vocab):
         """ Build graph, treat all nodes as the same type
-
         Parameters
         ----------
         network_data: a dict
@@ -249,7 +260,7 @@ class GATNEDataset(DGLBuiltinDataset):
         DGLHeteroGraph
             a heterogenous graph, with one node type and different edge types
         """
-        node_type = self.target_ntype  # '_N' can be replaced by an arbitrary name
+        node_type = self._ntype  # '_N' can be replaced by an arbitrary name
         data_dict = dict()
         num_nodes_dict = {node_type: len(vocab)}
 
@@ -267,10 +278,6 @@ class GATNEDataset(DGLBuiltinDataset):
         return graph
 
     @property
-    def target_ntype(self):
-        return self._target_ntype
-
-    @property
     def meta_paths_dict(self):
         return self._meta_paths_dict
 
@@ -282,6 +289,14 @@ class GATNEDataset(DGLBuiltinDataset):
     def neg_test_edges(self):
         return self._neg_test_edges
 
+    @property
+    def target_link(self):
+        return self._target_link
+
+    @property
+    def target_link_r(self):
+        return self._target_link_r
+
     def __getitem__(self, idx):
         assert idx == 0
         return self._g
@@ -290,29 +305,22 @@ class GATNEDataset(DGLBuiltinDataset):
         return 1
 
 
-class AMAZONDataset(GATNEDataset):
+class Amazon4GATNEDataset(GATNEDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
         name = 'amazon4GATNE'
-        super(AMAZONDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
-                                            transform=transform)
+        super(Amazon4GATNEDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
+                                                  transform=transform)
 
 
-class TWITTERDataset(GATNEDataset):
+class Twitter4GATNEDataset(GATNEDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
         name = 'twitter4GATNE'
-        super(TWITTERDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
-                                             transform=transform)
+        super(Twitter4GATNEDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
+                                                   transform=transform)
 
 
-class YOUTUBEDataset(GATNEDataset):
+class Youtube4GATNEDataset(GATNEDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
         name = 'youtube4GATNE'
-        super(YOUTUBEDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
-                                             transform=transform)
-
-
-# test
-dataset = GATNEDataset(name='amazon4GATNE', raw_dir='.', force_reload=True, verbose=True)
-graph = dataset[0]
-graph2 = load_graphs('./HGBl/HGBl-amazon.bin')
-print(graph2)
+        super(Youtube4GATNEDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
+                                                   transform=transform)
