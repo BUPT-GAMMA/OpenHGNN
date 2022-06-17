@@ -58,12 +58,15 @@ class GATNEDataset(DGLBuiltinDataset):
             etypes = ['contact', 'shared friends', 'shared subscription', 'shared subscriber',
                       'shared favorite videos']
             ntype = 'user'
-            target_link = None
+            target_link = [('user', 'contact', 'user'), ('user', 'shared friends', 'user'),
+                           ('user', 'shared subscription', 'user'), ('user', 'shared subscriber', 'user'),
+                           ('user', 'shared favorite videos', 'user')]
             meta_paths_dict = {}
         elif name == 'twitter4GATNE':
             etypes = ['re-tweet', 'reply', 'mention', 'friendship']
             ntype = 'user'
-            target_link = None
+            target_link = [('user', 're-tweet', 'user'), ('user', 'reply', 'user'),
+                           ('user', 'mention', 'user'), ('user', 'friendship', 'user')]
             meta_paths_dict = {}
         else:
             raise ValueError('Unsupported dataset name {}'.format(name))
@@ -230,7 +233,7 @@ class GATNEDataset(DGLBuiltinDataset):
                 if int(words[3]) == 1:  # 实边
                     if etype not in true_edge_data_by_type:
                         true_edge_data_by_type[etype] = list()  # 每种类型的边构成一个列表
-                    true_edge_data_by_type[etype].append((x, y))  # 每条边有一个二元组（src, des）唯一确定
+                    true_edge_data_by_type[etype].append((x, y))  # 每条边由一个二元组（src, des）唯一确定
                     # if self.name == 'amazon4GATNE' or self.name == 'youtube4GATNE':  # bidirectional
                     #     true_edge_data_by_type[etype].append((y, x))
                 else:  # 虚边
@@ -255,6 +258,7 @@ class GATNEDataset(DGLBuiltinDataset):
             keys describing the edge types, values representing edges
         vocab: a dict
             mapping node IDs to node indices
+
         Output
         ------
         DGLHeteroGraph
@@ -324,3 +328,4 @@ class Youtube4GATNEDataset(GATNEDataset):
         name = 'youtube4GATNE'
         super(Youtube4GATNEDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
                                                    transform=transform)
+Twitter4GATNEDataset()
