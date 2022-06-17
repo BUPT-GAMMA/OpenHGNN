@@ -328,4 +328,3 @@ class Youtube4GATNEDataset(GATNEDataset):
         name = 'youtube4GATNE'
         super(Youtube4GATNEDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
                                                    transform=transform)
-Twitter4GATNEDataset()
