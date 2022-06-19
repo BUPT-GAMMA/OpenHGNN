@@ -35,7 +35,7 @@ class hde_trainer(BaseFlow):
         args.input_dim = self.num_fea
         args.output_dim = args.emb_dim // 2
 
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
         # initialization
         for m in self.model.modules():
             if isinstance(m, (nn.Conv2d, nn.Linear)):

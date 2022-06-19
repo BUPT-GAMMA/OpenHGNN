@@ -164,7 +164,7 @@ class AsNodeClassificationDataset(DGLDataset):
         self.val_idx = F.nonzero_1d(ndata['val_mask'])
         self.test_idx = F.nonzero_1d(ndata['test_mask'])
 
-    def get_split(self):
+    def get_split(self, *args, **kwargs):
         return self.train_idx, self.val_idx, self.test_idx
 
     def get_labels(self):
@@ -335,7 +335,7 @@ class AsLinkPredictionDataset(DGLDataset):
                 'meta_paths': self.meta_paths,
             }, f)
 
-    def get_split(self):
+    def get_split(self, *args, **kwargs):
         return self.train_graph, self.pos_val_graph, self.pos_test_graph, self.neg_val_graph, self.neg_test_graph
 
     def __getitem__(self, idx):

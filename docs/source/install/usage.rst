@@ -263,7 +263,7 @@ training loop.
         def __init__(self, args=None):
             super(Recommendation, self).__init__(args)
             self.target_link = self.task.dataset.target_link
-            self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+            self.model = build_model(self.model).build_model_from_args(self.args, self.hg)
             self.evaluator = self.task.get_evaluator(self.metric)
 
         def train(self,):

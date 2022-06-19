@@ -1,5 +1,5 @@
 import argparse
-import os
+from openhgnn import Experiment
 
 # script for running batch experiments
 # python tests/scripts/run_experiments.py -g 0
@@ -57,7 +57,6 @@ if __name__ == '__main__':
             model = elem[0]
             dataset = elem[1]
             try:
-                os.system(
-                    'python main.py -m {} -t {} -d {} -g {} --use_best_config'.format(model, task, dataset, args.gpu))
+                Experiment(model=model, dataset=dataset, task=task, gpu=args.gpu, epoch=1, max_epoch=1).run()
             except Exception as e:
                 print(e)

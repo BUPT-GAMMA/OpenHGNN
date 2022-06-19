@@ -30,21 +30,23 @@ class BaseFlow(ABC):
         self.evaluator = None
         self.evaluate_interval = 1
         if hasattr(args, '_checkpoint'):
-            self._checkpoint = os.path.join(args._checkpoint,
-                                            f"{args.model}_{args.dataset}.pt")
+            self._checkpoint = os.path.join(args._checkpoint, f"{args.model_name}_{args.dataset_name}.pt")
         else:
             if hasattr(args, 'load_from_pretrained'):
-                self._checkpoint = os.path.join("./openhgnn/output/{}".format(args.model),
-                                                f"{args.model}_{args.dataset}_{args.task}.pt")
+                self._checkpoint = os.path.join(args.output_dir,
+                                                f"{args.model_name}_{args.dataset_name}_{args.task}.pt")
             else:
                 self._checkpoint = None
 
-        if not hasattr(args, 'HGB_results_path') and args.dataset[:3] == 'HGB':
-            args.HGB_results_path = os.path.join("./openhgnn/output/{}/{}_{}.txt".format(args.model, args.dataset[5:], args.seed))
+        if not hasattr(args, 'HGB_results_path') and args.dataset_name[:3] == 'HGB':
+            args.HGB_results_path = os.path.join(args.output_dir,
+                                                 "{}_{}_{}.txt".format(args.model_name, args.dataset_name[5:],
+                                                                       args.seed))
 
         self.args = args
         self.logger = self.args.logger
-        self.model_name = args.model
+        self.model_name = args.model_name
+        self.model = args.model
         self.device = args.device
         self.task = build_task(args)
         self.hg = self.task.get_graph().to(self.device)
@@ -133,25 +135,25 @@ class BaseFlow(ABC):
     @abstractmethod
     def train(self):
         pass
-    
+
     def _full_train_step(self):
         r"""
         Train with a full_batch graph
         """
         raise NotImplementedError
-    
+
     def _mini_train_step(self):
         r"""
         Train with a mini_batch seed nodes graph
         """
         raise NotImplementedError
-    
+
     def _full_test_step(self):
         r"""
         Test with a full_batch graph
         """
         raise NotImplementedError
-    
+
     def _mini_test_step(self):
         r"""
         Test with a mini_batch seed nodes graph

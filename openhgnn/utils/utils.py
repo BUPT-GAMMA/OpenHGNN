@@ -67,20 +67,20 @@ def add_reverse_edges(hg, copy_ndata=True, copy_edata=True, ignore_one_type=True
 def set_best_config(args):
     configs = BEST_CONFIGS.get(args.task)
     if configs is None:
-        args.logger.load_best_config('The task: {} do not have a best_config!'.format(args.task))
+        print('The task: {} do not have a best_config!'.format(args.task))
         return args
     if args.model not in configs:
-        args.logger.load_best_config('The model: {} is not in the best config.'.format(args.model))
+        print('The model: {} is not in the best config.'.format(args.model))
         return args
     configs = configs[args.model]
     for key, value in configs["general"].items():
         args.__setattr__(key, value)
     if args.dataset not in configs:
-        args.logger.load_best_config('The dataset: {} is not in the best config of model: {}.'.format(args.dataset, args.model))
+        print('The dataset: {} is not in the best config of model: {}.'.format(args.dataset, args.model))
         return args
     for key, value in configs[args.dataset].items():
         args.__setattr__(key, value)
-    args.logger.load_best_config('Load the best config of model: {} for dataset: {}.'.format(args.model, args.dataset))
+    print('Load the best config of model: {} for dataset: {}.'.format(args.model, args.dataset))
     return args
 
 

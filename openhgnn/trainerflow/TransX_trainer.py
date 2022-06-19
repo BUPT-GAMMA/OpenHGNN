@@ -7,7 +7,7 @@ from ..sampler.TransX_sampler import TransX_Sampler
 
 @register_flow("TransX_trainer")
 class TransXTrainer(BaseFlow):
-    """TransE flows."""
+    """TransX flows."""
 
     def __init__(self, args):
         super(TransXTrainer, self).__init__(args)
@@ -22,7 +22,7 @@ class TransXTrainer(BaseFlow):
         self.margin = args.margin
 
         self.train_hg = self.task.get_train()
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
 
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),

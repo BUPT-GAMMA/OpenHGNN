@@ -6,10 +6,10 @@ import os
 from dgl.data import DGLBuiltinDataset
 from dgl.data.utils import idx2mask, load_graphs, save_graphs
 
-__all__ = ['IMDB4GTNDataset', 'ACM4GTNDataset', 'DBLP4GTNDataset']
+__all__ = ['GTNDataset', 'IMDB4GTNDataset', 'ACM4GTNDataset', 'DBLP4GTNDataset']
 
 
-class _GTNDataset(DGLBuiltinDataset):
+class GTNDataset(DGLBuiltinDataset):
     r"""GTN Dataset.
 
     It contains three datasets used in a NeurIPS'19 paper Graph Transformer Networks <https://arxiv.org/abs/1911.06455>,
@@ -33,20 +33,74 @@ class _GTNDataset(DGLBuiltinDataset):
 
     Data source link: <https://drive.google.com/file/d/1qOZ3QjqWMIIvWjzrIdRe3EA4iKzPi6S5/view?usp=sharing>
 
+    Parameters
+    ----------
+    name : str
+        Name of the dataset. Supported dataset names are 'dblp4GTN', 'acm4GTN' and 'imdb4GTN'.
+    raw_dir : str
+        Specifying the directory that will store the
+        downloaded data or the directory that
+        already stores the input data.
+        Default: ~/.dgl/
+    force_reload : bool
+        Whether to reload the dataset. Default: False
+    verbose : bool
+        Whether to print out progress information. Default: False
+    transform : callable, optional
+        A transform that takes in a :class:`~dgl.DGLGraph` object and returns
+        a transformed version. The :class:`~dgl.DGLGraph` object will be
+        transformed before every access.
+
     Examples
     --------
-    >>> dataset = IMDB4GTNDataset()
+    >>> dataset = GTNDataset(name='imdb4GTN')
     >>> graph = dataset[0]
     """
 
-    def __init__(self, name, canonical_etypes, target_ntype, raw_dir=None, force_reload=False, verbose=False,
+    def __init__(self, name, raw_dir=None, force_reload=False, verbose=False,
                  transform=None):
         assert name in ['dblp4GTN', 'acm4GTN', 'imdb4GTN']
+        if name == 'dblp4GTN':
+            canonical_etypes = [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
+                                ('paper', 'paper-conference', 'conference'),
+                                ('conference', 'conference-paper', 'paper')]
+            target_ntype = 'author'
+            meta_paths_dict = {'APCPA': [('author', 'author-paper', 'paper'),
+                                         ('paper', 'paper-conference', 'conference'),
+                                         ('conference', 'conference-paper', 'paper'),
+                                         ('paper', 'paper-author', 'author')],
+                               'APA': [('author', 'author-paper', 'paper'),
+                                       ('paper', 'paper-author', 'author')],
+                               }
+
+        elif name == 'acm4GTN':
+            canonical_etypes = [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
+                                ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper')]
+            target_ntype = 'paper'
+            meta_paths_dict = {'PAPSP': [('paper', 'paper-author', 'author'),
+                                         ('author', 'author-paper', 'paper'),
+                                         ('paper', 'paper-subject', 'subject'),
+                                         ('subject', 'subject-paper', 'paper')],
+                               'PAP': [('paper', 'paper-author', 'author'),
+                                       ('author', 'author-paper', 'paper')],
+                               'PSP': [('paper', 'paper-subject', 'subject'),
+                                       ('subject', 'subject-paper', 'paper')]
+                               }
+        elif name == 'imdb4GTN':
+            canonical_etypes = [('movie', 'movie-director', 'director'), ('director', 'director-movie', 'movie'),
+                                ('movie', 'movie-actor', 'actor'), ('actor', 'actor-movie', 'movie')]
+            target_ntype = 'movie'
+            meta_paths_dict = {'MAM': [('movie', 'movie-actor', 'actor'),
+                                       ('actor', 'actor-movie', 'movie')],
+                               'MDM': [('movie', 'movie-director', 'subject'),
+                                       ('subject', 'subject-movie', 'movie')]
+                               }
+        else:
+            raise ValueError('Unsupported dataset name {}'.format(name))
         self._canonical_etypes = canonical_etypes
         self._target_ntype = target_ntype
-        if raw_dir is None:
-            raw_dir = './openhgnn/dataset'
-        super(_GTNDataset, self).__init__(
+        self._meta_paths_dict = meta_paths_dict
+        super(GTNDataset, self).__init__(
             name,
             url='https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{}.zip'.format(name),
             raw_dir=raw_dir,
@@ -142,6 +196,10 @@ class _GTNDataset(DGLBuiltinDataset):
         return self._num_classes
 
     @property
+    def meta_paths_dict(self):
+        return self._meta_paths_dict
+
+    @property
     def in_dim(self):
         return self._in_dim
 
@@ -153,61 +211,22 @@ class _GTNDataset(DGLBuiltinDataset):
         return 1
 
 
-class DBLP4GTNDataset(_GTNDataset):
+class DBLP4GTNDataset(GTNDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
         name = 'dblp4GTN'
-        canonical_etypes = [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
-                            ('paper', 'paper-conference', 'conference'), ('conference', 'conference-paper', 'paper')]
-        target_ntype = 'author'
-        super(DBLP4GTNDataset, self).__init__(name, canonical_etypes, target_ntype, raw_dir=raw_dir,
-                                              force_reload=force_reload, verbose=verbose, transform=transform)
-
-    @property
-    def meta_paths_dict(self):
-        return {'APCPA': [('author', 'author-paper', 'paper'),
-                          ('paper', 'paper-conference', 'conference'),
-                          ('conference', 'conference-paper', 'paper'),
-                          ('paper', 'paper-author', 'author')],
-                'APA': [('author', 'author-paper', 'paper'),
-                        ('paper', 'paper-author', 'author')],
-                }
+        super(DBLP4GTNDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
+                                              transform=transform)
 
 
-class ACM4GTNDataset(_GTNDataset):
+class ACM4GTNDataset(GTNDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
         name = 'acm4GTN'
-        canonical_etypes = [('paper', 'paper-author', 'author'), ('author', 'author-paper', 'paper'),
-                            ('paper', 'paper-subject', 'subject'), ('subject', 'subject-paper', 'paper')]
-        target_ntype = 'paper'
-        super(ACM4GTNDataset, self).__init__(name, canonical_etypes, target_ntype, raw_dir=raw_dir,
-                                             force_reload=force_reload, verbose=verbose, transform=transform)
-
-    @property
-    def meta_paths_dict(self):
-        return {'PAPSP': [('paper', 'paper-author', 'author'),
-                          ('author', 'author-paper', 'paper'),
-                          ('paper', 'paper-subject', 'subject'),
-                          ('subject', 'subject-paper', 'paper')],
-                'PAP': [('paper', 'paper-author', 'author'),
-                        ('author', 'author-paper', 'paper')],
-                'PSP': [('paper', 'paper-subject', 'subject'),
-                        ('subject', 'subject-paper', 'paper')]
-                }
+        super(ACM4GTNDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
+                                             transform=transform)
 
 
-class IMDB4GTNDataset(_GTNDataset):
+class IMDB4GTNDataset(GTNDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
         name = 'imdb4GTN'
-        canonical_etypes = [('movie', 'movie-director', 'director'), ('director', 'director-movie', 'movie'),
-                            ('movie', 'movie-actor', 'actor'), ('actor', 'actor-movie', 'movie')]
-        target_ntype = 'movie'
-        super(IMDB4GTNDataset, self).__init__(name, canonical_etypes, target_ntype, raw_dir=raw_dir,
-                                              force_reload=force_reload, verbose=verbose, transform=transform)
-
-    @property
-    def meta_paths_dict(self):
-        return {'MAM': [('movie', 'movie-actor', 'actor'),
-                        ('actor', 'actor-movie', 'movie')],
-                'MDM': [('movie', 'movie-director', 'subject'),
-                        ('subject', 'subject-movie', 'movie')]
-                }
+        super(IMDB4GTNDataset, self).__init__(name, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
+                                              transform=transform)

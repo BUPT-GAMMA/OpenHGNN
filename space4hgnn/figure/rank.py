@@ -17,7 +17,7 @@ bias = 0.01
 df = pd.read_csv(results_file_path)
 dataset = 'all'
 model = 'all'
-df=df[df['subgraph'] != 'mixed']
+df=df[df['model_family'] != 'mixed']
 if dataset != 'all':
     df = df[df['dataset'] == dataset]
 if model != 'all':
@@ -61,7 +61,7 @@ def get_acc(df, name, ax, metric='acc', has_y=True):
 
     # column_temp = copy.deepcopy(column)
     # column_temp.remove(name)
-    column_temp = ['key', 'dataset', 'subgraph', 'gnn_type', 'times']
+    column_temp = ['key', 'dataset', 'model_family', 'gnn_type', 'times']
     #df_selected['num_heads'] = df_selected['value']2
     df_pivot = pd.pivot_table(df_selected, values=score, index=column_temp, columns=[name], aggfunc=np.mean)
     accs_np = df_pivot.fillna(df_pivot.min()).values.round(5)

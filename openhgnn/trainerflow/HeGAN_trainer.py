@@ -108,7 +108,7 @@ class HeGANTrainer(BaseFlow):
         self.category = self.task.dataset.category
 
         self.hg = self.task.get_graph()
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
         self.label_smooth = args.label_smooth
 

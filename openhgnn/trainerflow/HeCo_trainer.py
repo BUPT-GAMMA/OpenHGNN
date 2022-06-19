@@ -31,7 +31,7 @@ class HeCoTrainer(BaseFlow):
         
         self.category = self.args.category
         self.pos = self.task.dataset.pos.to(self.device)
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg)
         print("build_model_finish")
         self.model = self.model.to(self.device)
 

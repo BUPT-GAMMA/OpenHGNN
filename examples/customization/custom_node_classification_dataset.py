@@ -1,4 +1,5 @@
 import torch as th
+from openhgnn import Experiment
 from openhgnn.dataset import AsNodeClassificationDataset, generate_random_hg
 from dgl import transforms as T
 from dgl import DGLHeteroGraph
@@ -104,11 +105,8 @@ def generate_random_citation_nc_hg(multi_label=False) -> DGLHeteroGraph:
 
 
 def train_with_custom_nc_dataset(dataset):
-    from openhgnn.config import Config
-    from openhgnn.start import OpenHGNN
-    config_file = ["../../openhgnn/config.ini"]
-    config = Config(file_path=config_file, model='HAN', dataset=dataset, task='node_classification', gpu=-1)
-    OpenHGNN(args=config)
+    experiment = Experiment(model='RGCN', dataset=dataset, task='node_classification', gpu=-1)
+    experiment.run()
 
 
 if __name__ == '__main__':
