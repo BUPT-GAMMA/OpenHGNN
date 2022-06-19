@@ -58,7 +58,7 @@ class LinkPrediction(BaseFlow):
         if not hasattr(self.args, 'out_dim'):
             self.args.out_dim = self.args.hidden_dim
 
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.train_hg).to(self.device)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.train_hg).to(self.device)
 
         if not hasattr(self.args, 'score_fn'):
             self.args.score_fn = 'distmult'

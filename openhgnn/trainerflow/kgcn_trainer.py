@@ -27,7 +27,7 @@ class KGCNTrainer(BaseFlow):
             self.neighborList = [8]
             self.trainIndex, self.evalIndex, self.testIndex = self.task.get_split()
 
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
         self.optimizer = th.optim.Adam(self.model.parameters(), lr=self.args.lr, weight_decay=self.args.weight_decay)
 
     def KGCNCollate(self, index):

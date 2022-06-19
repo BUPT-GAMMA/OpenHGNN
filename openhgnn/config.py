@@ -1,5 +1,4 @@
 import configparser
-import os
 import numpy as np
 import torch as th
 from .utils.activation import act_dict
@@ -8,7 +7,6 @@ from .utils.activation import act_dict
 class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
         conf = configparser.ConfigParser()
-        data_path = os.getcwd()
         if gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
@@ -28,9 +26,26 @@ class Config(object):
         self.task = task
         self.model = model
         self.dataset = dataset
-        self.output_dir = './openhgnn/output/{}'.format(self.model)
+        if isinstance(dataset, str):
+            self.dataset_name = dataset
+        else:
+            self.dataset_name = type(self.dataset).__name__
+        if isinstance(model, str):
+            self.model_name = model
+        else:
+            self.model_name = type(self.model).__name__
         self.optimizer = 'Adam'
-        if model == "NSHE":
+        # custom model
+        if isinstance(model, th.nn.Module):
+            self.lr = conf.getfloat("General", "learning_rate")
+            self.dropout = conf.getfloat("General", "dropout")
+            self.max_epoch = conf.getint("General", "max_epoch")
+            self.weight_decay = conf.getfloat("General", "weight_decay")
+            self.hidden_dim = conf.getint("General", "hidden_dim")
+            self.seed = conf.getint("General", "seed")
+            self.patience = conf.getint("General", "patience")
+            self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
+        elif self.model_name == "NSHE":
             self.dim_size = {}
             self.dim_size['emd'] = conf.getint("NSHE", "emd_dim")
             self.dim_size['context'] = conf.getint("NSHE", "context_dim")
@@ -48,7 +63,7 @@ class Config(object):
             self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
             self.mini_batch_flag = conf.getboolean("NSHE", "mini_batch_flag")
 
-        elif model in ["GTN", "fastGTN"]:
+        elif self.model_name in ["GTN", "fastGTN"]:
             self.lr = conf.getfloat("GTN", "learning_rate")
             self.weight_decay = conf.getfloat("GTN", "weight_decay")
             self.seed = conf.getint("GTN", "seed")
@@ -66,7 +81,7 @@ class Config(object):
             self.adaptive_lr_flag = conf.getboolean("GTN", "adaptive_lr_flag")
             self.mini_batch_flag = conf.getboolean("GTN", "mini_batch_flag")
 
-        elif model == "MHNF":
+        elif self.model_name == "MHNF":
             self.lr = conf.getfloat("MHNF", "learning_rate")
             self.weight_decay = conf.getfloat("MHNF", "weight_decay")
             self.seed = conf.getint("MHNF", "seed")
@@ -84,7 +99,7 @@ class Config(object):
             self.adaptive_lr_flag = conf.getboolean("MHNF", "adaptive_lr_flag")
             self.mini_batch_flag = conf.getboolean("MHNF", "mini_batch_flag")
 
-        elif model == "RSHN":
+        elif self.model_name == "RSHN":
             self.lr = conf.getfloat("RSHN", "learning_rate")
             self.weight_decay = conf.getfloat("RSHN", "weight_decay")
             self.dropout = conf.getfloat("RSHN", "dropout")
@@ -100,7 +115,7 @@ class Config(object):
             self.validation = conf.getboolean("RSHN", "validation")
             self.mini_batch_flag = conf.getboolean("RSHN", "mini_batch_flag")
 
-        elif model == 'RGCN':
+        elif self.model_name == 'RGCN':
             self.lr = conf.getfloat("RGCN", "learning_rate")
             self.dropout = conf.getfloat("RGCN", "dropout")
 
@@ -119,7 +134,7 @@ class Config(object):
             self.mini_batch_flag = conf.getboolean("RGCN", "mini_batch_flag")
             self.use_self_loop = conf.getboolean("RGCN", "use_self_loop")
 
-        elif model == 'CompGCN':
+        elif self.model_name == 'CompGCN':
             self.lr = conf.getfloat("CompGCN", "learning_rate")
 
             self.weight_decay = conf.getfloat("CompGCN", "weight_decay")
@@ -137,11 +152,11 @@ class Config(object):
             self.mini_batch_flag = conf.getboolean("CompGCN", "mini_batch_flag")
             self.validation = conf.getboolean("CompGCN", "validation")
             pass
-        elif model == 'HetGNN':
+        elif self.model_name == 'HetGNN':
             self.lr = conf.getfloat("HetGNN", "learning_rate")
             self.weight_decay = conf.getfloat("HetGNN", "weight_decay")
 
-            #self.dropout = conf.getfloat("CompGCN", "dropout")
+            # self.dropout = conf.getfloat("CompGCN", "dropout")
             self.max_epoch = conf.getint("HetGNN", "max_epoch")
             self.dim = conf.getint("HetGNN", "dim")
             self.batch_size = conf.getint("HetGNN", "batch_size")
@@ -155,7 +170,7 @@ class Config(object):
             self.rwr_prob = conf.getfloat("HetGNN", "rwr_prob")
             self.mini_batch_flag = conf.getboolean("HetGNN", "mini_batch_flag")
             pass
-        elif model == 'Metapath2vec':
+        elif self.model_name == 'Metapath2vec':
             self.lr = conf.getfloat("Metapath2vec", "learning_rate")
             self.max_epoch = conf.getint("Metapath2vec", "max_epoch")
             self.dim = conf.getint("Metapath2vec", "dim")
@@ -167,7 +182,7 @@ class Config(object):
             self.rw_walks = conf.getint("Metapath2vec", "rw_walks")
             self.meta_path_key = conf.get("Metapath2vec", "meta_path_key")
 
-        elif model == 'HERec':
+        elif self.model_name == 'HERec':
             self.lr = conf.getfloat("HERec", "learning_rate")
             self.max_epoch = conf.getint("HERec", "max_epoch")
             self.dim = conf.getint("HERec", "dim")
@@ -179,7 +194,7 @@ class Config(object):
             self.rw_walks = conf.getint("HERec", "rw_walks")
             self.meta_path_key = conf.get("HERec", "meta_path_key")
 
-        elif model == 'HAN':
+        elif self.model_name == 'HAN':
             self.lr = conf.getfloat("HAN", "learning_rate")
             self.weight_decay = conf.getfloat("HAN", "weight_decay")
             self.seed = conf.getint("HAN", "seed")
@@ -193,7 +208,7 @@ class Config(object):
             self.max_epoch = conf.getint('HAN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")
 
-        elif model == 'NARS':
+        elif self.model_name == 'NARS':
             self.lr = conf.getfloat("NARS", "learning_rate")
             self.weight_decay = conf.getfloat("NARS", "weight_decay")
             self.seed = conf.getint("NARS", "seed")
@@ -213,7 +228,7 @@ class Config(object):
 
             self.ff_layer = conf.getint('NARS', 'ff_layer')
 
-        elif model == 'MAGNN':
+        elif self.model_name == 'MAGNN':
             self.lr = conf.getfloat("MAGNN", "learning_rate")
             self.weight_decay = conf.getfloat("MAGNN", "weight_decay")
             self.seed = conf.getint("MAGNN", "seed")
@@ -233,8 +248,8 @@ class Config(object):
                 self.batch_size = conf.getint("MAGNN", "batch_size")
                 self.num_samples = conf.getint("MAGNN", "num_samples")
             self.hidden_dim = self.h_dim * self.num_heads
-        
-        elif model == 'RHGNN':
+
+        elif self.model_name == 'RHGNN':
             self.lr = conf.getfloat("RHGNN", "learning_rate")
             self.num_heads = conf.getint("RHGNN", "num_heads")
             self.hidden_dim = conf.getint("RHGNN", "hidden_dim")
@@ -244,7 +259,7 @@ class Config(object):
             self.residual = conf.getboolean("RHGNN", "residual")
             self.batch_size = conf.getint("RHGNN", "batch_size")
             self.node_neighbors_min_num = conf.getint("RHGNN", "node_neighbors_min_num")
-            #self.optimizer = conf.get
+            # self.optimizer = conf.get
             self.weight_decay = conf.getfloat("RHGNN", "weight_decay")
             self.max_epoch = conf.getint("RHGNN", "max_epoch")
             self.patience = conf.getint("RHGNN", "patience")
@@ -255,8 +270,8 @@ class Config(object):
             self.n_heads = conf.getint("RHGNN", "n_heads")
             self.category = conf.get("RHGNN", "category")
             self.out_dim = conf.getint("RHGNN", "out_dim")
-        
-        elif model == 'HGNN_AC':
+
+        elif self.model_name == 'HGNN_AC':
             self.feats_drop_rate = conf.getfloat("HGNN_AC", "feats_drop_rate")
             self.attn_vec_dim = conf.getint("HGNN_AC", "attn_vec_dim")
             self.feats_opt = conf.get("HGNN_AC", "feats_opt")
@@ -303,7 +318,7 @@ class Config(object):
                 self.lr = conf.getfloat("MHNF", "learning_rate")
                 self.weight_decay = conf.getfloat("MHNF", "weight_decay")
                 self.seed = conf.getint("MHNF", "seed")
-            # np.random.seed(self.seed)
+                # np.random.seed(self.seed)
 
                 self.hidden_dim = conf.getint("MHNF", "hidden_dim")
                 self.out_dim = conf.getint("MHNF", "out_dim")
@@ -319,7 +334,7 @@ class Config(object):
                 self.dropout = 0.2
                 self.num_heads = 8
 
-        elif model == 'HGT':
+        elif self.model_name == 'HGT':
             self.lr = conf.getfloat("HGT", "learning_rate")
             self.weight_decay = conf.getfloat("HGT", "weight_decay")
             self.seed = conf.getint("HGT", "seed")
@@ -336,7 +351,7 @@ class Config(object):
             self.norm = conf.getboolean("HGT", "norm")
             self.num_layers = conf.getint("HGT", "num_layers")
             self.num_heads = conf.getint("HGT", "num_heads")
-        elif model == 'HeCo':
+        elif self.model_name == 'HeCo':
             self.lr = conf.getfloat("HeCo", "learning_rate")
             self.weight_decay = conf.getfloat("HeCo", "weight_decay")
             self.seed = conf.getint("HeCo", "seed")
@@ -351,7 +366,7 @@ class Config(object):
             self.eva_lr = conf.getfloat("HeCo", "eva_lr")
             self.eva_wd = conf.getfloat("HeCo", "eva_wd")
             sample_rate = conf.get('HeCo', 'sample_rate').split('_')
-            #self.sample_rate = [int(i) for i in sample_rate]
+            # self.sample_rate = [int(i) for i in sample_rate]
             self.sample_rate = {}
             for i in sample_rate:
                 one = i.split('-')
@@ -359,51 +374,50 @@ class Config(object):
             self.tau = conf.getfloat("HeCo", "tau")
             self.lam = conf.getfloat("HeCo", "lam")
 
-        elif model == 'DMGI':
+        elif self.model_name == 'DMGI':
             self.lr = conf.getfloat("DMGI", "learning_rate")
             self.weight_decay = conf.getfloat("DMGI", "weight_decay")
             self.sc = conf.getint("DMGI", "sc")
             self.seed = conf.getint("DMGI", "seed")
-            self.sup_coef = conf.getfloat("DMGI",'sup_coef')
+            self.sup_coef = conf.getfloat("DMGI", 'sup_coef')
             self.reg_coef = conf.getfloat("DMGI", "reg_coef")
             self.dropout = conf.getfloat("DMGI", "dropout")
             self.hidden_dim = conf.getint('DMGI', 'hidden_dim')
             self.num_heads = conf.getint('DMGI', 'num_heads')
             self.patience = conf.getint('DMGI', 'patience')
             self.max_epoch = conf.getint('DMGI', 'max_epoch')
-
             self.isSemi = conf.getboolean("DMGI", "isSemi")
             self.isBias = conf.getboolean("DMGI", "isBias")
             self.isAttn = conf.getboolean("DMGI", "isAttn")
-            
-        elif model == 'SLiCE':
-            self.data_name = conf.get('SLiCE','data_name')
-            self.num_walks_per_node=conf.getint('SLiCE','num_walks_per_node')
-            self.beam_width=conf.getint('SLiCE','beam_width')
-            self.max_length=conf.getint('SLiCE','max_length')
-            self.walk_type=conf.get("SLiCE",'walk_type')
-            self.batch_size=conf.getint('SLiCE','batch_size')
-            self.outdir=conf.get('SLiCE','outdir')
-            self.n_pred=conf.getint('SLiCE','n_pred')
-            self.max_pred=conf.getint('SLiCE','max_pred')
-            self.lr=conf.getfloat('SLiCE','lr')
-            self.n_epochs=conf.getint('SLiCE','n_epochs')
-            self.get_bert_encoder_embeddings=conf.getboolean('SLiCE','get_bert_encoder_embeddings')
-            self.checkpoint=conf.getint('SLiCE','checkpoint')
-            self.path_option = conf.get("SLiCE",'path_option')
-            self.ft_batch_size=conf.getint('SLiCE','ft_batch_size')
-            #self.embed_dir=conf.get('SLiCE','embed_dir')
-            self.d_model=conf.getint('SLiCE','d_model')
-            self.ft_d_ff=conf.getint('SLiCE','ft_d_ff')
-            self.ft_layer=conf.get('SLiCE','ft_layer')
-            self.ft_drop_rate=conf.getfloat('SLiCE','ft_drop_rate')
-            self.ft_input_option=conf.get('SLiCE','ft_input_option')
-            self.n_layers=conf.getint('SLiCE','n_layers')
-            self.ft_lr=conf.getfloat('SLiCE','ft_lr')
-            self.ft_n_epochs=conf.getint('SLiCE','ft_n_epochs')
-            self.ft_checkpoint=conf.getint('SLiCE','ft_checkpoint')
-            self.pretrained_embeddings=conf.get('SLiCE','pretrained_embeddings')
-        elif model == 'HPN':
+
+        elif self.model_name == 'SLiCE':
+            self.data_name = conf.get('SLiCE', 'data_name')
+            self.num_walks_per_node = conf.getint('SLiCE', 'num_walks_per_node')
+            self.beam_width = conf.getint('SLiCE', 'beam_width')
+            self.max_length = conf.getint('SLiCE', 'max_length')
+            self.walk_type = conf.get("SLiCE", 'walk_type')
+            self.batch_size = conf.getint('SLiCE', 'batch_size')
+            self.outdir = conf.get('SLiCE', 'outdir')
+            self.n_pred = conf.getint('SLiCE', 'n_pred')
+            self.max_pred = conf.getint('SLiCE', 'max_pred')
+            self.lr = conf.getfloat('SLiCE', 'lr')
+            self.n_epochs = conf.getint('SLiCE', 'n_epochs')
+            self.get_bert_encoder_embeddings = conf.getboolean('SLiCE', 'get_bert_encoder_embeddings')
+            self.checkpoint = conf.getint('SLiCE', 'checkpoint')
+            self.path_option = conf.get("SLiCE", 'path_option')
+            self.ft_batch_size = conf.getint('SLiCE', 'ft_batch_size')
+            # self.embed_dir=conf.get('SLiCE','embed_dir')
+            self.d_model = conf.getint('SLiCE', 'd_model')
+            self.ft_d_ff = conf.getint('SLiCE', 'ft_d_ff')
+            self.ft_layer = conf.get('SLiCE', 'ft_layer')
+            self.ft_drop_rate = conf.getfloat('SLiCE', 'ft_drop_rate')
+            self.ft_input_option = conf.get('SLiCE', 'ft_input_option')
+            self.n_layers = conf.getint('SLiCE', 'n_layers')
+            self.ft_lr = conf.getfloat('SLiCE', 'ft_lr')
+            self.ft_n_epochs = conf.getint('SLiCE', 'ft_n_epochs')
+            self.ft_checkpoint = conf.getint('SLiCE', 'ft_checkpoint')
+            self.pretrained_embeddings = conf.get('SLiCE', 'pretrained_embeddings')
+        elif self.model_name == 'HPN':
             self.lr = conf.getfloat("HPN", "learning_rate")
             self.weight_decay = conf.getfloat("HPN", "weight_decay")
             self.seed = conf.getint("HPN", "seed")
@@ -415,7 +429,7 @@ class Config(object):
             self.patience = conf.getint('HPN', 'patience')
             self.max_epoch = conf.getint('HPN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("HPN", "mini_batch_flag")
-        elif model == 'KGCN':
+        elif self.model_name == 'KGCN':
             self.weight_decay = conf.getfloat("KGCN", "weight_decay")
             self.batch_size = conf.getint("KGCN", "batch_size")
             self.in_dim = conf.getint('KGCN', 'in_dim')
@@ -428,7 +442,7 @@ class Config(object):
             self.n_user = conf.getint("KGCN", "n_user")
             self.epoch_iter = conf.getint("KGCN", "epoch_iter")
 
-        elif model == 'general_HGNN':
+        elif self.model_name == 'general_HGNN':
             self.lr = conf.getfloat("general_HGNN", "lr")
             self.weight_decay = conf.getfloat("general_HGNN", "weight_decay")
             self.dropout = conf.getfloat("general_HGNN", "dropout")
@@ -451,7 +465,7 @@ class Config(object):
             self.has_l2norm = conf.getboolean('general_HGNN', 'has_l2norm')
             self.macro_func = conf.get('general_HGNN', 'macro_func')
 
-        elif model == 'homo_GNN':
+        elif self.model_name == 'homo_GNN':
             self.lr = conf.getfloat("homo_GNN", "lr")
             self.weight_decay = conf.getfloat("homo_GNN", "weight_decay")
             self.dropout = conf.getfloat("homo_GNN", "dropout")
@@ -472,7 +486,7 @@ class Config(object):
             self.feat = conf.getint('homo_GNN', 'feat')
             self.has_bn = conf.getboolean('homo_GNN', 'has_bn')
             self.has_l2norm = conf.getboolean('homo_GNN', 'has_l2norm')
-        elif model == 'HeGAN':
+        elif self.model_name == 'HeGAN':
             self.lr_gen = conf.getfloat('HeGAN', 'lr_gen')
             self.lr_dis = conf.getfloat('HeGAN', 'lr_dis')
             self.sigma = conf.getfloat('HeGAN', 'sigma')
@@ -487,7 +501,7 @@ class Config(object):
             self.emb_size = conf.getint("HeGAN", 'emb_size')
             self.patience = conf.getint("HeGAN", 'patience')
             self.label_smooth = conf.getfloat("HeGAN", 'label_smooth')
-        elif model == 'HDE':
+        elif self.model_name == 'HDE':
             self.emb_dim = conf.getint('HDE', 'emb_dim')
             self.num_neighbor = conf.getint('HDE', 'num_neighbor')
             self.use_bias = conf.getboolean('HDE', 'use_bias')
@@ -496,7 +510,7 @@ class Config(object):
             self.batch_size = conf.getint('HDE', 'batch_size')
             self.max_dist = conf.getint('HDE', 'max_dist')
             self.lr = conf.getfloat('HDE', 'lr')
-        elif model == 'SimpleHGN':
+        elif self.model_name == 'SimpleHGN':
             self.weight_decay = conf.getfloat("SimpleHGN", "weight_decay")
             self.lr = conf.getfloat("SimpleHGN", "lr")
             self.max_epoch = conf.getint("SimpleHGN", "max_epoch")
@@ -513,7 +527,7 @@ class Config(object):
             self.mini_batch_flag = False
             self.hidden_dim = self.h_dim * self.num_heads
 
-        elif model == 'GATNE-T':
+        elif self.model_name == 'GATNE-T':
             self.learning_rate = conf.getfloat("GATNE-T", "learning_rate")
             self.patience = conf.getint("GATNE-T", "patience")
             self.max_epoch = conf.getint("GATNE-T", "max_epoch")
@@ -529,7 +543,7 @@ class Config(object):
             self.neighbor_samples = conf.getint("GATNE-T", "neighbor_samples")
             self.score_fn = conf.get("GATNE-T", "score_fn")
 
-        elif model == 'HetSANN':
+        elif self.model_name == 'HetSANN':
             self.lr = conf.getfloat("HetSANN", "lr")
             self.weight_decay = conf.getfloat("HetSANN", "weight_decay")
             self.dropout = conf.getfloat("HetSANN", "dropout")
@@ -545,4 +559,4 @@ class Config(object):
             self.hidden_dim = self.h_dim * self.num_heads
 
     def __repr__(self):
-        return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)
+        return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model_name, self.task, self.dataset)
