@@ -10,7 +10,7 @@ from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import extract_embed, get_nodes_dict
 from collections.abc import Mapping
-from ..models import build_model, HeteroEmbedLayer
+from ..models import build_model
 
 
 @register_flow("demo")
@@ -27,7 +27,7 @@ class Demo(BaseFlow):
         self.task = build_task(args)
         self.hg = self.task.get_graph().to(self.device)
 
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
     def preprocess(self):
 

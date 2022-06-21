@@ -27,13 +27,13 @@ class DMGI_trainer(BaseFlow):
         # get category num_classes
         self.num_classes = self.task.dataset.num_classes
         self.args.num_classes = self.task.dataset.num_classes
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg)
         self.model = self.model.to(self.device)
         
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),
                                                                   lr=args.lr, weight_decay=args.weight_decay)
 
-        self.train_idx, self.val_idx, self.test_idx = self.task.get_idx()
+        self.train_idx, self.val_idx, self.test_idx = self.task.get_split()
         # get label
         self.labels = self.task.get_labels().to(self.device)
         # get category's numbers

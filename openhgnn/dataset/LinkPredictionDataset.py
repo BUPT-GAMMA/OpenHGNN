@@ -6,6 +6,7 @@ from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset, OHGBDataset
 from ..utils import add_reverse_edges
 
+__all__ = ['LinkPredictionDataset', 'HGB_LinkPrediction']
 
 @register_dataset('link_prediction')
 class LinkPredictionDataset(BaseDataset):
@@ -18,7 +19,7 @@ class LinkPredictionDataset(BaseDataset):
         self.target_link = None
         self.target_link_r = None
 
-    def get_idx(self, val_ratio=0.1, test_ratio=0.2):
+    def get_split(self, val_ratio=0.1, test_ratio=0.2):
         """
         Get subgraphs for train, valid and test.
         Generally, the original will have train_mask and test_mask in edata, or we will split it automatically.
@@ -52,15 +53,15 @@ class LinkPredictionDataset(BaseDataset):
                 random_int = th.randperm(num_edges)
                 val_index = random_int[:int(num_edges * val_ratio)]
                 val_edge = self.g.find_edges(val_index, etype)
-                test_index = random_int[int(num_edges * test_ratio):int(num_edges * (test_ratio + val_ratio))]
+                test_index = random_int[int(num_edges * val_ratio):int(num_edges * (test_ratio + val_ratio))]
                 test_edge = self.g.find_edges(test_index, etype)
 
                 val_edge_dict[etype] = val_edge
                 test_edge_dict[etype] = test_edge
                 out_ntypes.append(etype[0])
                 out_ntypes.append(etype[2])
-                # train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
-                train_graph = dgl.remove_edges(train_graph, val_index, etype)
+                train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
+                # train_graph = dgl.remove_edges(train_graph, val_index, etype)
                 if self.target_link_r is None:
                     pass
                 else:
@@ -101,7 +102,9 @@ class LinkPredictionDataset(BaseDataset):
         test_graph = dgl.heterograph(test_edge_dict,
                                      {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
 
-        return train_graph, val_graph, test_graph
+        # todo: val/test negative graphs should be created before training rather than
+        #  create them dynamically in every evaluation.
+        return train_graph, val_graph, test_graph, None, None
 
 
 @register_dataset('demo_link_prediction')
@@ -253,11 +256,11 @@ class HIN_LinkPrediction(LinkPredictionDataset):
                                     }
         return g
     
-    def get_idx(self, val_ratio=0.1, test_ratio=0.2):
+    def get_split(self, val_ratio=0.1, test_ratio=0.2):
         if self.dataset_name == 'academic4HetGNN':
-            return None, None, None
+            return None, None, None, None, None
         else:
-            return super(HIN_LinkPrediction, self).get_idx(val_ratio, test_ratio)
+            return super(HIN_LinkPrediction, self).get_split(val_ratio, test_ratio)
 
 
 @register_dataset('HGBl_link_prediction')
@@ -346,7 +349,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
             count += self.g.num_nodes(type)
         return node_shift_dict
 
-    def get_idx(self):
+    def get_split(self):
         r"""
         Get graphs for train, valid or test.
 
@@ -384,7 +387,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
         test_graph = dgl.heterograph(test_edge_dict,
                                      {ntype: self.g.number_of_nodes(ntype) for ntype in set(out_ntypes)})
 
-        return train_graph, val_graph, test_graph
+        return train_graph, val_graph, test_graph, None, None
 
     def save_results(self, hg, score, file_path):
         with hg.local_scope():
@@ -510,8 +513,8 @@ class KG_LinkPrediction(LinkPredictionDataset):
         test_data = th.LongTensor(dataset.test)
         return train_data, valid_data, test_data
 
-    def get_idx(self):
-        return self.train_hg, self.valid_hg, self.test_hg
+    def get_split(self):
+        return self.train_hg, self.valid_hg, self.test_hg, None, None
 
     def split_graph(self, g, mode='train'):
         """

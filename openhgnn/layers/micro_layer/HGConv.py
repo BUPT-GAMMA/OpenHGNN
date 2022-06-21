@@ -9,8 +9,6 @@ import dgl.function as fn
 
 class AttConv(nn.Module):
     """
-    Description
-    -----------
     Attention-based convolution was introduced in `Hybrid Micro/Macro Level Convolution for Heterogeneous Graph Learning
     <https://arxiv.org/abs/>`__
     and mathematically is defined as follows:

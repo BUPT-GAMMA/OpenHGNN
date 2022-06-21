@@ -586,4 +586,4 @@ class Config(object):
             self.negative_slope = conf.getfloat("HGAT", "negative_slope")
 
     def __repr__(self):
-        return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model, self.task, self.dataset)
+        return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model_name, self.task, self.dataset)

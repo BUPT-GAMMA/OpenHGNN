@@ -12,8 +12,6 @@ from ..utils.utils import extract_metapaths
 @register_model('HAN')
 class HAN(BaseModel):
     r"""
-    Description
-    ------------
     This model shows an example of using dgl.metapath_reachable_graph on the original heterogeneous
     graph HAN from paper `Heterogeneous Graph Attention Network <https://arxiv.org/pdf/1903.07293.pdf>`__..
     Because the original HAN implementation only gives the preprocessed homogeneous graph, this model

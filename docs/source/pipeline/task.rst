@@ -9,7 +9,7 @@ Included Object:
 --------------------
 
 * :ref:`api-dataset`, containing the heterogeneous graph as DGLGraph, as well as node/edge features
-and additional dataset-specific information.
+  and additional dataset-specific information.
 
 * Evaluation Metric, a callable object which takes in the prediction and the ground truth label, and returns an output.
 

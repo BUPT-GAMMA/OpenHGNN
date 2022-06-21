@@ -39,12 +39,12 @@ class NodeClassification(BaseFlow):
             args.out_dim = self.num_classes
         self.args.out_node_type = [self.category]
 
-        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
 
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),
                                                                   lr=args.lr, weight_decay=args.weight_decay)
 
-        self.train_idx, self.valid_idx, self.test_idx = self.task.get_idx()
+        self.train_idx, self.valid_idx, self.test_idx = self.task.get_split()
         self.labels = self.task.get_labels().to(self.device)
 
         if self.args.mini_batch_flag:

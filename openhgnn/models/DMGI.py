@@ -13,9 +13,6 @@ import torch.nn.functional as F
 @register_model('DMGI')
 class DMGI(BaseModel):
     r"""
-
-    Description
-    -----------
     **Title:** Unsupervised Attributed Multiplex Network Embedding
 
     **Authors:** Chanyoung Park, Donghyun Kim, Jiawei Han, Hwanjo Yu
@@ -131,6 +128,7 @@ class DMGI(BaseModel):
         r"""
 
         The forward part of DMGI
+
         Parameters
         ----------
         hg : object

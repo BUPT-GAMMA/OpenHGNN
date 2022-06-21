@@ -8,22 +8,21 @@ import dgl.function as fn
 
 
 class MicroConv(nn.Module):
-
+    """
+    Parameters
+    ----------
+    in_feats : pair of ints
+        Input feature size.
+    out_feats : int
+        Output feature size.
+    num_heads : int
+        Number of heads in Multi-Head Attention.
+    dropout : float, optional
+        Dropout rate, defaults: 0.
+    negative_slope : float, optional
+        Negative slope rate, defaults: 0.2.
+    """
     def __init__(self, in_feats: tuple, out_feats: int, num_heads: int, dropout: float = 0.0, negative_slope: float = 0.2):
-        """
-        Parameters
-        ----------
-        in_feats : pair of ints
-            Input feature size.
-        out_feats : int
-            Output feature size.
-        num_heads : int
-            Number of heads in Multi-Head Attention.
-        dropout : float, optional
-            Dropout rate, defaults: 0.
-        negative_slope : float, optional
-            Negative slope rate, defaults: 0.2.
-        """
         super(MicroConv, self).__init__()
         self._in_src_feats, self._in_dst_feats = in_feats[0], in_feats[1]
         self._out_feats = out_feats

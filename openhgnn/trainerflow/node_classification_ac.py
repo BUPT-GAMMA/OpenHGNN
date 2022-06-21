@@ -44,8 +44,7 @@ class NodeClassificationAC(BaseFlow):
 
         self.args.category = self.task.dataset.category
         self.category = self.args.category
-        self.model = build_model(
-            self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
         self.hgnn_ac = build_model(
             "HGNN_AC").build_model_from_args(self.args, self.hg).to(self.device)
         self.optimizer = torch.optim.Adam([{'params': self.model.parameters()},
@@ -64,7 +63,7 @@ class NodeClassificationAC(BaseFlow):
         # self.feat_drop = torch.nn.Dropout(p = args.dropout)
         self.evaluator = self.task.get_evaluator('f1')
 
-        self.train_idx, self.valid_idx, self.test_idx = self.task.get_idx()
+        self.train_idx, self.valid_idx, self.test_idx = self.task.get_split()
         self.labels = self.task.get_labels().to(self.device)
         if self.args.mini_batch_flag:
             # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
