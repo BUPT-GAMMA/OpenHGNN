@@ -12,10 +12,13 @@ def register_model(name):
     """
     New models types can be added to cogdl with the :func:`register_model`
     function decorator.
+
     For example::
+
         @register_model('gat')
         class GAT(BaseModel):
             (...)
+
     Args:
         name (str): the name of the models
     """
@@ -86,7 +89,7 @@ SUPPORTED_MODELS = {
     'GATNE-T': 'openhgnn.models.GATNE',
     'HetSANN': 'openhgnn.models.HetSANN',
     'HGAT': 'openhgnn.models.HGAT',
-    'ieHGCN': 'openhgnn.models.ieHGCN'
+    
 }
 
 from .CompGCN import CompGCN
@@ -115,10 +118,6 @@ from .general_HGNN import general_HGNN
 from .HDE import HDE
 from .SimpleHGN import SimpleHGN
 from .GATNE import GATNE
-from .HetSANN import HetSANN
-from .ieHGCN import ieHGCN
-from .HGAT import HGAT
-
 
 __all__ = [
     'BaseModel',
@@ -147,9 +146,6 @@ __all__ = [
     'general_HGNN',
     'HDE',
     'SimpleHGN',
-    'GATNE',
-    'HetSANN',
-    'ieHGCN',
-    'HGAT'
+    'GATNE'
 ]
 classes = __all__
