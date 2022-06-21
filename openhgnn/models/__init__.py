@@ -118,6 +118,9 @@ from .general_HGNN import general_HGNN
 from .HDE import HDE
 from .SimpleHGN import SimpleHGN
 from .GATNE import GATNE
+from .HetSANN import HetSANN
+from .ieHGCN import ieHGCN
+from .HGAT import HGAT
 
 __all__ = [
     'BaseModel',
@@ -146,6 +149,9 @@ __all__ = [
     'general_HGNN',
     'HDE',
     'SimpleHGN',
-    'GATNE'
+    'GATNE',
+    'HetSANN',
+    'ieHGCN',
+    'HGAT'
 ]
 classes = __all__
