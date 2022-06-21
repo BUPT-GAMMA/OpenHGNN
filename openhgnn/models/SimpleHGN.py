@@ -15,7 +15,9 @@ class SimpleHGN(BaseModel):
     This is a model SimpleHGN from `Are we really making much progress? Revisiting, benchmarking, and
     refining heterogeneous graph neural networks
     <https://dl.acm.org/doi/pdf/10.1145/3447548.3467350>`__
+
     The model extend the original graph attention mechanism in GAT by including edge type information into attention calculation.
+
     Calculating the coefficient:
     
     .. math::
