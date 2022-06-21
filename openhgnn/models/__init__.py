@@ -119,6 +119,7 @@ from .HetSANN import HetSANN
 from .ieHGCN import ieHGCN
 from .HGAT import HGAT
 
+
 __all__ = [
     'BaseModel',
     'CompGCN',
