@@ -1,21 +1,30 @@
+import torch
 import torch as th
 import os
 from dgl.data import DGLBuiltinDataset
 from dgl.data.utils import load_graphs, save_graphs
 import pickle, csv
+import tqdm
 
 __all__ = ['ICDM2022Dataset']
 
 
 class ICDM2022Dataset(DGLBuiltinDataset):
-    def __init__(self, init_emb=False, item_embedding_dim=50, non_item_embedding_dim=30, raw_dir=None,
+    r"""ICDM 2022 Dataset.
+
+    Parameters
+    ----------
+    scale : str
+        'small' or 'large'.
+
+    """
+
+    def __init__(self, scale='small', load_feature=True, raw_dir=None,
                  force_reload=False,
                  verbose=False,
                  transform=None):
-        name = 'icdm2022'
-        self.init_emb = init_emb
-        self.item_embedding_dim = item_embedding_dim
-        self.non_item_embedding_dim = non_item_embedding_dim
+        name = 'icdm2022_{}'.format(scale)
+        self.load_feature = load_feature
 
         super(ICDM2022Dataset, self).__init__(
             name,
@@ -31,23 +40,31 @@ class ICDM2022Dataset(DGLBuiltinDataset):
         return os.path.exists(graph_path)
 
     def save(self):
-        graph_path = os.path.join(self.save_path, 'graph.bin')
-        save_graphs(graph_path, self._g)
+        pass
+        # graph_path = os.path.join(self.save_path, 'graph.bin')
+        # save_graphs(graph_path, self._g)
 
     def load(self):
         # load graph
         print('loading dataset...')
-        graph_path = os.path.join(self.save_path, 'graph.bin')
-        gs, _ = load_graphs(graph_path)
+        orig_graph_path = os.path.join(self.save_path, '{}.graph.dgl'.format(self.name))
+        gs, _ = load_graphs(orig_graph_path)
         g = gs[0]
         # load node map
-        nodes_path = os.path.join(self.save_path, 'icdm2022.nodes.dgl')
+        nodes_path = os.path.join(self.save_path, '{}.nodes.dgl'.format(self.name))
         with open(nodes_path, 'rb') as f:
             nodes_info = pickle.load(f)
 
+        if self.load_feature:
+            for ntype, embedding_dict in nodes_info['embeds'].items():
+                dim = embedding_dict[0].shape[0]
+                g.nodes[ntype].data['h'] = torch.empty(g.num_nodes(ntype), dim)
+                for nid, embedding in tqdm.tqdm(embedding_dict.items()):
+                    g.nodes[ntype].data['h'][nid] = torch.from_numpy(embedding)
+
         # load label
-        labels_path = os.path.join(self.save_path, 'icdm2022_labels.csv')
-        labels = th.tensor([th.nan] * g.num_nodes(self.category))
+        labels_path = os.path.join(self.save_path, '{}_labels.csv'.format(self.name))
+        labels = th.tensor([float('nan')] * g.num_nodes(self.category))
         with open(labels_path, 'r') as f:
             csvreader = csv.reader(f)
             item_maps = nodes_info['maps']['item']
@@ -73,14 +90,14 @@ class ICDM2022Dataset(DGLBuiltinDataset):
         g.nodes[self.category].data['train_mask'] = train_mask
         g.nodes[self.category].data['val_mask'] = val_mask
         g.nodes[self.category].data['test_mask'] = test_mask
-        if self.init_emb:
-            for ntype in g.ntypes:
-                if ntype == 'item':
-                    g.nodes[ntype].data['h'] = th.rand(g.num_nodes(ntype), self.item_embedding_dim, dtype=th.float32)
-                else:
-                    g.nodes[ntype].data['h'] = th.rand(g.num_nodes(ntype), self.non_item_embedding_dim,
-                                                       dtype=th.float32)
-        self._g = gs[0]
+        # if self.init_emb:
+        #     for ntype in g.ntypes:
+        #         if ntype == 'item':
+        #             g.nodes[ntype].data['h'] = th.rand(g.num_nodes(ntype), self.item_embedding_dim, dtype=th.float32)
+        #         else:
+        #             g.nodes[ntype].data['h'] = th.rand(g.num_nodes(ntype), self.non_item_embedding_dim,
+        #                                                dtype=th.float32)
+        self._g = g
 
         print('finish loading dataset')
 
