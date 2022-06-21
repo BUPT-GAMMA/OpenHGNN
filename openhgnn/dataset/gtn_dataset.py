@@ -92,8 +92,8 @@ class GTNDataset(DGLBuiltinDataset):
             target_ntype = 'movie'
             meta_paths_dict = {'MAM': [('movie', 'movie-actor', 'actor'),
                                        ('actor', 'actor-movie', 'movie')],
-                               'MDM': [('movie', 'movie-director', 'subject'),
-                                       ('subject', 'subject-movie', 'movie')]
+                               'MDM': [('movie', 'movie-director', 'director'),
+                                       ('director', 'director-movie', 'movie')]
                                }
         else:
             raise ValueError('Unsupported dataset name {}'.format(name))
