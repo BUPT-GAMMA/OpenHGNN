@@ -1,6 +1,7 @@
 import importlib
 from .NEW_model import MLP_follow_model
 from .base_model import BaseModel
+from torch import nn
 import sys
 sys.path.append("..")
 
@@ -11,13 +12,10 @@ def register_model(name):
     """
     New models types can be added to cogdl with the :func:`register_model`
     function decorator.
-
     For example::
-
         @register_model('gat')
         class GAT(BaseModel):
             (...)
-
     Args:
         name (str): the name of the models
     """
@@ -45,6 +43,12 @@ def try_import_model(model):
 
 
 def build_model(model):
+    if isinstance(model, nn.Module):
+        if not hasattr(model, 'build_model_from_args'):
+            def build_model_from_args(args, hg):
+                return model
+            model.build_model_from_args = build_model_from_args
+        return model
     if not try_import_model(model):
         exit(1)
     return MODEL_REGISTRY[model]
