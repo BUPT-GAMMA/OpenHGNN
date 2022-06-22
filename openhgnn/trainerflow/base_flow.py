@@ -48,7 +48,10 @@ class BaseFlow(ABC):
         self.model = args.model
         self.device = args.device
         self.task = build_task(args)
-        self.hg = self.task.get_graph().to(self.device)
+        if self.args.data_cpu:
+            self.hg = self.task.get_graph()
+        else:
+            self.hg = self.task.get_graph().to(self.device)
         self.args.meta_paths_dict = self.task.dataset.meta_paths_dict
         self.patience = args.patience
         self.max_epoch = args.max_epoch

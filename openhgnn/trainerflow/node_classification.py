@@ -48,17 +48,18 @@ class NodeClassification(BaseFlow):
         self.labels = self.task.get_labels().to(self.device)
 
         if self.args.mini_batch_flag:
+            torch.multiprocessing.set_start_method('spawn')
             # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
             sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
-            self.train_loader = dgl.dataloading.NodeDataLoader(
+            self.train_loader = dgl.dataloading.DataLoader(
                 self.hg.cpu(), {self.category: self.train_idx.cpu()}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=8)
-            self.val_loader = dgl.dataloading.NodeDataLoader(
+                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=4)
+            self.val_loader = dgl.dataloading.DataLoader(
                 self.hg.to('cpu'), {self.category: self.valid_idx.to('cpu')}, sampler,
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=4)
-            self.test_loader = dgl.dataloading.NodeDataLoader(
+            self.test_loader = dgl.dataloading.DataLoader(
                 self.hg.to('cpu'), {self.category: self.test_idx.to('cpu')}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=4)
 
     def preprocess(self):
         r"""
@@ -149,6 +150,8 @@ class NodeClassification(BaseFlow):
     def _full_train_step(self):
         self.model.train()
         h_dict = self.model.input_feature()
+        self.hg = self.hg.to(self.device)
+        h_dict = {k: e.to(self.device) for k, e in h_dict.items()}
         logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
         self.optimizer.zero_grad()
@@ -165,6 +168,8 @@ class NodeClassification(BaseFlow):
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
             # batch_tic = time.time()
             emb = extract_embed(self.model.input_feature(), input_nodes)
+            emb = {k: e.to(self.device) for k, e in emb.items()}
+            
             lbl = self.labels[seeds].to(self.device)
             logits = self.model(blocks, emb)[self.category]
             loss = self.loss_fn(logits, lbl)
@@ -229,6 +234,7 @@ class NodeClassification(BaseFlow):
                 for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
                     blocks = [blk.to(self.device) for blk in blocks]
                     emb = extract_embed(self.model.input_feature(), input_nodes)
+                    emb = {k: e.to(self.device) for k, e in emb.items()}
                     seeds = seeds[self.category]
                     lbl = self.labels[seeds].to(self.device)
                     logits = self.model(blocks, emb)[self.category]
