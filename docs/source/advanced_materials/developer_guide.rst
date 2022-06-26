@@ -1,52 +1,19 @@
-Basic Usage
-==========================
+Developer Guide
+=================
+.. toctree::
+   :maxdepth: 2
+   :titlesonly:
 
-Run experiments
-------------------
-Running an existing baseline model on an existing benchmark :ref:`task <api-dataset>`
-
-.. code:: bash
-
-    >>> python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
-    usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
-               [--gpu GPU] [--use_best_config] [--use_hpo]
-
-Optional arguments are as follows:
-
-    - ``--model MODEL``, ``-m MODEL`` name of models.  Please refer to the `model list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_ for supported models and their names.
-    - ``--task TASK``, ``-t TASK`` name of task.  Please refer to `tasks <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/tasks#Supported task>`_  for the list of tasks.
-    - ``--dataset DATASET``, ``-d DATASET`` name of datasets.  Please refer to `datasets <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/dataset#Dataset>`_ for the list of datasets.
-    - ``--gpu GPU``, ``-g GPU``	controls which GPU you will use. If you do not have GPU, set ``-g -1``.
-    - ``--use_best_config`` use the best config OpenHGNN has found in the dataset with the model. If you want to set the different hyper-parameter, modify the `config.ini <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ file manually.
-    - ``--use_hpo`` use hyper-parameter optimization from optuna.
-    - ``--load_from_pretrained`` will load the model from a default checkpoint.
-
-e.g.:
-
-.. code:: bash
-
-    python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
-
-Hyper-parameter optimization
--------------------------------
-Running an experiment with optuna
-
-.. code:: bash
-
-    >>> python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --use_hpo
-
-OpenHGNN will determine hyperparameters in the following order:
-
-- If ``--use_hpo`` is enabled, search for the best hyperparameter by optuna. This is controlled by :func:`func_search` in ``./openhgnn/auto/hpo.py``. Please refer `here <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_ for more details.
-- Otherwise, if ``--use_best_config`` is enabled, load the best hyperparameters built within OpenHGNN. The configurations are in ``./openhgnn/utils/best_config.py``.
-- Otherwise, load the hyperparameters in ``./openhgnn/config.ini``.
+   Evaluate a new dataset
+   Apply a new model
+   Apply to a new scenario
 
 Evaluate a new dataset
-=======================
+-------------------
 You can specify your dataset if necessary. In this section we use HGBn-ACM as an example for the node classification dataset.
 
 How to build a new dataset
----------------------------
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 **First step: Process dataset**
 
@@ -123,12 +90,12 @@ We can use ``demo_graph`` as our dataset name to evaluate an existing model.
 If you have another dataset name, you should also modify the `build_dataset <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/dataset/__init__.py>`_.
 
 Apply a new model
-====================
+-------------------
 In this section, we will create a model named RGAT,
 which is not in our `models package <api-model>`.
 
 How to build a new model
---------------------------
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 **First step: Register model**
 
 We should create a class ``RGAT`` that inherits the :ref:`Base Model <api-model>` and register the model with ``@register_model(str)``.
@@ -193,11 +160,11 @@ For more reading, check out: `RGATLayer <https://github.com/BUPT-GAMMA/OpenHGNN/
 We should add a new entry to ``SUPPORTED_MODELS`` in `models/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/__init__.py>`_
 
 Apply to a new scenario
-=======================
+-------------------
 In this section, we will apply to a recommendation scenario, which involves building a new task and trainerflow.
 
 How to build a new task
----------------------------------
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 **First step: Register task**
 
 We should create a class ``Recommendation`` that inherits
@@ -238,7 +205,7 @@ We should implement the methods involved with evaluation metrics and loss functi
 We should add a new entry to ``SUPPORTED_TASKS`` in `task/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/tasks/__init__.py>`_
 
 How to build a new trainerflow
--------------------------------
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 **First step: Register trainerflow**
 
 We should create a class that inherits the :ref:`BaseFlow <api-trainerflow>`

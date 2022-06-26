@@ -12,17 +12,17 @@ Welcome to OpenHGNN's documentation!
    :hidden:
    :glob:
 
-   install/index
-   install/usage
+   get_started/index
+   get_started/quick_start
 
 .. toctree::
    :maxdepth: 2
    :caption: Advanced Materials
    :hidden:
-   :titlesonly:
    :glob:
 
-   pipeline/index
+   advanced_materials/index
+   advanced_materials/developer_guide
 
 .. toctree::
    :maxdepth: 1

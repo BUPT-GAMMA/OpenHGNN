@@ -54,7 +54,7 @@ msgid "Python environment requirments"
 msgstr "Python"
 
 #: ../../install/index.rst:19
-msgid "`Python <https://www.python.org/>`_ >= 3.6"
+msgid "`Python <https://www.python.org/>`_ >= 3.8"
 msgstr ""
 
 #: ../../install/index.rst:20
@@ -82,7 +82,7 @@ msgid ""
 msgstr "**3. DGL:** 安装 DGL, 参考 `DGL安装文档 <https://www.dgl.ai/pages/start.html>`_ ."
 
 #: ../../install/index.rst:48
-msgid "**4. OpenHGNN and other dependencies:**"
+msgid "**4. Install openhgnn:**"
 msgstr "**4. 下载OpenHGNN, 安装依赖:**"
 
 #: ../../install/usage.rst:2
