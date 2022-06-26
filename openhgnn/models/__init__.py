@@ -89,6 +89,7 @@ SUPPORTED_MODELS = {
     'GATNE-T': 'openhgnn.models.GATNE',
     'HetSANN': 'openhgnn.models.HetSANN',
     'HGAT': 'openhgnn.models.HGAT',
+    'ieHGCN': 'openhgnn.models.ieHGCN',
     'TransE': 'openhgnn.models.TransE',
     'TransH': 'openhgnn.models.TransH',
     'TransR': 'openhgnn.models.TransR',
@@ -120,6 +121,9 @@ from .homo_GNN import homo_GNN
 from .general_HGNN import general_HGNN
 from .HDE import HDE
 from .SimpleHGN import SimpleHGN
+from .HetSANN import HetSANN
+from .ieHGCN import ieHGCN
+from .HGAT import HGAT
 from .GATNE import GATNE
 
 __all__ = [

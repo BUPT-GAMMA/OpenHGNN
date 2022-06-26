@@ -172,36 +172,36 @@ class SimpleHGN(BaseModel):
         return h_dict
 
 class SimpleHGNConv(nn.Module):
+    r"""
+    The SimpleHGN convolution layer.
+
+    Parameters
+    ----------
+    edge_dim: int
+        the edge dimension
+    num_etypes: int
+        the number of the edge type
+    in_dim: int
+        the input dimension
+    out_dim: int
+        the output dimension
+    num_heads: int
+        the number of heads
+    num_etypes: int
+        the number of edge type
+    feat_drop: float
+        the feature drop rate
+    negative_slope: float
+        the negative slope used in the LeakyReLU
+    residual: boolean
+        if we need the residual operation
+    activation: str
+        the activation function
+    beta: float
+        the hyperparameter used in edge residual
+    """
     def __init__(self, edge_dim, in_dim, out_dim, num_heads, num_etypes, feat_drop=0.0,
                  negative_slope=0.2, residual=True, activation=F.elu, beta=0.0):
-        """
-        The SimpleHGN convolution layer.
-
-        Parameters
-        ----------
-        edge_dim: int
-            the edge dimension
-        num_etypes: int
-            the number of the edge type
-        in_dim: int
-            the input dimension
-        out_dim: int
-            the output dimension
-        num_heads: int
-            the number of heads
-        num_etypes: int
-            the number of edge type
-        feat_drop: float
-            the feature drop rate
-        negative_slope: float
-            the negative slope used in the LeakyReLU
-        residual: boolean
-            if we need the residual operation
-        activation: str
-            the activation function
-        beta: float
-            the hyperparameter used in edge residual
-        """
         super(SimpleHGNConv, self).__init__()
         self.edge_dim = edge_dim
         self.in_dim = in_dim
