@@ -72,7 +72,7 @@ pip install dgl -f https://data.dgl.ai/wheels/repo.html
 
 - 从pypi安装
 ```bash
-pip install pypi
+pip install openhgnn
 ```
 
 - 从源码安装
