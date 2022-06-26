@@ -41,7 +41,7 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 
 #### 环境要求
 
-- Python  >= 3.6
+- Python  >= 3.8
 
 - [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
 
@@ -52,7 +52,7 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 **1. Python 环境 (可选):** 推荐使用 Conda 包管理
 
 ```bash
-conda create -n openhgnn python=3.7
+conda create -n openhgnn python=3.8
 source activate openhgnn
 ```
 
@@ -65,15 +65,23 @@ pip install torch torchvision torchaudio
 **3. 安装DGL:** 参考 [DGL安装文档](https://www.dgl.ai/pages/start.html) 根据你的操作系统和CUDA版本选择合适的安装命令。例如：
 
 ```bash
-pip install dgl dglgo -f https://data.dgl.ai/wheels/repo.html
+pip install dgl -f https://data.dgl.ai/wheels/repo.html
 ```
 
-**4. 下载OpenHGNN，安装依赖:**
+**4. 安装 openhgnn:** 
 
+- 从pypi安装
+```bash
+pip install pypi
+```
+
+- 从源码安装
 ```bash
 git clone https://github.com/BUPT-GAMMA/OpenHGNN
+# If you encounter a network error, try git clone from openi as following.
+# git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
 cd OpenHGNN
-pip install -r requirements.txt
+pip install .
 ```
 
 #### 在已有的评测上运行已有的基线模型 [数据集](./openhgnn/dataset/#Dataset)
@@ -98,8 +106,6 @@ python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 ``--gpu -g``    控制你使用哪一个GPU，如果没有GPU，设定 -g -1。
 
 ``--use_best_config``    use_best_config 意味着你使用该模型在该数据集下最优的配置，如果你想要设定不同的超参数,请手动修改 [配置文件](./openhgnn/config.ini)。使用最佳配置会覆盖配置文件中的参数。
-
-``--use_hpo`` 除了 use_best_config，我们还提供了一个超参数的 [样例](./openhgnn/auto) 来自动查找最佳超参数。
 
 ``--load_from_pretrained`` 从默认检查点加载模型。
 
