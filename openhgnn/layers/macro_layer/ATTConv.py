@@ -74,6 +74,8 @@ class ATTConv(nn.Module):
 
 class MacroConv(nn.Module):
     """
+    MacroConv
+    
     Parameters
     ----------
     in_feats : int
