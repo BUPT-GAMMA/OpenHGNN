@@ -126,7 +126,11 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 表格中的链接给出了模型的基本使用方法.
 
 | 模型                                                       | 节点分类               | 链路预测               | 推荐                 |
-| -------------------------------------------------------- | ------------------ | ------------------ | ------------------ |
+|----------------------------------------------------------|--------------------|--------------------|--------------------|
+| [TransE](./openhgnn/output/TransE)[NIPS 2013]            |                    | :heavy_check_mark: |                    |
+| [TransH](./openhgnn/output/TransH)[AAAI 2014]            |                    | :heavy_check_mark: |                    |
+| [TransR](./openhgnn/output/TransR)[AAAI 2015]            |                    | :heavy_check_mark: |                    |
+| [TransD](./openhgnn/output/TransD)[ACL 2015]             |                    | :heavy_check_mark: |                    |
 | [Metapath2vec](./openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark: |                    |                    |
 | [RGCN](./openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark: | :heavy_check_mark: |                    |
 | [HERec](./openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark: |                    |                    |

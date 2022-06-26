@@ -130,7 +130,11 @@ Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get
 The link will give some basic usage.
 
 | Model                                                     | Node classification | Link prediction    | Recommendation     |
-| --------------------------------------------------------- | ------------------- | ------------------ | ------------------ |
+|-----------------------------------------------------------|---------------------|--------------------|--------------------|
+| [TransE](../openhgnn/output/TransE)[NIPS 2013]            |                     | :heavy_check_mark: |                    |
+| [TransH](../openhgnn/output/TransH)[AAAI 2014]            |                     | :heavy_check_mark: |                    |
+| [TransR](../openhgnn/output/TransR)[AAAI 2015]            |                     | :heavy_check_mark: |                    |
+| [TransD](../openhgnn/output/TransD)[ACL 2015]             |                     | :heavy_check_mark: |                    |
 | [Metapath2vec](../openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark:  |                    |                    |
 | [RGCN](../openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [HERec](../openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark:  |                    |                    |
