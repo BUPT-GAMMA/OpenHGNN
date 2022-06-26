@@ -89,7 +89,11 @@ SUPPORTED_MODELS = {
     'GATNE-T': 'openhgnn.models.GATNE',
     'HetSANN': 'openhgnn.models.HetSANN',
     'HGAT': 'openhgnn.models.HGAT',
-    'ieHGCN': 'openhgnn.models.ieHGCN'
+    'ieHGCN': 'openhgnn.models.ieHGCN',
+    'TransE': 'openhgnn.models.TransE',
+    'TransH': 'openhgnn.models.TransH',
+    'TransR': 'openhgnn.models.TransR',
+    'TransD': 'openhgnn.models.TransD',
 }
 
 from .CompGCN import CompGCN

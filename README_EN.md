@@ -41,7 +41,7 @@ We release the latest version v0.2.
 
 #### Requirements and Installation
 
-- Python  >= 3.6
+- Python  >= 3.8
 
 - [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
 
@@ -52,7 +52,7 @@ We release the latest version v0.2.
 **1. Python environment (Optional):** We recommend using Conda package manager
 
 ```bash
-conda create -n openhgnn python=3.7
+conda create -n openhgnn python=3.8
 source activate openhgnn
 ```
 
@@ -67,17 +67,23 @@ pip install torch torchvision torchaudio
 your OS and CUDA version. For example:
 
 ```bash
-pip install dgl dglgo -f https://data.dgl.ai/wheels/repo.html
+pip install dgl -f https://data.dgl.ai/wheels/repo.html
 ```
 
-**4. OpenHGNN and other dependencies:**
+**4. Install openhgnn:** 
 
+- install from pypi
+```bash
+pip install openhgnn
+```
+
+- install from source
 ```bash
 git clone https://github.com/BUPT-GAMMA/OpenHGNN
 # If you encounter a network error, try git clone from openi as following.
 # git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
 cd OpenHGNN
-pip install -r requirements.txt
+pip install .
 ```
 
 #### Running an existing baseline model on an existing benchmark [dataset](../openhgnn/dataset/#Dataset)
@@ -104,9 +110,6 @@ usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
 ``--use_best_config``    use_best_config means you can use the best config in the dataset with the model. If you want to
 set the different hyper-parameter, modify the [openhgnn.config.ini](../openhgnn/config.ini) manually. The best_config
 will override the parameter in config.ini.
-
-``--use_hpo`` Besides use_best_config, we give a hyper-parameter [example](../openhgnn/auto) to search the best
-hyper-parameter automatically.
 
 ``--load_from_pretrained`` will load the model from a default checkpoint.
 
