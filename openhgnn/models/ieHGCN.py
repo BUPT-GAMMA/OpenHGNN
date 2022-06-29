@@ -14,49 +14,48 @@ import sys
 @register_model('ieHGCN')
 class ieHGCN(BaseModel):
     r"""
-    Description
-    -----------
     ie-HGCN from paper `Interpretable and Efficient Heterogeneous Graph Convolutional Network
     <https://arxiv.org/pdf/2005.13183.pdf>`__.
 
     `Source Code Link <https://github.com/kepsail/ie-HGCN>`_
     
-    Description
-    -----------
     The core part of ie-HGCN, the calculating flow of projection, object-level aggregation and type-level aggregation in
     a specific type block.
 
     Projection
-        .. math::
-            Y^{Self-\Omega }=H^{\Omega} \cdot W^{Self-\Omega} (1)-1
+    
+    .. math::
+        Y^{Self-\Omega }=H^{\Omega} \cdot W^{Self-\Omega} \quad (1)-1
 
-            Y^{\Gamma - \Omega}=H^{\Gamma} \cdot W^{\Gamma - \Omega} , \Gamma \in N_{\Omega} (1)-2
+        Y^{\Gamma - \Omega}=H^{\Gamma} \cdot W^{\Gamma - \Omega} , \Gamma \in N_{\Omega} \quad (1)-2
 
     Object-level Aggregation
-        .. math::
-            Z^{ Self - \Omega } = Y^{ Self - \Omega}=H^{\Omega} \cdot W^{Self - \Omega} (2)-1
+    
+    .. math::
+        Z^{ Self - \Omega } = Y^{ Self - \Omega}=H^{\Omega} \cdot W^{Self - \Omega} \quad (2)-1
 
-            Z^{\Gamma - \Omega}=\hat{A}^{\Omega-\Gamma} \cdot Y^{\Gamma - \Omega} = \hat{A}^{\Omega-\Gamma} \cdot H^{\Gamma} \cdot W^{\Gamma - \Omega} (2)-2
+        Z^{\Gamma - \Omega}=\hat{A}^{\Omega-\Gamma} \cdot Y^{\Gamma - \Omega} = \hat{A}^{\Omega-\Gamma} \cdot H^{\Gamma} \cdot W^{\Gamma - \Omega} \quad (2)-2
 
     Type-level Aggregation
-        .. math::
-            Q^{\Omega}=Z^{Self-\Omega} \cdot W_q^{\Omega} (3)-1
+    
+    .. math::
+        Q^{\Omega}=Z^{Self-\Omega} \cdot W_q^{\Omega} \quad (3)-1
 
-            K^{Self-\Omega}=Z^{Self -\Omega} \cdot W_{k}^{\Omega} (3)-2
+        K^{Self-\Omega}=Z^{Self -\Omega} \cdot W_{k}^{\Omega} \quad (3)-2
 
-            K^{\Gamma - \Omega}=Z^{\Gamma - \Omega} \cdot W_{k}^{\Omega}, \quad \Gamma \in N_{\Omega} (3)-3
+        K^{\Gamma - \Omega}=Z^{\Gamma - \Omega} \cdot W_{k}^{\Omega}, \quad \Gamma \in N_{\Omega} \quad (3)-3
 
-        .. math::
-            e^{Self-\Omega}={ELU} ([K^{ Self-\Omega} \| Q^{\Omega}] \cdot w_{a}^{\Omega}) (4)-1
+    .. math::
+        e^{Self-\Omega}={ELU} ([K^{ Self-\Omega} \| Q^{\Omega}] \cdot w_{a}^{\Omega}) \quad (4)-1
 
-            e^{\Gamma - \Omega}={ELU} ([K^{\Gamma - \Omega} \| Q^{\Omega}] \cdot w_{a}^{\Omega}), \Gamma \in N_{\Omega} (4)-2
+        e^{\Gamma - \Omega}={ELU} ([K^{\Gamma - \Omega} \| Q^{\Omega}] \cdot w_{a}^{\Omega}), \Gamma \in N_{\Omega} \quad (4)-2
 
-        .. math::
-            [a^{Self-\Omega}\|a^{1 - \Omega}\| \ldots . a^{\Gamma - \Omega}\|\ldots\| a^{|N_{\Omega}| - \Omega}]=
-            {softmax}([e^{Self - \Omega}\|e^{1 - \Omega}\| \ldots\|e^{\Gamma - \Omega}\| \ldots \| e^{|\N_{\Omega}| - \Omega}]) (5)
+    .. math::
+        [a^{Self-\Omega}\|a^{1 - \Omega}\| \ldots . a^{\Gamma - \Omega}\|\ldots\| a^{|N_{\Omega}| - \Omega}] \\
+        = {softmax}([e^{Self - \Omega}\|e^{1 - \Omega}\| \ldots\|e^{\Gamma - \Omega}\| \ldots \| e^{|N_{\Omega}| - \Omega}]) \quad (5)
 
-        .. math::
-            H_{i,:}^{\Omega \prime}=\sigma(a_{i}^{Self-\Omega} \cdot Z_{i,:}^{Self-\Omega}+\sum_{\Gamma \in N_{\Omega}} a_{i}^{\Gamma - \Omega} \cdot Z_{i,:}^{\Gamma - \Omega}) (6)
+    .. math::
+        H_{i,:}^{\Omega \prime}=\sigma(a_{i}^{Self-\Omega} \cdot Z_{i,:}^{Self-\Omega}+\sum_{\Gamma \in N_{\Omega}} a_{i}^{\Gamma - \Omega} \cdot Z_{i,:}^{\Gamma - \Omega}) \quad (6)
     
     Parameters
     ----------

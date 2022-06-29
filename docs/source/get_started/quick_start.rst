@@ -2,7 +2,7 @@ Quick Start
 ==========================
 
 Quick Start From API
-------------------
+--------------------
 
 Run experiments:
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -41,7 +41,7 @@ OpenHGNN will determine hyperparameters in the following order:
 
 
 Quick Start From Source
-------------------
+-----------------------
 
 Besides using API, you can also directly run the source code of OpenHGNN.
 

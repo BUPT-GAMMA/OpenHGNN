@@ -17,11 +17,11 @@ class CompGCN(BaseModel):
     For all the tasks, we used COMPGCN build on PyTorch geometric framework (Fey & Lenssen, 2019).
 
     Link Prediction: For evaluation, 200-dimensional embeddings for node and relation embeddings are used. 
-        For selecting the best model we perform a hyperparameter search using the validation data over the values listed in Table 8. 
-        For training link prediction models, we use the standard binary cross entropy loss with label smoothing Dettmers et al. (2018).
+    For selecting the best model we perform a hyperparameter search using the validation data over the values listed in Table 8. 
+    For training link prediction models, we use the standard binary cross entropy loss with label smoothing Dettmers et al. (2018).
 
     Node Classification: Following Schlichtkrull et al. (2017), we use 10% training data as validation for selecting the best model for both the datasets. 
-        We restrict the number of hidden units to 32. We use cross-entropy loss for training our model.
+    We restrict the number of hidden units to 32. We use cross-entropy loss for training our model.
 
     For all the experiments, training is done using Adam optimizer (Kingma & Ba, 2014) and Xavier initialization (Glorot & Bengio, 2010) is used for initializing parameters.
     """

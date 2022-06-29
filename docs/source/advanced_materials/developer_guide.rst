@@ -4,12 +4,8 @@ Developer Guide
    :maxdepth: 2
    :titlesonly:
 
-   Evaluate a new dataset
-   Apply a new model
-   Apply to a new scenario
-
 Evaluate a new dataset
--------------------
+----------------------
 You can specify your dataset if necessary. In this section we use HGBn-ACM as an example for the node classification dataset.
 
 How to build a new dataset
@@ -160,7 +156,7 @@ For more reading, check out: `RGATLayer <https://github.com/BUPT-GAMMA/OpenHGNN/
 We should add a new entry to ``SUPPORTED_MODELS`` in `models/init.py <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/__init__.py>`_
 
 Apply to a new scenario
--------------------
+-----------------------
 In this section, we will apply to a recommendation scenario, which involves building a new task and trainerflow.
 
 How to build a new task

@@ -11,6 +11,71 @@ from . import BaseModel, register_model
 
 @register_model('HetSANN')
 class HetSANN(BaseModel):
+    r"""
+    This is a model HetSANN from `An Attention-Based Graph Neural Network for Heterogeneous Structural Learning
+    <https://arxiv.org/abs/1912.10832>`__
+
+    It contains the following part:
+
+    Apply a linear transformation:
+    
+    .. math::
+       h^{(l+1, m)}_{\phi(j),i} = W^{(l+1, m)}_{\phi(j),\phi(i)} h^{(l)}_i \quad (1)
+    
+    And return the new embeddings.
+    
+    You may refer to the paper HetSANN-Section 2.1-Type-aware Attention Layer-(1)
+
+    Aggregation of Neighborhood:
+    
+    Computing the attention coefficient:
+    
+    .. math::
+       o^{(l+1,m)}_e = \sigma(f^{(l+1,m)}_r(h^{(l+1, m)}_{\phi(j),j}, h^{(l+1, m)}_{\phi(j),i})) \quad (2)
+        
+    .. math::
+       f^{(l+1,m)}_r(e) = [h^{(l+1, m)^T}_{\phi(j),j}||h^{(l+1, m)^T}_{\phi(j),i}]a^{(l+1, m)}_r ] \quad (3)
+    
+    .. math::
+       \alpha^{(l+1,m)}_e = exp(o^{(l+1,m)}_e) / \sum_{k\in \varepsilon_j} exp(o^{(l+1,m)}_k) \quad (4)
+    
+    Getting new embeddings with multi-head and residual
+    
+    .. math::
+       h^{(l + 1, m)}_j = \sigma(\sum_{e = (i,j,r)\in \varepsilon_j} \alpha^{(l+1,m)}_e h^{(l+1, m)}_{\phi(j),i}) \quad (5)
+    
+    Multi-heads:
+    
+    .. math::
+       h^{(l+1)}_j = \parallel^M_{m = 1}h^{(l + 1, m)}_j \quad (6)
+    
+    Residual:
+    
+    .. math::
+       h^{(l+1)}_j = h^{(l)}_j + \parallel^M_{m = 1}h^{(l + 1, m)}_j \quad (7)
+    
+    Parameters
+    ----------
+    num_heads: int
+        the number of heads in the attention computing
+    num_layers: int
+        the number of layers we used in the computing
+    in_dim: int
+        the input dimension
+    hidden_dim: int
+        the hidden dimension
+    num_classes: int
+        the number of the output classes
+    num_etypes: int
+        the number of the edge types
+    dropout: float
+        the dropout rate
+    negative_slope: float
+        the negative slope used in the LeakyReLU
+    residual: boolean
+        if we need the residual operation
+
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         return cls(
@@ -27,71 +92,6 @@ class HetSANN(BaseModel):
     
     def __init__(self, num_heads, num_layers, in_dim, hidden_dim, 
                  num_classes, num_etypes, dropout, negative_slope, residual):
-        """
-        This is a model HetSANN from `An Attention-Based Graph Neural Network for Heterogeneous Structural Learning
-        <https://arxiv.org/abs/1912.10832>`__
-
-        It contains the following part:
-
-        Apply a linear transformation:
-        
-        ..math::
-            h^{(l+1, m)}_{\phi(j),i} = W^{(l+1, m)}_{\phi(j),\phi(i)} h^{(l)}_i  (1)
-        
-        And return the new embeddings.
-        
-        You may refer to the paper HetSANN-Section 2.1-Type-aware Attention Layer-(1)
-
-        Aggregation of Neighborhood:
-        
-        Computing the attention coefficient:
-        
-        ..math::
-            o^{(l+1,m)}_e = \sigma(f^{(l+1,m)}_r(h^{(l+1, m)}_{\phi(j),j}, h^{(l+1, m)}_{\phi(j),i}))  (2)
-            
-        ..math::
-            f^{(l+1,m)}_r(e) = [h^{(l+1, m)^T}_{\phi(j),j}||h^{(l+1, m)^T}_{\phi(j),i}]a^{(l+1, m)}_r ] (3)
-        
-        ..math::
-            \alpha^{(l+1,m)}_e = exp(o^{(l+1,m)}_e) / \sum_{k\in \varepsilon_j} exp(o^{(l+1,m)}_k)  (4)
-        
-        Getting new embeddings with multi-head and residual
-        
-        ..math::
-            h^{(l + 1, m)}_j = \sigma(\sum_{e = (i,j,r)\in \varepsilon_j} \alpha^{(l+1,m)}_e h^{(l+1, m)}_{\phi(j),i})  (5)
-        
-        Multi-heads:
-        
-        ..math::
-            h^{(l+1)}_j = \parallel^M_{m = 1}h^{(l + 1, m)}_j  (6)
-        
-        Residual:
-        
-        ..math::
-            h^{(l+1)}_j = h^{(l)}_j + \parallel^M_{m = 1}h^{(l + 1, m)}_j  (7)
-        
-        Parameters
-        ----------
-        num_heads: int
-            the number of heads in the attention computing
-        num_layers: int
-            the number of layers we used in the computing
-        in_dim: int
-            the input dimension
-        hidden_dim: int
-            the hidden dimension
-        num_classes: int
-            the number of the output classes
-        num_etypes: int
-            the number of the edge types
-        dropout: float
-            the dropout rate
-        negative_slope: float
-            the negative slope used in the LeakyReLU
-        residual: boolean
-            if we need the residual operation
-
-        """
         super(HetSANN, self).__init__()
         self.num_heads = num_heads
         self.num_layers = num_layers
@@ -189,30 +189,30 @@ class HetSANN(BaseModel):
         return h_dict
 
 class HetSANNConv(nn.Module):
+    """
+    The HetSANN convolution layer.
+
+    Parameters
+    ----------
+    num_heads: int
+        the number of heads in the attention computing
+    in_dim: int
+        the input dimension of the feature
+    hidden_dim: int
+        the hidden dimension
+    num_etypes: int
+        the number of the edge types
+    dropout: float
+        the dropout rate
+    negative_slope: float
+        the negative slope used in the LeakyReLU
+    residual: boolean
+        if we need the residual operation
+    activation: str
+        the activation function
+    """
     def __init__(self, num_heads, in_dim, hidden_dim, num_etypes,
                  dropout, negative_slope, residual, activation):
-        """
-        The HetSANN convolution layer.
-
-        Parameters
-        ----------
-        num_heads: int
-            the number of heads in the attention computing
-        in_dim: int
-            the input dimension of the feature
-        hidden_dim: int
-            the hidden dimension
-        num_etypes: int
-            the number of the edge types
-        dropout: float
-            the dropout rate
-        negative_slope: float
-            the negative slope used in the LeakyReLU
-        residual: boolean
-            if we need the residual operation
-        activation: str
-            the activation function
-        """
         super(HetSANNConv, self).__init__()
         self.num_heads = num_heads
         self.in_dim = in_dim

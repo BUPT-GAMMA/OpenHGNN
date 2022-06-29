@@ -12,17 +12,72 @@ from ..utils import to_hetero_feat
 
 @register_model('HGAT')
 class HGAT(BaseModel):
+    r"""
+    This is a model HGAT from `Heterogeneous Graph Attention Networks for Semi-supervised Short Text Classification
+    <https://dl.acm.org/doi/abs/10.1145/3450352>`__
+
+    It contains the following parts:
+
+    Type-level Attention: Given a specific node :math:`v`, we need to calculate the type-level attention scores based on the current node 
+    embedding and the type embedding.
+    
+    .. math::
+       a_{\tau} = \sigma(\mu_{\tau}^T \cdot [h_v \parallel h_{\tau}]) \quad (1)
+    
+    The type embedding is :math:`h_{\tau}=\sum_{v^{'}}\widetilde{A}_{vv^{'}}h_{v^{'}}`, 
+    which is the sum of the neighboring node features :math:`h_{v^{'}}` 
+    where the nodes :math:`v^{'} \in \mathcal{N}_v` and are with the type :math:`h_{\tau}`.
+    :math:`\mu_{\tau}` is the attention vector for the type :math:`\tau`.
+    
+    And the type-level attention weights is:
+    
+    .. math::
+       \alpha_{\tau} = \frac{exp(a_{\tau})}{\sum_{\tau^{'}\in \mathcal{T}} exp(a_{\tau^{'}})} \quad (2)
+
+    Node-level Attention: Given a specific node :math:`v` and its neightoring node :math:`v^{'}\in \mathcal{N}_v`, 
+    we need to calculate the node-level attention scores based on the node embeddings :math:`h_v` and :math:`h_{v^{'}}`
+    and with the type-level attention weight :math:`\alpha_{\tau^{'}}` for the node :math:`v^{'}`:
+    
+    .. math::
+       b_{vv^{'}} = \sigma(\nu^T \cdot \alpha_{\tau^{'}}[h_v \parallel h_{v^{'}}]) \quad (3)
+    
+    where :math:`\nu` is the attention vector.
+    
+    And the node-level attention weights is:
+    
+    .. math::
+       \beta_{vv^{'}} = \frac{exp(b_{vv^{'}})}{\sum_{i\in \mathcal{N}_v} exp(b_{vi})} \quad (4)
+    
+    The final output is:
+    
+    .. math::
+       H^{(l+1)} = \sigma(\sum_{\tau \in \mathcal{T}}B_{\tau}\cdot H_{\tau}^{(l)}\cdot W_{\tau}^{(l)}) \quad (5)
+    
+    Parameters
+    ----------
+    num_layers: int
+        the number of layers we used in the computing
+    in_dim: int
+        the input dimension
+    hidden_dim: int
+        the hidden dimension
+    num_classes: int
+        the number of the output classes
+    ntypes: list
+        the list of the node type in the graph
+    negative_slope: float
+        the negative slope used in the LeakyReLU
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         return cls(args.num_layers,
                    args.in_dim,
                    args.hidden_dim,
-                   args.attn_dim,
                    args.num_classes,
                    hg.ntypes,
                    args.negative_slope)
     
-    def __init__(self, num_layers, in_dim, hidden_dim, attn_dim,
+    def __init__(self, num_layers, in_dim, hidden_dim,
                  num_classes, ntypes, negative_slope):
         super(HGAT, self).__init__()
         self.num_layers = num_layers
@@ -32,42 +87,51 @@ class HGAT(BaseModel):
         self.hgat_layers = nn.ModuleList()
         self.hgat_layers.append(
             TypeAttention(in_dim,
-                          attn_dim,
                           ntypes,
                           negative_slope))
         self.hgat_layers.append(
             NodeAttention(in_dim,
-                          attn_dim,
                           hidden_dim,
                           negative_slope)
         )
         for l in range(num_layers - 1):
             self.hgat_layers.append(
                 TypeAttention(hidden_dim,
-                            attn_dim,
                             ntypes,
                             negative_slope))
             self.hgat_layers.append(
                 NodeAttention(hidden_dim,
-                            attn_dim,
                             hidden_dim,
                             negative_slope)
             )
         
         self.hgat_layers.append(
             TypeAttention(hidden_dim,
-                          attn_dim,
                           ntypes,
                           negative_slope))
         self.hgat_layers.append(
             NodeAttention(hidden_dim,
-                          attn_dim,
                           num_classes,
                           negative_slope)
         )
         
         
     def forward(self, hg, h_dict):
+        """
+        The forward part of the HGAT.
+        
+        Parameters
+        ----------
+        hg : object
+            the dgl heterogeneous graph
+        h_dict: dict
+            the feature dict of different node types
+            
+        Returns
+        -------
+        dict
+            The embeddings after the output projection.
+        """
         with hg.local_scope():
             hg.ndata['h'] = h_dict
             for l in range(self.num_layers):
@@ -81,6 +145,18 @@ class HGAT(BaseModel):
         return h_dict
 
 class TypeAttention(nn.Module):
+    """
+    The type-level attention layer
+
+    Parameters
+    ----------
+    in_dim: int
+        the input dimension of the feature
+    ntypes: list
+        the list of the node type in the graph
+    slope: float
+        the negative slope used in the LeakyReLU
+    """
     def __init__(self, in_dim, ntypes, slope):
         super(TypeAttention, self).__init__()
         attn_vector = {}
@@ -91,6 +167,21 @@ class TypeAttention(nn.Module):
         self.leakyrelu = nn.LeakyReLU(slope)
         
     def forward(self, hg, h_dict):
+        """
+        The forward part of the TypeAttention.
+        
+        Parameters
+        ----------
+        hg : object
+            the dgl heterogeneous graph
+        h_dict: dict
+            the feature dict of different node types
+            
+        Returns
+        -------
+        dict
+            The embeddings after the output projection.
+        """
         h_t = {}
         attention = {}
         with hg.local_scope():
@@ -138,6 +229,18 @@ class TypeAttention(nn.Module):
         return attention
     
 class NodeAttention(nn.Module):
+    """
+    The node-level attention layer
+
+    Parameters
+    ----------
+    in_dim: int
+        the input dimension of the feature
+    out_dim: int
+        the output dimension
+    slope: float
+        the negative slope used in the LeakyReLU
+    """
     def __init__(self, in_dim, out_dim, slope):
         super(NodeAttention, self).__init__()
         self.in_dim = in_dim
@@ -147,6 +250,27 @@ class NodeAttention(nn.Module):
         self.leakyrelu = nn.LeakyReLU(slope)
         
     def forward(self, g, x, ntype, etype, presorted = False):
+        """
+        The forward part of the NodeAttention.
+
+        Parameters
+        ----------
+        g : object
+            the dgl homogeneous graph
+        x: tensor
+            the original features of the graph
+        ntype: tensor
+            the node type of the graph
+        etype: tensor
+            the edge type of the graph
+        presorted: boolean
+            if the ntype and etype are preordered, default: ``False``
+            
+        Returns
+        -------
+        tensor
+            The embeddings after aggregation.
+        """
         with g.local_scope():
             src = g.edges()[0]
             dst = g.edges()[1]
