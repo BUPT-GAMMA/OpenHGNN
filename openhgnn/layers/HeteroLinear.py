@@ -189,7 +189,7 @@ class HeteroFeature(nn.Module):
     hetero_linear : HeteroLinearLayer
         A heterogeneous linear layer to transform original feature.
     """
-    def __init__(self, h_dict, n_nodes_dict, embed_size, act=None, need_trans=True, all_feats=True):
+    def __init__(self, h_dict, n_nodes_dict, embed_size, act=None, need_trans=True, all_feats=True, device = 'cpu'):
         """
 
         @param h_dict:
@@ -204,6 +204,7 @@ class HeteroFeature(nn.Module):
         self.embed_size = embed_size
         self.h_dict = h_dict
         self.need_trans = need_trans
+        self.device = device
         self.embed_dict = nn.ParameterDict()
         linear_dict = {}
         for ntype, n_nodes in self.n_nodes_dict.items():
@@ -217,8 +218,10 @@ class HeteroFeature(nn.Module):
                     self.embed_dict[ntype] = embed
             else:
                 linear_dict[ntype] = [h.shape[1], self.embed_size]
+        if self.h_dict.get(ntype) is None:
+            need_trans = False
         if need_trans:
-            self.hetero_linear = HeteroLinearLayer(linear_dict, act=act)
+            self.hetero_linear = HeteroLinearLayer(linear_dict, act=act).to(self.device)
 
     def forward(self):
         r"""
@@ -244,9 +247,10 @@ class HeteroFeature(nn.Module):
         for ntype, nid in nodes_dict.items():
             if self.h_dict.get(ntype) is None:
                 out_feature[ntype] = self.embed_dict[ntype][nid]
+                out_feature[ntype] = out_feature[ntype].to(self.device)
             else:
-                if self.need_trans:
-                    out_feature[ntype] = self.hetero_linear(self.h_dict)[ntype][nid]
-                else:
-                    out_feature[ntype] = self.h_dict[ntype][nid]
+                out_feature[ntype] = self.h_dict[ntype][nid]
+                out_feature[ntype] = out_feature[ntype].to(self.device)
+        if self.need_trans:
+            out_feature = self.hetero_linear(out_feature)
         return out_feature

@@ -87,7 +87,10 @@ class Experiment(object):
         """ run the experiment """
         self.config.logger = Logger(self.config)
         set_random_seed(self.config.seed)
-        trainerflow = self.specific_trainerflow.get(self.config.model, self.config.task)
+        if self.config.dataset.name[ :4] == "icdm":
+            trainerflow = "icdm_trainer"
+        else:
+            trainerflow = self.specific_trainerflow.get(self.config.model, self.config.task)
         if self.config.hpo_search_space is not None:
             # hyper-parameter search
             hpo_experiment(self.config, trainerflow)

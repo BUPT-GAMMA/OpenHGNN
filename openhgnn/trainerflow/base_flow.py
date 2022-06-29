@@ -15,11 +15,9 @@ class BaseFlow(ABC):
 
     def __init__(self, args):
         """
-
         Parameters
         ----------
         args
-
         Attributes
         -------------
         evaluate_interval: int
@@ -62,12 +60,10 @@ class BaseFlow(ABC):
         r"""
         Every trainerflow should run the preprocess_feature if you want to get a feature preprocessing.
         The Parameters in input_feature will be added into optimizer and input_feature will be added into the model.
-
         Attributes
         -----------
         input_feature : HeteroFeature
             It will return the processed feature if call it.
-
         """
         if hasattr(self.args, 'activation'):
             if hasattr(self.args.activation, 'weight'):
@@ -96,10 +92,8 @@ class BaseFlow(ABC):
         Node feature
             1 node type & more than 1 node types
             no feature
-
         Returns
         -------
-
         """
 
         if self.hg.ndata.get('h', {}) == {} or self.args.feat == 2:
@@ -109,7 +103,7 @@ class BaseFlow(ABC):
                 self.logger.feature_info('feat2, drop features!')
                 self.hg.ndata.pop('h')
             self.input_feature = HeteroFeature({}, get_nodes_dict(self.hg), self.args.hidden_dim,
-                                               act=act)
+                                               act=act, device = self.device).to(self.device)
         elif self.args.feat == 0:
             self.input_feature = self.init_feature(act)
         elif self.args.feat == 1:
@@ -120,20 +114,18 @@ class BaseFlow(ABC):
                 h_dict = self.hg.ndata.pop('h')
                 self.logger.feature_info('feat1, preserve target nodes!')
                 self.input_feature = HeteroFeature({self.category: h_dict[self.category]}, get_nodes_dict(self.hg), self.args.hidden_dim,
-                                                   act=act)
-        if not getattr(self.args, 'data_cpu', False):
-            self.input_feature = self.input_feature.to(self.device)
+                                                   act=act, device = self.device).to(self.device)
 
     def init_feature(self, act):
         self.logger.feature_info("Feat is 0, nothing to do!")
         if isinstance(self.hg.ndata['h'], dict):
             # The heterogeneous contains more than one node type.
             input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg),
-                                               self.args.hidden_dim, act=act)
+                                               self.args.hidden_dim, act=act, device = self.device).to(self.device)
         elif isinstance(self.hg.ndata['h'], torch.Tensor):
             # The heterogeneous only contains one node type.
             input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg),
-                                               self.args.hidden_dim, act=act)
+                                               self.args.hidden_dim, act=act, device = self.device).to(self.device)
         return input_feature
 
     @abstractmethod
