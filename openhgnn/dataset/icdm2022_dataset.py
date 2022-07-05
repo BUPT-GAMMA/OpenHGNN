@@ -5,6 +5,7 @@ from dgl.data import DGLBuiltinDataset
 from dgl.data.utils import load_graphs, save_graphs, save_info
 import pickle, csv
 import tqdm
+import numpy as np
 
 __all__ = ['ICDM2022Dataset']
 
@@ -50,7 +51,8 @@ class ICDM2022Dataset(DGLBuiltinDataset):
     def process(self):
 
         # load graph
-        print('loading dataset...')
+        if self.verbose:
+            print('loading dataset...')
         orig_graph_path = os.path.join(self.save_path, '{}.graph.dgl'.format(self.name))
         gs, _ = load_graphs(orig_graph_path)
         g = gs[0]
@@ -59,7 +61,7 @@ class ICDM2022Dataset(DGLBuiltinDataset):
         if self.load_features:
             for ntype, embedding_dict in nodes_info['embeds'].items():
                 dim = embedding_dict[0].shape[0]
-                g.nodes[ntype].data['h'] = torch.empty(g.num_nodes(ntype), dim)
+                g.nodes[ntype].data['h'] = torch.rand(g.num_nodes(ntype), dim)
                 for nid, embedding in tqdm.tqdm(embedding_dict.items()):
                     g.nodes[ntype].data['h'][nid] = torch.from_numpy(embedding)
 
@@ -78,7 +80,9 @@ class ICDM2022Dataset(DGLBuiltinDataset):
             label_mask = ~th.isnan(labels)
             label_idx = th.nonzero(label_mask, as_tuple=False).squeeze()
             g.nodes[self.category].data['label'] = labels.type(th.int64)
-            split_ratio = [0.9, 0.1]
+
+            # label_idx = np.random.permutation(np.array(label_idx))  # shuffle the label index
+            split_ratio = [0.8, 0.2]
             num_labels = len(label_idx)
             train_mask = th.zeros(num_nodes).bool()
             train_mask[label_idx[0: int(split_ratio[0] * num_labels)]] = True
@@ -100,8 +104,9 @@ class ICDM2022Dataset(DGLBuiltinDataset):
                     test_mask[new_id] = True
         g.nodes[self.category].data['test_mask'] = test_mask
         self._g = g
-
-        print('finish loading dataset')
+        if self.verbose:
+            print(self._g)
+            print('finish loading dataset')
 
     def has_cache(self):
         graph_path = os.path.join(self.save_path, 'graph.bin')
@@ -116,6 +121,8 @@ class ICDM2022Dataset(DGLBuiltinDataset):
         gs, _ = load_graphs(graph_path)
         self._g = gs[0]
         _, self._item_map, self._rev_item_map = self._load_map()
+        if self.verbose:
+            print(self._g)
 
     def _load_map(self):
         # load node map
