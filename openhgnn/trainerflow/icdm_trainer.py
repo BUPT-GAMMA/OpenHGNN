@@ -50,7 +50,7 @@ class ICDMTrainer(BaseFlow):
         if self.args.mini_batch_flag:
             # torch.multiprocessing.set_start_method('spawn')
             # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
-            sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
+            sampler = dgl.dataloading.NeighborSampler([self.args.fanout] * self.args.n_layers)
             self.train_loader = dgl.dataloading.DataLoader(
                 self.hg.to('cpu'), {self.category: self.train_idx.to('cpu')}, sampler,
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
@@ -104,25 +104,27 @@ class ICDMTrainer(BaseFlow):
 
     def train(self):
         self.preprocess()
-        stopper = EarlyStopping(self.args.patience, self._checkpoint)
-        epoch_iter = tqdm(range(self.max_epoch))
-        for epoch in epoch_iter:
-            if self.args.mini_batch_flag:
-                train_loss = self._mini_train_step()
-            if epoch % self.evaluate_interval == 0:
-                if hasattr(self, 'val_loader'):
-                    metric_dict, losses = self._mini_test_step(modes=['train', 'valid'])
-                    # train_score, train_loss = self._mini_test_step(modes='train')
-                    # val_score, val_loss = self._mini_test_step(modes='valid')
-                val_loss = losses['valid']
-                self.logger.train_info(f"Epoch: {epoch}, Train loss: {train_loss:.4f}, Valid loss: {val_loss:.4f}. "
-                                       + self.logger.metric2str(metric_dict))
-                early_stop = stopper.loss_step(val_loss, self.model)
-                if early_stop:
-                    self.logger.train_info('Early Stop!\tEpoch:' + str(epoch))
-                    break
-
-        stopper.load_model(self.model)
+        epoch = 0
+        if hasattr(self.args, "direct_inference") and not self.args.direct_inference:
+            stopper = EarlyStopping(self.args.patience, self._checkpoint)
+            epoch_iter = tqdm(range(self.max_epoch))
+            for epoch in epoch_iter:
+                if self.args.mini_batch_flag:
+                    train_loss = self._mini_train_step()
+                if epoch % self.evaluate_interval == 0:
+                    if hasattr(self, 'val_loader'):
+                        metric_dict, losses = self._mini_test_step(modes=['train', 'valid'])
+                        # train_score, train_loss = self._mini_test_step(modes='train')
+                        # val_score, val_loss = self._mini_test_step(modes='valid')
+                    val_loss = losses['valid']
+                    self.logger.train_info(f"Epoch: {epoch}, Train loss: {train_loss:.4f}, Valid loss: {val_loss:.4f}. "
+                                        + self.logger.metric2str(metric_dict))
+                    early_stop = stopper.loss_step(val_loss, self.model)
+                    if early_stop:
+                        self.logger.train_info('Early Stop!\tEpoch:' + str(epoch))
+                        break
+            
+            stopper.load_model(self.model)
         if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
             metric_dict = self.test()
         return dict(metric=metric_dict, epoch=epoch)
@@ -206,10 +208,9 @@ class ICDMTrainer(BaseFlow):
             with open("test.json",'w+') as f:
                 for i in range(len(test_id)):
                     y_dict = {}
-                    y_dict["item_id"] = int(test_id[i])
+                    y_dict["item_id"] = int(self.task.dataset.rev_item_map[int(test_id[i])])
                     y_dict["score"] = float(y_predicts[i])
                     json.dump(y_dict, f)
                     f.write('\n')
 
         return y_predicts
-    

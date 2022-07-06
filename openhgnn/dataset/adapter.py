@@ -79,7 +79,7 @@ class AsNodeClassificationDataset(DGLDataset):
 
         if 'label' not in self.g.nodes[self.target_ntype].data:
             raise ValueError("Missing node labels. Make sure labels are stored "
-                             "under name 'label'.")
+                            "under name 'label'.")
 
         if self.split_ratio is None:
             if is_ogb:
@@ -173,6 +173,10 @@ class AsNodeClassificationDataset(DGLDataset):
     @property
     def category(self):
         return self.target_ntype
+
+    @property
+    def rev_item_map(self):
+        return self.dataset.rev_item_map
 
 
 class AsLinkPredictionDataset(DGLDataset):

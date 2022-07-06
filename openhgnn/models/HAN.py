@@ -90,6 +90,7 @@ class HAN(BaseModel):
 
         for gnn in self.layers:
             h_dict = gnn(g, h_dict)
+            print(h_dict)
         out_dict = {ntype: self.linear(h_dict[ntype]) for ntype in self.category}
         
         return out_dict

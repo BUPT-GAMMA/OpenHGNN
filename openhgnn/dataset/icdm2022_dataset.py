@@ -3,6 +3,7 @@ import torch as th
 import os
 from dgl.data import DGLBuiltinDataset
 from dgl.data.utils import load_graphs, save_graphs, save_info
+from dgl import backend as F
 import pickle, csv
 import tqdm
 import numpy as np
@@ -12,7 +13,6 @@ __all__ = ['ICDM2022Dataset']
 
 class ICDM2022Dataset(DGLBuiltinDataset):
     r"""ICDM 2022 Dataset.
-
     Parameters
     ----------
     session : str
@@ -91,6 +91,14 @@ class ICDM2022Dataset(DGLBuiltinDataset):
                 label_idx[int(split_ratio[0] * num_labels): int((split_ratio[0] + split_ratio[1]) * num_labels)]] = True
             g.nodes[self.category].data['train_mask'] = train_mask
             g.nodes[self.category].data['val_mask'] = val_mask
+        else:
+            labels = th.tensor([float('nan')] * g.num_nodes(self.category))
+            g.nodes[self.category].data['label'] = labels.type(th.int64)
+            train_mask = th.zeros(len(labels)).bool()
+            val_mask = th.zeros(len(labels)).bool()
+            g.nodes[self.category].data['train_mask'] = train_mask
+            g.nodes[self.category].data['val_mask'] = val_mask
+            
 
         # load test_idx
         test_idx_path = os.path.join(self.save_path, '{}_test_ids.csv'.format(self.name))

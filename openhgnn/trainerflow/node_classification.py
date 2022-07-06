@@ -48,9 +48,10 @@ class NodeClassification(BaseFlow):
         self.labels = self.task.get_labels().to(self.device)
 
         if self.args.mini_batch_flag:
-            torch.multiprocessing.set_start_method('spawn')
+            # torch.multiprocessing.set_start_method('spawn')
             # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
             sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
+
             self.train_loader = dgl.dataloading.DataLoader(
                 self.hg.cpu(), {self.category: self.train_idx.cpu()}, sampler,
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=4)
@@ -169,7 +170,6 @@ class NodeClassification(BaseFlow):
             # batch_tic = time.time()
             emb = extract_embed(self.model.input_feature(), input_nodes)
             emb = {k: e.to(self.device) for k, e in emb.items()}
-            
             lbl = self.labels[seeds].to(self.device)
             logits = self.model(blocks, emb)[self.category]
             loss = self.loss_fn(logits, lbl)
@@ -202,6 +202,7 @@ class NodeClassification(BaseFlow):
         self.model.eval()
         with torch.no_grad():
             h_dict = self.model.input_feature()
+            h_dict = {k: e.to(self.device) for k, e in h_dict.items()}
             logits = logits if logits else self.model(self.hg, h_dict)[self.category]
             masks = {}
             for mode in modes:

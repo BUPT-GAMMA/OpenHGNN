@@ -6,7 +6,6 @@ import torch.nn.functional as F
 class GeneralLinear(nn.Module):
     r"""
     General Linear, combined with activation, normalization(batch and L2), dropout and so on.
-
     Parameters
     ------------
     in_features : int
@@ -22,7 +21,6 @@ class GeneralLinear(nn.Module):
         If True, applies torch.nn.functional.normalize to the node features at last of forward(). Default: ``True``
     has_bn : bool
         If True, applies torch.nn.BatchNorm1d to the node features after applying nn.Linear.
-
     """
 
     def __init__(self, in_features, out_features, act=None, dropout=0.0, has_l2norm=True, has_bn=True, **kwargs):
@@ -59,15 +57,12 @@ class HeteroLinearLayer(nn.Module):
     Transform feature with nn.Linear. In general, heterogeneous feature has different dimension as input.
     Even though they may have same dimension, they may have different semantic in every dimension.
     So we use a linear layer for each node type to map all node features to a shared feature space.
-
     Parameters
     ----------
     linear_dict : dict
         Key of dict can be node type(node name), value of dict is a list contains input dimension and output dimension.
-
     Examples
     ----------
-
     >>>import torch as th
     >>>linear_dict = {}
     >>>linear_dict['author'] = [110, 64]
@@ -77,7 +72,6 @@ class HeteroLinearLayer(nn.Module):
     >>>h_dict['paper'] = th.tensor(5, 128)
     >>>layer = HeteroLinearLayer(linear_dict)
     >>>out_dict = layer(h_dict)
-
     """
     def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, **kwargs):
         super(HeteroLinearLayer, self).__init__()
@@ -93,7 +87,6 @@ class HeteroLinearLayer(nn.Module):
         ----------
         dict_h : dict
             A dict of heterogeneous feature
-
         return dict_h
         """
         # note must set new_h dict, or overwrite dict_h
@@ -108,12 +101,10 @@ class HeteroMLPLayer(nn.Module):
     r"""
     HeteroMLPLayer contains multiple GeneralLinears, different with HeteroLinearLayer.
     The latter contains only one layer.
-
     Parameters
     ----------
     linear_dict : dict
         Key of dict can be node type(node name), value of dict is a list contains input, hidden and output dimension.
-
     """
     def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, final_act=False, **kwargs):
         super(HeteroMLPLayer, self).__init__()
@@ -149,23 +140,14 @@ class HeteroMLPLayer(nn.Module):
 class HeteroFeature(nn.Module):
     r"""
     This is a feature preprocessing component which is dealt with various heterogeneous feature situation.
-
     In general, we will face the following three situations.
-
         1. The dataset has not feature at all.
-
         2. The dataset has features in every node type.
-
         3. The dataset has features of a part of node types.
-
     To deal with that, we implement the HeteroFeature.In every situation, we can see that
-
         1. We will build embeddings for all node types.
-
         2. We will build linear layer for all node types.
-
         3. We will build embeddings for parts of node types and linear layer for parts of node types which have original feature.
-
     Parameters
     ----------
     h_dict: dict
@@ -180,18 +162,15 @@ class HeteroFeature(nn.Module):
         Dimension of embedding, and used to assign to the output dimension of Linear which transform the original feature.
     need_trans: bool, optional
         A flag to control whether to transform original feature linearly. Default is ``True``.
-
     Attributes
     -----------
     embed_dict : nn.ParameterDict
         store the embeddings
-
     hetero_linear : HeteroLinearLayer
         A heterogeneous linear layer to transform original feature.
     """
     def __init__(self, h_dict, n_nodes_dict, embed_size, act=None, need_trans=True, all_feats=True, device = 'cpu'):
         """
-
         @param h_dict:
         @param n_dict:
         @param embed_size:
@@ -226,7 +205,6 @@ class HeteroFeature(nn.Module):
     def forward(self):
         r"""
         return feature.
-
         Returns
         -------
         dict [str, th.Tensor]

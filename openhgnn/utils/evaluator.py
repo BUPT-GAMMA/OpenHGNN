@@ -35,7 +35,7 @@ class Evaluator():
         return dict(Macro_f1=macro_f1, Micro_f1=micro_f1)
 
     def cal_acc(self, y_true, y_pred):
-        return accuracy_score(y_true, y_pred)
+        return dict(acc = accuracy_score(y_true, y_pred))
 
     def cal_roc_auc(self, y_true, y_pred):
         return roc_auc_score(y_true, y_pred)
