@@ -63,15 +63,15 @@ class HeteroLinearLayer(nn.Module):
         Key of dict can be node type(node name), value of dict is a list contains input dimension and output dimension.
     Examples
     ----------
-    >>>import torch as th
-    >>>linear_dict = {}
-    >>>linear_dict['author'] = [110, 64]
-    >>>linear_dict['paper'] = [128,64]
-    >>>h_dict = {}
-    >>>h_dict['author'] = th.tensor(10, 110)
-    >>>h_dict['paper'] = th.tensor(5, 128)
-    >>>layer = HeteroLinearLayer(linear_dict)
-    >>>out_dict = layer(h_dict)
+    >>> import torch as th
+    >>> linear_dict = {}
+    >>> linear_dict['author'] = [110, 64]
+    >>> linear_dict['paper'] = [128,64]
+    >>> h_dict = {}
+    >>> h_dict['author'] = th.tensor(10, 110)
+    >>> h_dict['paper'] = th.tensor(5, 128)
+    >>> layer = HeteroLinearLayer(linear_dict)
+    >>> out_dict = layer(h_dict)
     """
     def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, **kwargs):
         super(HeteroLinearLayer, self).__init__()

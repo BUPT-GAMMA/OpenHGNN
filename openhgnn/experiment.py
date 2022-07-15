@@ -24,6 +24,8 @@ class Experiment(object):
         Search space for hyperparameters.
     hpo_trials : int
         Number of trials for hyperparameter search.
+    specified_trainer: str
+        Specified name of trainerflow.
     Examples
     --------
     >>> experiment = Experiment(model='RGCN', dataset='imdb4GTN', task='node_classification', gpu=-1)
@@ -44,6 +46,10 @@ class Experiment(object):
         'HeGAN': 'HeGAN_trainer',
         'HDE': 'hde_trainer',
         'GATNE-T': 'GATNE_trainer',
+        'TransE': 'TransX_trainer',
+        'TransH': 'TransX_trainer',
+        'TransR': 'TransX_trainer',
+        'TransD': 'TransX_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 
@@ -56,6 +62,7 @@ class Experiment(object):
                  output_dir: str = "./openhgnn/output",
                  conf_path: str = default_conf_path,
                  data_cpu: bool = False,
+                 specified_trainer: str = None,
                  **kwargs):
         self.config = Config(file_path=conf_path, model=model, dataset=dataset, task=task, gpu=gpu)
         self.config.model = model
@@ -70,7 +77,7 @@ class Experiment(object):
         self.config.hpo_search_space = hpo_search_space
         self.config.hpo_trials = hpo_trials
         self.config.data_cpu = data_cpu
-
+        self.config.specified_trainer = specified_trainer
         if not getattr(self.config, 'seed', False):
             self.config.seed = 0
         if use_best_config:
@@ -87,10 +94,9 @@ class Experiment(object):
         """ run the experiment """
         self.config.logger = Logger(self.config)
         set_random_seed(self.config.seed)
-        if self.config.dataset.name[ :4] == "icdm":
-            trainerflow = "icdm_trainer"
-        else:
-            trainerflow = self.specific_trainerflow.get(self.config.model, self.config.task)
+        trainerflow = self.specific_trainerflow.get(self.config.model, self.config.task)
+        if self.config.specified_trainer is not None:
+            trainerflow = self.config.specified_trainer
         if self.config.hpo_search_space is not None:
             # hyper-parameter search
             hpo_experiment(self.config, trainerflow)

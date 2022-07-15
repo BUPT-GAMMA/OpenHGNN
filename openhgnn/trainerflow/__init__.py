@@ -65,7 +65,8 @@ SUPPORTED_FLOWS = {
     'slicetrainer': 'openhgnn.trainerflow.slice_trainer',
     'hde_trainer':  'openhgnn.trainerflow.hde_trainer',
     'GATNE_trainer': 'openhgnn.trainerflow.GATNE_trainer',
-    'icdm_trainer': 'openhgnn.trainerflow.icdm_trainer'
+    'icdm_trainer': 'openhgnn.trainerflow.icdm_trainer',
+    'TransX_trainer': 'openhgnn.trainerflow.TransX_trainer',
 }
 
 from .node_classification import NodeClassification

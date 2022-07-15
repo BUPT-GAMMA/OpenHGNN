@@ -30,7 +30,7 @@ class LinkPrediction(BaseTask):
 
     def __init__(self, args):
         super(LinkPrediction, self).__init__()
-        self.n_dataset = args.dataset
+        self.name_dataset = args.dataset
         self.logger = args.logger
         self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger)
         # self.evaluator = Evaluator()
@@ -48,15 +48,24 @@ class LinkPrediction(BaseTask):
             self.ScorePredictor = HeteroDotProductPredictor()
         elif args.score_fn == 'distmult':
             self.ScorePredictor = HeteroDistMultPredictor()
+        # deprecated, new score predictor of these score_fn are in their model
+        # elif args.score_fn in ['transe', 'transh', 'transr', 'transd'] :
+        #     self.ScorePredictor = HeteroTransXPredictor(args.dis_norm)
+
         self.negative_sampler = Uniform(1)
 
         if args.dataset in ['wn18', 'FB15k', 'FB15k-237']:
             self.evaluation_metric = 'mrr'
+            self.filtered = args.filtered
+            if hasattr(args, "valid_percent") :
+                self.dataset.modify_size(args.valid_percent, 'valid')
+            if hasattr(args, "test_percent") :
+                self.dataset.modify_size(args.test_percent, 'test')
         else:
             self.evaluation_metric = 'roc_auc'
 
         args.logger.info('[Init Task] The task: link prediction, the dataset: {}, the evaluation metric is {}, '
-                         'the score function: {} '.format(self.n_dataset, self.evaluation_metric, args.score_fn))
+                         'the score function: {} '.format(self.name_dataset, self.evaluation_metric, args.score_fn))
 
     def get_out_ntype(self):
         ntype = []
@@ -100,10 +109,10 @@ class LinkPrediction(BaseTask):
             acc = self.evaluator.author_link_prediction
             return dict(Accuracy=acc)
         elif self.evaluation_metric == 'mrr':
-            mrr = self.evaluator.mrr_(n_embedding['_N'], self.dict2emd(r_embedding), self.dataset.train_triplets,
-                                      self.dataset.valid_triplets, self.dataset.test_triplets,
-                                      hits=[1, 3, 10], eval_bz=100)
-            return dict(MRR=mrr)
+            mrr_matrix = self.evaluator.mrr_(n_embedding, r_embedding,
+                                        self.dataset.train_triplets, self.dataset.valid_triplets, self.dataset.test_triplets, 
+                                        score_predictor=self.ScorePredictor, hits=[1, 3, 10], filtered=self.filtered, eval_mode=mode)
+            return mrr_matrix
         elif self.evaluation_metric == 'roc_auc':
             if mode == 'test':
                 eval_hg = self.test_hg
@@ -243,3 +252,15 @@ class HeteroDistMultPredictor(th.nn.Module):
             else:
                 score = th.sum(score, dim=1)
             return score
+
+# class HeteroTransXPredictor(th.nn.Module):
+#     def __init__(self, dis_norm):
+#         super(HeteroTransXPredictor, self).__init__()
+#         self.dis_norm = dis_norm
+    
+#     def forward(self, h, r, t):
+#         h = F.normalize(h, 2, -1)
+#         r = F.normalize(r, 2, -1)
+#         t = F.normalize(t, 2, -1)
+#         dist = th.norm(h+r-t, self.dis_norm, dim=-1)
+#         return dist

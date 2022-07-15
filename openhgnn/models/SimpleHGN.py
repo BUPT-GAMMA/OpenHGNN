@@ -21,27 +21,27 @@ class SimpleHGN(BaseModel):
     Calculating the coefficient:
     
     .. math::
-        \alpha_{ij} = \frac{exp(LeakyReLU(a^T[Wh_i||Wh_j||W_r r_{\psi(<i,j>)}]))}{\Sigma_{k\in\mathcal{E}}{exp(LeakyReLU(a^T[Wh_i||Wh_k||W_r r_{\psi(<i,k>)}]))}}  (1)
+        \alpha_{ij} = \frac{exp(LeakyReLU(a^T[Wh_i||Wh_j||W_r r_{\psi(<i,j>)}]))}{\Sigma_{k\in\mathcal{E}}{exp(LeakyReLU(a^T[Wh_i||Wh_k||W_r r_{\psi(<i,k>)}]))}} \quad (1)
     
     Residual connection including Node residual:
     
     .. math::
-        h_i^{(l)} = \sigma(\Sigma_{j\in \mathcal{N}_i} {\alpha_{ij}^{(l)}W^{(l)}h_j^{(l-1)}} + h_i^{(l-1)})  (2)
+        h_i^{(l)} = \sigma(\Sigma_{j\in \mathcal{N}_i} {\alpha_{ij}^{(l)}W^{(l)}h_j^{(l-1)}} + h_i^{(l-1)}) \quad (2)
     
     and Edge residual:
         
     .. math::
-        \alpha_{ij}^{(l)} = (1-\beta)\alpha_{ij}^{(l)}+\beta\alpha_{ij}^{(l-1)}  (3)
+        \alpha_{ij}^{(l)} = (1-\beta)\alpha_{ij}^{(l)}+\beta\alpha_{ij}^{(l-1)} \quad (3)
         
     Multi-heads:
     
     .. math::
-        h^{(l+1)}_j = \parallel^M_{m = 1}h^{(l + 1, m)}_j  (4)
+        h^{(l+1)}_j = \parallel^M_{m = 1}h^{(l + 1, m)}_j \quad (4)
     
     Residual:
     
         .. math::
-            h^{(l+1)}_j = h^{(l)}_j + \parallel^M_{m = 1}h^{(l + 1, m)}_j  (5)
+            h^{(l+1)}_j = h^{(l)}_j + \parallel^M_{m = 1}h^{(l + 1, m)}_j \quad (5)
     
     Parameters
     ----------
@@ -172,36 +172,36 @@ class SimpleHGN(BaseModel):
         return h_dict
 
 class SimpleHGNConv(nn.Module):
+    r"""
+    The SimpleHGN convolution layer.
+
+    Parameters
+    ----------
+    edge_dim: int
+        the edge dimension
+    num_etypes: int
+        the number of the edge type
+    in_dim: int
+        the input dimension
+    out_dim: int
+        the output dimension
+    num_heads: int
+        the number of heads
+    num_etypes: int
+        the number of edge type
+    feat_drop: float
+        the feature drop rate
+    negative_slope: float
+        the negative slope used in the LeakyReLU
+    residual: boolean
+        if we need the residual operation
+    activation: str
+        the activation function
+    beta: float
+        the hyperparameter used in edge residual
+    """
     def __init__(self, edge_dim, in_dim, out_dim, num_heads, num_etypes, feat_drop=0.0,
                  negative_slope=0.2, residual=True, activation=F.elu, beta=0.0):
-        """
-        The SimpleHGN convolution layer.
-
-        Parameters
-        ----------
-        edge_dim: int
-            the edge dimension
-        num_etypes: int
-            the number of the edge type
-        in_dim: int
-            the input dimension
-        out_dim: int
-            the output dimension
-        num_heads: int
-            the number of heads
-        num_etypes: int
-            the number of edge type
-        feat_drop: float
-            the feature drop rate
-        negative_slope: float
-            the negative slope used in the LeakyReLU
-        residual: boolean
-            if we need the residual operation
-        activation: str
-            the activation function
-        beta: float
-            the hyperparameter used in edge residual
-        """
         super(SimpleHGNConv, self).__init__()
         self.edge_dim = edge_dim
         self.in_dim = in_dim

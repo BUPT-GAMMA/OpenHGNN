@@ -557,6 +557,107 @@ class Config(object):
             self.residual = conf.getboolean("HetSANN", "residual")
             self.mini_batch_flag = False
             self.hidden_dim = self.h_dim * self.num_heads
+            self.mini_batch_flag = False
+            self.hidden_dim = self.h_dim * self.num_heads
+        elif self.model_name == 'ieHGCN':
+            self.weight_decay = conf.getfloat("ieHGCN", "weight_decay")
+            self.lr = conf.getfloat("ieHGCN", "lr")
+            self.max_epoch = conf.getint("ieHGCN", "max_epoch")
+            self.seed = conf.getint("ieHGCN", "seed")
+            self.attn_dim = conf.getint("ieHGCN", "attn_dim")
+            self.num_layers = conf.getint("ieHGCN","num_layers")
+            self.mini_batch_flag = False
+            self.hidden_dim = conf.getint("ieHGCN", "hidden_dim")
+            self.in_dim = conf.getint("ieHGCN", "in_dim")
+            self.out_dim = conf.getint("ieHGCN", "out_dim")
+            self.patience = conf.getint("ieHGCN", "patience")
+        elif self.model_name == 'HGAT':
+            self.weight_decay = conf.getfloat("HGAT", "weight_decay")
+            self.lr = conf.getfloat("HGAT", "lr")
+            self.max_epoch = conf.getint("HGAT", "max_epoch")
+            self.seed = conf.getint("HGAT", "seed")
+            self.attn_dim = conf.getint("HGAT", "attn_dim")
+            self.num_layers = conf.getint("HGAT","num_layers")
+            self.mini_batch_flag = False
+            self.hidden_dim = conf.getint("HGAT", "hidden_dim")
+            self.in_dim = conf.getint("HGAT", "in_dim")
+            self.num_classes = conf.getint("HGAT", "num_classes")
+            self.patience = conf.getint("HGAT", "patience")
+            self.negative_slope = conf.getfloat("HGAT", "negative_slope")
+
+        elif self.model_name == 'TransE':
+            self.seed = conf.getint("TransE", "seed")
+            self.patience = conf.getint("TransE", "patience")
+            self.batch_size = conf.getint("TransE", "batch_size")
+            self.neg_size = conf.getint("TransE", "neg_size")
+            self.dis_norm = conf.getint("TransE", "dis_norm")
+            self.margin = conf.getfloat("TransE", "margin")
+            self.hidden_dim = conf.getint("TransE", "hidden_dim")
+            self.optimizer = conf.get("TransE", "optimizer")
+            self.lr = conf.getfloat("TransE", "lr")
+            self.weight_decay = conf.getfloat("TransE", "weight_decay")
+            self.max_epoch = conf.getint("TransE", "max_epoch")
+            self.score_fn = conf.get("TransE", "score_fn")
+            self.filtered = conf.get("TransE", "filtered")
+            self.valid_percent = conf.getfloat("TransE", "valid_percent")
+            self.test_percent = conf.getfloat("TransE", "test_percent")
+            self.mini_batch_flag = True
+
+        elif self.model_name == 'TransH':
+            self.seed = conf.getint("TransH", "seed")
+            self.patience = conf.getint("TransH", "patience")
+            self.batch_size = conf.getint("TransH", "batch_size")
+            self.neg_size = conf.getint("TransH", "neg_size")
+            self.dis_norm = conf.getint("TransH", "dis_norm")
+            self.margin = conf.getfloat("TransH", "margin")
+            self.hidden_dim = conf.getint("TransH", "hidden_dim")
+            self.optimizer = conf.get("TransH", "optimizer")
+            self.lr = conf.getfloat("TransH", "lr")
+            self.weight_decay = conf.getfloat("TransH", "weight_decay")
+            self.max_epoch = conf.getint("TransH", "max_epoch")
+            self.score_fn = conf.get("TransH", "score_fn")
+            self.filtered = conf.get("TransH", "filtered")
+            self.valid_percent = conf.getfloat("TransH", "valid_percent")
+            self.test_percent = conf.getfloat("TransH", "test_percent")
+            self.mini_batch_flag = True
+        
+        elif self.model_name == 'TransR':
+            self.seed = conf.getint("TransR", "seed")
+            self.patience = conf.getint("TransR", "patience")
+            self.batch_size = conf.getint("TransR", "batch_size")
+            self.neg_size = conf.getint("TransR", "neg_size")
+            self.dis_norm = conf.getint("TransR", "dis_norm")
+            self.margin = conf.getfloat("TransR", "margin")
+            self.ent_dim = conf.getint("TransR", "ent_dim")
+            self.rel_dim = conf.getint("TransR", "rel_dim")
+            self.optimizer = conf.get("TransR", "optimizer")
+            self.lr = conf.getfloat("TransR", "lr")
+            self.weight_decay = conf.getfloat("TransR", "weight_decay")
+            self.max_epoch = conf.getint("TransR", "max_epoch")
+            self.score_fn = conf.get("TransR", "score_fn")
+            self.filtered = conf.get("TransR", "filtered")
+            self.valid_percent = conf.getfloat("TransR", "valid_percent")
+            self.test_percent = conf.getfloat("TransR", "test_percent")
+            self.mini_batch_flag = True
+        
+        elif self.model_name == 'TransD':
+            self.seed = conf.getint("TransD", "seed")
+            self.patience = conf.getint("TransD", "patience")
+            self.batch_size = conf.getint("TransD", "batch_size")
+            self.neg_size = conf.getint("TransD", "neg_size")
+            self.dis_norm = conf.getint("TransD", "dis_norm")
+            self.margin = conf.getfloat("TransD", "margin")
+            self.ent_dim = conf.getint("TransD", "ent_dim")
+            self.rel_dim = conf.getint("TransD", "rel_dim")
+            self.optimizer = conf.get("TransD", "optimizer")
+            self.lr = conf.getfloat("TransD", "lr")
+            self.weight_decay = conf.getfloat("TransD", "weight_decay")
+            self.max_epoch = conf.getint("TransD", "max_epoch")
+            self.score_fn = conf.get("TransD", "score_fn")
+            self.filtered = conf.get("TransD", "filtered")
+            self.valid_percent = conf.getfloat("TransD", "valid_percent")
+            self.test_percent = conf.getfloat("TransD", "test_percent")
+            self.mini_batch_flag = True
 
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model_name, self.task, self.dataset)

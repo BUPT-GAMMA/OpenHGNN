@@ -125,9 +125,7 @@ __all__ = [
     'AcademicDataset',
     'HGBDataset',
     'OHGBDataset',
-    'IMDB4GTNDataset',
-    'ACM4GTNDataset',
-    'DBLP4GTNDataset',
+    'GTNDataset',
     'AsLinkPredictionDataset',
     'AsNodeClassificationDataset'
 ]

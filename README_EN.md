@@ -41,7 +41,7 @@ We release the latest version v0.2.
 
 #### Requirements and Installation
 
-- Python  >= 3.6
+- Python  >= 3.8
 
 - [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
 
@@ -52,7 +52,7 @@ We release the latest version v0.2.
 **1. Python environment (Optional):** We recommend using Conda package manager
 
 ```bash
-conda create -n openhgnn python=3.7
+conda create -n openhgnn python=3.8
 source activate openhgnn
 ```
 
@@ -67,17 +67,23 @@ pip install torch torchvision torchaudio
 your OS and CUDA version. For example:
 
 ```bash
-pip install dgl dglgo -f https://data.dgl.ai/wheels/repo.html
+pip install dgl -f https://data.dgl.ai/wheels/repo.html
 ```
 
-**4. OpenHGNN and other dependencies:**
+**4. Install openhgnn:** 
 
+- install from pypi
+```bash
+pip install openhgnn
+```
+
+- install from source
 ```bash
 git clone https://github.com/BUPT-GAMMA/OpenHGNN
 # If you encounter a network error, try git clone from openi as following.
 # git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
 cd OpenHGNN
-pip install -r requirements.txt
+pip install .
 ```
 
 #### Running an existing baseline model on an existing benchmark [dataset](../openhgnn/dataset/#Dataset)
@@ -105,9 +111,6 @@ usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
 set the different hyper-parameter, modify the [openhgnn.config.ini](../openhgnn/config.ini) manually. The best_config
 will override the parameter in config.ini.
 
-``--use_hpo`` Besides use_best_config, we give a hyper-parameter [example](../openhgnn/auto) to search the best
-hyper-parameter automatically.
-
 ``--load_from_pretrained`` will load the model from a default checkpoint.
 
 e.g.:
@@ -127,7 +130,11 @@ Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get
 The link will give some basic usage.
 
 | Model                                                     | Node classification | Link prediction    | Recommendation     |
-| --------------------------------------------------------- | ------------------- | ------------------ | ------------------ |
+|-----------------------------------------------------------|---------------------|--------------------|--------------------|
+| [TransE](../openhgnn/output/TransE)[NIPS 2013]            |                     | :heavy_check_mark: |                    |
+| [TransH](../openhgnn/output/TransH)[AAAI 2014]            |                     | :heavy_check_mark: |                    |
+| [TransR](../openhgnn/output/TransR)[AAAI 2015]            |                     | :heavy_check_mark: |                    |
+| [TransD](../openhgnn/output/TransD)[ACL 2015]             |                     | :heavy_check_mark: |                    |
 | [Metapath2vec](../openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark:  |                    |                    |
 | [RGCN](../openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [HERec](../openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark:  |                    |                    |
@@ -153,6 +160,8 @@ The link will give some basic usage.
 | [HPN](../openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  | :heavy_check_mark: |                    |
 | [RHGNN](../openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
 | [HDE](../openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
+| [HetSANN](./openhgnn/output/HGT)[AAAI 2020]               | :heavy_check_mark:  |                    |                    |
+| [ieHGCN](./openhgnn/output/HGT)[TKDE 2021]                | :heavy_check_mark:  |                    |                    |
 
 ### Candidate models
 
