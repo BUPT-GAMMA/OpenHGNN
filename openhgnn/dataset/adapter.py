@@ -174,9 +174,6 @@ class AsNodeClassificationDataset(DGLDataset):
     def category(self):
         return self.target_ntype
 
-    @property
-    def rev_item_map(self):
-        return self.dataset.rev_item_map
 
 
 class AsLinkPredictionDataset(DGLDataset):

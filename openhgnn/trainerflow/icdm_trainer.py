@@ -208,7 +208,7 @@ class ICDMTrainer(BaseFlow):
             with open("test.json",'w+') as f:
                 for i in range(len(test_id)):
                     y_dict = {}
-                    y_dict["item_id"] = int(self.task.dataset.rev_item_map[int(test_id[i])])
+                    y_dict["item_id"] = int(self.task.dataset.dataset.rev_item_map[int(test_id[i])])
                     y_dict["score"] = float(y_predicts[i])
                     json.dump(y_dict, f)
                     f.write('\n')
