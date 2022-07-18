@@ -7,9 +7,6 @@ import dgl.nn.pytorch as dglnn
 import torch
 import torch.nn.functional as F
 
-
-
-
 @register_model('DMGI')
 class DMGI(BaseModel):
     r"""

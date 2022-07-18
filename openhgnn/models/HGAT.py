@@ -211,7 +211,7 @@ class TypeAttention(nn.Module):
                     edge_attention = F.elu(h_l + h_r)
                     # edge_attention = F.elu(h_l + h_r).unsqueeze(0)
                     rel_graph.ndata['m'] = {dsttype: edge_attention,
-                                    srctype: torch.zeros((rel_graph.num_nodes(ntype = srctype),))}
+                                    srctype: torch.zeros((rel_graph.num_nodes(ntype = srctype),)).to(edge_attention.device)}
                     # print(rel_graph.ndata)
                     reverse_graph = dgl.reverse(rel_graph)
                     reverse_graph.apply_edges(Fn.copy_src('m', 'alpha'))
