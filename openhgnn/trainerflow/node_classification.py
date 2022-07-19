@@ -50,13 +50,13 @@ class NodeClassification(BaseFlow):
         if self.args.mini_batch_flag:
             # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
             sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
-            self.train_loader = dgl.dataloading.NodeDataLoader(
+            self.train_loader = dgl.dataloading.DataLoader(
                 self.hg.cpu(), {self.category: self.train_idx.cpu()}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=8)
-            self.val_loader = dgl.dataloading.NodeDataLoader(
+                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+            self.val_loader = dgl.dataloading.DataLoader(
                 self.hg.to('cpu'), {self.category: self.valid_idx.to('cpu')}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=4)
-            self.test_loader = dgl.dataloading.NodeDataLoader(
+                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+            self.test_loader = dgl.dataloading.DataLoader(
                 self.hg.to('cpu'), {self.category: self.test_idx.to('cpu')}, sampler,
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
 
