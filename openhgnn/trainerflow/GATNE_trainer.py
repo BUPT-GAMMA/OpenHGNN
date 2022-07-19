@@ -25,8 +25,7 @@ class GATNE(BaseFlow):
         self.orig_test_hg = self.task.test_hg
 
         self.preprocess()
-        self.train()
-
+        
     def preprocess(self):
         assert len(self.hg.ntypes) == 1
         bidirected_hg = dgl.to_bidirected(dgl.to_simple(self.hg.to('cpu')))
