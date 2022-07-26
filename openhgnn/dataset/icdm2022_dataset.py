@@ -36,7 +36,7 @@ class ICDM2022Dataset(DGLBuiltinDataset):
         transformed before every access.
     """
 
-    def __init__(self, session='small', load_features=True, load_labels=True, raw_dir=None, force_reload=False,
+    def __init__(self, session='session1', load_features=True, load_labels=True, raw_dir=None, force_reload=False,
                  verbose=False, transform=None):
         name = 'icdm2022_{}'.format(session)
         self.load_features = load_features
