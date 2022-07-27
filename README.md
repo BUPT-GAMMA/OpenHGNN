@@ -12,16 +12,39 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 
 ## 新闻
 
-**2022-02-28**
+<details>
+<summary>
+2022-06-27 开源0.3版本
+</summary>
+<br/>
+
+我们开源了0.3版本。
+
+- 新增模型
+- 支持API调用
+- 简化定制数据集和模型流程
+- 异质图信息可视化工具
+
+</details>
+
+<details>
+<summary>
+2022-02-28 开源0.2版本
+</summary>
+<br/>
 
 我们开源了0.2版本。
 
 - 新增模型
 - 异质图神经网络的设计空间：[Space4HGNN [SIGIR2022]](./space4hgnn)
 - 基准数据集以及排行榜：[Benchmark&Leaderboard](./openhgnn/dataset/ohgb.md)
+</details>
 
-**2022-01-07**
-
+<details>
+<summary>
+2022-01-07 加入启智社区
+</summary>
+<br/>
 启智社区用户可以享受到如下功能：
 
 - 全新的中文文档
@@ -30,7 +53,8 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
   - 新增模型：【KDD2017】Metapath2vec、【TKDE2018】HERec、【KDD2021】HeCo、【KDD2021】SimpleHGN、【TKDE2021】HPN、【ICDM2021】HDE、fastGTN
   - 新增日志功能
   - 新增美团外卖数据集
-
+</details>
+  
 ## 关键特性
 
 - 易用：OpenHGNN提供了了易用的接口在给定的模型和数据集上运行实验，且集成了 [optuna](https://optuna.org/) 进行超参数优化。
