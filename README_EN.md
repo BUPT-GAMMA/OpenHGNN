@@ -14,7 +14,26 @@ of heterogeneous graph.
 
 ## News
 
-**2022-02-28**
+<details>
+<summary>
+2022-06-27 release v0.3
+</summary>
+<br/>
+
+We release the latest version v0.3.
+
+- New models
+- API Usage
+- Simply customization of user-defined datasets and models
+- Visualization tools of heterogeneous graphs
+
+</details>
+
+<details>
+<summary>
+2022-02-28 release v0.2
+</summary>
+<br/>
 
 We release the latest version v0.2.
 
@@ -22,14 +41,23 @@ We release the latest version v0.2.
 - [Space4HGNN [SIGIR2022]](../space4hgnn)
 - [Benchmark&Leaderboard](../openhgnn/dataset/ohgb.md)
 
-**2022-01-07**
+</details>
 
+<details>
+<summary>
+2022-01-07 加入启智社区
+</summary>
+<br/>
 启智社区用户可以享受到如下功能：
 
 - 全新的中文文档
-- 免费的计算资源
+- 免费的计算资源—— [云脑使用教程](https://git.openi.org.cn/GAMMALab/OpenHGNN/src/branch/main/yunnao_tutorial.md)
 - OpenHGNN最新功能
-
+  - 新增模型：【KDD2017】Metapath2vec、【TKDE2018】HERec、【KDD2021】HeCo、【KDD2021】SimpleHGN、【TKDE2021】HPN、【ICDM2021】HDE、fastGTN
+  - 新增日志功能
+  - 新增美团外卖数据集
+</details>
+  
 ## Key Features
 
 - Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and dataset.
