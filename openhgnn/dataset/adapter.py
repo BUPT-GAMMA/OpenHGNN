@@ -37,12 +37,22 @@ class AsNodeClassificationDataset(DGLDataset):
 
     Parameters
     ----------
-    dataset : DGLDataset
-        The dataset to be converted.
-    split_ratio : (float, float, float), optional
-        Split ratios for training, validation and test sets. Must sum to one.
+    name : str
+        The dataset name.
+    data : DGLDataset or DGLHeteroGraph
+        The dataset or graph to be converted.
+    labeled_nodes_split_ratio : (float, float, float), optional
+        Split ratios for training, validation and test sets. Must sum to 1. If None, we will use the train_mask,
+        val_mask and test_mask from the original graph.
+    prediction_ratio : float, optional
+        The ratio of number of prediction nodes to all unlabeled nodes. Prediction_ratio ranges from 0 to 1.
+        If None, we will use the pred_mask from the original graph.
     target_ntype : str, optional
         The node type to add split mask for.
+    label_feat_name: str, optional
+        The feature name of label.
+    label_mask_feat_name: str, optional
+        The feature name of the mask indicating the indices of nodes with labels. None means that all nodes are labeled.
 
     Attributes
     ----------
@@ -54,18 +64,23 @@ class AsNodeClassificationDataset(DGLDataset):
         An 1-D integer tensor of validation node IDs.
     test_idx : Tensor
         An 1-D integer tensor of test node IDs.
-
+    pred_idx : Tensor
+        An 1-D integer tensor of prediction node IDs.
     """
 
     def __init__(self,
-                 dataset,
-                 split_ratio=None,
+                 name,
+                 data,
+                 labeled_nodes_split_ratio=None,
+                 prediction_ratio=None,
                  target_ntype=None,
+                 label_feat_name='label',
+                 label_mask_feat_name=None,
                  **kwargs):
         self.dataset = dataset
         self.split_ratio = split_ratio
         self.target_ntype = target_ntype
-        super().__init__(self.dataset.name + '-as-nodepred',
+        super().__init__(name + '-as-nodepred',
                          hash_key=(split_ratio, target_ntype, dataset.name, 'nodepred'), **kwargs)
 
     def process(self):
