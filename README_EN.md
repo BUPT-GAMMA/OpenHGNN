@@ -76,7 +76,7 @@ We release the latest version v0.2.
 
 #### Requirements and Installation
 
-- Python  >= 3.8
+- Python  >= 3.6
 
 - [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
 
@@ -87,7 +87,7 @@ We release the latest version v0.2.
 **1. Python environment (Optional):** We recommend using Conda package manager
 
 ```bash
-conda create -n openhgnn python=3.8
+conda create -n openhgnn python=3.6
 source activate openhgnn
 ```
 
