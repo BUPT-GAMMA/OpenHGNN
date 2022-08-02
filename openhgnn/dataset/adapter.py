@@ -8,6 +8,8 @@ from dgl import backend as F
 import dgl
 from dgl.dataloading.negative_sampler import GlobalUniform, PerSourceUniform
 import torch as th
+from dgl import DGLHeteroGraph
+import torch
 
 __all__ = ['AsNodeClassificationDataset', 'AsLinkPredictionDataset']
 
@@ -72,16 +74,23 @@ class AsNodeClassificationDataset(DGLDataset):
                  name,
                  data,
                  labeled_nodes_split_ratio=None,
-                 prediction_ratio=None,
+                 prediction_ratio=1,
                  target_ntype=None,
                  label_feat_name='label',
                  label_mask_feat_name=None,
                  **kwargs):
-        self.dataset = dataset
-        self.split_ratio = split_ratio
+        self.label_feat_name = label_feat_name
+        self.prediction_ratio = prediction_ratio
+        self.label_mask_feat_name = label_mask_feat_name
+        if isinstance(data, DGLDataset):
+            self.dataset = data
+            self.g = data[0]
+        elif isinstance(data, DGLHeteroGraph):
+            self.g = data
+        self.split_ratio = labeled_nodes_split_ratio
         self.target_ntype = target_ntype
         super().__init__(name + '-as-nodepred',
-                         hash_key=(split_ratio, target_ntype, dataset.name, 'nodepred'), **kwargs)
+                         hash_key=(labeled_nodes_split_ratio, target_ntype, data.name, 'nodepred'), **kwargs)
 
     def process(self):
         is_ogb = hasattr(self.dataset, 'get_idx_split')
@@ -92,7 +101,7 @@ class AsNodeClassificationDataset(DGLDataset):
         else:
             self.g = self.dataset[0].clone()
 
-        if 'label' not in self.g.nodes[self.target_ntype].data:
+        if self.label_feat_name not in self.g.nodes[self.target_ntype].data:
             raise ValueError("Missing node labels. Make sure labels are stored "
                              "under name 'label'.")
 
@@ -117,10 +126,10 @@ class AsNodeClassificationDataset(DGLDataset):
         else:
             if self.verbose:
                 print('Generating train/val/test masks...')
-            utils.add_nodepred_split(self, self.split_ratio, self.target_ntype)
+            # utils.add_nodepred_split(self, self.split_ratio, self.target_ntype)
+            self.gene_mask(self.split_ratio, self.target_ntype, self.prediction_ratio)
 
         self._set_split_index()
-
         self.multi_label = getattr(self.dataset, 'multi_label', None)
         if self.multi_label is None:
             self.multi_label = len(self.g.nodes[self.target_ntype].data['label'].shape) == 2
@@ -135,6 +144,28 @@ class AsNodeClassificationDataset(DGLDataset):
         self.meta_paths = getattr(self.dataset, 'meta_paths', None)
         self.meta_paths_dict = getattr(self.dataset, 'meta_paths_dict', None)
 
+
+    def gene_mask(self, ratio, ntype, pred_retio):
+        if len(ratio) != 3:
+            raise ValueError(f'Split ratio must be a float triplet but got {ratio}.')
+        idx_tensor = torch.nonzero(self.g.nodes[ntype].data[self.label_mask_feat_name]).squeeze(1)
+        idx = idx_tensor.tolist()
+        idx_1 = torch.where(self.g.nodes[ntype].data[self.label_mask_feat_name] == 0)[0].tolist()
+        n = len(idx)
+        n_1 = len(idx_1)
+        # idx = np.arange(0, n)
+        np.random.shuffle(idx)
+        np.random.shuffle(idx_1)
+        n_train, n_val, n_test, n_pred = int(n * ratio[0]), int(n * ratio[1]), int(n * ratio[2]), int(n_1 * pred_retio)
+        train_mask = utils.generate_mask_tensor(utils.idx2mask(idx[:n_train], n + n_1))
+        val_mask = utils.generate_mask_tensor(utils.idx2mask(idx[n_train:n_train + n_val], n + n_1))
+        test_mask = utils.generate_mask_tensor(utils.idx2mask(idx[n_train + n_val:], n + n_1))
+        pred_mask = utils.generate_mask_tensor(utils.idx2mask(idx_1[:n_pred], n + n_1))
+        self.g.nodes[ntype].data['train_mask'] = train_mask
+        self.g.nodes[ntype].data['val_mask'] = val_mask
+        self.g.nodes[ntype].data['test_mask'] = test_mask
+        self.g.nodes[ntype].data['pred_mask'] = pred_mask
+            
     def has_cache(self):
         return os.path.isfile(os.path.join(self.save_path, 'graph_{}.bin'.format(self.hash)))
 
@@ -151,6 +182,9 @@ class AsNodeClassificationDataset(DGLDataset):
             self.meta_paths_dict = info['meta_paths_dict']
             self.meta_paths = info['meta_paths']
             self.multi_label = info['multi_label']
+            self.label_feat_name = info['label_feat_name']
+            self.prediction_ratio = info['prediction_ratio']
+            self.label_mask_feat_name = info['label_mask_feat_name']
         gs, _ = utils.load_graphs(os.path.join(self.save_path, 'graph_{}.bin'.format(self.hash)))
         self.g = gs[0]
         self._set_split_index()
@@ -164,7 +198,10 @@ class AsNodeClassificationDataset(DGLDataset):
                 'num_classes': self.num_classes,
                 'multi_label': self.multi_label,
                 'meta_paths_dict': self.meta_paths_dict,
-                'meta_paths': self.meta_paths}, f)
+                'meta_paths': self.meta_paths,
+                'label_feat_name': self.label_feat_name,
+                'prediction_ratio': self.prediction_ratio,
+                'label_mask_feat_name': self.label_mask_feat_name}, f)
 
     def __getitem__(self, idx):
         return self.g
@@ -178,6 +215,7 @@ class AsNodeClassificationDataset(DGLDataset):
         self.train_idx = F.nonzero_1d(ndata['train_mask'])
         self.val_idx = F.nonzero_1d(ndata['val_mask'])
         self.test_idx = F.nonzero_1d(ndata['test_mask'])
+        self.pred_idx = F.nonzero_1d(ndata['pred_mask'])
 
     def get_split(self, *args, **kwargs):
         return self.train_idx, self.val_idx, self.test_idx
