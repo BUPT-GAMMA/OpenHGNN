@@ -43,6 +43,14 @@ class BaseFlow(ABC):
                                                  "{}_{}_{}.txt".format(args.model_name, args.dataset_name[5:],
                                                                        args.seed))
 
+        # stage flags: whether to run the corresponding stages
+        # todo: only take effects in node classification trainer flow
+
+        # args.training_flag = getattr(args, 'training_flag', True)
+        # args.validation_flag = getattr(args, 'validation_flag', True)
+        args.test_flag = getattr(args, 'test_flag', True)
+        args.prediction_flag = getattr(args, 'prediction_flag', False)
+
         self.args = args
         self.logger = self.args.logger
         self.model_name = args.model_name
