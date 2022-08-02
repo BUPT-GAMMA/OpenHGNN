@@ -39,10 +39,10 @@ class AsNodeClassificationDataset(DGLDataset):
 
     Parameters
     ----------
-    name : str
-        The dataset name.
     data : DGLDataset or DGLHeteroGraph
         The dataset or graph to be converted.
+    name : str
+        The dataset name. Optional when data is DGLDataset. Required when data is DGLHeteroGraph.
     labeled_nodes_split_ratio : (float, float, float), optional
         Split ratios for training, validation and test sets. Must sum to 1. If None, we will use the train_mask,
         val_mask and test_mask from the original graph.
@@ -71,26 +71,37 @@ class AsNodeClassificationDataset(DGLDataset):
     """
 
     def __init__(self,
-                 name,
                  data,
+                 name=None,
                  labeled_nodes_split_ratio=None,
                  prediction_ratio=1,
                  target_ntype=None,
                  label_feat_name='label',
                  label_mask_feat_name=None,
                  **kwargs):
+
         self.label_feat_name = label_feat_name
         self.prediction_ratio = prediction_ratio
         self.label_mask_feat_name = label_mask_feat_name
         if isinstance(data, DGLDataset):
             self.dataset = data
             self.g = data[0]
+            if name is None:
+                name = self.dataset.name
         elif isinstance(data, DGLHeteroGraph):
             self.g = data
-        self.split_ratio = labeled_nodes_split_ratio
+            assert name is not None, \
+                "Name is required when data is a graph."
+        else:
+            raise ValueError("Invalid data type.")
+
+        self.split_ratio = kwargs.get('split_ratio', None)  # for compatibility
+        if labeled_nodes_split_ratio is not None:
+            self.split_ratio = labeled_nodes_split_ratio
+
         self.target_ntype = target_ntype
         super().__init__(name + '-as-nodepred',
-                         hash_key=(labeled_nodes_split_ratio, target_ntype, data.name, 'nodepred'), **kwargs)
+                         hash_key=(self.split_ratio, target_ntype, name, 'nodepred'), **kwargs)
 
     def process(self):
         is_ogb = hasattr(self.dataset, 'get_idx_split')
@@ -144,7 +155,6 @@ class AsNodeClassificationDataset(DGLDataset):
         self.meta_paths = getattr(self.dataset, 'meta_paths', None)
         self.meta_paths_dict = getattr(self.dataset, 'meta_paths_dict', None)
 
-
     def gene_mask(self, ratio, ntype, pred_retio):
         if len(ratio) != 3:
             raise ValueError(f'Split ratio must be a float triplet but got {ratio}.')
@@ -165,7 +175,7 @@ class AsNodeClassificationDataset(DGLDataset):
         self.g.nodes[ntype].data['val_mask'] = val_mask
         self.g.nodes[ntype].data['test_mask'] = test_mask
         self.g.nodes[ntype].data['pred_mask'] = pred_mask
-            
+
     def has_cache(self):
         return os.path.isfile(os.path.join(self.save_path, 'graph_{}.bin'.format(self.hash)))
 
