@@ -11,6 +11,15 @@
 OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包，集成了异质图神经网络的前沿模型。
 
 ## 新闻
+<details>
+<summary>
+2022-08-02 论文接收
+</summary>
+<br/>
+
+我们的论文 <i>OpenHGNN: An Open Source Toolkit for Heterogeneous Graph Neural Network</i> 在CIKM2022 short paper track接收。
+
+</details>
 
 <details>
 <summary>
@@ -65,7 +74,7 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 
 #### 环境要求
 
-- Python  >= 3.8
+- Python  >= 3.6
 
 - [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
 
@@ -76,7 +85,7 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 **1. Python 环境 (可选):** 推荐使用 Conda 包管理
 
 ```bash
-conda create -n openhgnn python=3.8
+conda create -n openhgnn python=3.6
 source activate openhgnn
 ```
 
@@ -193,3 +202,16 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 OpenHGNN团队[北邮 GAMMA 实验室]、DGL 团队和鹏城实验室。
 
 [贡献者名单](./CONTRIBUTING.md)
+
+## 引用OpenHGNN
+
+欢迎在您的工作中用如下的方式引用OpenHGNN:
+
+```
+@inproceedings{han2022openhgnn,
+  title={OpenHGNN: An Open Source Toolkit for Heterogeneous Graph Neural Network},
+  author={Hui Han, Tianyu Zhao, Cheng Yang, Hongyi Zhang, Yaoqi Liu, Xiao Wang, Chuan Shi},
+  booktitle={CIKM},
+  year={2022}
+}
+```

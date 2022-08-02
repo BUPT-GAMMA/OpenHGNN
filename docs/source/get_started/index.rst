@@ -9,7 +9,7 @@ OpenHGNN works with the following operating systems:
 
 Python environment requirments
 
-- `Python <https://www.python.org/>`_ >= 3.8
+- `Python <https://www.python.org/>`_ >= 3.6
 - `PyTorch <https://pytorch.org/>`_  >= 1.9.0
 - `DGL <https://github.com/dmlc/dgl>`_ >= 0.8.0
 
@@ -18,7 +18,7 @@ Python environment requirments
 
 .. code:: bash
 
-    conda create -n openhgnn python=3.8
+    conda create -n openhgnn python=3.6
     source activate openhgnn
 
 **2. Pytorch:** Follow their `tutorial <https://pytorch.org/get-started/>`_ to run the proper command according to

@@ -23,7 +23,7 @@ setup(
     description="An open-source toolkit for Heterogeneous Graph Neural Network",
     url="https://github.com/BUPT-GAMMA/OpenHGNN",
     download_url="https://github.com/BUPT-GAMMA/OpenHGNN",
-    python_requires='>=3.8',
+    python_requires='>=3.6',
     packages=find_packages(),
     install_requires=install_requires,
     include_package_data=True,

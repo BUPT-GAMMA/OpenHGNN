@@ -54,7 +54,7 @@ msgid "Python environment requirments"
 msgstr "Python"
 
 #: ../../install/index.rst:19
-msgid "`Python <https://www.python.org/>`_ >= 3.8"
+msgid "`Python <https://www.python.org/>`_ >= 3.6"
 msgstr ""
 
 #: ../../install/index.rst:20
