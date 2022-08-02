@@ -74,7 +74,7 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 
 #### 环境要求
 
-- Python  >= 3.8
+- Python  >= 3.6
 
 - [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
 
@@ -85,7 +85,7 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 **1. Python 环境 (可选):** 推荐使用 Conda 包管理
 
 ```bash
-conda create -n openhgnn python=3.8
+conda create -n openhgnn python=3.6
 source activate openhgnn
 ```
 
