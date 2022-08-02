@@ -139,7 +139,7 @@ class AsNodeClassificationDataset(DGLDataset):
             if self.verbose:
                 print('Generating train/val/test masks...')
             # utils.add_nodepred_split(self, self.split_ratio, self.target_ntype)
-            self.gene_mask(self.split_ratio, self.target_ntype, self.prediction_ratio)
+            self.gene_mask(self.split_ratio, self.target_ntype,)
         if self.prediction_ratio is None:
             if self.verbose:
                 print("Predicion_ratio is not provided, we will use the pred_mask from the original graph.")
@@ -160,7 +160,6 @@ class AsNodeClassificationDataset(DGLDataset):
         self.meta_paths = getattr(self.dataset, 'meta_paths', None)
         self.meta_paths_dict = getattr(self.dataset, 'meta_paths_dict', None)
 
-<<<<<<< HEAD
     def gene_pred_mask(self, ratio, ntype):
         idx_tensor = torch.where(self.g.nodes[ntype].data[self.label_mask_feat_name] == 0)[0]
         idx = idx_tensor.tolist()
@@ -171,9 +170,7 @@ class AsNodeClassificationDataset(DGLDataset):
         pred_mask = utils.generate_mask_tensor(utils.idx2mask(idx[:n_pred], len_nodes))
         self.g.nodes[ntype].data['pred_mask'] = pred_mask
 
-=======
->>>>>>> 59a770de2b76f092ee0d7647f43813e0a89b3f57
-    def gene_mask(self, ratio, ntype, pred_retio):
+    def gene_mask(self, ratio, ntype):
         if len(ratio) != 3:
             raise ValueError(f'Split ratio must be a float triplet but got {ratio}.')
         idx_tensor = torch.nonzero(self.g.nodes[ntype].data[self.label_mask_feat_name]).squeeze(1)
@@ -189,12 +186,6 @@ class AsNodeClassificationDataset(DGLDataset):
         self.g.nodes[ntype].data['train_mask'] = train_mask
         self.g.nodes[ntype].data['val_mask'] = val_mask
         self.g.nodes[ntype].data['test_mask'] = test_mask
-<<<<<<< HEAD
-            
-=======
-        self.g.nodes[ntype].data['pred_mask'] = pred_mask
-
->>>>>>> 59a770de2b76f092ee0d7647f43813e0a89b3f57
     def has_cache(self):
         return os.path.isfile(os.path.join(self.save_path, 'graph_{}.bin'.format(self.hash)))
 
