@@ -32,7 +32,7 @@ class TestAsNodeClassificationDataset(TestCase):
 
     ds = MyDataset()
     new_ds = AsNodeClassificationDataset(name='new_test', data=ds, target_ntype='user', 
-                                         prediction_ratio=0.5,label_mask_feat_name='mask',
+                                         label_mask_feat_name='mask',
                                          labeled_nodes_split_ratio=[0.8, 0.1, 0.1], force_reload=True)
     
     assert new_ds[0].num_nodes() == ds[0].num_nodes()

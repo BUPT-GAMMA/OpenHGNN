@@ -2,6 +2,7 @@
 
 import os
 import json
+from tkinter.messagebox import NO
 import numpy as np
 from dgl.data import utils, DGLDataset
 from dgl import backend as F
@@ -74,7 +75,7 @@ class AsNodeClassificationDataset(DGLDataset):
                  name,
                  data,
                  labeled_nodes_split_ratio=None,
-                 prediction_ratio=1,
+                 prediction_ratio=None,
                  target_ntype=None,
                  label_feat_name='label',
                  label_mask_feat_name=None,
@@ -128,8 +129,12 @@ class AsNodeClassificationDataset(DGLDataset):
                 print('Generating train/val/test masks...')
             # utils.add_nodepred_split(self, self.split_ratio, self.target_ntype)
             self.gene_mask(self.split_ratio, self.target_ntype, self.prediction_ratio)
-
-        self._set_split_index()
+        if self.prediction_ratio is None:
+            if self.verbose:
+                print("Predicion_ratio is not provided, we will use the pred_mask from the original graph.")
+        else:
+            self.gene_pred_mask(self.prediction_ratio, self.target_ntype)
+        self._set_split_index(self.target_ntype)
         self.multi_label = getattr(self.dataset, 'multi_label', None)
         if self.multi_label is None:
             self.multi_label = len(self.g.nodes[self.target_ntype].data['label'].shape) == 2
@@ -144,27 +149,32 @@ class AsNodeClassificationDataset(DGLDataset):
         self.meta_paths = getattr(self.dataset, 'meta_paths', None)
         self.meta_paths_dict = getattr(self.dataset, 'meta_paths_dict', None)
 
+    def gene_pred_mask(self, ratio, ntype):
+        idx_tensor = torch.where(self.g.nodes[ntype].data[self.label_mask_feat_name] == 0)[0]
+        idx = idx_tensor.tolist()
+        len_nodes = len(self.g.nodes[ntype].data[self.label_mask_feat_name])
+        n = len(idx)
+        np.random.shuffle(idx)
+        n_pred = int (n * ratio)
+        pred_mask = utils.generate_mask_tensor(utils.idx2mask(idx[:n_pred], len_nodes))
+        self.g.nodes[ntype].data['pred_mask'] = pred_mask
 
     def gene_mask(self, ratio, ntype, pred_retio):
         if len(ratio) != 3:
             raise ValueError(f'Split ratio must be a float triplet but got {ratio}.')
         idx_tensor = torch.nonzero(self.g.nodes[ntype].data[self.label_mask_feat_name]).squeeze(1)
         idx = idx_tensor.tolist()
-        idx_1 = torch.where(self.g.nodes[ntype].data[self.label_mask_feat_name] == 0)[0].tolist()
+        len_nodes = len(self.g.nodes[ntype].data[self.label_mask_feat_name])
         n = len(idx)
-        n_1 = len(idx_1)
         # idx = np.arange(0, n)
         np.random.shuffle(idx)
-        np.random.shuffle(idx_1)
-        n_train, n_val, n_test, n_pred = int(n * ratio[0]), int(n * ratio[1]), int(n * ratio[2]), int(n_1 * pred_retio)
-        train_mask = utils.generate_mask_tensor(utils.idx2mask(idx[:n_train], n + n_1))
-        val_mask = utils.generate_mask_tensor(utils.idx2mask(idx[n_train:n_train + n_val], n + n_1))
-        test_mask = utils.generate_mask_tensor(utils.idx2mask(idx[n_train + n_val:], n + n_1))
-        pred_mask = utils.generate_mask_tensor(utils.idx2mask(idx_1[:n_pred], n + n_1))
+        n_train, n_val, n_test = int(n * ratio[0]), int(n * ratio[1]), int(n * ratio[2])
+        train_mask = utils.generate_mask_tensor(utils.idx2mask(idx[:n_train],len_nodes))
+        val_mask = utils.generate_mask_tensor(utils.idx2mask(idx[n_train:n_train + n_val],len_nodes))
+        test_mask = utils.generate_mask_tensor(utils.idx2mask(idx[n_train + n_val:], len_nodes))
         self.g.nodes[ntype].data['train_mask'] = train_mask
         self.g.nodes[ntype].data['val_mask'] = val_mask
         self.g.nodes[ntype].data['test_mask'] = test_mask
-        self.g.nodes[ntype].data['pred_mask'] = pred_mask
             
     def has_cache(self):
         return os.path.isfile(os.path.join(self.save_path, 'graph_{}.bin'.format(self.hash)))
@@ -209,13 +219,19 @@ class AsNodeClassificationDataset(DGLDataset):
     def __len__(self):
         return 1
 
-    def _set_split_index(self):
+    def _set_split_index(self, ntype):
         """Add train_idx/val_idx/test_idx as dataset attributes according to corresponding mask."""
         ndata = self.g.nodes[self.target_ntype].data
         self.train_idx = F.nonzero_1d(ndata['train_mask'])
         self.val_idx = F.nonzero_1d(ndata['val_mask'])
         self.test_idx = F.nonzero_1d(ndata['test_mask'])
-        self.pred_idx = F.nonzero_1d(ndata['pred_mask'])
+        if 'pred_mask' in ndata:
+            self.pred_idx = F.nonzero_1d(ndata['pred_mask'])
+        else:
+            if self.verbose:
+                print('No prediction mask exists, will predict all missing labels.')
+            idx_tensor = torch.where(self.g.nodes[ntype].data[self.label_mask_feat_name] == 0)[0]
+            self.pred_idx = idx_tensor
 
     def get_split(self, *args, **kwargs):
         return self.train_idx, self.val_idx, self.test_idx
