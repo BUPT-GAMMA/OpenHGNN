@@ -13,6 +13,13 @@ on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https:/
 of heterogeneous graph.
 
 ## News
+<details>
+<summary>
+2022-08-02 paper accepted
+</summary>
+<br/>
+Our paper <i>OpenHGNN: An Open Source Toolkit for Heterogeneous Graph Neural Network </i> is accpeted at CIKM 2022 short paper track.
+</details>
 
 <details>
 <summary>
@@ -201,3 +208,17 @@ The link will give some basic usage.
 OpenHGNN Team[GAMMA LAB], DGL Team and Peng Cheng Laboratory.
 
 See more in [CONTRIBUTING](../CONTRIBUTING.md).
+
+
+## Cite OpenHGNN
+
+If you use OpenHGNN in a scientific publication, we would appreciate citations to the following paper:
+
+```
+@inproceedings{han2022openhgnn,
+  title={OpenHGNN: An Open Source Toolkit for Heterogeneous Graph Neural Network},
+  author={Hui Han, Tianyu Zhao, Cheng Yang, Hongyi Zhang, Yaoqi Liu, Xiao Wang, Chuan Shi},
+  booktitle={CIKM},
+  year={2022}
+}
+```
