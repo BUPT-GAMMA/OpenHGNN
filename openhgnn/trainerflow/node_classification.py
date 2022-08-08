@@ -186,7 +186,8 @@ class NodeClassification(BaseFlow):
         for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
             blocks = [blk.to(self.device) for blk in blocks]
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
-            # batch_tic = time.time()
+            if not isinstance(input_nodes, dict):
+                input_nodes = {self.category: input_nodes}
             emb = self.model.input_feature.forward_nodes(input_nodes)
             emb = {k: e.to(self.device) for k, e in emb.items()}
 
@@ -252,6 +253,8 @@ class NodeClassification(BaseFlow):
                 y_predicts = []
                 for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
                     blocks = [blk.to(self.device) for blk in blocks]
+                    if not isinstance(input_nodes, dict):
+                        input_nodes = {self.category: input_nodes}
                     emb = self.model.input_feature.forward_nodes(input_nodes)
                     emb = {k: e.to(self.device) for k, e in emb.items()}
                     seeds = seeds[self.category]
@@ -291,6 +294,8 @@ class NodeClassification(BaseFlow):
             y_predicts = []
             for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
                 blocks = [blk.to(self.device) for blk in blocks]
+                if not isinstance(input_nodes, dict):
+                    input_nodes = {self.category: input_nodes}
                 emb = self.model.input_feature.forward_nodes(input_nodes)
                 emb = {k: e.to(self.device) for k, e in emb.items()}
                 logits = self.model(blocks, emb)[self.category]

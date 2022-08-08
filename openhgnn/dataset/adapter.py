@@ -97,7 +97,7 @@ class AsNodeClassificationDataset(DGLDataset):
         else:
             raise ValueError("Invalid data type.")
 
-        self.split_ratio = kwargs.get('split_ratio', None)  # for compatibility
+        self.split_ratio = kwargs.pop('split_ratio', None)  # for compatibility
         if labeled_nodes_split_ratio is not None:
             self.split_ratio = labeled_nodes_split_ratio
 
