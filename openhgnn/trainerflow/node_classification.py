@@ -49,16 +49,18 @@ class NodeClassification(BaseFlow):
 
         if self.args.mini_batch_flag:
             # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
-            sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
+            # sampler = dgl.dataloading.NeighborSampler([self.args.fanout] * self.args.n_layers)
+            # sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
+            sampler = dgl.dataloading.SAINTSampler(mode = "node", budget = 20000)
             self.train_loader = dgl.dataloading.DataLoader(
                 self.hg.cpu(), {self.category: self.train_idx.cpu()}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=4)
             self.val_loader = dgl.dataloading.DataLoader(
                 self.hg.to('cpu'), {self.category: self.valid_idx.to('cpu')}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=4)
             self.test_loader = dgl.dataloading.DataLoader(
                 self.hg.to('cpu'), {self.category: self.test_idx.to('cpu')}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=4)
 
     def preprocess(self):
         r"""
@@ -240,7 +242,7 @@ class NodeClassification(BaseFlow):
                 loss_all /= (i + 1)
                 y_trues = torch.cat(y_trues, dim=0)
                 y_predicts = torch.cat(y_predicts, dim=0)
-                evaluator = self.task.get_evaluator(name='f1')
+                evaluator = self.task.get_evaluator(name='acc')
                 metric_dict[mode] = evaluator(y_trues, y_predicts.argmax(dim=1).to('cpu'))
                 loss_dict[mode] = loss
         return metric_dict, loss_dict

@@ -239,6 +239,7 @@ class Config(object):
             self.out_dim = conf.getint('MAGNN', 'out_dim')
             self.num_heads = conf.getint('MAGNN', 'num_heads')
             self.num_layers = conf.getint("MAGNN", "num_layers")
+            self.n_layers = self.num_layers
 
             self.patience = conf.getint('MAGNN', 'patience')
             self.max_epoch = conf.getint('MAGNN', 'max_epoch')
@@ -247,6 +248,7 @@ class Config(object):
             if self.mini_batch_flag:
                 self.batch_size = conf.getint("MAGNN", "batch_size")
                 self.num_samples = conf.getint("MAGNN", "num_samples")
+                self.fanout = conf.getint("MAGNN", "fanout")
             self.hidden_dim = self.h_dim * self.num_heads
 
         elif self.model_name == 'RHGNN':
@@ -262,6 +264,7 @@ class Config(object):
             # self.optimizer = conf.get
             self.weight_decay = conf.getfloat("RHGNN", "weight_decay")
             self.max_epoch = conf.getint("RHGNN", "max_epoch")
+            self.fanout = conf.getint("RHGNN", "fanout")
             self.patience = conf.getint("RHGNN", "patience")
             self.mini_batch_flag = conf.getboolean("RHGNN", "mini_batch_flag")
             self.negative_slope = conf.getfloat("RHGNN", "negative_slope")
@@ -341,6 +344,7 @@ class Config(object):
             self.dropout = conf.getfloat("HGT", "dropout")
 
             self.batch_size = conf.getint("HGT", "batch_size")
+            self.fanout = conf.getint("HGT", "fanout")
             self.hidden_dim = conf.getint('HGT', 'hidden_dim')
             self.out_dim = conf.getint('HGT', 'out_dim')
             self.num_heads = conf.getint('HGT', 'num_heads')
@@ -350,6 +354,7 @@ class Config(object):
             self.mini_batch_flag = conf.getboolean("HGT", "mini_batch_flag")
             self.norm = conf.getboolean("HGT", "norm")
             self.num_layers = conf.getint("HGT", "num_layers")
+            self.n_layers = self.num_layers
             self.num_heads = conf.getint("HGT", "num_heads")
         elif self.model_name == 'HeCo':
             self.lr = conf.getfloat("HeCo", "learning_rate")
@@ -566,7 +571,10 @@ class Config(object):
             self.seed = conf.getint("ieHGCN", "seed")
             self.attn_dim = conf.getint("ieHGCN", "attn_dim")
             self.num_layers = conf.getint("ieHGCN","num_layers")
-            self.mini_batch_flag = False
+            self.n_layers = self.num_layers
+            self.mini_batch_flag = conf.getboolean("ieHGCN", "mini_batch_flag")
+            self.batch_size = conf.getint("ieHGCN","batch_size")
+            self.fanout = conf.getint("ieHGCN","fanout")
             self.hidden_dim = conf.getint("ieHGCN", "hidden_dim")
             self.in_dim = conf.getint("ieHGCN", "in_dim")
             self.out_dim = conf.getint("ieHGCN", "out_dim")

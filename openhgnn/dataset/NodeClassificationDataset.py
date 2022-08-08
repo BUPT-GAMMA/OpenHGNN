@@ -489,6 +489,18 @@ class OGB_NodeClassification(NodeClassificationDataset):
         if dataset_name == 'ogbn-mag':
             dataset = DglNodePropPredDataset(name='ogbn-mag')
             self.category = 'paper'  # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
+            self.meta_paths_dict = {'metapath':[
+                ('author', 'writes', 'paper'),
+                ('paper', 'has_topic', 'field_of_study'),
+                ('field_of_study', 'has_topic_inv', 'paper'),
+                ('paper', 'cites_inv', 'paper'),
+                ('paper', 'writes_inv', 'author'),
+                ('author', 'affiliated_with', 'institution'),
+                ('institution', 'affiliated_with_inv', 'author'),
+                ('author', 'writes', 'paper'),
+                ('paper', 'cites', 'paper'),
+                ('paper', 'writes_inv', 'author')
+            ]}
         else:
             raise ValueError
 
