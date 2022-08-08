@@ -129,7 +129,7 @@ class AsNodeClassificationDataset(DGLDataset):
             if self.verbose:
                 print('Generating train/val/test masks...')
             # utils.add_nodepred_split(self, self.split_ratio, self.target_ntype)
-            self.gene_mask(self.split_ratio, self.target_ntype,)
+            self.gene_mask(self.split_ratio, self.target_ntype, )
         if self.prediction_ratio is None:
             if self.verbose:
                 print("Predicion_ratio is not provided, we will use the pred_mask from the original graph.")
@@ -159,7 +159,7 @@ class AsNodeClassificationDataset(DGLDataset):
         len_nodes = len(self.g.nodes[ntype].data[self.label_mask_feat_name])
         n = len(idx)
         np.random.shuffle(idx)
-        n_pred = int (n * ratio)
+        n_pred = int(n * ratio)
         pred_mask = utils.generate_mask_tensor(utils.idx2mask(idx[:n_pred], len_nodes))
         self.g.nodes[ntype].data['pred_mask'] = pred_mask
 
@@ -176,12 +176,13 @@ class AsNodeClassificationDataset(DGLDataset):
         # idx = np.arange(0, n)
         np.random.shuffle(idx)
         n_train, n_val, n_test = int(n * ratio[0]), int(n * ratio[1]), int(n * ratio[2])
-        train_mask = utils.generate_mask_tensor(utils.idx2mask(idx[:n_train],len_nodes))
-        val_mask = utils.generate_mask_tensor(utils.idx2mask(idx[n_train:n_train + n_val],len_nodes))
+        train_mask = utils.generate_mask_tensor(utils.idx2mask(idx[:n_train], len_nodes))
+        val_mask = utils.generate_mask_tensor(utils.idx2mask(idx[n_train:n_train + n_val], len_nodes))
         test_mask = utils.generate_mask_tensor(utils.idx2mask(idx[n_train + n_val:], len_nodes))
         self.g.nodes[ntype].data['train_mask'] = train_mask
         self.g.nodes[ntype].data['val_mask'] = val_mask
         self.g.nodes[ntype].data['test_mask'] = test_mask
+
     def has_cache(self):
         return os.path.isfile(os.path.join(self.save_path, 'graph_{}.bin'.format(self.hash)))
 
