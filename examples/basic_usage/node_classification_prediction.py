@@ -42,8 +42,8 @@ if __name__ == '__main__':
     new_ds.num_classes = ds.num_classes
 
     labels = new_ds[0].nodes[new_ds.target_ntype].data['label']
-    experiment = Experiment(model='RGCN', dataset=new_ds, task='node_classification', mini_batch_flag=True, gpu=-1,
-                            lr=0.05, hidden_dim=64, max_epoch=200, n_layers=3, test_flag=False, prediction_flag=True)
+    experiment = Experiment(model='RGCN', dataset=new_ds, task='node_classification', mini_batch_flag=False, gpu=-1,
+                            test_flag=False, prediction_flag=True)
     prediction_res = experiment.run()
     indices, y_predicts = prediction_res
     y_predicts = torch.argmax(y_predicts, dim=1)

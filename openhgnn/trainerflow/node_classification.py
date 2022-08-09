@@ -52,7 +52,8 @@ class NodeClassification(BaseFlow):
         self.labels = self.task.get_labels().to(self.device)
 
         if self.args.mini_batch_flag:
-            sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
+            fanout = getattr(self.args, 'fanout', -1)
+            sampler = dgl.dataloading.MultiLayerNeighborSampler([fanout] * self.args.n_layers)
             self.train_loader = dgl.dataloading.DataLoader(
                 self.hg.cpu(), {self.category: self.train_idx.cpu()}, sampler,
                 batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
