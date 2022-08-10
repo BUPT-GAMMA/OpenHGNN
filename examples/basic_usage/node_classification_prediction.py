@@ -8,6 +8,12 @@ from openhgnn.dataset import AsNodeClassificationDataset, ACM4GTNDataset
 from dgl.data import CoraFullDataset, CoraGraphDataset
 from sklearn.metrics import f1_score, accuracy_score
 
+# python node_classification_prediction.py -m RGCN -d acm -g -1
+# python node_classification_prediction.py -m RGCN -d acm -g -1 --mini-batch-flag
+# python node_classification_prediction.py -m RGCN -d cora -g -1
+# python node_classification_prediction.py -m RGCN -d cora -g -1 --mini-batch-flag
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', default='RGCN', type=str, help='name of models')
@@ -50,8 +56,9 @@ if __name__ == '__main__':
     # new_ds.num_classes = ds.num_classes
 
     labels = new_ds[0].nodes[new_ds.target_ntype].data['label']
-    experiment = Experiment(conf_path='./my_config.ini', model=args.model, dataset=new_ds, task='node_classification',
-                            mini_batch_flag=args.mini_batch_flag, gpu=args.gpu, test_flag=False, prediction_flag=True)
+    experiment = Experiment(conf_path='./my_config.ini', max_epoch=1, epoch=1, model=args.model, dataset=new_ds,
+                            task='node_classification', mini_batch_flag=args.mini_batch_flag, gpu=args.gpu,
+                            test_flag=False, prediction_flag=True)
     prediction_res = experiment.run()
     indices, y_predicts = prediction_res
     y_predicts = torch.argmax(y_predicts, dim=1)
