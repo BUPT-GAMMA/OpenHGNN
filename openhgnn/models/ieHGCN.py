@@ -3,12 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import dgl.nn.pytorch as dglnn
-import numpy as np
 
 from . import BaseModel, register_model
-from ..utils import to_hetero_feat
-
-import sys
 
 
 @register_model('ieHGCN')
@@ -77,7 +73,6 @@ class ieHGCN(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg:dgl.DGLGraph):
         return cls(args.num_layers,
-                   args.in_dim,
                    args.hidden_dim,
                    args.out_dim,
                    args.attn_dim,
@@ -85,24 +80,13 @@ class ieHGCN(BaseModel):
                    hg.etypes
                    )
 
-    def __init__(self, num_layers, in_dim, hidden_dim, out_dim, attn_dim, ntypes, etypes):
+    def __init__(self, num_layers, hidden_dim, out_dim, attn_dim, ntypes, etypes):
         super(ieHGCN, self).__init__()
         self.num_layers = num_layers
         self.activation = F.elu
         self.hgcn_layers = nn.ModuleList()
-        
-        self.hgcn_layers.append(
-            ieHGCNConv(
-                in_dim,
-                hidden_dim,
-                attn_dim,
-                ntypes,
-                etypes,
-                self.activation,
-            )
-        )
 
-        for i in range(1, num_layers - 1):
+        for i in range(0, num_layers - 1):
             self.hgcn_layers.append(
                 ieHGCNConv(
                     hidden_dim,
