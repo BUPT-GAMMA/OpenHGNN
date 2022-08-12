@@ -47,7 +47,7 @@ class RHGNN(BaseModel):
         return cls(graph=hg, input_dim_dict=input_dim_dict, hidden_dim=args.hidden_dim,
                    relation_input_dim=args.relation_hidden_units,
                    relation_hidden_dim=args.relation_hidden_units,
-                   num_layers=args.n_layers,category=args.category,
+                   num_layers=args.num_layers,category=args.category,
                    out_dim=args.out_dim
                    )
 
