@@ -70,13 +70,13 @@ class SimpleHGN(BaseModel):
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
-        heads = [args.num_heads] * args.n_layers + [1]
+        heads = [args.num_heads] * args.num_layers + [1]
         return cls(args.edge_dim,
                    len(hg.etypes),
                    [args.hidden_dim],
                    args.h_dim,
                    args.out_dim,
-                   args.n_layers,
+                   args.num_layers,
                    heads,
                    args.feats_drop_rate,
                    args.slope,

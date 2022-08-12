@@ -66,7 +66,7 @@ Node classification
 num_heads  = 8            
 hidden_units = 64
 relation_hidden_units = 8
-n_layers = 2
+num_layers = 2
 learning_rate = 0.001
 dropout = 0.5
 residual = True

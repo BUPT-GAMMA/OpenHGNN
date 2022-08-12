@@ -104,7 +104,7 @@ if __name__ == '__main__':
     model = MAGNN.build_model_from_args(args, hg)
     print(args)
 
-    sampler = MAGNN_sampler(g=hg, mask=train_mask.cpu().numpy(), n_layers=args.num_layers, category=args.category,
+    sampler = MAGNN_sampler(g=hg, mask=train_mask.cpu().numpy(), num_layers=args.num_layers, category=args.category,
                             metapath_list=model.metapath_list, num_samples=args.num_samples, dataset_name=args.dataset)
 
     dataloader = DataLoader(dataset=sampler, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers,

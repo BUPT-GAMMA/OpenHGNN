@@ -12,7 +12,7 @@ Running an existing baseline model on an existing benchmark
 
     from openhgnn import Experiment
     experiment = Experiment(model='RGCN', dataset='acm4GTN', task='node_classification', gpu=-1, lr=0.05, hidden_dim=64,
-                            max_epoch=30, n_layers=3)
+                            max_epoch=30, num_layers=3)
     experiment.run()
 
 Hyper-parameter optimization
@@ -27,7 +27,7 @@ Run an experiment with optuna
             "lr": trial.suggest_categorical("lr", [1e-3, 5e-3, 1e-2]),
             "hidden_dim": trial.suggest_categorical("hidden_dim", [32, 64]),
             "dropout": trial.suggest_uniform("dropout", 0.0, 0.5),
-            'n_layers': trial.suggest_int('n_layers', 2, 3)
+            'num_layers': trial.suggest_int('num_layers', 2, 3)
         }
     experiment = Experiment(model='RGCN', dataset='acm4GTN', task='node_classification', gpu=-1,
                             hpo_search_space=search_space, hpo_trials=20)

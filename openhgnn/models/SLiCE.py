@@ -262,7 +262,7 @@ class SLiCE(BaseModel):
         G,  #G为DGLGraph
         args,
         pretrained_node_embedding_tensor,
-        n_layers=6,
+        num_layers=6,
         d_model=200,
         d_k=64,
         d_v=64,
@@ -279,7 +279,7 @@ class SLiCE(BaseModel):
         super().__init__()
         #initialize
         self.g=G
-        self.n_layers = n_layers
+        self.num_layers = num_layers
         self.d_model = d_model
         self.max_length = max_length
         self.get_embeddings = get_embeddings
@@ -322,7 +322,7 @@ class SLiCE(BaseModel):
         )
 
         self.layers = torch.nn.ModuleList(
-            [EncoderLayer(d_model, d_k, d_v, d_ff, n_heads) for _ in range(n_layers)]
+            [EncoderLayer(d_model, d_k, d_v, d_ff, n_heads) for _ in range(num_layers)]
         ).cuda()
         self.linear = torch.nn.Linear(d_model, d_model).cuda()
         self.norm = torch.nn.LayerNorm(d_model).cuda()
@@ -374,7 +374,7 @@ class SLiCE(BaseModel):
                     att_output = enc_self_attn.unsqueeze(0)
 
         # new added for ablation study
-        if self.n_layers == 0:
+        if self.num_layers == 0:
             layer_output = output.unsqueeze(1)
             att_output = "NA"
 
@@ -402,7 +402,7 @@ class SLiCEFinetuneLayer(torch.nn.Module):
     def build_model_from_args(cls, args):
         return cls(d_model=args.d_model,ft_d_ff=args.ft_d_ff,
         ft_layer=args.ft_layer,ft_drop_rate=args.ft_drop_rate,
-        ft_input_option=args.ft_input_option,n_layers=args.n_layers)
+        ft_input_option=args.ft_input_option,n_layers=args.num_layers)
     def __init__(
         self,
         d_model,
@@ -410,28 +410,28 @@ class SLiCEFinetuneLayer(torch.nn.Module):
         ft_layer,
         ft_drop_rate,
         ft_input_option,
-        n_layers,
+        num_layers,
     ):
 
         super().__init__()
         self.d_model = d_model
         self.ft_layer = ft_layer
         self.ft_input_option = ft_input_option
-        self.n_layers = n_layers
+        self.num_layers = num_layers
 
         if ft_input_option in ["last", "last4_sum"]:
             cnt_layers = 1
         elif ft_input_option in ["last4_cat"]:
             cnt_layers = 4
 
-        if self.n_layers == 0:
+        if self.num_layers == 0:
             cnt_layers = 1
 
         if self.ft_layer == "linear":
             self.ft_decoder = torch.nn.Linear(d_model * cnt_layers, d_model).cuda()
         elif self.ft_layer == "ffn":
             self.ffn1 = torch.nn.Linear(d_model * cnt_layers, ft_d_ff).cuda()
-            print(self.n_layers, cnt_layers, self.ffn1)
+            print(self.num_layers, cnt_layers, self.ffn1)
             self.dropout = torch.nn.Dropout(ft_drop_rate).cuda()
             self.ffn2 = torch.nn.Linear(ft_d_ff, d_model).cuda()
 

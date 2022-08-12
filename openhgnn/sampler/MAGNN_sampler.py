@@ -24,7 +24,7 @@ class MAGNN_sampler():
         that the 1th, 4th nodes are training nodes of g. Note that the mask indicates which part of nodes in g will be
         sampled by MAGNN sampler. e.g. if it's the test mask, the sample will be employed on testing nodes of g to
         sample subgraphs for testing phase. This param is useful when the graph is too large to be directly validate on.
-    n_layers : int
+    num_layers : int
         the number of layers of each subgraph.
     category : any
         the class of seed_nodes.
@@ -39,13 +39,13 @@ class MAGNN_sampler():
         Default : 'dblp4MAGNN'
 
     '''
-    def __init__(self, g, mask, n_layers, category, metapath_list,
+    def __init__(self, g, mask, num_layers, category, metapath_list,
                  num_samples, dataset_name='dblp4MAGNN'):
         self.g = g
         self.mask = mask
         self.dataset_name = dataset_name
         self.metapath_list = metapath_list
-        self.n_layers = n_layers
+        self.num_layers = num_layers
         self.category = category
         self.num_samples = num_samples
         self.mp_inst = mp_instance_sampler(g, self.metapath_list, self.dataset_name)
@@ -82,9 +82,9 @@ class MAGNN_sampler():
         idx = np.where(self.mask)[0][idx]
         _seed_nodes = {self.category: idx}
         seed_nodes = {self.category: np.array([idx])}
-        if self.n_layers < 1:
+        if self.num_layers < 1:
             raise ValueError("Wrong value of number of layers.")
-        for _ in range(self.n_layers):
+        for _ in range(self.num_layers):
             mini_mp_inst = mini_mp_instance_sampler(seed_nodes=seed_nodes, mp_instances=self.mp_inst,
                                                     num_samples=self.num_samples)
             # seed_nodes = {}

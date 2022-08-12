@@ -227,23 +227,23 @@ class FeedForwardNet(nn.Module):
             hidden layer dimention
         out_feats :
             output feature dimention
-        n_layers :
+        num_layers :
             number of layers
         dropout :
             dropout rate
     """
-    def __init__(self, in_feats, hidden, out_feats, n_layers, dropout):
+    def __init__(self, in_feats, hidden, out_feats, num_layers, dropout):
         super(FeedForwardNet, self).__init__()
         self.layers = nn.ModuleList()
-        self.n_layers = n_layers
-        if n_layers == 1:
+        self.num_layers = num_layers
+        if num_layers == 1:
             self.layers.append(nn.Linear(in_feats, out_feats))
         else:
             self.layers.append(nn.Linear(in_feats, hidden))
-            for i in range(n_layers - 2):
+            for i in range(num_layers - 2):
                 self.layers.append(nn.Linear(hidden, hidden))
             self.layers.append(nn.Linear(hidden, out_feats))
-        if self.n_layers > 1:
+        if self.num_layers > 1:
             self.prelu = nn.PReLU()
             self.dropout = nn.Dropout(dropout)
         self.reset_parameters()
@@ -257,7 +257,7 @@ class FeedForwardNet(nn.Module):
     def forward(self, x):
         for layer_id, layer in enumerate(self.layers):
             x = layer(x)
-            if layer_id < self.n_layers - 1:
+            if layer_id < self.num_layers - 1:
                 x = self.dropout(self.prelu(x))
         return x
 
@@ -276,7 +276,7 @@ class SIGN(nn.Module):
             output feature dimention
         num_hops :
             number of hops
-        n_layers :
+        num_layers :
             number of layers
         dropout :
             dropout rate
@@ -285,7 +285,7 @@ class SIGN(nn.Module):
 
     """
     def __init__(
-        self, in_feats, hidden, out_feats, num_hops, n_layers, dropout, input_drop
+        self, in_feats, hidden, out_feats, num_hops, num_layers, dropout, input_drop
     ):
         super(SIGN, self).__init__()
         self.dropout = nn.Dropout(dropout)
@@ -294,10 +294,10 @@ class SIGN(nn.Module):
         self.input_drop = input_drop
         for i in range(num_hops):
             self.inception_ffs.append(
-                FeedForwardNet(in_feats, hidden, hidden, n_layers, dropout)
+                FeedForwardNet(in_feats, hidden, hidden, num_layers, dropout)
             )
         self.project = FeedForwardNet(
-            num_hops * hidden, hidden, out_feats, n_layers, dropout
+            num_hops * hidden, hidden, out_feats, num_layers, dropout
         )
 
     def forward(self, feats):
