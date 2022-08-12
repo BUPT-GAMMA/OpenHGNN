@@ -190,8 +190,8 @@ class ieHGCNConv(nn.Module):
         
         Parameters
         ----------
-        hg : object
-            the dgl heterogeneous graph
+        hg : object or list[block]
+            the dgl heterogeneous graph or the list of blocks
         h_dict: dict
             the feature dict of different node types
             
@@ -201,14 +201,12 @@ class ieHGCNConv(nn.Module):
             The embeddings after final aggregation.
         """
         outputs = {ntype: [] for ntype in hg.dsttypes}
-        if isinstance(h_dict, tuple) or hg.is_block:
-            if isinstance(h_dict, tuple):
-                src_inputs, dst_inputs = h_dict
-            else:
-                src_inputs = h_dict
-                dst_inputs = {k: v[:hg.number_of_dst_nodes(k)] for k, v in h_dict.items()}
+        if hg.is_block:
+            src_inputs = h_dict
+            dst_inputs = {k: v[:hg.number_of_dst_nodes(k)] for k, v in h_dict.items()}
         else:
-            src_inputs, dst_inputs = h_dict
+            src_inputs = h_dict
+            dst_inputs = h_dict
         with hg.local_scope():
             hg.ndata['h'] = h_dict
             # formulas (2)-1
