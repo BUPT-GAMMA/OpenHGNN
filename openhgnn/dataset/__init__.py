@@ -10,6 +10,7 @@ from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 
 DATASET_REGISTRY = {}
 
+
 def register_dataset(name):
     """
     New dataset types can be added to cogdl with the :func:`register_dataset`
@@ -46,6 +47,13 @@ def try_import_task_dataset(task):
     return True
 
 
+hgbl_datasets = ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']
+hgbn_datasets = ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']
+kg_lp_datasets = ['wn18', 'FB15k', 'FB15k-237']
+ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
+ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
+
+
 def build_dataset(dataset, task, *args, **kwargs):
     if isinstance(dataset, DGLDataset):
         return dataset
@@ -55,20 +63,19 @@ def build_dataset(dataset, task, *args, **kwargs):
         exit(1)
     if dataset in ['aifb', 'mutag', 'bgs', 'am']:
         _dataset = 'rdf_' + task
-    elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp', 'dblp4MAGNN',
-                     'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie', 'Book-Crossing',
-                     'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB']:
+    elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp',
+                     'dblp4MAGNN', 'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie',
+                     'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB']:
         _dataset = 'hin_' + task
-    elif dataset in ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase',
-                     'ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']:
+    elif dataset in ohgbn_datasets + ohgbn_datasets:
         _dataset = 'ohgb_' + task
     elif dataset in ['ogbn-mag']:
         _dataset = 'ogbn_' + task
-    elif dataset in ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']:
+    elif dataset in hgbn_datasets:
         _dataset = 'HGBn_node_classification'
-    elif dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
+    elif dataset in hgbl_datasets:
         _dataset = 'HGBl_link_prediction'
-    elif dataset in ['wn18', 'FB15k', 'FB15k-237']:
+    elif dataset in kg_lp_datasets:
         assert task == 'link_prediction'
         _dataset = 'kg_link_prediction'
     elif dataset in ['LastFM4KGCN']:
