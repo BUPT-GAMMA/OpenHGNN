@@ -43,7 +43,7 @@ class RGCN(BaseModel):
                    args.out_dim,
                    hg.etypes,
                    args.n_bases,
-                   args.n_layers - 2,
+                   args.num_layers - 2,
                    dropout=args.dropout)
 
     def __init__(self, in_dim,

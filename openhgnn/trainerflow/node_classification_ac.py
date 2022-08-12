@@ -66,9 +66,9 @@ class NodeClassificationAC(BaseFlow):
         self.train_idx, self.valid_idx, self.test_idx = self.task.get_split()
         self.labels = self.task.get_labels().to(self.device)
         if self.args.mini_batch_flag:
-            # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.n_layers)
+            # sampler = dgl.dataloading.MultiLayerNeighborSampler([self.args.fanout] * self.args.num_layers)
             sampler = dgl.dataloading.MultiLayerFullNeighborSampler(
-                self.args.n_layers)
+                self.args.num_layers)
             self.loader = dgl.dataloading.NodeDataLoader(
                 self.hg.to('cpu'), {
                     self.category: self.train_idx.to('cpu')}, sampler,

@@ -87,7 +87,7 @@ class LinkPrediction(BaseFlow):
             train_eid_dict = {
                 etype: self.train_hg.edges(etype=etype, form='eid')
                 for etype in self.target_link}
-            sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.n_layers)
+            sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.num_layers)
             self.dataloader = dgl.dataloading.EdgeDataLoader(
                 self.train_hg, train_eid_dict, sampler,
                 negative_sampler=dgl.dataloading.negative_sampler.Uniform(2),

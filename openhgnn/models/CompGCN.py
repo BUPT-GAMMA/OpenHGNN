@@ -31,7 +31,7 @@ class CompGCN(BaseModel):
         return cls(args.hidden_dim, args.hidden_dim, args.out_dim,
                    hg.etypes,
                    get_nodes_dict(hg), len(hg.etypes),
-                   args.n_layers, comp_fn=args.comp_fn, dropout=args.dropout
+                   args.num_layers, comp_fn=args.comp_fn, dropout=args.dropout
                    )
 
     def __init__(self, in_dim, hid_dim, out_dim, etypes, n_nodes, n_rels, num_layers=2, comp_fn='sub', dropout=0.0,

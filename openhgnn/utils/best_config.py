@@ -6,51 +6,51 @@ BEST_CONFIGS = {
             },
             'aifb': {
                 'lr': 0.005, 'weight_decay': 0, 'max_epoch': 100,
-                'hidden_dim': 32, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'dropout': 0,
+                'hidden_dim': 32, 'n_bases': -1, 'num_layers': 2, 'batch_size': 126, 'dropout': 0,
                 'mini_batch_flag': False, 'validation': True
             },
             'mutag': {
                 'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50,
-                'hidden_dim': 32, 'n_bases': 30, 'n_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0.5,
+                'hidden_dim': 32, 'n_bases': 30, 'num_layers': 2, 'batch_size': 50, 'fanout': 4, 'dropout': 0.5,
                 'mini_batch_flag': False, 'validation': True
             },
             'bgs': {
                 'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 50,
-                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 3, 'batch_size': 126, 'fanout': 4, 'dropout': 0.1,
+                'hidden_dim': 16, 'n_bases': 40, 'num_layers': 3, 'batch_size': 126, 'fanout': 4, 'dropout': 0.1,
                 'mini_batch_flag': True, 'validation': True
             },
             'am': {
                 'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 50,
-                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'hidden_dim': 16, 'n_bases': 40, 'num_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
                 'mini_batch_flag': True, 'validation': True
             },
             'ogbn-mag': {
                 'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 10,
-                'hidden_dim': 16, 'n_bases': -1, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'hidden_dim': 16, 'n_bases': -1, 'num_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
                 'mini_batch_flag': True, 'validation': True
             },
             'HGBn-ACM': {
                 'evaluation_metric': 'f1'
             },
             'HGBn-DBLP': {
-                'n_layers': 2, 'hidden_dim': 16, 'dropout': 0.5
+                'num_layers': 2, 'hidden_dim': 16, 'dropout': 0.5
             },
             'HGBn-Freebase': {
-                'n_layers': 5, 'hidden_dim': 16, 'dropout': 0.5
+                'num_layers': 5, 'hidden_dim': 16, 'dropout': 0.5
             },
             'HGBn-IMDB': {
             },
             'ohgbn-Freebase': {
-                'lr': 0.005, 'weight_decay': 0.0001, 'hidden_dim': 32, 'n_bases': 40, 'n_layers': 2, 'batch_size': 256,
+                'lr': 0.005, 'weight_decay': 0.0001, 'hidden_dim': 32, 'n_bases': 40, 'num_layers': 2, 'batch_size': 256,
                 'fanout': 4, 'dropout': 0.2, 'mini_batch_flag': True,
             },
             'ohgbn-acm': {
-                'lr': 0.01, 'hidden_dim': 64, 'dropout': 0.4, 'n_layers': 2, 'evaluation_metric': 'f1'
+                'lr': 0.01, 'hidden_dim': 64, 'dropout': 0.4, 'num_layers': 2, 'evaluation_metric': 'f1'
             },
             'ohgbn-imdb': {
-                'lr': 0.01, 'hidden_dim': 128, 'dropout': 0.2, 'n_layers': 4, 'evaluation_metric': 'f1'
+                'lr': 0.01, 'hidden_dim': 128, 'dropout': 0.2, 'num_layers': 4, 'evaluation_metric': 'f1'
             },
-            'ohgbn-yelp2': {'lr': 0.001, 'hidden_dim': 64, 'dropout': 0.3696343130196993, 'n_layers': 3,
+            'ohgbn-yelp2': {'lr': 0.001, 'hidden_dim': 64, 'dropout': 0.3696343130196993, 'num_layers': 3,
                             'use_self_loop': True, 'n_bases': 3}
         },
         'CompGCN': {
@@ -59,12 +59,12 @@ BEST_CONFIGS = {
             },
             'aifb': {
                 'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
-                'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
+                'hidden_dim': 32, 'num_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
                 'mini_batch_flag': False, 'validation': True
             },
             'mutag': {
                 'lr': 0.01, 'weight_decay': 0.0001, 'max_epoch': 100,
-                'hidden_dim': 32, 'n_layers': 3, 'dropout': 0.5, 'comp_fn': 'sub',
+                'hidden_dim': 32, 'num_layers': 3, 'dropout': 0.5, 'comp_fn': 'sub',
                 'mini_batch_flag': False, 'validation': True
             },
             'bgs': {
@@ -72,15 +72,15 @@ BEST_CONFIGS = {
             },
             'am': {
                 'lr': 0.001, 'weight_decay': 0.0001, 'max_epoch': 100, 'fanout': 4,
-                'hidden_dim': 32, 'n_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
+                'hidden_dim': 32, 'num_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
                 'mini_batch_flag': True, 'validation': True
             },
             'ohgbn-Freebase': {
                 'mini_batch_flag': True, 'batch_size': 128,
             },
-            'ohgbn-acm': {'lr': 0.005, 'hidden_dim': 128, 'dropout': 0.16, 'n_layers': 2,
+            'ohgbn-acm': {'lr': 0.005, 'hidden_dim': 128, 'dropout': 0.16, 'num_layers': 2,
                           'comp_fn': 'sub', 'evaluation_metric': 'f1'},
-            'ohgbn-imdb': {'lr': 0.001, 'hidden_dim': 64, 'n_layers': 3,
+            'ohgbn-imdb': {'lr': 0.001, 'hidden_dim': 64, 'num_layers': 3,
                            'comp_fn': 'sub', 'evaluation_metric': 'f1'}
         },
         'GTN': {
@@ -266,9 +266,9 @@ BEST_CONFIGS = {
         'HGT': {
             'general': {},
             'ohgbn-acm': {
-                'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.1, 'n_layers': 2, 'num_heads': 1
+                'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.1, 'num_layers': 2, 'num_heads': 1
             },
-            'ohgbn-imdb': {'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.3, 'n_layers': 2, 'num_heads': 4},
+            'ohgbn-imdb': {'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.3, 'num_layers': 2, 'num_heads': 4},
 
         },
         'SimpleHGN': {
@@ -304,7 +304,7 @@ BEST_CONFIGS = {
             },
             'HGBl-PubMed': {
                 'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 400,
-                'hidden_dim': 64, 'n_bases': 40, 'n_layers': 4, 'batch_size': 126, 'fanout': 4, 'dropout': 0.5,
+                'hidden_dim': 64, 'n_bases': 40, 'num_layers': 4, 'batch_size': 126, 'fanout': 4, 'dropout': 0.5,
                 'validation': True, 'feat': 2, 'seed': 4,
             },
         },
@@ -312,14 +312,14 @@ BEST_CONFIGS = {
             'general': {
             },
             'ohgbl-yelp1': {
-                'mini_batch_flag': True, 'n_layers': 2,
+                'mini_batch_flag': True, 'num_layers': 2,
             },
             'ohgbl-yelp2': {
-                'mini_batch_flag': True, 'n_layers': 2, 'batch_size': 1024
+                'mini_batch_flag': True, 'num_layers': 2, 'batch_size': 1024
             },
             'ohgbl-MTWM': {
                 'weight_decay': 0.00001, 'max_epoch': 50, 'patience': 50,
-                'mini_batch_flag': True, 'n_layers': 2,
+                'mini_batch_flag': True, 'num_layers': 2,
             }
         },
         'RGCN': {
@@ -327,32 +327,32 @@ BEST_CONFIGS = {
             },
             'HGBl-amazon': {
                 'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 400,
-                'hidden_dim': 64, 'n_bases': 40, 'n_layers': 4, 'batch_size': 126, 'fanout': 4, 'dropout': 0.5,
+                'hidden_dim': 64, 'n_bases': 40, 'num_layers': 4, 'batch_size': 126, 'fanout': 4, 'dropout': 0.5,
                 'validation': True, 'feat': 2, 'seed': 0,
             },
             'HGBl-PubMed': {
                 'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 400,
-                'hidden_dim': 64, 'n_bases': 40, 'n_layers': 4, 'batch_size': 126, 'fanout': 4, 'dropout': 0.5,
+                'hidden_dim': 64, 'n_bases': 40, 'num_layers': 4, 'batch_size': 126, 'fanout': 4, 'dropout': 0.5,
                 'validation': True, 'feat': 2, 'seed': 4,
             },
             'HGBl-LastFM': {
                 'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 400,
-                'hidden_dim': 64, 'n_bases': 40, 'n_layers': 4, 'batch_size': 126, 'fanout': 4, 'dropout': 0.5,
+                'hidden_dim': 64, 'n_bases': 40, 'num_layers': 4, 'batch_size': 126, 'fanout': 4, 'dropout': 0.5,
                 'validation': True, 'feat': 2, 'seed': 3,
             },
             'FB15k-237': {
                 'lr': 0.01, 'weight_decay': 0.0005, 'max_epoch': 100,
-                'hidden_dim': 16, 'n_bases': 40, 'n_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
+                'hidden_dim': 16, 'n_bases': 40, 'num_layers': 2, 'batch_size': 126, 'fanout': 4, 'dropout': 0,
                 'validation': True
             },
             'ohgbl-MTWM': {
-                'mini_batch_flag': True, 'n_layers': 2, 'batch_size': 12800
+                'mini_batch_flag': True, 'num_layers': 2, 'batch_size': 12800
             },
             'ohgbl-yelp1': {
-                'mini_batch_flag': True, 'n_layers': 2, 'batch_size': 102400
+                'mini_batch_flag': True, 'num_layers': 2, 'batch_size': 102400
             },
             'ohgbl-yelp2': {
-                'mini_batch_flag': True, 'n_layers': 2,
+                'mini_batch_flag': True, 'num_layers': 2,
             }
         },
         'TransE': {

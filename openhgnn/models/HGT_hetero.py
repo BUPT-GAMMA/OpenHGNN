@@ -19,9 +19,9 @@ class HGT(BaseModel):
         for etype in hg.etypes:
             edge_dict[etype] = len(edge_dict)
             hg.edges[etype].data['id'] = th.ones(hg.number_of_edges(etype), dtype=th.long).to(args.device) * edge_dict[etype]
-        return cls(node_dict, edge_dict, args.hidden_dim, args.out_dim, args.n_layers, args.num_heads, args.dropout, category=args.category)
+        return cls(node_dict, edge_dict, args.hidden_dim, args.out_dim, args.num_layers, args.num_heads, args.dropout, category=args.category)
 
-    def __init__(self, node_dict, edge_dict, hidden_dim, out_dim, n_layers, n_heads, dropout, category, use_norm=True):
+    def __init__(self, node_dict, edge_dict, hidden_dim, out_dim, num_layers, n_heads, dropout, category, use_norm=True):
         super(HGT, self).__init__()
         self.node_dict = node_dict
         self.edge_dict = edge_dict
@@ -30,15 +30,15 @@ class HGT(BaseModel):
         self.gcs = nn.ModuleList()
         self.hidden_dim = hidden_dim
         self.out_dim = out_dim
-        self.n_layers = n_layers
+        self.num_layers = num_layers
         self.adapt_ws = nn.ModuleList()
-        for _ in range(n_layers):
+        for _ in range(num_layers):
             self.gcs.append(HGTLayer(hidden_dim, hidden_dim, node_dict, edge_dict, n_heads, dropout, use_norm = use_norm))
         self.out = nn.Linear(hidden_dim, out_dim)
 
     def forward(self, G, h_in=None):
         h = h_in
-        for i in range(self.n_layers):
+        for i in range(self.num_layers):
             h = self.gcs[i](G, h)
         return {self.category: self.out(h[self.category])}
 

@@ -13,7 +13,7 @@ from collections import Counter
 from torch.utils.data import IterableDataset, DataLoader
 
 
-def get_node_data_loader(node_neighbors_min_num: int, n_layers: int,
+def get_node_data_loader(node_neighbors_min_num: int, num_layers: int,
                          graph: dgl.DGLGraph, batch_size: int, sampled_node_type: str,
                          train_idx: th.Tensor, valid_idx: th.Tensor, test_idx: th.Tensor,
                          shuffle: bool = True, drop_last: bool = False, num_workers: int = 0):
@@ -23,7 +23,7 @@ def get_node_data_loader(node_neighbors_min_num: int, n_layers: int,
     """
     # list of neighbors to sample per edge type for each GNN layer
     sample_nodes_num = []
-    for layer in range(n_layers):
+    for layer in range(num_layers):
         sample_nodes_num.append({etype: node_neighbors_min_num + layer for etype in graph.canonical_etypes})
 
     # neighbor sampler
