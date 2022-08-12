@@ -559,8 +559,10 @@ class Config(object):
             self.max_epoch = conf.getint("ieHGCN", "max_epoch")
             self.seed = conf.getint("ieHGCN", "seed")
             self.attn_dim = conf.getint("ieHGCN", "attn_dim")
-            self.num_layers = conf.getint("ieHGCN","num_layers")
-            self.mini_batch_flag = False
+            self.n_layers = conf.getint("ieHGCN","num_layers")
+            self.mini_batch_flag = conf.getboolean("ieHGCN", "mini_batch_flag")
+            self.fanout = conf.getint("ieHGCN", "fanout")
+            self.batch_size = conf.getint("ieHGCN", "batch_size")
             self.hidden_dim = conf.getint("ieHGCN", "hidden_dim")
             self.in_dim = conf.getint("ieHGCN", "in_dim")
             self.out_dim = conf.getint("ieHGCN", "out_dim")

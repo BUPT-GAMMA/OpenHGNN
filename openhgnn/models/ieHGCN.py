@@ -72,7 +72,7 @@ class ieHGCN(BaseModel):
     """
     @classmethod
     def build_model_from_args(cls, args, hg:dgl.DGLGraph):
-        return cls(args.num_layers,
+        return cls(args.n_layers,
                    args.hidden_dim,
                    args.out_dim,
                    args.attn_dim,
@@ -125,12 +125,13 @@ class ieHGCN(BaseModel):
         dict
             The embeddings after the output projection.
         """
-        with hg.local_scope():
-            hg.ndata['h'] = h_dict
+        if hasattr(hg, "ntypes"):
             for l in range(self.num_layers):
                 h_dict = self.hgcn_layers[l](hg, h_dict)
-            
-            return h_dict
+        else:
+            for layer, block in zip(self.hgcn_layers, hg):
+                h_dict = layer(block, h_dict)
+        return h_dict
 
 class ieHGCNConv(nn.Module):
     r"""
@@ -200,10 +201,18 @@ class ieHGCNConv(nn.Module):
             The embeddings after final aggregation.
         """
         outputs = {ntype: [] for ntype in hg.dsttypes}
+        if isinstance(h_dict, tuple) or hg.is_block:
+            if isinstance(h_dict, tuple):
+                src_inputs, dst_inputs = h_dict
+            else:
+                src_inputs = h_dict
+                dst_inputs = {k: v[:hg.number_of_dst_nodes(k)] for k, v in h_dict.items()}
+        else:
+            src_inputs, dst_inputs = h_dict
         with hg.local_scope():
             hg.ndata['h'] = h_dict
             # formulas (2)-1
-            hg.ndata['z'] = self.W_self(hg.ndata['h'])
+            dst_inputs = self.W_self(dst_inputs)
             query = {}
             key = {}
             attn = {}
@@ -211,8 +220,8 @@ class ieHGCNConv(nn.Module):
             
             # formulas (3)-1 and (3)-2
             for ntype in hg.dsttypes:
-                query[ntype] = self.linear_q[ntype](hg.ndata['z'][ntype])
-                key[ntype] = self.linear_k[ntype](hg.ndata['z'][ntype])
+                query[ntype] = self.linear_q[ntype](dst_inputs[ntype])
+                key[ntype] = self.linear_k[ntype](dst_inputs[ntype])
             # formulas (4)-1
             h_l = self.W_al(key)
             h_r = self.W_ar(query)
@@ -227,7 +236,7 @@ class ieHGCNConv(nn.Module):
                 # formulas (2)-2
                 dstdata = self.mods[etype](
                     rel_graph,
-                    (h_dict[srctype], h_dict[dsttype])
+                    (src_inputs[srctype], dst_inputs[dsttype])
                 )
                 outputs[dsttype].append(dstdata)
                 # formulas (3)-3
@@ -245,7 +254,7 @@ class ieHGCNConv(nn.Module):
             # formulas (6)
             rst = {ntype: 0 for ntype in hg.dsttypes}
             for ntype, data in outputs.items():
-                data = [hg.ndata['z'][ntype]] + data
+                data = [dst_inputs[ntype]] + data
                 if len(data) != 0:
                     for i in range(len(data)):
                         aggregation = torch.mul(data[i], attention[ntype][i])
