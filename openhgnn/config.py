@@ -564,7 +564,6 @@ class Config(object):
             self.fanout = conf.getint("ieHGCN", "fanout")
             self.batch_size = conf.getint("ieHGCN", "batch_size")
             self.hidden_dim = conf.getint("ieHGCN", "hidden_dim")
-            self.in_dim = conf.getint("ieHGCN", "in_dim")
             self.out_dim = conf.getint("ieHGCN", "out_dim")
             self.patience = conf.getint("ieHGCN", "patience")
         elif self.model_name == 'HGAT':
@@ -576,7 +575,6 @@ class Config(object):
             self.num_layers = conf.getint("HGAT","num_layers")
             self.mini_batch_flag = False
             self.hidden_dim = conf.getint("HGAT", "hidden_dim")
-            self.in_dim = conf.getint("HGAT", "in_dim")
             self.num_classes = conf.getint("HGAT", "num_classes")
             self.patience = conf.getint("HGAT", "patience")
             self.negative_slope = conf.getfloat("HGAT", "negative_slope")
