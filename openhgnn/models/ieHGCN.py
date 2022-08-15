@@ -79,7 +79,7 @@ class ieHGCN(BaseModel):
     """
     @classmethod
     def build_model_from_args(cls, args, hg:dgl.DGLGraph):
-        return cls(args.n_layers,
+        return cls(args.num_layers,
                    args.hidden_dim,
                    args.out_dim,
                    args.attn_dim,
