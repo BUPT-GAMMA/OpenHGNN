@@ -6,7 +6,7 @@ def search_space(trial):
         "lr": trial.suggest_categorical("lr", [1e-3, 5e-3, 1e-2]),
         "hidden_dim": trial.suggest_categorical("hidden_dim", [32, 64]),
         "dropout": trial.suggest_uniform("dropout", 0.0, 0.5),
-        'n_layers': trial.suggest_int('n_layers', 2, 3)
+        'num_layers': trial.suggest_int('num_layers', 2, 3)
     }
 
 
