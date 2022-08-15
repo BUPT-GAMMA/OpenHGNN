@@ -58,7 +58,7 @@ if __name__ == '__main__':
     labels = new_ds[0].nodes[new_ds.target_ntype].data['label']
     experiment = Experiment(conf_path='./my_config.ini', max_epoch=1, epoch=1, model=args.model, dataset=new_ds,
                             task='node_classification', mini_batch_flag=args.mini_batch_flag, gpu=args.gpu,
-                            test_flag=False, prediction_flag=True)
+                            test_flag=False, prediction_flag=True, batch_size=100)
     prediction_res = experiment.run()
     indices, y_predicts = prediction_res
     y_predicts = torch.argmax(y_predicts, dim=1)
