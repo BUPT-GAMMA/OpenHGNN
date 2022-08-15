@@ -1,3 +1,4 @@
+from audioop import bias
 import dgl
 import torch
 import torch.nn as nn
@@ -77,10 +78,13 @@ class ieHGCN(BaseModel):
                    args.out_dim,
                    args.attn_dim,
                    hg.ntypes,
-                   hg.etypes
+                   hg.etypes,
+                   args.bias,
+                   args.batchnorm,
+                   args.dropout
                    )
 
-    def __init__(self, num_layers, hidden_dim, out_dim, attn_dim, ntypes, etypes):
+    def __init__(self, num_layers, hidden_dim, out_dim, attn_dim, ntypes, etypes, bias, batchnorm, dropout):
         super(ieHGCN, self).__init__()
         self.num_layers = num_layers
         self.activation = F.elu
@@ -94,7 +98,10 @@ class ieHGCN(BaseModel):
                     attn_dim,
                     ntypes,
                     etypes,
-                    self.activation
+                    self.activation,
+                    bias,
+                    batchnorm,
+                    dropout
                 )
             )
         
@@ -106,6 +113,9 @@ class ieHGCN(BaseModel):
                 ntypes,
                 etypes,
                 None,
+                False,
+                False,
+                0.0
             )
         )
 
@@ -148,12 +158,16 @@ class ieHGCNConv(nn.Module):
     ntypes: list
         the node type list of a heterogeneous graph
     etypes: list
-        the feature drop rate
+        the edge type list of a heterogeneous graph
     activation: str
         the activation function
     """
-    def __init__(self, in_size, out_size, attn_size, ntypes, etypes, activation = F.elu):
+    def __init__(self, in_size, out_size, attn_size, ntypes, etypes, activation = F.elu, 
+                 bias = False, batchnorm = False, dropout = 0.0):
         super(ieHGCNConv, self).__init__()
+        self.bias = bias
+        self.batchnorm = batchnorm
+        self.dropout = dropout
         node_size = {}
         for ntype in ntypes:
             node_size[ntype] = in_size
@@ -182,7 +196,12 @@ class ieHGCNConv(nn.Module):
         self.linear_k = nn.ModuleDict({ntype: nn.Linear(out_size, attn_size) for ntype in ntypes})
         
         self.activation = activation
-        
+        if batchnorm:
+            self.bn = nn.BatchNorm1d(out_size)
+        if bias:
+            self.h_bias = nn.Parameter(torch.Tensor(out_size))
+            nn.init.zeros_(self.h_bias)      
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, hg, h_dict):
         """
@@ -259,8 +278,13 @@ class ieHGCNConv(nn.Module):
                         rst[ntype] = aggregation + rst[ntype]
                 
             # h = self.conv(hg, hg.ndata['h'], aggregate = self.my_agg_func)
-        if self.activation is not None:
-            for ntype in rst.keys():
-                rst[ntype] = self.activation(rst[ntype])
+        def _apply(ntype, h):
+            if self.bias:
+                h = h + self.h_bias
+            if self.activation:
+                h = self.activation(h)
+            if self.batchnorm:
+                h = self.bn(h)
+            return self.dropout(h)
             
-        return rst
+        return {ntype: _apply(ntype, feat) for ntype, feat in rst.items()}
