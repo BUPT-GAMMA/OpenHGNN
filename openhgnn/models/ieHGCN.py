@@ -70,6 +70,12 @@ class ieHGCN(BaseModel):
         the node type of a heterogeneous graph
     etypes: list
         the edge type of a heterogeneous graph
+    bias: boolean
+        whether we need bias vector
+    batchnorm: boolean
+        whether we need batchnorm
+    dropout: float
+        the drop out rate
     """
     @classmethod
     def build_model_from_args(cls, args, hg:dgl.DGLGraph):
@@ -161,6 +167,12 @@ class ieHGCNConv(nn.Module):
         the edge type list of a heterogeneous graph
     activation: str
         the activation function
+    bias: boolean
+        whether we need bias vector
+    batchnorm: boolean
+        whether we need batchnorm
+    dropout: float
+        the drop out rate
     """
     def __init__(self, in_size, out_size, attn_size, ntypes, etypes, activation = F.elu, 
                  bias = False, batchnorm = False, dropout = 0.0):
