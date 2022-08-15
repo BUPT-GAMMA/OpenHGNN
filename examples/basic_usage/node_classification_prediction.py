@@ -25,7 +25,7 @@ if __name__ == '__main__':
     # acm
     if args.dataset == 'acm':
         ds = ACM4GTNDataset()
-        ds[0].nodes[ds.target_ntype].data['pred_mask'] = ds[0].nodes[ds.target_ntype].data.pop('test_mask')
+        ds[0].nodes[ds.target_ntype].data['pred_mask'] = ds[0].nodes[ds.target_ntype].data['test_mask']
         new_ds = AsNodeClassificationDataset(ds, target_ntype=ds.target_ntype)
 
     # cora graph
