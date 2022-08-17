@@ -67,24 +67,41 @@ class MAGNN(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
         ntypes = hg.ntypes
-        if args.dataset == 'imdb4MAGNN':
-            # build model
-            metapath_list = ['M-D-M', 'M-A-M', 'D-M-D', 'D-M-A-M-D', 'A-M-A', 'A-M-D-M-A']
-            edge_type_list = ['A-M', 'M-A', 'D-M', 'M-D']
-            # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
-            in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
-            metapath_idx_dict = mp_instance_sampler(hg, metapath_list, 'imdb4MAGNN')
+        # if args.dataset != 'imdb4MAGNN':
+        edge_type_list = []
+        edge_added = [0] * len(hg.etypes)
+        for i in range(len(edge_added)):
+            if edge_added[i] == 0:
+                edge_type_list.append(hg.etypes[i])
+                edge_added[i] = 1
+                for j in range(i, len(edge_added)):
+                    if hg.canonical_etypes[j][0] == hg.canonical_etypes[i][2] and hg.canonical_etypes[j][2] == hg.canonical_etypes[i][0]:
+                        edge_type_list.append(hg.etypes[j])
+                        edge_added[j] = 1
+                        break
+        print(edge_type_list)
+        metapath_list = []
+        # for i in range(len(hg.canonical_etypes)):
+        for i in range(1):
+            metapath = hg.canonical_etypes[i][1] + '-' + hg.canonical_etypes[i][0]
+            metapath_list.append(metapath)
+        print(metapath_list)
+        metapath_idx_dict = mp_instance_sampler(hg, metapath_list, args.dataset_name)
+        # if args.dataset == 'imdb4MAGNN':
+        #     # build model
+        #     metapath_list = ['M-D-M', 'M-A-M', 'D-M-D', 'D-M-A-M-D', 'A-M-A', 'A-M-D-M-A']
+        #     edge_type_list = ['A-M', 'M-A', 'D-M', 'M-D']
+        #     # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
+        #     in_feats = {'M': 3066, 'D': 2081, 'A': 5257}
+        #     metapath_idx_dict = mp_instance_sampler(hg, metapath_list, 'imdb4MAGNN')
 
-        elif args.dataset == 'dblp4MAGNN':
-            # build model
-            metapath_list = ['A-P-A', 'A-P-T-P-A', 'A-P-V-P-A']
-            edge_type_list = ['A-P', 'P-A', 'P-T', 'T-P', 'P-V', 'V-P']
-            # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
-            in_feats = {'A': 334, 'P': 14328, 'T': 7723, 'V': 20}
-            metapath_idx_dict = mp_instance_sampler(hg, metapath_list, 'dblp4MAGNN')
-
-        else:
-            raise NotImplementedError("MAGNN on dataset {} has not been implemented".format(args.dataset))
+        # elif args.dataset == 'dblp4MAGNN':
+        #     # build model
+        #     metapath_list = ['A-P-A']
+        #     edge_type_list = ['A-P', 'P-A', 'P-T', 'T-P', 'P-V', 'V-P']
+        #     # in_feats: {'n1type': n1_dim, 'n2type', n2_dim, ...}
+        #     in_feats = {'A': 334, 'P': 14328, 'T': 7723, 'V': 20}
+        #     metapath_idx_dict = mp_instance_sampler(hg, metapath_list, 'dblp4MAGNN')
 
         return cls(ntypes=ntypes,
                    h_feats=args.h_dim,
@@ -200,18 +217,25 @@ class MAGNN(BaseModel):
         dict
             The embeddings before the output projection. e.g dict['M'] contains embeddings of every node of M type.
         """
+        if hasattr(g, "ntypes"):
+            # hidden layer
+            for i in range(self.num_layers - 1):
+                h, _ = self.layers[i](feat_dict, self.metapath_idx_dict)
+                for key in h.keys():
+                    h[key] = self.activation(h[key])
 
-        # hidden layer
-        for i in range(self.num_layers - 1):
-            h, _ = self.layers[i](feat_dict, self.metapath_idx_dict)
-            for key in h.keys():
-                h[key] = self.activation(h[key])
+            # output layer
+            h_output, embedding = self.layers[-1](feat_dict, self.metapath_idx_dict)
 
-        # output layer
-        h_output, embedding = self.layers[-1](feat_dict, self.metapath_idx_dict)
-
-        # return h_output, embedding
-        return h_output
+            # return h_output, embedding
+            return h_output
+        else:
+            for layer, block in zip(self.layers, g):
+                h, _ = layer(feat_dict, self.metapath_idx_dict)
+                for key in h.keys():
+                    h[key] = self.activation(h[key])
+            h_output, embedding = self.layers[-1](feat_dict, self.metapath_idx_dict)
+            return h_output
 
 
 class MAGNN_layer(nn.Module):
