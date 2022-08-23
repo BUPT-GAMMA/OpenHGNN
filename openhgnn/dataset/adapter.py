@@ -218,6 +218,10 @@ class AsNodeClassificationDataset(DGLDataset):
     def _set_split_index(self, ntype):
         """Add train_idx/val_idx/test_idx as dataset attributes according to corresponding mask."""
         ndata = self.g.nodes[self.target_ntype].data
+        self.train_idx = None
+        self.val_idx = None
+        self.test_idx = None
+        self.pred_idx = None
         if 'train_mask' in ndata:
             self.train_idx = F.nonzero_1d(ndata['train_mask'])
         if 'val_mask' in ndata:

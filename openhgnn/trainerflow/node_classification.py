@@ -54,12 +54,14 @@ class NodeClassification(BaseFlow):
         if self.args.mini_batch_flag:
             fanout = getattr(self.args, 'fanout', -1)
             sampler = dgl.dataloading.MultiLayerNeighborSampler([fanout] * self.args.num_layers)
-            self.train_loader = dgl.dataloading.DataLoader(
-                self.hg.cpu(), {self.category: self.train_idx.cpu()}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
-            self.val_loader = dgl.dataloading.DataLoader(
-                self.hg.to('cpu'), {self.category: self.valid_idx.to('cpu')}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+            if self.train_idx is not None:
+                self.train_loader = dgl.dataloading.DataLoader(
+                    self.hg.cpu(), {self.category: self.train_idx.cpu()}, sampler,
+                    batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+            if self.valid_idx is not None:
+                self.val_loader = dgl.dataloading.DataLoader(
+                    self.hg.to('cpu'), {self.category: self.valid_idx.to('cpu')}, sampler,
+                    batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
             if self.args.test_flag:
                 self.test_loader = dgl.dataloading.DataLoader(
                     self.hg.to('cpu'), {self.category: self.test_idx.to('cpu')}, sampler,
