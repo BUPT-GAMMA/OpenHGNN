@@ -106,25 +106,14 @@ class AsNodeClassificationDataset(DGLDataset):
                          hash_key=(self.split_ratio, target_ntype, name, 'nodepred'), **kwargs)
 
     def process(self):
-        # is_ogb = hasattr(self.dataset, 'get_idx_split')
-        # if is_ogb:
-        #     g, label = self.dataset[0]
-        #     self.g = g.clone()
-        #     self.g.ndata['label'] = F.reshape(label, (g.num_nodes(),))
-        # else:
-        #     self.g = self.dataset[0].clone()
-
         if self.label_feat_name not in self.g.nodes[self.target_ntype].data:
             raise ValueError("Missing node labels. Make sure labels are stored "
                              "under name {}.".format(self.label_feat_name))
 
         if self.split_ratio is None:
-            assert "train_mask" in self.g.nodes[self.target_ntype].data, \
-                "train_mask is not provided, please specify split_ratio to generate the masks"
-            assert "val_mask" in self.g.nodes[self.target_ntype].data, \
-                "val_mask is not provided, please specify split_ratio to generate the masks"
-            assert "test_mask" in self.g.nodes[self.target_ntype].data, \
-                "test_mask is not provided, please specify split_ratio to generate the masks"
+            if self.verbose:
+                print('Split ratio is not provided, '
+                      'we will use the train_mask, val_mask and test_mask from the original graph.')
         else:
             if self.verbose:
                 print('Generating train/val/test masks...')
@@ -132,7 +121,7 @@ class AsNodeClassificationDataset(DGLDataset):
             self.gene_mask(self.split_ratio, self.target_ntype, )
         if self.prediction_ratio is None:
             if self.verbose:
-                print("Predicion_ratio is not provided, we will use the pred_mask from the original graph.")
+                print("Prediction ratio is not provided, we will use the pred_mask from the original graph.")
         elif self.label_mask_feat_name is not None:
             self.gene_pred_mask(self.prediction_ratio, self.target_ntype)
         else:
@@ -229,12 +218,15 @@ class AsNodeClassificationDataset(DGLDataset):
     def _set_split_index(self, ntype):
         """Add train_idx/val_idx/test_idx as dataset attributes according to corresponding mask."""
         ndata = self.g.nodes[self.target_ntype].data
-        self.train_idx = F.nonzero_1d(ndata['train_mask'])
-        self.val_idx = F.nonzero_1d(ndata['val_mask'])
-        self.test_idx = F.nonzero_1d(ndata['test_mask'])
+        if 'train_mask' in ndata:
+            self.train_idx = F.nonzero_1d(ndata['train_mask'])
+        if 'val_mask' in ndata:
+            self.val_idx = F.nonzero_1d(ndata['val_mask'])
+        if 'test_mask' in ndata:
+            self.test_idx = F.nonzero_1d(ndata['test_mask'])
         if 'pred_mask' in ndata:
             self.pred_idx = F.nonzero_1d(ndata['pred_mask'])
-        else:
+        elif self.label_mask_feat_name is not None:
             if self.verbose:
                 print('No prediction mask exists, will predict all missing labels.')
             idx_tensor = torch.where(self.g.nodes[ntype].data[self.label_mask_feat_name] == 0)[0]
