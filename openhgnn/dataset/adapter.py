@@ -337,6 +337,11 @@ class AsLinkPredictionDataset(DGLDataset):
         self.pos_val_graph, self.neg_val_graph = self._get_pos_and_neg_graph('val')
         self.pos_test_graph, self.neg_test_graph = self._get_pos_and_neg_graph('test')
 
+        self.pred_edges = getattr(self.dataset, 'pred_edges', None)
+        if self.pred_edges is not None:
+            self.pred_graph = dgl.heterograph(self.pred_edges,
+                                              {ntype: self.g.num_nodes(ntype) for ntype in self.g.ntypes})
+
         # create train graph
         train_graph = self.g
         for i, etype in enumerate(self.target_link):

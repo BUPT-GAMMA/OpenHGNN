@@ -35,6 +35,7 @@ class LinkPrediction(BaseTask):
         self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger)
         # self.evaluator = Evaluator()
         self.train_hg, self.val_hg, self.test_hg, self.neg_val_graph, self.neg_test_graph = self.dataset.get_split()
+        self.pred_hg = getattr(self.dataset, 'pred_graph', None)
         if self.val_hg is None and self.test_hg is None:
             pass
         else:
@@ -57,9 +58,9 @@ class LinkPrediction(BaseTask):
         if args.dataset in ['wn18', 'FB15k', 'FB15k-237']:
             self.evaluation_metric = 'mrr'
             self.filtered = args.filtered
-            if hasattr(args, "valid_percent") :
+            if hasattr(args, "valid_percent"):
                 self.dataset.modify_size(args.valid_percent, 'valid')
-            if hasattr(args, "test_percent") :
+            if hasattr(args, "test_percent"):
                 self.dataset.modify_size(args.test_percent, 'test')
         else:
             self.evaluation_metric = 'roc_auc'
@@ -110,8 +111,10 @@ class LinkPrediction(BaseTask):
             return dict(Accuracy=acc)
         elif self.evaluation_metric == 'mrr':
             mrr_matrix = self.evaluator.mrr_(n_embedding, r_embedding,
-                                        self.dataset.train_triplets, self.dataset.valid_triplets, self.dataset.test_triplets, 
-                                        score_predictor=self.ScorePredictor, hits=[1, 3, 10], filtered=self.filtered, eval_mode=mode)
+                                             self.dataset.train_triplets, self.dataset.valid_triplets,
+                                             self.dataset.test_triplets,
+                                             score_predictor=self.ScorePredictor, hits=[1, 3, 10],
+                                             filtered=self.filtered, eval_mode=mode)
             return mrr_matrix
         elif self.evaluation_metric == 'roc_auc':
             if mode == 'test':
@@ -133,6 +136,11 @@ class LinkPrediction(BaseTask):
             return dict(roc_auc=roc_auc, loss=loss)
         else:
             return self.evaluator.link_prediction
+
+    def predict(self, n_embedding, r_embedding, **kwargs):
+        score = th.sigmoid(self.ScorePredictor(self.pred_hg, n_embedding, r_embedding))
+        indices = self.pred_hg.edges()
+        return indices, score
 
     def downstream_evaluate(self, logits, evaluation_metric):
         if evaluation_metric == 'academic_lp':
@@ -257,7 +265,7 @@ class HeteroDistMultPredictor(th.nn.Module):
 #     def __init__(self, dis_norm):
 #         super(HeteroTransXPredictor, self).__init__()
 #         self.dis_norm = dis_norm
-    
+
 #     def forward(self, h, r, t):
 #         h = F.normalize(h, 2, -1)
 #         r = F.normalize(r, 2, -1)
