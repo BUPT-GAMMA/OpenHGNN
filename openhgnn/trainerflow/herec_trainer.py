@@ -20,7 +20,7 @@ class HERecTrainer(BaseFlow):
         self.dataloader = None
 
         self.metapath = self.task.dataset.meta_paths_dict[self.args.meta_path_key]
-        self.embeddings_file_path = os.path.join(self.args.output_dir, self.args.dataset + '_' +
+        self.embeddings_file_path = os.path.join(self.args.output_dir, self.args.dataset_name + '_' +
                                                  self.args.meta_path_key + '_herec_embeddings.npy')
         self.load_trained_embeddings = False
 
@@ -49,9 +49,13 @@ class HERecTrainer(BaseFlow):
     def train(self):
         emb = self.load_embeddings()
 
-        # todo: only supports node classification now
-        metric = {'test': self.task.downstream_evaluate(logits=emb, evaluation_metric='f1_lr')}
-        self.logger.train_info(self.logger.metric2str(metric))
+        # if node classification, evaluate and return metric
+        if self.args.task == 'node_classification':
+            metric = {'test': self.task.downstream_evaluate(logits=emb, evaluation_metric='f1_lr')}
+            self.logger.train_info(self.logger.metric2str(metric))
+            return metric
+        # otherwise, return emb
+        return emb
 
     def load_embeddings(self):
         if not self.load_trained_embeddings or not os.path.exists(self.embeddings_file_path):

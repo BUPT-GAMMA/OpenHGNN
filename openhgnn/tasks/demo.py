@@ -16,7 +16,7 @@ class Demo(BaseTask):
         self.evaluator = Evaluator(args.seed)
 
     def get_graph(self):
-        return self.dataset.g
+        return getattr(self.dataset, 'g', self.dataset[0])
 
     def get_loss_fn(self):
         return F.binary_cross_entropy_with_logits
