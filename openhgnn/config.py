@@ -658,6 +658,20 @@ class Config(object):
             self.valid_percent = conf.getfloat("TransD", "valid_percent")
             self.test_percent = conf.getfloat("TransD", "test_percent")
             self.mini_batch_flag = True
+        
+        elif self.model_name == 'RGAT':
+            self.weight_decay = conf.getfloat("RGAT", "weight_decay")
+            self.lr = conf.getfloat("RGAT", "lr")
+            self.max_epoch = conf.getint("RGAT", "max_epoch")
+            self.seed = conf.getint("RGAT", "seed")
+            self.num_layers = conf.getint("RGAT","num_layers")
+            self.mini_batch_flag = False
+            self.hidden_dim = conf.getint("RGAT", "hidden_dim")
+            self.in_dim = conf.getint("RGAT", "in_dim")
+            self.patience = conf.getint("RGAT", "patience")
+            self.num_heads = conf.getint("RGAT", "num_heads")
+            self.dropout = conf.getfloat("RGAT", "dropout")
+            self.out_dim = conf.getint("RGAT", "out_dim")
 
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model_name, self.task, self.dataset)
