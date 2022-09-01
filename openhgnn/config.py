@@ -672,6 +672,20 @@ class Config(object):
             self.num_heads = conf.getint("RGAT", "num_heads")
             self.dropout = conf.getfloat("RGAT", "dropout")
             self.out_dim = conf.getint("RGAT", "out_dim")
+        
+        elif self.model_name == 'Rsage':
+            self.weight_decay = conf.getfloat("Rsage", "weight_decay")
+            self.lr = conf.getfloat("Rsage", "lr")
+            self.max_epoch = conf.getint("Rsage", "max_epoch")
+            self.seed = conf.getint("Rsage", "seed")
+            self.num_layers = conf.getint("Rsage","num_layers")
+            self.mini_batch_flag = False
+            self.hidden_dim = conf.getint("Rsage", "hidden_dim")
+            self.in_dim = conf.getint("Rsage", "in_dim")
+            self.patience = conf.getint("Rsage", "patience")
+            self.aggregator_type = conf.get("Rsage", "aggregator_type")
+            self.dropout = conf.getfloat("Rsage", "dropout")
+            self.out_dim = conf.getint("Rsage", "out_dim")
 
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model_name, self.task, self.dataset)
