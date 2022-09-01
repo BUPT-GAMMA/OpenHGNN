@@ -94,6 +94,7 @@ SUPPORTED_MODELS = {
     'TransH': 'openhgnn.models.TransH',
     'TransR': 'openhgnn.models.TransR',
     'TransD': 'openhgnn.models.TransD',
+    'Rsage': 'openhgnn.models.Rsage'
 }
 
 from .CompGCN import CompGCN
@@ -125,6 +126,7 @@ from .HetSANN import HetSANN
 from .ieHGCN import ieHGCN
 from .HGAT import HGAT
 from .GATNE import GATNE
+from .Rsage import Rsage
 
 __all__ = [
     'BaseModel',
@@ -153,6 +155,7 @@ __all__ = [
     'general_HGNN',
     'HDE',
     'SimpleHGN',
-    'GATNE'
+    'GATNE',
+    'Rsage'
 ]
 classes = __all__
