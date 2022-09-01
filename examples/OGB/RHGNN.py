@@ -52,18 +52,29 @@ class MyNCDataset(DGLDataset):
         self._g.nodes[self.category].data['val_mask'] = val_mask
         self._g.nodes[self.category].data['test_mask'] = test_mask
         self._g.nodes[self.category].data['label'] = self.label
+        feat = self._g.nodes[self.category].data['h']
         
         # 2-dim label
         self.in_dim = self._g.ndata['h'][self.category].shape[1]
         self.has_feature = True
-        emb = numpy.load('./openhgnn/output/Metapath2vec/ogbn-mag_mp2vec_embeddings.npy')
-        emb = torch.tensor(emb)
-        start = 0
-        for ntype in self._g.ntypes:
-            end = start + self._g.num_nodes(ntype)
-            feature[ntype] = emb[start:end]
-            start = end
+        # emb = numpy.load('./openhgnn/output/Metapath2vec/ogbn-mag_mp2vec_embeddings.npy')
+        # emb = torch.tensor(emb)
+        # start = 0
+        # for ntype in self._g.ntypes:
+        #     end = start + self._g.num_nodes(ntype)
+        #     if ntype == self.category:
+        #         feature[ntype] = feat
+        #     else:
+        #         feature[ntype] = emb[start:end]
+        #     start = end
 
+        for ntype in self._g.ntypes:
+            if ntype == self.category:
+                feature[ntype] = feat
+            else:
+                emb = torch.load("./dataset/ogbn_mag/preprocess/{}.pt".format(ntype), map_location=torch.device('cpu')).float()
+                feature[ntype] = emb
+            
         self._g.ndata['h'] = feature
 
         # train_mask = utils.generate_mask_tensor(utils.idx2mask(self.train_idx, n))
@@ -131,9 +142,9 @@ def search_space(trial):
         "out_dim": trial.suggest_categorical("out_dim", [8, 16]),
         "weight_decay": trial.suggest_categorical("weight_decay", [1e-3, 1e-4, 1e-2, 1e-5]),
         "dropout": trial.suggest_uniform("dropout", 0.0, 0.5),
-        "num_heads": trial.suggest_categorical("num_heads", [4, 8]),
+        "n_heads": trial.suggest_categorical("n_heads", [4, 8]),
         # 'n_layers': trial.suggest_int('n_layers', 2, 3)
-        "negative_slope": trial.suggest_uniform("dropout", 0.0, 0.5),
+        "negative_slope": trial.suggest_uniform("negative_slope", 0.0, 0.5),
         
     }
 
@@ -141,18 +152,18 @@ def search_space(trial):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mini_batch_flag', action='store_false')
-    parser.add_argument('--max_epoch', default='100', type=int)
+    parser.add_argument('--max_epoch', default='2000', type=int)
     parser.add_argument('--gpu', '-g', default='2', type=int, help='-1 means cpu')
-    parser.add_argument('--batch_size', default='2048', type=int)
+    parser.add_argument('--batch_size', default='2000', type=int)
     parser.add_argument('--hidden_dim', default='64', type=int)
     parser.add_argument('--out_dim', default='16', type=int)
     parser.add_argument('--num_layers', default='2', type=int)
-    parser.add_argument('--num_heads', default='8', type=int)
-    parser.add_argument('--lr', default='0.01', type=float)
+    parser.add_argument('--n_heads', default='8', type=int)
+    parser.add_argument('--lr', default='0.0001', type=float)
     parser.add_argument('--weight_decay', default='0.00001', type=float)
-    parser.add_argument('--dropout', default='0.2', type=float)
-    parser.add_argument('--negative_slope', default='0.2', type=float)
-    parser.add_argument('--fanout', default='10', type=int)
+    parser.add_argument('--dropout', default='0.02', type=float)
+    parser.add_argument('--negative_slope', default='0.02', type=float)
+    parser.add_argument('--fanout', default='20', type=int)
     parser.add_argument('--residual', action='store_false')
     parser.add_argument('--norm', action='store_false')
     parser.add_argument('--relation_hidden_units', default='8', type=int)
@@ -161,12 +172,13 @@ if __name__ == '__main__':
 
     myNCDataset = AsNodeClassificationDataset(MyNCDataset(dataset_name = "mag"), target_ntype='paper',
                                             force_reload=True)
+    
     experiment = Experiment( model='RHGNN', dataset=myNCDataset,
                             task='node_classification', gpu = args.gpu, mini_batch_flag = args.mini_batch_flag, 
-                            max_epoch=args.max_epoch, batch_size=args.batch_size, out_dim = args.out_dim, num_heads = args.num_heads,
+                            max_epoch=args.max_epoch, batch_size=args.batch_size, out_dim = args.out_dim, n_heads = args.n_heads,
                             hidden_dim=args.hidden_dim, n_layers=args.num_layers, lr=args.lr,
                             weight_decay=args.weight_decay, dropout=args.dropout, fanout=args.fanout,
                             residual = args.residual, norm = args.norm, relation_hidden_units = args.relation_hidden_units,
-                            node_neighbors_min_num = args.node_neighbors_min_num, hpo_search_space=search_space, hpo_trials=20
+                            node_neighbors_min_num = args.node_neighbors_min_num
                             )
     experiment.run()
