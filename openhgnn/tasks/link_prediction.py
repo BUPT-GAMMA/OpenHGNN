@@ -55,6 +55,7 @@ class LinkPrediction(BaseTask):
 
         self.negative_sampler = Uniform(1)
 
+        self.evaluation_metric = getattr(args, 'evaluation_metric', 'roc_auc')  # default evaluation_metric is roc_auc
         if args.dataset in ['wn18', 'FB15k', 'FB15k-237']:
             self.evaluation_metric = 'mrr'
             self.filtered = args.filtered
@@ -62,8 +63,6 @@ class LinkPrediction(BaseTask):
                 self.dataset.modify_size(args.valid_percent, 'valid')
             if hasattr(args, "test_percent"):
                 self.dataset.modify_size(args.test_percent, 'test')
-        else:
-            self.evaluation_metric = 'roc_auc'
 
         args.logger.info('[Init Task] The task: link prediction, the dataset: {}, the evaluation metric is {}, '
                          'the score function: {} '.format(self.name_dataset, self.evaluation_metric, args.score_fn))
@@ -114,7 +113,7 @@ class LinkPrediction(BaseTask):
                                              self.dataset.train_triplets, self.dataset.valid_triplets,
                                              self.dataset.test_triplets,
                                              score_predictor=self.ScorePredictor, hits=[1, 3, 10],
-                                             filtered=self.filtered, eval_mode=mode)
+                                             filtered=getattr(self, 'filtered', 'filtered'), eval_mode=mode)
             return mrr_matrix
         elif self.evaluation_metric == 'roc_auc':
             if mode == 'test':
@@ -139,6 +138,12 @@ class LinkPrediction(BaseTask):
 
     def predict(self, n_embedding, r_embedding, **kwargs):
         score = th.sigmoid(self.ScorePredictor(self.pred_hg, n_embedding, r_embedding))
+        indices = self.pred_hg.edges()
+        return indices, score
+
+    def tranX_predict(self):
+        pred_triples_T = self.dataset.pred_triples.T
+        score = th.sigmoid(self.ScorePredictor(pred_triples_T[0], pred_triples_T[1], pred_triples_T[2]))
         indices = self.pred_hg.edges()
         return indices, score
 

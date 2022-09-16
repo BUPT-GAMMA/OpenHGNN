@@ -29,7 +29,7 @@ class Config(object):
         if isinstance(dataset, str):
             self.dataset_name = dataset
         else:
-            self.dataset_name = type(self.dataset).__name__
+            self.dataset_name = self.dataset.name
         if isinstance(model, str):
             self.model_name = model
         else:
