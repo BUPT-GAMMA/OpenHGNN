@@ -33,7 +33,8 @@ class HANSampler(dgl.dataloading.Sampler):
         for meta_path_name, sampler in self.sampler_dict.items():
             frontier = sampler(category_seeds)
             frontier = dgl.remove_self_loop(frontier)
-            frontier.add_edges(torch.tensor(category_seeds), torch.tensor(category_seeds))
+            # frontier.add_edges(torch.tensor(category_seeds), torch.tensor(category_seeds))
+            frontier.add_edges(category_seeds.clone().detach(), category_seeds.clone().detach())
             block = dgl.to_block(frontier, category_seeds)
             block_dict[meta_path_name] = block
             input_nodes_dict[meta_path_name] = {self.category: block.srcdata[dgl.NID]}

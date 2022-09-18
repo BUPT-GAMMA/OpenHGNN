@@ -50,7 +50,7 @@ class HAN(BaseFlow):
 
         if self.args.mini_batch_flag:
 
-            sampler = HANSampler(g=self.hg, category=self.category, meta_paths_dict=self.args.meta_paths_dict,
+            sampler = HANSampler(g=self.hg.cpu(), category=self.category, meta_paths_dict=self.args.meta_paths_dict,
                                  num_neighbors=20)
             self.train_loader = dgl.dataloading.DataLoader(
                 self.hg.cpu(), {self.category: self.train_idx.cpu()}, sampler,
