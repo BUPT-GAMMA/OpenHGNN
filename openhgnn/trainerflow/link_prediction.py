@@ -96,7 +96,7 @@ class LinkPrediction(BaseFlow):
                 shuffle=True,
                 drop_last=False,
                 num_workers=4)
-            # if self.args.prediction_flag:
+            self.category = self.hg.ntypes[0]
 
     def preprocess(self):
         """
@@ -141,11 +141,13 @@ class LinkPrediction(BaseFlow):
                 return dict(metric=val_metric, epoch=epoch)
             else:
                 test_score = self._test_step(split="test")
-                # val_score = self._test_step(split="valid")
                 self.logger.train_info(self.logger.metric2str(test_score))
                 return dict(metric=test_score, epoch=epoch)
         elif self.args.prediction_flag:
-            prediction_res = self._prediction_step()
+            if self.args.mini_batch_flag:
+                prediction_res = self._mini_prediction_step()
+            else:
+                prediction_res = self._full_prediction_step()
             return prediction_res
 
     def construct_negative_graph(self, hg):
@@ -203,15 +205,77 @@ class LinkPrediction(BaseFlow):
         return th.mean(embedding.pow(2)) + th.mean(self.r_embedding.pow(2))
 
     def _test_step(self, split=None):
+        if self.args.mini_batch_flag:
+            return self._mini_test_step(split=split)
+        else:
+            return self._full_test_step(split=split)
+
+    def _full_test_step(self, split=None):
         self.model.eval()
         with th.no_grad():
             h_dict = self.model.input_feature()
             embedding = self.model(self.train_hg, h_dict)
             return {split: self.task.evaluate(embedding, self.r_embedding, mode=split)}
 
-    def _prediction_step(self):
+    def _mini_test_step(self, split=None):
+        print('mini test...\n')
+        self.model.eval()
+        with th.no_grad():
+            ntypes = set()
+            for etype in self.target_link:
+                src = etype[0]
+                dst = etype[2]
+                ntypes.add(src)
+                ntypes.add(dst)
+
+            embedding = self._mini_embedding(model=self.model, fanouts=[-1] * self.args.num_layers, g=self.train_hg,
+                                             device=self.args.device, dim=self.model.out_dim, ntypes=ntypes,
+                                             batch_size=self.args.batch_size)
+            return {split: self.task.evaluate(embedding, self.r_embedding, mode=split)}
+
+    def _full_prediction_step(self):
         self.model.eval()
         with th.no_grad():
             h_dict = self.model.input_feature()
             embedding = self.model(self.train_hg, h_dict)
             return self.task.predict(embedding, self.r_embedding)
+
+    def _mini_prediction_step(self):
+        self.model.eval()
+        with th.no_grad():
+            ntypes = set()
+            for etype in self.target_link:
+                src = etype[0]
+                dst = etype[2]
+                ntypes.add(src)
+                ntypes.add(dst)
+
+            embedding = self._mini_embedding(model=self.model, fanouts=[-1] * self.args.num_layers, g=self.train_hg,
+                                             device=self.args.device, dim=self.model.out_dim, ntypes=ntypes,
+                                             batch_size=self.args.batch_size)
+            return self.task.predict(embedding, self.r_embedding)
+
+    def _mini_embedding(self, model, fanouts, g, device, dim, ntypes, batch_size):
+        model.eval()
+        with th.no_grad():
+            sampler = dgl.dataloading.NeighborSampler(fanouts)
+
+            pred_idx = {ntype: torch.arange(g.num_nodes(ntype)) for ntype in ntypes}
+            embedding = {ntype: torch.zeros(g.num_nodes(ntype), dim) for ntype in ntypes}
+            dataloader = dgl.dataloading.DataLoader(
+                g.cpu(),
+                pred_idx, sampler,
+                device=device,
+                batch_size=batch_size,
+                shuffle=False, drop_last=False, num_workers=4)
+            loader_tqdm = tqdm(dataloader, ncols=120)
+
+            for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
+                if not isinstance(input_nodes, dict):
+                    input_nodes = {self.category: input_nodes}
+                input_emb = model.input_feature.forward_nodes(input_nodes)
+                output_emb = model(blocks, input_emb)
+
+                for ntype, idx in seeds.items():
+                    embedding[ntype][idx] = output_emb[ntype]
+            return embedding
