@@ -83,19 +83,17 @@ class LinkPrediction(BaseFlow):
 
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link).to(self.device)
         if self.args.mini_batch_flag:
-            self.train_hg = self.train_hg.cpu()
+            self.fanouts = [-1] * self.args.num_layers
             train_eid_dict = {
                 etype: self.train_hg.edges(etype=etype, form='eid')
                 for etype in self.target_link}
-            sampler = dgl.dataloading.MultiLayerFullNeighborSampler(self.args.num_layers)
-            self.dataloader = dgl.dataloading.EdgeDataLoader(
+            sampler = dgl.dataloading.NeighborSampler(self.fanouts)
+            negative_sampler = dgl.dataloading.negative_sampler.Uniform(2)
+            sampler = dgl.dataloading.as_edge_prediction_sampler(sampler=sampler, negative_sampler=negative_sampler)
+            self.dataloader = dgl.dataloading.DataLoader(
                 self.train_hg, train_eid_dict, sampler,
-                negative_sampler=dgl.dataloading.negative_sampler.Uniform(2),
-                # device = th.device('cpu'),
                 batch_size=self.args.batch_size,
-                shuffle=True,
-                drop_last=False,
-                num_workers=4)
+                shuffle=True)
             self.category = self.hg.ntypes[0]
 
     def preprocess(self):
@@ -227,8 +225,7 @@ class LinkPrediction(BaseFlow):
                 dst = etype[2]
                 ntypes.add(src)
                 ntypes.add(dst)
-
-            embedding = self._mini_embedding(model=self.model, fanouts=[-1] * self.args.num_layers, g=self.train_hg,
+            embedding = self._mini_embedding(model=self.model, fanouts=self.fanouts, g=self.train_hg,
                                              device=self.args.device, dim=self.model.out_dim, ntypes=ntypes,
                                              batch_size=self.args.batch_size)
             return {split: self.task.evaluate(embedding, self.r_embedding, mode=split)}
@@ -259,15 +256,12 @@ class LinkPrediction(BaseFlow):
         model.eval()
         with th.no_grad():
             sampler = dgl.dataloading.NeighborSampler(fanouts)
-
-            pred_idx = {ntype: torch.arange(g.num_nodes(ntype)) for ntype in ntypes}
-            embedding = {ntype: torch.zeros(g.num_nodes(ntype), dim) for ntype in ntypes}
+            indices = {ntype: torch.arange(g.num_nodes(ntype)).to(device) for ntype in ntypes}
+            embedding = {ntype: torch.zeros(g.num_nodes(ntype), dim).to(device) for ntype in ntypes}
             dataloader = dgl.dataloading.DataLoader(
-                g.cpu(),
-                pred_idx, sampler,
+                g, indices, sampler,
                 device=device,
-                batch_size=batch_size,
-                shuffle=False, drop_last=False, num_workers=4)
+                batch_size=batch_size)
             loader_tqdm = tqdm(dataloader, ncols=120)
 
             for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):

@@ -52,23 +52,23 @@ class NodeClassification(BaseFlow):
         self.labels = self.task.get_labels().to(self.device)
 
         if self.args.mini_batch_flag:
-            fanout = getattr(self.args, 'fanout', -1)
-            sampler = dgl.dataloading.MultiLayerNeighborSampler([fanout] * self.args.num_layers)
+            self.fanouts = [-1] * self.args.num_layers
+            sampler = dgl.dataloading.MultiLayerNeighborSampler(self.fanouts)
             if self.train_idx is not None:
                 self.train_loader = dgl.dataloading.DataLoader(
-                    self.hg.cpu(), {self.category: self.train_idx.cpu()}, sampler,
-                    batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+                    self.hg, {self.category: self.train_idx.to(self.device)}, sampler,
+                    batch_size=self.args.batch_size, device=self.device, shuffle=True)
             if self.valid_idx is not None:
                 self.val_loader = dgl.dataloading.DataLoader(
-                    self.hg.to('cpu'), {self.category: self.valid_idx.to('cpu')}, sampler,
-                    batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+                    self.hg, {self.category: self.valid_idx.to(self.device)}, sampler,
+                    batch_size=self.args.batch_size, device=self.device, shuffle=True)
             if self.args.test_flag:
                 self.test_loader = dgl.dataloading.DataLoader(
-                    self.hg.to('cpu'), {self.category: self.test_idx.to('cpu')}, sampler,
-                    batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+                    self.hg, {self.category: self.test_idx.to(self.device)}, sampler,
+                    batch_size=self.args.batch_size, device=self.device, shuffle=True)
             if self.args.prediction_flag:
                 self.pred_loader = dgl.dataloading.DataLoader(
-                    self.hg.to('cpu'), {self.category: self.pred_idx.to('cpu')}, sampler,
+                    self.hg, {self.category: self.pred_idx.to(self.device)}, sampler,
                     batch_size=self.args.batch_size, device=self.device, shuffle=True)
 
     def preprocess(self):
@@ -187,7 +187,6 @@ class NodeClassification(BaseFlow):
         loss_all = 0.0
         loader_tqdm = tqdm(self.train_loader, ncols=120)
         for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
-            blocks = [blk.to(self.device) for blk in blocks]
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
             if not isinstance(input_nodes, dict):
                 input_nodes = {self.category: input_nodes}
@@ -255,7 +254,6 @@ class NodeClassification(BaseFlow):
                 y_trues = []
                 y_predicts = []
                 for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
-                    blocks = [blk.to(self.device) for blk in blocks]
                     if not isinstance(input_nodes, dict):
                         input_nodes = {self.category: input_nodes}
                     emb = self.model.input_feature.forward_nodes(input_nodes)
@@ -296,7 +294,6 @@ class NodeClassification(BaseFlow):
             indices = []
             y_predicts = []
             for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
-                blocks = [blk.to(self.device) for blk in blocks]
                 if not isinstance(input_nodes, dict):
                     input_nodes = {self.category: input_nodes}
                 emb = self.model.input_feature.forward_nodes(input_nodes)
