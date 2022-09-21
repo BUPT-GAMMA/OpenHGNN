@@ -49,23 +49,25 @@ class HAN(BaseFlow):
         self.labels = self.task.get_labels().to(self.device)
 
         if self.args.mini_batch_flag:
-
-            sampler = HANSampler(g=self.hg.cpu(), category=self.category, meta_paths_dict=self.args.meta_paths_dict,
+            sampler = HANSampler(g=self.hg, category=self.category, meta_paths_dict=self.args.meta_paths_dict,
                                  num_neighbors=20)
-            self.train_loader = dgl.dataloading.DataLoader(
-                self.hg.cpu(), {self.category: self.train_idx.cpu()}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
-            self.val_loader = dgl.dataloading.DataLoader(
-                self.hg.to('cpu'), {self.category: self.valid_idx.to('cpu')}, sampler,
-                batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+            if self.train_idx is not None:
+                self.train_loader = dgl.dataloading.DataLoader(
+                    self.hg, {self.category: self.train_idx.to(self.device)}, sampler,
+                    batch_size=self.args.batch_size, device=self.device, shuffle=True)
+            if self.valid_idx is not None:
+                self.val_loader = dgl.dataloading.DataLoader(
+                    self.hg, {self.category: self.valid_idx.to(self.device)}, sampler,
+                    batch_size=self.args.batch_size, device=self.device, shuffle=True)
             if self.args.test_flag:
                 self.test_loader = dgl.dataloading.DataLoader(
-                    self.hg.to('cpu'), {self.category: self.test_idx.to('cpu')}, sampler,
-                    batch_size=self.args.batch_size, device=self.device, shuffle=True, num_workers=0)
+                    self.hg, {self.category: self.test_idx.to(self.device)}, sampler,
+                    batch_size=self.args.batch_size, device=self.device, shuffle=True)
             if self.args.prediction_flag:
                 self.pred_loader = dgl.dataloading.DataLoader(
-                    self.hg.to('cpu'), {self.category: self.pred_idx.to('cpu')}, sampler,
+                    self.hg, {self.category: self.pred_idx.to(self.device)}, sampler,
                     batch_size=self.args.batch_size, device=self.device, shuffle=True)
+
 
     def preprocess(self):
 
@@ -145,7 +147,6 @@ class HAN(BaseFlow):
         loss_all = 0.0
         loader_tqdm = tqdm(self.train_loader, ncols=120)
         for i, (input_nodes_dict, seeds, block_dict) in enumerate(loader_tqdm):
-            block_dict = {meta_path_name: blk.to(self.device) for meta_path_name, blk in block_dict.items()}
             seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
             emb_dict = {}
             for meta_path_name, input_nodes in input_nodes_dict.items():
@@ -212,7 +213,6 @@ class HAN(BaseFlow):
                 y_trues = []
                 y_predicts = []
                 for i, (input_nodes_dict, seeds, block_dict) in enumerate(loader_tqdm):
-                    block_dict = {meta_path_name: blk.to(self.device) for meta_path_name, blk in block_dict.items()}
                     seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
                     emb_dict = {}
                     for meta_path_name, input_nodes in input_nodes_dict.items():
@@ -248,7 +248,6 @@ class HAN(BaseFlow):
             indices = []
             y_predicts = []
             for i, (input_nodes_dict, seeds, block_dict) in enumerate(loader_tqdm):
-                block_dict = {meta_path_name: blk.to(self.device) for meta_path_name, blk in block_dict.items()}
                 seeds = seeds[self.category]
                 emb_dict = {}
                 for meta_path_name, input_nodes in input_nodes_dict.items():
