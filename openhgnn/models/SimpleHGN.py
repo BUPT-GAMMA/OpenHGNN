@@ -81,13 +81,15 @@ class SimpleHGN(BaseModel):
                    args.feats_drop_rate,
                    args.slope,
                    True,
-                   args.beta
+                   args.beta,
+                   hg.ntypes
                    )
 
     def __init__(self, edge_dim, num_etypes, in_dim, hidden_dim, num_classes,
                 num_layers, heads, feat_drop, negative_slope,
-                residual, beta):
+                residual, beta, ntypes):
         super(SimpleHGN, self).__init__()
+        self.ntypes = ntypes
         self.num_layers = num_layers
         self.hgn_layers = nn.ModuleList()
         self.activation = F.elu
@@ -156,20 +158,31 @@ class SimpleHGN(BaseModel):
         dict
             The embeddings after the output projection.
         """
-        with hg.local_scope():
-            hg.ndata['h'] = h_dict
-            g = dgl.to_homogeneous(hg, ndata = 'h')
-            h = g.ndata['h']
-            for l in range(self.num_layers):  # noqa E741
-                h = self.hgn_layers[l](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], True)
-                h = h.flatten(1)
+        if hasattr(hg, 'ntypes'):
+            # full graph training,
+            with hg.local_scope():
+                hg.ndata['h'] = h_dict
+                g = dgl.to_homogeneous(hg, ndata = 'h')
+                h = g.ndata['h']
+                for l in range(self.num_layers):  # noqa E741
+                    h = self.hgn_layers[l](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], True)
+                    h = h.flatten(1)
 
-        h_dict = to_hetero_feat(h, g.ndata['_TYPE'], hg.ntypes)
-        # g.ndata['h'] = h
-        # hg = dgl.to_heterogeneous(g, hg.ntypes, hg.etypes)
-        # h_dict = hg.ndata['h']
+            h_dict = to_hetero_feat(h, g.ndata['_TYPE'], hg.ntypes)
+        else:
+            # for minibatch training, input h_dict is a tensor
+            h = h_dict
+            for layer, block in zip(self.hgn_layers, hg):
+                h = layer(block, h, block.ndata['_TYPE'], block.edata['_TYPE'], True)
+                h = h.flatten(1)
+            
+            h_dict = to_hetero_feat(h, block.ndata['_TYPE'], self.ntypes)
 
         return h_dict
+    
+    @property
+    def to_homo_flag(self):
+        return True
 
 class SimpleHGNConv(nn.Module):
     r"""
@@ -290,7 +303,14 @@ class SimpleHGNConv(nn.Module):
             g.update_all(Fn.u_mul_e('emb', 'alpha', 'm'),
                          Fn.sum('m', 'emb'))
             # g.apply_edges(Fn.u_mul_e('emb', 'alpha', 'm'))
-            h_output = g.ndata['emb'].view(-1, self.out_dim * self.num_heads)
+
+            if isinstance(g.ndata['emb'], dict):
+                # mini batch, block's ndata is a dict
+                temp = g.ndata['emb']['_N']
+            else:
+                # full batch
+                temp = g.ndata['emb']
+            h_output = temp.view(-1, self.out_dim * self.num_heads)
             # h_prime = []
             # for i in range(self.num_heads):
             #     g.edata['alpha'] = edge_attention[:, i]

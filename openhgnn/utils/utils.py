@@ -1,5 +1,6 @@
 import dgl
 import copy
+import torch
 from dgl import backend as F
 import torch as th
 from scipy.sparse import coo_matrix
@@ -128,7 +129,7 @@ class EarlyStopping(object):
         else:
             if score >= self.best_score:
                 self.save_model(model)
-                
+
             self.best_score = np.max((score, self.best_score))
             self.counter = 0
         return self.early_stop
@@ -242,11 +243,11 @@ def ccorr(a, b):
     except ImportError:
         from torch.fft import irfft2
         from torch.fft import rfft2
-        
+
         def rfft(x, d):
             t = rfft2(x, dim=(-d))
             return th.stack((t.real, t.imag), -1)
-        
+
         def irfft(x, d, signal_sizes):
             return irfft2(th.complex(x[:, :, 0], x[:, :, 1]), s=signal_sizes, dim=(-d))
 
@@ -436,3 +437,46 @@ def to_hetero_feat(h, type, name):
         h_dict[ntype] = h[th.where(type == index)]
 
     return h_dict
+
+
+def to_hetero_idx(g, hg, idx):
+    input_nodes_dict = {}
+    for i in idx:
+        if not hg.ntypes[g.ndata['_TYPE'][i]] in input_nodes_dict:
+            a = g.ndata['_ID'][i]
+            a = np.expand_dims(a, 0)
+            a = th.tensor(a)
+            input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i]]] = a
+        else:
+            a = input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i]]]
+            b = g.ndata['_ID'][i]
+            b = np.expand_dims(b, 0)
+            b = th.tensor(b)
+            input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i]]] = th.cat((a, b), 0)
+    return input_nodes_dict
+
+
+def to_homo_feature(ntypes, h_dict):
+    h = None
+    for ntype in ntypes:
+        if ntype in h_dict:
+            if h is None:
+                h = h_dict[ntype]
+            else:
+                h = th.cat((h, h_dict[ntype]), dim=0)
+    return h
+
+
+def to_homo_idx(ntypes, num_nodes_dict, idx_dict):
+    idx = None
+    start_idx = [0]
+    for i, num_nodes in enumerate([num_nodes_dict[ntype] for ntype in ntypes]):
+        if i < len(ntypes) - 1:
+            start_idx.append(num_nodes + start_idx[i])
+    for i, ntype in enumerate(ntypes):
+        if ntype in idx_dict and torch.is_tensor(idx_dict[ntype]):
+            if idx is None:
+                idx = th.add(idx_dict[ntype], start_idx[i])
+            else:
+                idx = th.cat((idx, th.add(idx_dict[ntype], start_idx[i])), dim=0)
+    return idx

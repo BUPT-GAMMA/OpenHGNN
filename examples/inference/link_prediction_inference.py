@@ -13,7 +13,7 @@ target_link_r = [('paper', 'rev_author-paper', 'author')]
 
 class MyLPDatasetWithPredEdges(DGLDataset):
     def __init__(self):
-        super().__init__(name='my-lp-dataset-with-pred-edges',
+        super().__init__(name='my-lp-dataset',
                          force_reload=True)
 
     def process(self):
@@ -47,7 +47,7 @@ def generate_random_citation_hg() -> DGLHeteroGraph:
     }
     num_nodes_dict = {
         'paper': 1000,
-        'author': 1000,
+        'author': 100,
     }
     hg = generate_random_hg(num_nodes_dict=num_nodes_dict, num_edges_dict=num_edges_dict)
     transform = T.Compose([T.ToSimple(), T.AddReverse()])

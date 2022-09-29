@@ -4,8 +4,7 @@ from tqdm import tqdm
 from ..utils.sampler import get_node_data_loader
 from ..models import build_model
 from . import BaseFlow, register_flow
-from ..utils.logger import printInfo, printMetric
-from ..utils import extract_embed, EarlyStopping
+from ..utils import EarlyStopping, to_hetero_idx, to_homo_feature, to_homo_idx
 
 
 @register_flow("node_classification")
@@ -44,32 +43,64 @@ class NodeClassification(BaseFlow):
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),
                                                                   lr=args.lr, weight_decay=args.weight_decay)
 
-        self.train_idx, self.valid_idx, self.test_idx = self.task.get_split()
-
-        if self.args.prediction_flag:
-            self.pred_idx = self.task.dataset.pred_idx
+        self.train_idx, self.val_idx, self.test_idx = self.task.get_split()
+        self.pred_idx = getattr(self.task.dataset, 'pred_idx', None)
 
         self.labels = self.task.get_labels().to(self.device)
+        self.num_nodes_dict = {ntype: self.hg.num_nodes(ntype) for ntype in self.hg.ntypes}
+        self.to_homo_flag = getattr(self.model, 'to_homo_flag', False)
+
+        if self.to_homo_flag:
+            self.g = dgl.to_homogeneous(self.hg)
 
         if self.args.mini_batch_flag:
             self.fanouts = [-1] * self.args.num_layers
             sampler = dgl.dataloading.MultiLayerNeighborSampler(self.fanouts)
+
+            if self.to_homo_flag:
+                loader_g = self.g
+            else:
+                loader_g = self.hg
+
             if self.train_idx is not None:
-                self.train_loader = dgl.dataloading.DataLoader(
-                    self.hg, {self.category: self.train_idx.to(self.device)}, sampler,
-                    batch_size=self.args.batch_size, device=self.device, shuffle=True)
-            if self.valid_idx is not None:
-                self.val_loader = dgl.dataloading.DataLoader(
-                    self.hg, {self.category: self.valid_idx.to(self.device)}, sampler,
-                    batch_size=self.args.batch_size, device=self.device, shuffle=True)
+                if self.to_homo_flag:
+                    loader_train_idx = to_homo_idx(self.hg.ntypes, self.num_nodes_dict,
+                                                   {self.category: self.train_idx}).to(self.device)
+                else:
+                    loader_train_idx = {self.category: self.train_idx.to(self.device)}
+
+                self.train_loader = dgl.dataloading.DataLoader(loader_g, loader_train_idx, sampler,
+                                                               batch_size=self.args.batch_size, device=self.device,
+                                                               shuffle=True)
+            if self.train_idx is not None:
+                if self.to_homo_flag:
+                    loader_val_idx = to_homo_idx(self.hg.ntypes, self.num_nodes_dict, {self.category: self.val_idx}).to(
+                        self.device)
+                else:
+                    loader_val_idx = {self.category: self.val_idx.to(self.device)}
+                self.val_loader = dgl.dataloading.DataLoader(loader_g, loader_val_idx, sampler,
+                                                             batch_size=self.args.batch_size, device=self.device,
+                                                             shuffle=True)
             if self.args.test_flag:
-                self.test_loader = dgl.dataloading.DataLoader(
-                    self.hg, {self.category: self.test_idx.to(self.device)}, sampler,
-                    batch_size=self.args.batch_size, device=self.device, shuffle=True)
+                if self.test_idx is not None:
+                    if self.to_homo_flag:
+                        loader_test_idx = to_homo_idx(self.hg.ntypes, self.num_nodes_dict,
+                                                      {self.category: self.test_idx}).to(self.device)
+                    else:
+                        loader_test_idx = {self.category: self.test_idx.to(self.device)}
+                    self.test_loader = dgl.dataloading.DataLoader(loader_g, loader_test_idx, sampler,
+                                                                  batch_size=self.args.batch_size, device=self.device,
+                                                                  shuffle=True)
             if self.args.prediction_flag:
-                self.pred_loader = dgl.dataloading.DataLoader(
-                    self.hg, {self.category: self.pred_idx.to(self.device)}, sampler,
-                    batch_size=self.args.batch_size, device=self.device, shuffle=True)
+                if self.pred_idx is not None:
+                    if self.to_homo_flag:
+                        loader_pred_idx = to_homo_idx(self.hg.ntypes, self.num_nodes_dict,
+                                                      {self.category: self.pred_idx}).to(self.device)
+                    else:
+                        loader_pred_idx = {self.category: self.pred_idx.to(self.device)}
+                    self.pred_loader = dgl.dataloading.DataLoader(loader_g, loader_pred_idx, sampler,
+                                                                  batch_size=self.args.batch_size, device=self.device,
+                                                                  shuffle=True)
 
     def preprocess(self):
         r"""
@@ -108,7 +139,8 @@ class NodeClassification(BaseFlow):
                 self.hg.to('cpu'),
                 batch_size=self.args.batch_size,
                 sampled_node_type=self.category,
-                train_idx=self.train_idx, valid_idx=self.valid_idx,
+                train_idx=self.train_idx,
+                valid_idx=self.val_idx,
                 test_idx=self.test_idx)
 
         super(NodeClassification, self).preprocess()
@@ -174,7 +206,6 @@ class NodeClassification(BaseFlow):
         self.model.train()
         h_dict = self.model.input_feature()
         self.hg = self.hg.to(self.device)
-        h_dict = {k: e.to(self.device) for k, e in h_dict.items()}
         logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
         self.optimizer.zero_grad()
@@ -187,13 +218,15 @@ class NodeClassification(BaseFlow):
         loss_all = 0.0
         loader_tqdm = tqdm(self.train_loader, ncols=120)
         for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
-            seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
-            if not isinstance(input_nodes, dict):
+            if self.to_homo_flag:
+                input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
+                seeds = to_hetero_idx(self.g, self.hg, seeds)
+            elif not isinstance(input_nodes, dict):
                 input_nodes = {self.category: input_nodes}
             emb = self.model.input_feature.forward_nodes(input_nodes)
-            emb = {k: e.to(self.device) for k, e in emb.items()}
-
-            lbl = self.labels[seeds].to(self.device)
+            if self.to_homo_flag:
+                emb = to_homo_feature(self.hg.ntypes, emb)
+            lbl = self.labels[seeds[self.category]].to(self.device)
             logits = self.model(blocks, emb)[self.category]
             loss = self.loss_fn(logits, lbl)
             loss_all += loss.item()
@@ -230,7 +263,7 @@ class NodeClassification(BaseFlow):
                 if mode == "train":
                     masks[mode] = self.train_idx
                 elif mode == "valid":
-                    masks[mode] = self.valid_idx
+                    masks[mode] = self.val_idx
                 elif mode == "test":
                     masks[mode] = self.test_idx
 

@@ -32,9 +32,10 @@ class HGT(BaseModel):
     norm: boolean
         if we need the norm operation
     """
+
     @classmethod
     def build_model_from_args(cls, args, hg):
-        
+
         return cls(args.hidden_dim,
                    args.out_dim,
                    args.num_heads,
@@ -44,8 +45,9 @@ class HGT(BaseModel):
                    args.dropout,
                    args.norm
                    )
-    def __init__(self, in_dim, out_dim, num_heads, num_etypes, num_ntypes, 
-                 num_layers, dropout = 0.2, norm = False):
+
+    def __init__(self, in_dim, out_dim, num_heads, num_etypes, num_ntypes,
+                 num_layers, dropout=0.2, norm=False):
         super(HGT, self).__init__()
         self.num_layers = num_layers
         self.hgt_layers = nn.ModuleList()
@@ -58,7 +60,7 @@ class HGT(BaseModel):
                     dropout,
                     norm)
         )
-        
+
         for _ in range(1, num_layers - 1):
             self.hgt_layers.append(
                 HGTConv(in_dim,
@@ -69,7 +71,7 @@ class HGT(BaseModel):
                         dropout,
                         norm)
             )
-                   
+
         self.hgt_layers.append(
             HGTConv(in_dim,
                     out_dim,
@@ -79,8 +81,7 @@ class HGT(BaseModel):
                     dropout,
                     norm)
         )
-        
-        
+
     def forward(self, hg, h_dict):
         """
         The forward part of the HGT.
@@ -97,15 +98,26 @@ class HGT(BaseModel):
         dict
             The embeddings after the output projection.
         """
-        with hg.local_scope():
-            hg.ndata['h'] = h_dict
-            g = dgl.to_homogeneous(hg, ndata = 'h')
-            h = g.ndata['h']
-            for l in range(self.num_layers):
-                h = self.hgt_layers[l](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], presorted = True)
-                
-        h_dict = to_hetero_feat(h, g.ndata['_TYPE'], hg.ntypes)
-        # hg = dgl.to_heterogeneous(g, hg.ntypes, hg.etypes)
-        # h_dict = hg.ndata['h']
+
+        if hasattr(hg, 'ntypes'):
+            # full graph training,
+            with hg.local_scope():
+                hg.ndata['h'] = h_dict
+                g = dgl.to_homogeneous(hg, ndata='h')
+                h = g.ndata['h']
+                for l in range(self.num_layers):
+                    h = self.hgt_layers[l](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], presorted=True)
+            h_dict = to_hetero_feat(h, g.ndata['_TYPE'], hg.ntypes)
+
+        else:
+            # for minibatch training, input h_dict is a tensor
+            h = h_dict
+            for layer, block in zip(self.hgt_layers, hg):
+                h = layer(block, h, block.ndata['_TYPE']['_N'], block.edata['_TYPE'], presorted=True)
+            h_dict = to_hetero_feat(h, block.ndata['_TYPE'], self.ntypes)
 
         return h_dict
+
+    @property
+    def to_homo_flag(self):
+        return True
