@@ -348,6 +348,7 @@ class Config(object):
             self.max_epoch = conf.getint('HGT', 'max_epoch')
             self.num_workers = conf.getint("HGT", "num_workers")
             self.mini_batch_flag = conf.getboolean("HGT", "mini_batch_flag")
+            self.fanout = conf.getint("HGT", "fanout")
             self.norm = conf.getboolean("HGT", "norm")
             self.num_layers = conf.getint("HGT", "num_layers")
             self.num_heads = conf.getint("HGT", "num_heads")
