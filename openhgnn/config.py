@@ -525,7 +525,9 @@ class Config(object):
             self.num_layers = conf.getint("SimpleHGN", "num_layers")
             self.beta = conf.getfloat("SimpleHGN", "beta")
             self.residual = conf.getboolean("SimpleHGN", "residual")
-            self.mini_batch_flag = False
+            self.mini_batch_flag = conf.getboolean("SimpleHGN", "mini_batch_flag")
+            self.fanout = conf.getint("SimpleHGN", "fanout")
+            self.batch_size = conf.getint("SimpleHGN", "batch_size")
             self.hidden_dim = self.h_dim * self.num_heads
 
         elif self.model_name == 'GATNE-T':
