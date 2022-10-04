@@ -4,9 +4,8 @@ import torch.nn as nn
 import dgl.function as Fn
 import torch.nn.functional as F
 
-from dgl.ops import edge_softmax, segment_softmax
-from dgl.nn import HeteroLinear, TypedLinear
-from dgl.nn.pytorch.conv import GraphConv
+from dgl.ops import edge_softmax
+from dgl.nn.pytorch import HeteroLinear
 from . import BaseModel, register_model
 from ..utils import to_hetero_feat
 
@@ -71,13 +70,12 @@ class HGAT(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
         return cls(args.num_layers,
-                   args.in_dim,
                    args.hidden_dim,
                    args.num_classes,
                    hg.ntypes,
                    args.negative_slope)
     
-    def __init__(self, num_layers, in_dim, hidden_dim,
+    def __init__(self, num_layers, hidden_dim,
                  num_classes, ntypes, negative_slope):
         super(HGAT, self).__init__()
         self.num_layers = num_layers
@@ -86,11 +84,11 @@ class HGAT(BaseModel):
         
         self.hgat_layers = nn.ModuleList()
         self.hgat_layers.append(
-            TypeAttention(in_dim,
+            TypeAttention(hidden_dim,
                           ntypes,
                           negative_slope))
         self.hgat_layers.append(
-            NodeAttention(in_dim,
+            NodeAttention(hidden_dim,
                           hidden_dim,
                           negative_slope)
         )
