@@ -443,13 +443,13 @@ def to_hetero_idx(g, hg, idx):
     input_nodes_dict = {}
     for i in idx:
         if not hg.ntypes[g.ndata['_TYPE'][i]] in input_nodes_dict:
-            a = g.ndata['_ID'][i]
+            a = g.ndata['_ID'][i].cpu()
             a = np.expand_dims(a, 0)
             a = th.tensor(a)
             input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i]]] = a
         else:
-            a = input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i]]]
-            b = g.ndata['_ID'][i]
+            a = input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i].cpu()]]
+            b = g.ndata['_ID'][i].cpu()
             b = np.expand_dims(b, 0)
             b = th.tensor(b)
             input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i]]] = th.cat((a, b), 0)
