@@ -81,16 +81,18 @@ class HetSANN(BaseModel):
             args.num_layers,
             args.hidden_dim,
             args.out_dim,
+            hg.ntypes,
             len(hg.etypes),
             args.dropout,
             args.slope,
             args.residual,
             )
     
-    def __init__(self, num_heads, num_layers, in_dim,
-                 num_classes, num_etypes, dropout, negative_slope, residual):
+    def __init__(self, num_heads, num_layers, in_dim, num_classes,
+                ntypes, num_etypes, dropout, negative_slope, residual):
         super(HetSANN, self).__init__()
         self.num_layers = num_layers
+        self.ntypes = ntypes
         # self.dropout = nn.Dropout(dropout)
         self.residual = residual
         self.activation = F.elu
@@ -156,33 +158,32 @@ class HetSANN(BaseModel):
         dict
             The embeddings after the output projection.
         """
-        with hg.local_scope():
-            # input layer and hidden layers
-            hg.ndata['h'] = h_dict
-            g = dgl.to_homogeneous(hg, ndata = 'h')
-            h = g.ndata['h']
-            for i in range(self.num_layers - 1):
-                h = self.het_layers[i](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], True)
+        if hasattr(hg, 'ntypes'):
+            with hg.local_scope():
+                # input layer and hidden layers
+                hg.ndata['h'] = h_dict
+                g = dgl.to_homogeneous(hg, ndata = 'h')
+                h = g.ndata['h']
+                for i in range(self.num_layers - 1):
+                    h = self.het_layers[i](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], True)
 
-            # output layer
-            h = self.het_layers[-1](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], True)
+                # output layer
+                h = self.het_layers[-1](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], True)
 
-            h_dict = to_hetero_feat(h, g.ndata['_TYPE'], hg.ntypes)
-            # g.ndata['h'] = h
-            # hg = dgl.to_heterogeneous(g, hg.ntypes, hg.etypes)
-            # h_dict = hg.ndata['h']
-
-            # for etype in hg.etypes:
-            #     source = etype.split('-')[0]
-            #     h[source] = self.W_out[etype](h_dict[source])
-            # pre_h = dgl.to_homogeneous(hg, ndata = 'h').ndata['h']
-            # hg.ndata['h'] = h
-            # g = dgl.to_homogeneous(hg, ndata = 'h')
-            # h = self.het_layers[-1](g, pre_h)
-            # hg = dgl.to_heterogeneous(g, hg.ntypes, hg.etypes)
-            # h_dict = hg.ndata['h']
+                h_dict = to_hetero_feat(h, g.ndata['_TYPE'], self.ntypes)
             
+        else:
+            # for minibatch training, input h_dict is a tensor
+            h = h_dict
+            for layer, block in zip(self.het_layers, hg):
+                h = layer(block, h, block.ndata['_TYPE']['_N'], block.edata['_TYPE'], presorted=False)
+            h_dict = to_hetero_feat(h, block.ndata['_TYPE']['_N'][:block.num_dst_nodes()], self.ntypes)
+
         return h_dict
+    
+    @property
+    def to_homo_flag(self):
+        return True
 
 class HetSANNConv(nn.Module):
     """
@@ -262,14 +263,14 @@ class HetSANNConv(nn.Module):
             The embeddings after aggregation.
         """
         # formula (1)
-        feat = self.W(x, etype, presorted)
-        h = self.dropout(feat)
-        g.ndata['h'] = h
-        #h = feat.view(-1, self.num_heads, self.hidden_dim)
+        g.srcdata['h'] = x
         g.apply_edges(Fn.copy_u('h', 'm'))
         h = g.edata['m']
+        feat = self.W(h, etype, presorted)
+        h = self.dropout(feat)
+        g.edata['m'] = h
         h = h.view(-1, self.num_heads, self.hidden_dim)
-        
+
         # formula (2) (3) (4)
         h_l = self.a_l(h.view(-1, self.num_heads * self.hidden_dim), etype, presorted) \
         .view(-1, self.num_heads, self.hidden_dim).sum(dim = -1)
@@ -286,7 +287,7 @@ class HetSANNConv(nn.Module):
             g.edata['alpha'] = h @ attention.reshape(-1, self.num_heads, 1)
             
             g.update_all(Fn.copy_e('m', 'w'),Fn.sum('w', 'emb'))
-            h_output = g.ndata['emb']
+            h_output = g.dstdata['emb']
             # h_prime = []
             # h = h.permute(1, 0, 2).contiguous()
             # for i in range(self.num_heads):
@@ -298,6 +299,8 @@ class HetSANNConv(nn.Module):
             # h_output = torch.cat(h_prime, dim=1)
 
         # formula (7)
+        if g.is_block:
+            x = x[:g.num_dst_nodes()] 
         if self.residual:
             res = self.residual(x)
             h_output += res
