@@ -5,7 +5,7 @@ import dgl.function as Fn
 import torch.nn.functional as F
 
 from dgl.ops import edge_softmax
-from dgl.nn import TypedLinear
+from dgl.nn.pytorch import TypedLinear
 from ..utils import to_hetero_feat
 from . import BaseModel, register_model
 
@@ -74,7 +74,7 @@ class SimpleHGN(BaseModel):
         return cls(args.edge_dim,
                    len(hg.etypes),
                    [args.hidden_dim],
-                   args.h_dim,
+                   args.hidden_dim // args.heads,
                    args.out_dim,
                    args.num_layers,
                    heads,

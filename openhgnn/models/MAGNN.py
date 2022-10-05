@@ -87,7 +87,7 @@ class MAGNN(BaseModel):
             raise NotImplementedError("MAGNN on dataset {} has not been implemented".format(args.dataset))
 
         return cls(ntypes=ntypes,
-                   h_feats=args.h_dim,
+                   h_feats=args.hidden_dim // args.num_heads,
                    inter_attn_feats=args.inter_attn_feats,
                    num_heads=args.num_heads,
                    num_classes=args.out_dim,

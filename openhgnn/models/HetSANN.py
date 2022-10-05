@@ -5,7 +5,7 @@ import dgl.function as Fn
 import torch.nn.functional as F
 
 from dgl.ops import edge_softmax
-from dgl.nn import TypedLinear
+from dgl.nn.pytorch import TypedLinear
 from ..utils import to_hetero_feat
 from . import BaseModel, register_model
 
@@ -62,8 +62,6 @@ class HetSANN(BaseModel):
         the number of layers we used in the computing
     in_dim: int
         the input dimension
-    hidden_dim: int
-        the hidden dimension
     num_classes: int
         the number of the output classes
     num_etypes: int
@@ -82,7 +80,6 @@ class HetSANN(BaseModel):
             args.num_heads,
             args.num_layers,
             args.hidden_dim,
-            args.h_dim,
             args.out_dim,
             len(hg.etypes),
             args.dropout,
@@ -90,10 +87,9 @@ class HetSANN(BaseModel):
             args.residual,
             )
     
-    def __init__(self, num_heads, num_layers, in_dim, hidden_dim, 
+    def __init__(self, num_heads, num_layers, in_dim,
                  num_classes, num_etypes, dropout, negative_slope, residual):
         super(HetSANN, self).__init__()
-        self.num_heads = num_heads
         self.num_layers = num_layers
         # self.dropout = nn.Dropout(dropout)
         self.residual = residual
@@ -106,7 +102,7 @@ class HetSANN(BaseModel):
             HetSANNConv(
                 num_heads,
                 in_dim,
-                hidden_dim,
+                in_dim // num_heads,
                 num_etypes,
                 dropout,
                 negative_slope,
@@ -120,8 +116,8 @@ class HetSANN(BaseModel):
             self.het_layers.append(
                 HetSANNConv(
                     num_heads,
-                    hidden_dim * num_heads,
-                    hidden_dim,
+                    in_dim,
+                    in_dim // num_heads,
                     num_etypes,
                     dropout,
                     negative_slope,
@@ -134,7 +130,7 @@ class HetSANN(BaseModel):
         self.het_layers.append(
             HetSANNConv(
                 1,
-                hidden_dim * num_heads,
+                in_dim,
                 num_classes,
                 num_etypes,
                 dropout,
@@ -197,9 +193,9 @@ class HetSANNConv(nn.Module):
     num_heads: int
         the number of heads in the attention computing
     in_dim: int
-        the input dimension of the feature
+        the input dimension of the features
     hidden_dim: int
-        the hidden dimension
+        the hidden dimension of the features
     num_etypes: int
         the number of the edge types
     dropout: float
@@ -218,7 +214,7 @@ class HetSANNConv(nn.Module):
         self.in_dim = in_dim
         self.hidden_dim = hidden_dim
 
-        self.W = TypedLinear(in_dim, hidden_dim * num_heads, num_etypes)
+        self.W = TypedLinear(self.in_dim, self.hidden_dim * self.num_heads, num_etypes)
         # self.W_out = TypedLinear(hidden_dim * num_heads, num_classes, num_etypes)
 
         # self.W_hidden = nn.ModuleDict()
@@ -230,13 +226,13 @@ class HetSANNConv(nn.Module):
         # for etype in etypes:
         #     self.W_out[etype] = nn.Linear(hidden_dim * num_heads, num_classes)
         
-        self.a_l = TypedLinear(self.hidden_dim, self.hidden_dim, num_etypes)
-        self.a_r = TypedLinear(self.hidden_dim, self.hidden_dim, num_etypes)
+        self.a_l = TypedLinear(self.hidden_dim * self.num_heads, self.hidden_dim * self.num_heads, num_etypes)
+        self.a_r = TypedLinear(self.hidden_dim * self.num_heads, self.hidden_dim * self.num_heads, num_etypes)
         
         self.dropout = nn.Dropout(dropout)
         self.leakyrelu = nn.LeakyReLU(negative_slope)
         if residual:
-            self.residual = nn.Linear(in_dim, hidden_dim * num_heads)
+            self.residual = nn.Linear(in_dim, self.hidden_dim * num_heads)
         else:
             self.register_buffer("residual", None)
             
@@ -266,19 +262,20 @@ class HetSANNConv(nn.Module):
             The embeddings after aggregation.
         """
         # formula (1)
-        feat = self.W(x, ntype, presorted)
+        feat = self.W(x, etype, presorted)
         h = self.dropout(feat)
-        h = feat.view(-1, self.num_heads, self.hidden_dim)
-        
-        src = g.edges()[0]
-        dst = g.edges()[1]
+        g.ndata['h'] = h
+        #h = feat.view(-1, self.num_heads, self.hidden_dim)
+        g.apply_edges(Fn.copy_u('h', 'm'))
+        h = g.edata['m']
+        h = h.view(-1, self.num_heads, self.hidden_dim)
         
         # formula (2) (3) (4)
-        h_l = self.a_l(h.view(-1, self.hidden_dim), ntype, presorted) \
-        .view(-1, self.num_heads, self.hidden_dim).sum(dim = -1)[src]
+        h_l = self.a_l(h.view(-1, self.num_heads * self.hidden_dim), etype, presorted) \
+        .view(-1, self.num_heads, self.hidden_dim).sum(dim = -1)
 
-        h_r = self.a_r(h.view(-1, self.hidden_dim), ntype, presorted) \
-        .view(-1, self.num_heads, self.hidden_dim).sum(dim = -1)[dst]
+        h_r = self.a_r(h.view(-1, self.num_heads * self.hidden_dim), etype, presorted) \
+        .view(-1, self.num_heads, self.hidden_dim).sum(dim = -1)
         
         attention = self.leakyrelu(h_l + h_r)
         attention = edge_softmax(g, attention)
@@ -286,12 +283,10 @@ class HetSANNConv(nn.Module):
         # formula (5) (6)
         with g.local_scope():
             h = h.permute(0, 2, 1).contiguous()
-            g.edata['alpha'] = attention
-            g.srcdata['emb'] = h
-            g.update_all(Fn.u_mul_e('emb', 'alpha', 'm'),
-                         Fn.sum('m', 'emb'))
-            h_output = g.ndata['emb'].view(-1, self.hidden_dim * self.num_heads)
-
+            g.edata['alpha'] = h @ attention.reshape(-1, self.num_heads, 1)
+            
+            g.update_all(Fn.copy_e('m', 'w'),Fn.sum('w', 'emb'))
+            h_output = g.ndata['emb']
             # h_prime = []
             # h = h.permute(1, 0, 2).contiguous()
             # for i in range(self.num_heads):

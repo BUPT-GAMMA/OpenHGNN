@@ -198,7 +198,7 @@ BEST_CONFIGS = {
         },
         'MAGNN': {
             'general': {'lr': 0.005, 'weight_decay': 0.001, 'dropout': 0.5,
-                        'h_dim': 64, 'encoder_type': 'RotateE', 'inter_attn_feats': 128, 'num_heads': 8,
+                        'hidden_dim': 64, 'encoder_type': 'RotateE', 'inter_attn_feats': 128, 'num_heads': 8,
                         'num_layers': 2},
             'imdb4MAGNN': {
                 'max_epoch': 100, 'patience': 30, 'out_dim': 3, 'mini_batch_flag': False

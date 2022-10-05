@@ -1,14 +1,11 @@
+from audioop import bias
 import dgl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import dgl.nn.pytorch as dglnn
-import numpy as np
 
 from . import BaseModel, register_model
-from ..utils import to_hetero_feat
-
-import sys
 
 
 @register_model('ieHGCN')
@@ -73,36 +70,33 @@ class ieHGCN(BaseModel):
         the node type of a heterogeneous graph
     etypes: list
         the edge type of a heterogeneous graph
+    bias: boolean
+        whether we need bias vector
+    batchnorm: boolean
+        whether we need batchnorm
+    dropout: float
+        the drop out rate
     """
     @classmethod
     def build_model_from_args(cls, args, hg:dgl.DGLGraph):
         return cls(args.num_layers,
-                   args.in_dim,
                    args.hidden_dim,
                    args.out_dim,
                    args.attn_dim,
                    hg.ntypes,
-                   hg.etypes
+                   hg.etypes,
+                   args.bias,
+                   args.batchnorm,
+                   args.dropout
                    )
 
-    def __init__(self, num_layers, in_dim, hidden_dim, out_dim, attn_dim, ntypes, etypes):
+    def __init__(self, num_layers, hidden_dim, out_dim, attn_dim, ntypes, etypes, bias, batchnorm, dropout):
         super(ieHGCN, self).__init__()
         self.num_layers = num_layers
         self.activation = F.elu
         self.hgcn_layers = nn.ModuleList()
-        
-        self.hgcn_layers.append(
-            ieHGCNConv(
-                in_dim,
-                hidden_dim,
-                attn_dim,
-                ntypes,
-                etypes,
-                self.activation,
-            )
-        )
 
-        for i in range(1, num_layers - 1):
+        for i in range(0, num_layers - 1):
             self.hgcn_layers.append(
                 ieHGCNConv(
                     hidden_dim,
@@ -110,7 +104,10 @@ class ieHGCN(BaseModel):
                     attn_dim,
                     ntypes,
                     etypes,
-                    self.activation
+                    self.activation,
+                    bias,
+                    batchnorm,
+                    dropout
                 )
             )
         
@@ -122,6 +119,9 @@ class ieHGCN(BaseModel):
                 ntypes,
                 etypes,
                 None,
+                False,
+                False,
+                0.0
             )
         )
 
@@ -141,12 +141,13 @@ class ieHGCN(BaseModel):
         dict
             The embeddings after the output projection.
         """
-        with hg.local_scope():
-            hg.ndata['h'] = h_dict
+        if hasattr(hg, "ntypes"):
             for l in range(self.num_layers):
                 h_dict = self.hgcn_layers[l](hg, h_dict)
-            
-            return h_dict
+        else:
+            for layer, block in zip(self.hgcn_layers, hg):
+                h_dict = layer(block, h_dict)
+        return h_dict
 
 class ieHGCNConv(nn.Module):
     r"""
@@ -163,12 +164,22 @@ class ieHGCNConv(nn.Module):
     ntypes: list
         the node type list of a heterogeneous graph
     etypes: list
-        the feature drop rate
+        the edge type list of a heterogeneous graph
     activation: str
         the activation function
+    bias: boolean
+        whether we need bias vector
+    batchnorm: boolean
+        whether we need batchnorm
+    dropout: float
+        the drop out rate
     """
-    def __init__(self, in_size, out_size, attn_size, ntypes, etypes, activation = F.elu):
+    def __init__(self, in_size, out_size, attn_size, ntypes, etypes, activation = F.elu, 
+                 bias = False, batchnorm = False, dropout = 0.0):
         super(ieHGCNConv, self).__init__()
+        self.bias = bias
+        self.batchnorm = batchnorm
+        self.dropout = dropout
         node_size = {}
         for ntype in ntypes:
             node_size[ntype] = in_size
@@ -197,7 +208,12 @@ class ieHGCNConv(nn.Module):
         self.linear_k = nn.ModuleDict({ntype: nn.Linear(out_size, attn_size) for ntype in ntypes})
         
         self.activation = activation
-        
+        if batchnorm:
+            self.bn = nn.BatchNorm1d(out_size)
+        if bias:
+            self.h_bias = nn.Parameter(torch.Tensor(out_size))
+            nn.init.zeros_(self.h_bias)      
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, hg, h_dict):
         """
@@ -205,8 +221,8 @@ class ieHGCNConv(nn.Module):
         
         Parameters
         ----------
-        hg : object
-            the dgl heterogeneous graph
+        hg : object or list[block]
+            the dgl heterogeneous graph or the list of blocks
         h_dict: dict
             the feature dict of different node types
             
@@ -216,10 +232,16 @@ class ieHGCNConv(nn.Module):
             The embeddings after final aggregation.
         """
         outputs = {ntype: [] for ntype in hg.dsttypes}
+        if hg.is_block:
+            src_inputs = h_dict
+            dst_inputs = {k: v[:hg.number_of_dst_nodes(k)] for k, v in h_dict.items()}
+        else:
+            src_inputs = h_dict
+            dst_inputs = h_dict
         with hg.local_scope():
             hg.ndata['h'] = h_dict
             # formulas (2)-1
-            hg.ndata['z'] = self.W_self(hg.ndata['h'])
+            dst_inputs = self.W_self(dst_inputs)
             query = {}
             key = {}
             attn = {}
@@ -227,8 +249,8 @@ class ieHGCNConv(nn.Module):
             
             # formulas (3)-1 and (3)-2
             for ntype in hg.dsttypes:
-                query[ntype] = self.linear_q[ntype](hg.ndata['z'][ntype])
-                key[ntype] = self.linear_k[ntype](hg.ndata['z'][ntype])
+                query[ntype] = self.linear_q[ntype](dst_inputs[ntype])
+                key[ntype] = self.linear_k[ntype](dst_inputs[ntype])
             # formulas (4)-1
             h_l = self.W_al(key)
             h_r = self.W_ar(query)
@@ -243,7 +265,7 @@ class ieHGCNConv(nn.Module):
                 # formulas (2)-2
                 dstdata = self.mods[etype](
                     rel_graph,
-                    (h_dict[srctype], h_dict[dsttype])
+                    (src_inputs[srctype], dst_inputs[dsttype])
                 )
                 outputs[dsttype].append(dstdata)
                 # formulas (3)-3
@@ -261,15 +283,20 @@ class ieHGCNConv(nn.Module):
             # formulas (6)
             rst = {ntype: 0 for ntype in hg.dsttypes}
             for ntype, data in outputs.items():
-                data = [hg.ndata['z'][ntype]] + data
+                data = [dst_inputs[ntype]] + data
                 if len(data) != 0:
                     for i in range(len(data)):
                         aggregation = torch.mul(data[i], attention[ntype][i])
                         rst[ntype] = aggregation + rst[ntype]
                 
             # h = self.conv(hg, hg.ndata['h'], aggregate = self.my_agg_func)
-        if self.activation is not None:
-            for ntype in rst.keys():
-                rst[ntype] = self.activation(rst[ntype])
+        def _apply(ntype, h):
+            if self.bias:
+                h = h + self.h_bias
+            if self.activation:
+                h = self.activation(h)
+            if self.batchnorm:
+                h = self.bn(h)
+            return self.dropout(h)
             
-        return rst
+        return {ntype: _apply(ntype, feat) for ntype, feat in rst.items()}

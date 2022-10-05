@@ -235,7 +235,7 @@ class Config(object):
             self.dropout = conf.getfloat("MAGNN", "dropout")
 
             self.inter_attn_feats = conf.getint("MAGNN", "inter_attn_feats")
-            self.h_dim = conf.getint('MAGNN', 'h_dim')
+            self.hidden_dim = conf.getint('MAGNN', 'hidden_dim')
             self.out_dim = conf.getint('MAGNN', 'out_dim')
             self.num_heads = conf.getint('MAGNN', 'num_heads')
             self.num_layers = conf.getint("MAGNN", "num_layers")
@@ -247,7 +247,6 @@ class Config(object):
             if self.mini_batch_flag:
                 self.batch_size = conf.getint("MAGNN", "batch_size")
                 self.num_samples = conf.getint("MAGNN", "num_samples")
-            self.hidden_dim = self.h_dim * self.num_heads
 
         elif self.model_name == 'RHGNN':
             self.lr = conf.getfloat("RHGNN", "learning_rate")
@@ -285,7 +284,7 @@ class Config(object):
                 self.dropout = conf.getfloat("MAGNN", "dropout")
 
                 self.inter_attn_feats = conf.getint("MAGNN", "inter_attn_feats")
-                self.h_dim = conf.getint('MAGNN', 'h_dim')
+                self.hidden_dim = conf.getint('MAGNN', 'hidden_dim')
                 self.out_dim = conf.getint('MAGNN', 'out_dim')
                 self.num_heads = conf.getint('MAGNN', 'num_heads')
                 self.num_layers = conf.getint("MAGNN", "num_layers")
@@ -294,7 +293,6 @@ class Config(object):
                 self.max_epoch = conf.getint('MAGNN', 'max_epoch')
                 self.mini_batch_flag = conf.getboolean("MAGNN", "mini_batch_flag")
                 self.encoder_type = conf.get('MAGNN', 'encoder_type')
-                self.hidden_dim = self.h_dim * self.num_heads
             elif self.HIN == "GTN":
                 self.lr = conf.getfloat("GTN", "learning_rate")
                 self.weight_decay = conf.getfloat("GTN", "weight_decay")
@@ -521,14 +519,13 @@ class Config(object):
             self.slope = conf.getfloat("SimpleHGN", "slope")
             self.feats_drop_rate = conf.getfloat("SimpleHGN", "feats_drop_rate")
             self.num_heads = conf.getint("SimpleHGN", "num_heads")
-            self.h_dim = conf.getint("SimpleHGN", "h_dim")
+            self.hidden_dim = conf.getint("SimpleHGN", "hidden_dim")
             self.num_layers = conf.getint("SimpleHGN", "num_layers")
             self.beta = conf.getfloat("SimpleHGN", "beta")
             self.residual = conf.getboolean("SimpleHGN", "residual")
             self.mini_batch_flag = conf.getboolean("SimpleHGN", "mini_batch_flag")
             self.fanout = conf.getint("SimpleHGN", "fanout")
             self.batch_size = conf.getint("SimpleHGN", "batch_size")
-            self.hidden_dim = self.h_dim * self.num_heads
 
         elif self.model_name == 'GATNE-T':
             self.learning_rate = conf.getfloat("GATNE-T", "learning_rate")
@@ -551,7 +548,7 @@ class Config(object):
             self.weight_decay = conf.getfloat("HetSANN", "weight_decay")
             self.dropout = conf.getfloat("HetSANN", "dropout")
             self.seed = conf.getint("HetSANN", "seed")
-            self.h_dim = conf.getint("HetSANN", "h_dim")
+            self.hidden_dim = conf.getint("HetSANN", "hidden_dim")
             self.num_layers = conf.getint("HetSANN", "num_layers")
             self.num_heads = conf.getint("HetSANN", "num_heads")
             self.max_epoch = conf.getint("HetSANN", "max_epoch")
@@ -559,9 +556,6 @@ class Config(object):
             self.slope = conf.getfloat("HetSANN", "slope")
             self.residual = conf.getboolean("HetSANN", "residual")
             self.mini_batch_flag = False
-            self.hidden_dim = self.h_dim * self.num_heads
-            self.mini_batch_flag = False
-            self.hidden_dim = self.h_dim * self.num_heads
         elif self.model_name == 'ieHGCN':
             self.weight_decay = conf.getfloat("ieHGCN", "weight_decay")
             self.lr = conf.getfloat("ieHGCN", "lr")
@@ -569,11 +563,15 @@ class Config(object):
             self.seed = conf.getint("ieHGCN", "seed")
             self.attn_dim = conf.getint("ieHGCN", "attn_dim")
             self.num_layers = conf.getint("ieHGCN","num_layers")
-            self.mini_batch_flag = False
+            self.mini_batch_flag = conf.getboolean("ieHGCN", "mini_batch_flag")
+            self.fanout = conf.getint("ieHGCN", "fanout")
+            self.batch_size = conf.getint("ieHGCN", "batch_size")
             self.hidden_dim = conf.getint("ieHGCN", "hidden_dim")
-            self.in_dim = conf.getint("ieHGCN", "in_dim")
             self.out_dim = conf.getint("ieHGCN", "out_dim")
             self.patience = conf.getint("ieHGCN", "patience")
+            self.bias = conf.getboolean("ieHGCN", "bias")
+            self.batchnorm = conf.getboolean("ieHGCN", "batchnorm")
+            self.dropout = conf.getfloat("ieHGCN", "dropout")
         elif self.model_name == 'HGAT':
             self.weight_decay = conf.getfloat("HGAT", "weight_decay")
             self.lr = conf.getfloat("HGAT", "lr")
@@ -583,7 +581,6 @@ class Config(object):
             self.num_layers = conf.getint("HGAT","num_layers")
             self.mini_batch_flag = False
             self.hidden_dim = conf.getint("HGAT", "hidden_dim")
-            self.in_dim = conf.getint("HGAT", "in_dim")
             self.num_classes = conf.getint("HGAT", "num_classes")
             self.patience = conf.getint("HGAT", "patience")
             self.negative_slope = conf.getfloat("HGAT", "negative_slope")
