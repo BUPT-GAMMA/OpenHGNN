@@ -31,7 +31,6 @@ class Mg2vecDataSet(DGLDataset):
             file_path = os.path.join(self.raw_dir)
             download(self.url, path=file_path)
         tem_path = os.path.join(self.raw_dir, self.name)
-        print(tem_path)
         extract_archive(self.data_path, tem_path)
 
     def process(self):
