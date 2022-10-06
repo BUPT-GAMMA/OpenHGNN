@@ -5,6 +5,24 @@ from . import Mg2vecDataSet
 
 @register_dataset('edge_classification')
 class EdgeClassificationDataset(BaseDataset):
+    r"""
+        The class *EdgeClassificationDataset* is a base class for datasets which can be used in task *edge classification*.
+        So its subclass should contain attributes such as graph, category, num_classes and so on.
+        Besides, it should implement the functions *get_labels()* and *get_split()*.
+
+        Attributes
+        -------------
+        g : dgl.DGLHeteroGraph
+            The heterogeneous graph.
+        category : str
+            The category(or target) node type need to be predict. In general, we predict only one node type.
+        num_classes : int
+            The target node  will be classified into num_classes categories.
+        has_feature : bool
+            Whether the dataset has feature. Default ``False``.
+        multi_label : bool
+            Whether the node has multi label. Default ``False``. For now, only HGBn-IMDB has multi-label.
+        """
     def __init__(self, *args, **kwargs):
         super(EdgeClassificationDataset, self).__init__(*args, **kwargs)
         self.g = None
@@ -14,6 +32,19 @@ class EdgeClassificationDataset(BaseDataset):
         self.multi_label = False
 
     def get_labels(self):
+        r"""
+                The subclass of dataset should overwrite the function. We can get labels of target nodes through it.
+
+                Notes
+                ------
+                In general, the labels are th.LongTensor.
+                But for multi-label dataset, they should be th.FloatTensor. Or it will raise
+                RuntimeError: Expected object of scalar type Long but got scalar type Float for argument #2 target' in call to _thnn_nll_loss_forward
+
+                return
+                -------
+                labels : torch.Tensor
+                """
         if 'labels' in self.g.edges[self.category].data:
             labels = self.g.edges[self.category].data.pop('labels').long()
         elif 'label' in self.g.edges[self.category].data:
@@ -24,6 +55,19 @@ class EdgeClassificationDataset(BaseDataset):
         return labels
 
     def get_split(self, validation=True):
+        r"""
+
+                Parameters
+                ----------
+                validation : bool
+                    Whether to split dataset. Default ``True``. If it is False, val_idx will be same with train_idx.
+
+                We can get idx of train, validation and test through it.
+
+                return
+                -------
+                train_idx, val_idx, test_idx : torch.Tensor, torch.Tensor, torch.Tensor
+                """
         if 'train_mask' not in self.g.edges[self.category].data:
             self.logger.dataset_info("The dataset has no train mask. "
                                      "So split the category nodes randomly. And the ratio of train/test is 8:2.")
@@ -72,7 +116,13 @@ class EdgeClassificationDataset(BaseDataset):
 
 @register_dataset('hin_edge_classification')
 class HIN_EdgeClassification(EdgeClassificationDataset):
+    r"""
+        The HIN dataset are all used in different papers. So we preprocess them and store them as form of dgl.DGLHeteroGraph.
+        The dataset name combined with paper name through 4(for).
 
+        Dataset Name :
+        dblp4Mg2vec/ ...
+        """
     def __init__(self, dataset_name, *args, **kwargs):
         super(HIN_EdgeClassification, self).__init__(*args, **kwargs)
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
