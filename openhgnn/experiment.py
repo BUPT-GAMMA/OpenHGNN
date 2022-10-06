@@ -48,6 +48,7 @@ class Experiment(object):
         'TransH': 'TransX_trainer',
         'TransR': 'TransX_trainer',
         'TransD': 'TransX_trainer',
+        'Mg2vec': 'mg2vec_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 

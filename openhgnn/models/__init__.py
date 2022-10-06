@@ -94,6 +94,7 @@ SUPPORTED_MODELS = {
     'TransH': 'openhgnn.models.TransH',
     'TransR': 'openhgnn.models.TransR',
     'TransD': 'openhgnn.models.TransD',
+    'Mg2vec': 'openhgnn.models.MG2vec',
 }
 
 from .CompGCN import CompGCN
@@ -125,6 +126,7 @@ from .HetSANN import HetSANN
 from .ieHGCN import ieHGCN
 from .HGAT import HGAT
 from .GATNE import GATNE
+from .Mg2vec import Mg2vec
 
 __all__ = [
     'BaseModel',
@@ -153,6 +155,7 @@ __all__ = [
     'general_HGNN',
     'HDE',
     'SimpleHGN',
-    'GATNE'
+    'GATNE',
+    'Mg2vec'
 ]
 classes = __all__

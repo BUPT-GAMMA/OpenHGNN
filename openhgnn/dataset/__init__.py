@@ -7,6 +7,7 @@ from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
 from .gtn_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
+from .mg2vec_dataset import Mg2vecDataSet
 
 DATASET_REGISTRY = {}
 
@@ -82,6 +83,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'kgcn_recommendation'
     elif dataset in ['yelp4rec']:
         _dataset = 'hin_' + task
+    elif dataset in ['dblp4Mg2vec']:
+        _dataset = 'hin_' + task
     elif dataset == 'demo':
         _dataset = 'demo_' + task
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
@@ -90,12 +93,14 @@ def build_dataset(dataset, task, *args, **kwargs):
 SUPPORTED_DATASETS = {
     "node_classification": "openhgnn.dataset.NodeClassificationDataset",
     "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
-    "recommendation": "openhgnn.dataset.RecommendationDataset"
+    "recommendation": "openhgnn.dataset.RecommendationDataset",
+    "edge_classification": "openhgnn.dataset.EdgeClassificationDataset",
 }
 
 from .NodeClassificationDataset import NodeClassificationDataset
 from .LinkPredictionDataset import LinkPredictionDataset
 from .RecommendationDataset import RecommendationDataset
+from .EdgeClassificationDataset import EdgeClassificationDataset
 
 
 def build_dataset_v2(dataset, task):
@@ -133,7 +138,8 @@ __all__ = [
     'OHGBDataset',
     'GTNDataset',
     'AsLinkPredictionDataset',
-    'AsNodeClassificationDataset'
+    'AsNodeClassificationDataset',
+    'EdgeClassificationDataset'
 ]
 
 classes = __all__

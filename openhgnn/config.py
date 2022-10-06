@@ -656,5 +656,15 @@ class Config(object):
             self.test_percent = conf.getfloat("TransD", "test_percent")
             self.mini_batch_flag = True
 
+        elif model == 'Mg2vec':
+            self.lr = conf.getfloat("MG2VEC", "learning_rate")
+            self.max_epoch = conf.getint("MG2VEC", "max_epoch")
+            self.emb_dimension = conf.getint("MG2VEC", "dim")
+            self.batch_size = conf.getint("MG2VEC", "batch_size")
+            self.num_workers = conf.getint("MG2VEC", "num_workers")
+            self.sample_num = conf.getint("MG2VEC", "sample_num")
+            self.alpha = conf.getfloat("MG2VEC", "alpha")
+            self.seed = conf.getint("MG2VEC", "seed")
+
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model_name, self.task, self.dataset)
