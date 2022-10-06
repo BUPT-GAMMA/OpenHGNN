@@ -58,7 +58,7 @@ Best config can be found in [best_config](../../utils/best_config.py)
 
 ## Note
 - We will output the trained node embedding in output/MG2vec, and we will offer both text format and numpy format.
-- The input file meta.txt we provide only contains meta-graphs up to size 4 to limit the size of the file. If you want to enlarge the size of the meta-graphs, you should go to the [DataMaker-For-Mg2vec](https://github.com/null-xyj/DataMaker-For-Mg2vec).
+- We will offer you two files containing meta-graph information. The default one, meta.txt is up to size 4, and the other one, meta5.txt is up to size 5. If you want to use the meta5.txt to train your model, you should rename it to meta.txt. If you want to get a meta file which is up to 6 or more, you should go to the [DataMaker-For-Mg2vec](https://github.com/null-xyj/DataMaker-For-Mg2vec).
 
 | meta-graph size | meta-graph count | Accuracy |
 |-----------------|------------------|----------|
