@@ -176,12 +176,11 @@ class LinkPrediction(BaseFlow):
         all_loss = 0
         loader_tqdm = tqdm(self.dataloader, ncols=120)
         for input_nodes, positive_graph, negative_graph, blocks in loader_tqdm:
-            blocks = [b.to(self.device) for b in blocks]
             positive_graph = positive_graph.to(self.device)
             negative_graph = negative_graph.to(self.device)
             if type(input_nodes) == th.Tensor:
                 input_nodes = {self.category: input_nodes}
-            input_features = extract_embed(self.model.input_feature(), input_nodes)
+            input_features = self.model.input_feature.forward_nodes(input_nodes)
             logits = self.model(blocks, input_features)
             loss = self.loss_calculation(positive_graph, negative_graph, logits)
             all_loss += loss.item()

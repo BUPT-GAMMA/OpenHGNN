@@ -66,7 +66,8 @@ SUPPORTED_FLOWS = {
     'hde_trainer': 'openhgnn.trainerflow.hde_trainer',
     'GATNE_trainer': 'openhgnn.trainerflow.GATNE_trainer',
     'TransX_trainer': 'openhgnn.trainerflow.TransX_trainer',
-    'han_trainer': 'openhgnn.trainerflow.HAN',
+    'han_nc_trainer': 'openhgnn.trainerflow.HANNodeClassification',
+    'han_lp_trainer': 'openhgnn.trainerflow.HANLinkPrediction',
 }
 
 from .node_classification import NodeClassification
@@ -83,7 +84,8 @@ from .DMGI_trainer import DMGI_trainer
 from .slice_trainer import SLiCETrainer
 from .hde_trainer import hde_trainer
 from .GATNE_trainer import GATNE
-from .han_trainer import HAN
+from .han_trainer import HANNodeClassification
+from .han_trainer import HANLinkPrediction
 
 __all__ = [
     'BaseFlow',
@@ -101,6 +103,7 @@ __all__ = [
     'SLiCETrainer',
     'hde_trainer',
     'GATNE',
-    'HAN',
+    'HANNodeClassification',
+    'HANLinkPrediction',
 ]
 classes = __all__
