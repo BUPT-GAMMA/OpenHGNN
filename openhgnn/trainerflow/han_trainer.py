@@ -336,11 +336,12 @@ class HANLinkPrediction(BaseFlow):
 
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link).to(self.device)
         if self.args.mini_batch_flag:
-            self.fanouts = [-1] * self.args.num_layers
+            # self.fanouts = [-1] * self.args.num_layers
             train_eid_dict = {
                 etype: self.train_hg.edges(etype=etype, form='eid')
                 for etype in self.target_link}
-            sampler = dgl.dataloading.NeighborSampler(self.fanouts)
+            sampler = HANSampler(g=self.hg, category=self.category, meta_paths_dict=self.args.meta_paths_dict,
+                                 num_neighbors=20)
             negative_sampler = dgl.dataloading.negative_sampler.Uniform(2)
             sampler = dgl.dataloading.as_edge_prediction_sampler(sampler=sampler, negative_sampler=negative_sampler)
             self.dataloader = dgl.dataloading.DataLoader(
@@ -507,7 +508,8 @@ class HANLinkPrediction(BaseFlow):
     def _mini_embedding(self, model, fanouts, g, device, dim, ntypes, batch_size):
         model.eval()
         with th.no_grad():
-            sampler = dgl.dataloading.NeighborSampler(fanouts)
+            sampler = HANSampler(g=self.hg, category=self.category, meta_paths_dict=self.args.meta_paths_dict,
+                                 num_neighbors=20)
             indices = {ntype: torch.arange(g.num_nodes(ntype)).to(device) for ntype in ntypes}
             embedding = {ntype: torch.zeros(g.num_nodes(ntype), dim).to(device) for ntype in ntypes}
             dataloader = dgl.dataloading.DataLoader(
