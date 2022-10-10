@@ -295,6 +295,7 @@ class HANLinkPrediction(BaseFlow):
         self.patience = args.patience
         self.max_epoch = args.max_epoch
 
+        self.train_hg = self.train_hg.to(self.device)
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link).to(self.device)
         if self.args.mini_batch_flag:
             ntypes = get_ntypes_from_canonical_etypes(self.target_link)
@@ -318,8 +319,6 @@ class HANLinkPrediction(BaseFlow):
         The positive graph and the negative graph will contain the same set of nodes as the original graph.
         """
         super(HANLinkPrediction, self).preprocess()
-        # to('cpu') & to('self.device')
-        self.train_hg = self.train_hg.to(self.device)
 
     def train(self):
         self.preprocess()
