@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
 from ..models import build_model
-from ..utils import extract_embed, EarlyStopping, get_nodes_dict, add_reverse_edges
+from ..utils import EarlyStopping, add_reverse_edges, get_ntypes_from_canonical_etypes
 
 
 @register_flow("link_prediction")
@@ -218,12 +218,7 @@ class LinkPrediction(BaseFlow):
         print('mini test...\n')
         self.model.eval()
         with th.no_grad():
-            ntypes = set()
-            for etype in self.target_link:
-                src = etype[0]
-                dst = etype[2]
-                ntypes.add(src)
-                ntypes.add(dst)
+            ntypes = get_ntypes_from_canonical_etypes(self.target_link)
             embedding = self._mini_embedding(model=self.model, fanouts=self.fanouts, g=self.train_hg,
                                              device=self.args.device, dim=self.model.out_dim, ntypes=ntypes,
                                              batch_size=self.args.batch_size)
@@ -239,13 +234,7 @@ class LinkPrediction(BaseFlow):
     def _mini_prediction_step(self):
         self.model.eval()
         with th.no_grad():
-            ntypes = set()
-            for etype in self.target_link:
-                src = etype[0]
-                dst = etype[2]
-                ntypes.add(src)
-                ntypes.add(dst)
-
+            ntypes = get_ntypes_from_canonical_etypes(self.target_link)
             embedding = self._mini_embedding(model=self.model, fanouts=[-1] * self.args.num_layers, g=self.train_hg,
                                              device=self.args.device, dim=self.model.out_dim, ntypes=ntypes,
                                              batch_size=self.args.batch_size)

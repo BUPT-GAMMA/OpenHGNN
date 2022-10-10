@@ -7,26 +7,16 @@ import torch
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
 from ..models import build_model
-from ..utils import EarlyStopping, add_reverse_edges
+from ..utils import EarlyStopping, add_reverse_edges, get_ntypes_from_canonical_etypes
 
 
 @register_flow("han_nc_trainer")
 class HANNodeClassification(BaseFlow):
     r"""
-    HAN flow.
+    HAN node classification flow.
     """
 
     def __init__(self, args):
-        """
-
-        Attributes
-        ------------
-        category: str
-            The target node type to predict
-        num_classes: int
-            The number of classes for category node type
-
-        """
 
         super(HANNodeClassification, self).__init__(args)
         self.args.category = self.task.dataset.category
@@ -52,7 +42,7 @@ class HANNodeClassification(BaseFlow):
         self.labels = self.task.get_labels().to(self.device)
 
         if self.args.mini_batch_flag:
-            sampler = HANSampler(g=self.hg, category=self.category, meta_paths_dict=self.args.meta_paths_dict,
+            sampler = HANSampler(g=self.hg, seed_ntypes=[self.category], meta_paths_dict=self.args.meta_paths_dict,
                                  num_neighbors=20)
             if self.train_idx is not None:
                 self.train_loader = dgl.dataloading.DataLoader(
@@ -135,8 +125,6 @@ class HANNodeClassification(BaseFlow):
     def _full_train_step(self):
         self.model.train()
         h_dict = self.model.input_feature()
-        self.hg = self.hg.to(self.device)
-        h_dict = {k: e.to(self.device) for k, e in h_dict.items()}
         logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
         self.optimizer.zero_grad()
@@ -148,14 +136,15 @@ class HANNodeClassification(BaseFlow):
         self.model.train()
         loss_all = 0.0
         loader_tqdm = tqdm(self.train_loader, ncols=120)
-        for i, (input_nodes_dict, seeds, block_dict) in enumerate(loader_tqdm):
-            seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
+        for i, (ntype_mp_name_input_nodes_dict, seeds, ntype_mp_name_block_dict) in enumerate(loader_tqdm):
+            seeds = seeds[self.category]
+            mp_name_input_nodes_dict = ntype_mp_name_input_nodes_dict[self.category]
             emb_dict = {}
-            for meta_path_name, input_nodes in input_nodes_dict.items():
-                emb_dict[meta_path_name] = self.model.input_feature.forward_nodes(input_nodes)
-
+            for meta_path_name, input_nodes in mp_name_input_nodes_dict.items():
+                emb_dict[meta_path_name] = self.model.input_feature.forward_nodes({self.category: input_nodes})
+            emb_dict = {self.category: emb_dict}
+            logits = self.model(ntype_mp_name_block_dict, emb_dict)[self.category]
             lbl = self.labels[seeds].to(self.device)
-            logits = self.model(block_dict, emb_dict)[self.category]
             loss = self.loss_fn(logits, lbl)
             loss_all += loss.item()
             self.optimizer.zero_grad()
@@ -214,16 +203,17 @@ class HANNodeClassification(BaseFlow):
                     loader_tqdm = tqdm(self.test_loader, ncols=120)
                 y_trues = []
                 y_predicts = []
-                for i, (input_nodes_dict, seeds, block_dict) in enumerate(loader_tqdm):
-                    seeds = seeds[self.category]  # out_nodes, we only predict the nodes with type "category"
-                    emb_dict = {}
-                    for meta_path_name, input_nodes in input_nodes_dict.items():
-                        emb_dict[meta_path_name] = self.model.input_feature.forward_nodes(input_nodes)
-                    logits = self.model(block_dict, emb_dict)[self.category]
 
+                for i, (ntype_mp_name_input_nodes_dict, seeds, ntype_mp_name_block_dict) in enumerate(loader_tqdm):
+                    seeds = seeds[self.category]
+                    mp_name_input_nodes_dict = ntype_mp_name_input_nodes_dict[self.category]
+                    emb_dict = {}
+                    for meta_path_name, input_nodes in mp_name_input_nodes_dict.items():
+                        emb_dict[meta_path_name] = self.model.input_feature.forward_nodes({self.category: input_nodes})
+                    emb_dict = {self.category: emb_dict}
+                    logits = self.model(ntype_mp_name_block_dict, emb_dict)[self.category]
                     lbl = self.labels[seeds].to(self.device)
                     loss = self.loss_fn(logits, lbl)
-
                     loss_all += loss.item()
                     y_trues.append(lbl.detach().cpu())
                     y_predicts.append(logits.detach().cpu())
@@ -265,41 +255,11 @@ class HANNodeClassification(BaseFlow):
 @register_flow("han_lp_trainer")
 class HANLinkPrediction(BaseFlow):
     """
-    Link Prediction trainer flows.
-    Here is a tutorial teach you how to train a GNN for
-    `link prediction <https://docs.dgl.ai/en/latest/tutorials/blitz/4_link_predict.html>_`.
-
-    When training, you will need to remove the edges in the test set from the original graph.
-    DGL recommends you to treat the pairs of nodes as another graph, since you can describe a pair of nodes with an edge.
-    In link prediction, you will have a positive graph consisting of all the positive examples as edges,
-    and a negative graph consisting of all the negative examples.
-    The positive graph and the negative graph will contain the same set of nodes as the original graph.
-    This makes it easier to pass node features among multiple graphs for computation.
-    As you will see later, you can directly feed the node representations computed on the entire graph to the positive
-    and the negative graphs for computing pair-wise scores.
+    HAN link prediction trainer flows.
     """
 
     def __init__(self, args):
-        """
 
-        Parameters
-        ----------
-        args
-
-        Attributes
-        ------------
-        target_link: list
-            list of edge types which are target link type to be predicted
-
-        score_fn: str
-            score function used in calculating the scores of links, supported function: distmult[Default if not specified] & dot product
-
-        r_embedding: nn. ParameterDict
-            In DistMult, the representations of edge types are involving the calculation of score.
-            General models do not generate the representations of edge types, so we generate the embeddings of edge types.
-            The dimension of embedding is `self.args.hidden_dim`.
-
-        """
         super(HANLinkPrediction, self).__init__(args)
 
         self.target_link = self.task.dataset.target_link
@@ -311,6 +271,7 @@ class HANLinkPrediction(BaseFlow):
         if not hasattr(self.args, 'out_dim'):
             self.args.out_dim = self.args.hidden_dim
 
+        self.args.target_link = self.task.dataset.target_link
         self.model = build_model(self.model).build_model_from_args(self.args, self.train_hg).to(self.device)
 
         if not hasattr(self.args, 'score_fn'):
@@ -336,11 +297,11 @@ class HANLinkPrediction(BaseFlow):
 
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link).to(self.device)
         if self.args.mini_batch_flag:
-            # self.fanouts = [-1] * self.args.num_layers
+            ntypes = get_ntypes_from_canonical_etypes(self.target_link)
             train_eid_dict = {
                 etype: self.train_hg.edges(etype=etype, form='eid')
                 for etype in self.target_link}
-            sampler = HANSampler(g=self.hg, category=self.category, meta_paths_dict=self.args.meta_paths_dict,
+            sampler = HANSampler(g=self.hg, seed_ntypes=ntypes, meta_paths_dict=self.args.meta_paths_dict,
                                  num_neighbors=20)
             negative_sampler = dgl.dataloading.negative_sampler.Uniform(2)
             sampler = dgl.dataloading.as_edge_prediction_sampler(sampler=sampler, negative_sampler=negative_sampler)
@@ -429,13 +390,17 @@ class HANLinkPrediction(BaseFlow):
         self.model.train()
         all_loss = 0
         loader_tqdm = tqdm(self.dataloader, ncols=120)
-        for input_nodes, positive_graph, negative_graph, blocks in loader_tqdm:
-            positive_graph = positive_graph.to(self.device)
-            negative_graph = negative_graph.to(self.device)
-            if type(input_nodes) == th.Tensor:
-                input_nodes = {self.category: input_nodes}
-            input_features = self.model.input_feature.forward_nodes(input_nodes)
-            logits = self.model(blocks, input_features)
+        for ntype_mp_name_input_nodes_dict, positive_graph, negative_graph, ntype_mp_name_block_dict in loader_tqdm:
+
+            positive_graph = positive_graph.edge_type_subgraph(self.target_link).to(self.device)
+            negative_graph = negative_graph.edge_type_subgraph(self.target_link).to(self.device)
+            emb_dict = {}
+            for ntype, mp_name_input_nodes_dict in ntype_mp_name_input_nodes_dict.items():
+                mp_name_emb_dict = {}
+                for meta_path_name, input_nodes in mp_name_input_nodes_dict.items():
+                    mp_name_emb_dict[meta_path_name] = self.model.input_feature.forward_nodes({ntype: input_nodes})
+                emb_dict[ntype] = mp_name_emb_dict
+            logits = self.model(ntype_mp_name_block_dict, emb_dict)
             loss = self.loss_calculation(positive_graph, negative_graph, logits)
             all_loss += loss.item()
             self.optimizer.zero_grad()
@@ -472,13 +437,8 @@ class HANLinkPrediction(BaseFlow):
         print('mini test...\n')
         self.model.eval()
         with th.no_grad():
-            ntypes = set()
-            for etype in self.target_link:
-                src = etype[0]
-                dst = etype[2]
-                ntypes.add(src)
-                ntypes.add(dst)
-            embedding = self._mini_embedding(model=self.model, fanouts=self.fanouts, g=self.train_hg,
+            ntypes = get_ntypes_from_canonical_etypes(self.target_link)
+            embedding = self._mini_embedding(model=self.model, fanouts=[20], g=self.train_hg,
                                              device=self.args.device, dim=self.model.out_dim, ntypes=ntypes,
                                              batch_size=self.args.batch_size)
             return {split: self.task.evaluate(embedding, self.r_embedding, mode=split)}
@@ -493,13 +453,7 @@ class HANLinkPrediction(BaseFlow):
     def _mini_prediction_step(self):
         self.model.eval()
         with th.no_grad():
-            ntypes = set()
-            for etype in self.target_link:
-                src = etype[0]
-                dst = etype[2]
-                ntypes.add(src)
-                ntypes.add(dst)
-
+            ntypes = get_ntypes_from_canonical_etypes(self.target_link)
             embedding = self._mini_embedding(model=self.model, fanouts=[-1] * self.args.num_layers, g=self.train_hg,
                                              device=self.args.device, dim=self.model.out_dim, ntypes=ntypes,
                                              batch_size=self.args.batch_size)
@@ -508,8 +462,8 @@ class HANLinkPrediction(BaseFlow):
     def _mini_embedding(self, model, fanouts, g, device, dim, ntypes, batch_size):
         model.eval()
         with th.no_grad():
-            sampler = HANSampler(g=self.hg, category=self.category, meta_paths_dict=self.args.meta_paths_dict,
-                                 num_neighbors=20)
+            sampler = HANSampler(g=self.hg, seed_ntypes=ntypes, meta_paths_dict=self.args.meta_paths_dict,
+                                 num_neighbors=fanouts[0])
             indices = {ntype: torch.arange(g.num_nodes(ntype)).to(device) for ntype in ntypes}
             embedding = {ntype: torch.zeros(g.num_nodes(ntype), dim).to(device) for ntype in ntypes}
             dataloader = dgl.dataloading.DataLoader(
@@ -517,13 +471,14 @@ class HANLinkPrediction(BaseFlow):
                 device=device,
                 batch_size=batch_size)
             loader_tqdm = tqdm(dataloader, ncols=120)
-
-            for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
-                if not isinstance(input_nodes, dict):
-                    input_nodes = {self.category: input_nodes}
-                input_emb = model.input_feature.forward_nodes(input_nodes)
-                output_emb = model(blocks, input_emb)
-
+            for i, (ntype_mp_name_input_nodes_dict, seeds, ntype_mp_name_block_dict) in enumerate(loader_tqdm):
+                emb_dict = {}
+                for ntype, mp_name_input_nodes_dict in ntype_mp_name_input_nodes_dict.items():
+                    mp_name_emb_dict = {}
+                    for meta_path_name, input_nodes in mp_name_input_nodes_dict.items():
+                        mp_name_emb_dict[meta_path_name] = self.model.input_feature.forward_nodes({ntype: input_nodes})
+                    emb_dict[ntype] = mp_name_emb_dict
+                output_emb = self.model(ntype_mp_name_block_dict, emb_dict)
                 for ntype, idx in seeds.items():
                     embedding[ntype][idx] = output_emb[ntype]
             return embedding
