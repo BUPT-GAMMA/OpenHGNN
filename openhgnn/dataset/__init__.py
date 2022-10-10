@@ -83,7 +83,7 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'kgcn_recommendation'
     elif dataset in ['yelp4rec']:
         _dataset = 'hin_' + task
-    elif dataset in ['dblp4Mg2vec']:
+    elif dataset in ['dblp4Mg2vec_4', 'dblp4Mg2vec_5']:
         _dataset = 'hin_' + task
     elif dataset == 'demo':
         _dataset = 'demo_' + task

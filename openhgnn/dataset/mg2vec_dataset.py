@@ -9,14 +9,15 @@ from dgl.data.utils import save_graphs
 class Mg2vecDataSet(DGLDataset):
     _prefix = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/'
     _urls = {
-        'dblp4Mg2vec': 'dataset/dblp4Mg2vec.zip',
+        'dblp4Mg2vec_4': 'dataset/openhgnn/dblp4mg2vec_4.zip',
+        'dblp4Mg2vec_5': 'dataset/openhgnn/dblp4mg2vec_5.zip',
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=False):
-        assert name in ['dblp4Mg2vec']
-        self.data_path = './openhgnn/' + self._urls[name]
-        self.g_path = './openhgnn/dataset/' + name + '/graph.bin'
+        assert name in ['dblp4Mg2vec_4', 'dblp4Mg2vec_5']
         raw_dir = './openhgnn/dataset'
+        self.data_path = './openhgnn/dataset/' + name + '.zip'
+        self.g_path = './openhgnn/dataset/' + name + '/graph.bin'
         url = self._prefix + self._urls[name]
         super(Mg2vecDataSet, self).__init__(name=name,
                                             url=url,

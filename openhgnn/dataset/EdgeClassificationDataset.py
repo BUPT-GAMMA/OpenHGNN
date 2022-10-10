@@ -128,9 +128,16 @@ class HIN_EdgeClassification(EdgeClassificationDataset):
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
 
     def load_HIN(self, name_dataset):
-        if name_dataset == 'dblp4Mg2vec':
-            # which is used in MG2VEC
-            dataset = Mg2vecDataSet(name='dblp4Mg2vec', raw_dir='')
+        if name_dataset == 'dblp4Mg2vec_4':
+            # which is used in MG2VEC with size=4
+            dataset = Mg2vecDataSet(name='dblp4Mg2vec_4', raw_dir='')
+            g = dataset[0].long()
+            category = 'relation'
+            num_classes = 3
+            return g, category, num_classes
+        if name_dataset == 'dblp4Mg2vec_5':
+            # which is used in MG2VEC with size=5
+            dataset = Mg2vecDataSet(name='dblp4Mg2vec_5', raw_dir='')
             g = dataset[0].long()
             category = 'relation'
             num_classes = 3
