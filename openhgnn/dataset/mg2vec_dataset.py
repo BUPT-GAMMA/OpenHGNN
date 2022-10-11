@@ -5,7 +5,8 @@ from dgl.data.utils import load_graphs
 from dgl.data.utils import save_graphs
 
 
-# 处理lg文件
+# Download and process the dataset for mg2vec
+
 class Mg2vecDataSet(DGLDataset):
     _prefix = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/'
     _urls = {
