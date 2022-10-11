@@ -1,4 +1,4 @@
-# 处理训练的数据
+# Read and process the meta.txt
 
 from torch.utils.data import Dataset
 
