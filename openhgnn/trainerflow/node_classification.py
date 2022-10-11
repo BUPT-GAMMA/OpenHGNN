@@ -287,12 +287,15 @@ class NodeClassification(BaseFlow):
                 y_trues = []
                 y_predicts = []
                 for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
-                    if not isinstance(input_nodes, dict):
+                    if self.to_homo_flag:
+                        input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
+                        seeds = to_hetero_idx(self.g, self.hg, seeds)
+                    elif not isinstance(input_nodes, dict):
                         input_nodes = {self.category: input_nodes}
                     emb = self.model.input_feature.forward_nodes(input_nodes)
-                    emb = {k: e.to(self.device) for k, e in emb.items()}
-                    seeds = seeds[self.category]
-                    lbl = self.labels[seeds].to(self.device)
+                    if self.to_homo_flag:
+                        emb = to_homo_feature(self.hg.ntypes, emb)
+                    lbl = self.labels[seeds[self.category]].to(self.device)
                     logits = self.model(blocks, emb)[self.category]
                     loss = self.loss_fn(logits, lbl)
 
