@@ -555,7 +555,9 @@ class Config(object):
             self.patience = conf.getint("HetSANN", "patience")
             self.slope = conf.getfloat("HetSANN", "slope")
             self.residual = conf.getboolean("HetSANN", "residual")
-            self.mini_batch_flag = False
+            self.mini_batch_flag = conf.getboolean("HetSANN", "mini_batch_flag")
+            self.batch_size = conf.getint("HetSANN", "batch_size")
+            self.fanout = conf.getint("HetSANN", "fanout")
         elif self.model_name == 'ieHGCN':
             self.weight_decay = conf.getfloat("ieHGCN", "weight_decay")
             self.lr = conf.getfloat("ieHGCN", "lr")
