@@ -48,6 +48,7 @@ class Experiment(object):
         'TransH': 'TransX_trainer',
         'TransR': 'TransX_trainer',
         'TransD': 'TransX_trainer',
+        'DHNE':'DHNE_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 
@@ -78,7 +79,7 @@ class Experiment(object):
         if use_best_config:
             self.config = set_best_config(self.config)
         self.set_params(**kwargs)
-        print(self)
+
 
     def set_params(self, **kwargs):
         for key, value in kwargs.items():

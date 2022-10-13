@@ -656,5 +656,21 @@ class Config(object):
             self.test_percent = conf.getfloat("TransD", "test_percent")
             self.mini_batch_flag = True
 
+        elif self.model_name == 'DHNE':
+            self.lr = conf.getfloat("DHNE", "lr")
+            emb_size = conf.getint("DHNE", "embedding_sizes")
+            self.embedding_sizes=[emb_size, emb_size, emb_size]
+            self.prefix_path = conf.get("DHNE", "prefix_path")
+            self.hidden_size = conf.getint("DHNE", "hidden_size")
+            self.epochs_to_train = conf.getint("DHNE", "epochs_to_train")
+            self.max_epoch = conf.getint("DHNE", "max_epoch")
+            self.batch_size = conf.getint("DHNE", "batch_size")
+            self.alpha = conf.getfloat("DHNE", "alpha")
+            self.num_neg_samples = conf.getint("DHNE", "num_neg_samples")
+            self.seed = conf.getint("DHNE", "seed")
+            self.dim_features = conf.get("DHNE", "dim_features")
+            self.max_epoch = conf.getint("DHNE", "max_epoch")
+            self.mini_batch_flag = True
+
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model_name, self.task, self.dataset)
