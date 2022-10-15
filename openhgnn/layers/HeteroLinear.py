@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from dgl.nn import HeteroEmbedding,HeteroLinear
 
 
 class GeneralLinear(nn.Module):
@@ -180,6 +181,9 @@ class HeteroFeature(nn.Module):
         Dimension of embedding, and used to assign to the output dimension of Linear which transform the original feature.
     need_trans: bool, optional
         A flag to control whether to transform original feature linearly. Default is ``True``.
+    act : callable activation function/layer or None, optional
+        If not None, applies an activation function to the updated node features.
+        Default: ``None``.
 
     Attributes
     -----------
@@ -189,64 +193,50 @@ class HeteroFeature(nn.Module):
     hetero_linear : HeteroLinearLayer
         A heterogeneous linear layer to transform original feature.
     """
-    def __init__(self, h_dict, n_nodes_dict, embed_size, act=None, need_trans=True, all_feats=True):
-        """
-
-        @param h_dict:
-        @param n_dict:
-        @param embed_size:
-        @param need_trans:
-        @param all_feats:
-        """
-
+    def __init__(self,h_dict, n_nodes_dict, embed_size, act=None, need_trans=True, all_feats=True):
         super(HeteroFeature, self).__init__()
         self.n_nodes_dict = n_nodes_dict
         self.embed_size = embed_size
         self.h_dict = h_dict
         self.need_trans = need_trans
-        self.embed_dict = nn.ParameterDict()
         linear_dict = {}
+        embed_dict={}
         for ntype, n_nodes in self.n_nodes_dict.items():
             h = h_dict.get(ntype)
             if h is None:
                 if all_feats:
-                    embed = nn.Parameter(torch.FloatTensor(n_nodes, self.embed_size))
-                    # initrange = 1.0 / self.embed_size
-                    # nn.init.uniform_(embed, -initrange, initrange)
-                    nn.init.xavier_uniform_(embed, gain=nn.init.calculate_gain('relu'))
-                    self.embed_dict[ntype] = embed
+                    embed_dict[ntype]=n_nodes
             else:
-                linear_dict[ntype] = [h.shape[1], self.embed_size]
+                linear_dict[ntype]=h.shape[1]
+        self.embes=HeteroEmbedding(embed_dict,embed_size)
         if need_trans:
-            self.hetero_linear = HeteroLinearLayer(linear_dict, act=act)
+            self.linear=HeteroLinear(linear_dict,embed_size)
+        self.act=act                                                   #activate
 
     def forward(self):
-        r"""
-        return feature.
-
-        Returns
-        -------
-        dict [str, th.Tensor]
-            The output feature dictionary of feature.
-        """
-        out_dict = {}
-        for ntype, _ in self.n_nodes_dict.items():
-            if self.h_dict.get(ntype) is None:
-                out_dict[ntype] = self.embed_dict[ntype]
-        if self.need_trans:
-            out_dict.update(self.hetero_linear(self.h_dict))
-        else:
-            out_dict.update(self.h_dict)
+        out_dict={}
+        out_dict.update(self.embes.weight)
+        tmp=self.linear(self.h_dict)
+        if self.act:                                                    #activate
+            for x,y in tmp.items():
+                tmp.update({x:self.act(y)})
+        out_dict.update(tmp)
         return out_dict
 
-    def forward_nodes(self, nodes_dict):
-        out_feature = {}
-        for ntype, nid in nodes_dict.items():
-            if self.h_dict.get(ntype) is None:
-                out_feature[ntype] = self.embed_dict[ntype][nid]
+    def forward_nodes(self,id_dict):
+        embed_id_dict={}
+        linear_id_dict={}
+        for entype,id in id_dict.items():
+            if self.h_dict.get(entype) is None:
+                embed_id_dict[entype]=id
             else:
-                if self.need_trans:
-                    out_feature[ntype] = self.hetero_linear(self.h_dict)[ntype][nid]
-                else:
-                    out_feature[ntype] = self.h_dict[ntype][nid]
-        return out_feature
+                linear_id_dict[entype]=id
+        out_dict={}
+        out_dict.update(self.embes(embed_id_dict))
+        tmp=self.linear(self.h_dict)
+        if self.act:                                                    #activate
+            for x,y in tmp.items():
+                tmp.update({x:self.act(y)})
+        for entype,id in linear_id_dict.items():
+            out_dict[entype]=tmp[entype][id]
+        return out_dict
