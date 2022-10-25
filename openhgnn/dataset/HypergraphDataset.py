@@ -95,11 +95,11 @@ class HgraphDataset(Dataset):
             mode = np.random.rand()
             if mode < self.pair_radio:
                 type_ = np.random.randint(3)
-                # 随机选择一个node
+                # Randomly select a mode
                 node = np.random.randint(self.nums_type[type_])
                 index[type_] = node
             else:
-                # 随机选择两个类型
+                # Randomly select two types
                 types_ = np.random.choice(3, 2, replace=False)
                 node_1 = np.random.randint(self.nums_type[types_[0]])
                 node_2 = np.random.randint(self.nums_type[types_[1]])
@@ -140,8 +140,8 @@ def generate_H(edge, nums_type):
 def generate_embeddings(edge, nums_type):
     r"""
     Args:
-        edge (_type_): 边的数量
-        nums_type (_type_): 节点类型数量
+        edge (_type_): Number of edges
+        nums_type (_type_): Number of node types
     Returns:
         _type_: _description_
     """
