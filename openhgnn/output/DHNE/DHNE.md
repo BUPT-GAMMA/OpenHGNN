@@ -25,7 +25,12 @@ Supported dataset: drug, GPS, MovieLens, wordnet
 
 The details of datasets can be seen in the graph below:
 
-![image-20221013115422414](C:\Users\81480\AppData\Roaming\Typora\typora-user-images\image-20221013115422414.png)
+| datasets  |                 #(V)                 |  #(E)  |
+| :-------: | :----------------------------------: | :----: |
+|    GPS    |  user(146) location(70) activity(5)  |  1436  |
+| MovieLens |   user(2113) movie(5908) tag(9079)   | 47957  |
+|   drug    |  user(12) drug(1076) reaction(6398)  | 171756 |
+|  wordnet  | head(40504) relation(18) tail(40551) | 145966 |
 
 Note: Every node in these four datasets should have the same embedding and feature dimension.
 
