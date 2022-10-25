@@ -3,7 +3,6 @@
 # @Email  : tyzhao@bupt.edu.cn
 
 import argparse
-import os.path
 
 from openhgnn.experiment import Experiment
 
@@ -21,4 +20,3 @@ if __name__ == '__main__':
     experiment = Experiment(model=args.model, dataset=args.dataset, task=args.task, gpu=args.gpu,
                             use_best_config=args.use_best_config, load_from_pretrained=args.load_from_pretrained)
     experiment.run()
-
