@@ -17,24 +17,16 @@ class DHNE(BaseModel):
 
         Parameters
         ----------
+        nums_type : list
+            the type of nodes
         dim_features : array
             the embedding dimension of nodes
         embedding_sizes : int
             the embedding dimension size
         hidden_size : int
             The hidden full connected layer size
-        nums_type : list
-            the type of nodes
         device : int
             the device DHNE working on
-        encodeds :
-            the input of autoencoder (the first layer of DHNE)
-        decodeds :
-            the output of autoencoder (the first layer of DHNE)
-        hidden_layer:
-            the second layer of DHNE
-        ouput_layer :
-            the third layer of DHNE
         """
     @classmethod
     def build_model_from_args(cls, args):
