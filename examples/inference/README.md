@@ -67,16 +67,16 @@ python link_prediction_inference.py -m RGCN -g -1 --mini-batch-flag
 
 ```
 cd examples/inference
-python link_prediction_train.py -m RGCN -g -1 --mini-batch-flag
+python graph_representation_learning.py -m Metapath2vec -mp APA -g -1 
 ```
 
 *命令行参数*:
 
-``--model -m ``    模型名 支持模型包括 RGCN
+``--model -m ``    模型名 支持模型包括 Metapath2vec HERec
 
 ``--gpu -g``    控制你使用哪一个GPU，如果没有GPU，设定 -g -1
 
-``--mini-batch-flag``  使用minibatch训练 支持模型包括 RGCN
+``--meta-path-key -mp``   指定进行随机游走时使用的metapath
 
 ## RGCN
 ### 模型简述
