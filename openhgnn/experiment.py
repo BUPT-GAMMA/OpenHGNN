@@ -79,7 +79,7 @@ class Experiment(object):
         if use_best_config:
             self.config = set_best_config(self.config)
         self.set_params(**kwargs)
-
+        print(self)
 
     def set_params(self, **kwargs):
         for key, value in kwargs.items():
