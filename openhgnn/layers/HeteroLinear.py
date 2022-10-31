@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn import HeteroEmbedding,HeteroLinear
+import numpy as np
+import torch as th
+
 
 
 class GeneralLinear(nn.Module):
@@ -199,6 +202,19 @@ class HeteroFeature(nn.Module):
         self.embed_size = embed_size
         self.h_dict = h_dict
         self.need_trans = need_trans
+
+        #同质图转换相关
+        #type_node_num_sum:每种类型的边或节点的数量的累加
+        #all_type:所有的边、节点类型
+        self.type_node_num_sum = [0]
+        self.all_type = []
+        for ntype, type_num in n_nodes_dict.items():
+            num_now = self.type_node_num_sum[-1]
+            num_now += type_num
+            self.type_node_num_sum.append(num_now)
+            self.all_type.append(ntype)
+        self.type_node_num_sum=torch.tensor(self.type_node_num_sum)
+
         linear_dict = {}
         embed_dict={}
         for ntype, n_nodes in self.n_nodes_dict.items():
@@ -224,6 +240,30 @@ class HeteroFeature(nn.Module):
         return out_dict
 
     def forward_nodes(self,id_dict):
+        #如果id_dict为tensor，将id_dict从tensor转化dict，并记录对应关系在to_pos中，
+        id_tensor=None
+        if torch.is_tensor(id_dict):
+            id_tensor=id_dict
+            id_dict={}
+            to_pos={}
+            for i,x in enumerate(id_tensor):
+                tmp=torch.where(self.type_node_num_sum<=x)[0]
+                if len(tmp)>0:
+                    tmp=tmp.max()
+                    now_type=self.all_type[tmp]
+                    now_id=x-self.type_node_num_sum[tmp]
+                    if now_type not in id_dict.keys():
+                        id_dict[now_type]=[]
+                    id_dict[now_type].append(now_id)
+                    if now_type not in to_pos.keys():
+                        to_pos[now_type]=[]
+                    to_pos[now_type].append(i)
+            for ntype in id_dict.keys():
+                id_dict[ntype]=torch.tensor(id_dict[ntype])
+            # print('id_dict:',id_dict)
+            # print('to_pos:',to_pos)
+
+        #原本的获取feat的代码
         embed_id_dict={}
         linear_id_dict={}
         for entype,id in id_dict.items():
@@ -239,4 +279,14 @@ class HeteroFeature(nn.Module):
                 tmp.update({x:self.act(y)})
         for entype,id in linear_id_dict.items():
             out_dict[entype]=tmp[entype][id]
+
+        #结果依据对应关系对应到原本的位置
+        if id_tensor is not None:
+            out_feat=[None]*len(id_tensor)
+            for ntype,feat_list in out_dict.items():
+                for i,feat in enumerate(feat_list):
+                    now_pos=to_pos[ntype][i]
+                    out_feat[now_pos]=feat.data
+            out_dict=torch.stack(out_feat,dim=0)
+
         return out_dict

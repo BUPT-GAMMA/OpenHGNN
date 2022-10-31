@@ -219,13 +219,13 @@ class NodeClassification(BaseFlow):
         loader_tqdm = tqdm(self.train_loader, ncols=120)
         for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
             if self.to_homo_flag:
-                input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
+                # input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
                 seeds = to_hetero_idx(self.g, self.hg, seeds)
-            elif not isinstance(input_nodes, dict):
-                input_nodes = {self.category: input_nodes}
+            # elif not isinstance(input_nodes, dict):
+            #     input_nodes = {self.category: input_nodes}
             emb = self.model.input_feature.forward_nodes(input_nodes)
-            if self.to_homo_flag:
-                emb = to_homo_feature(self.hg.ntypes, emb)
+            # if self.to_homo_flag:
+            #     emb = to_homo_feature(self.hg.ntypes, emb)
             lbl = self.labels[seeds[self.category]].to(self.device)
             logits = self.model(blocks, emb)[self.category]
             loss = self.loss_fn(logits, lbl)
@@ -288,13 +288,13 @@ class NodeClassification(BaseFlow):
                 y_predicts = []
                 for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
                     if self.to_homo_flag:
-                        input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
+                        # input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
                         seeds = to_hetero_idx(self.g, self.hg, seeds)
                     elif not isinstance(input_nodes, dict):
                         input_nodes = {self.category: input_nodes}
                     emb = self.model.input_feature.forward_nodes(input_nodes)
-                    if self.to_homo_flag:
-                        emb = to_homo_feature(self.hg.ntypes, emb)
+                    # if self.to_homo_flag:
+                    #     emb = to_homo_feature(self.hg.ntypes, emb)
                     lbl = self.labels[seeds[self.category]].to(self.device)
                     logits = self.model(blocks, emb)[self.category]
                     loss = self.loss_fn(logits, lbl)
