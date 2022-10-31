@@ -203,9 +203,6 @@ class HeteroFeature(nn.Module):
         self.h_dict = h_dict
         self.need_trans = need_trans
 
-        #同质图转换相关
-        #type_node_num_sum:每种类型的边或节点的数量的累加
-        #all_type:所有的边、节点类型
         self.type_node_num_sum = [0]
         self.all_type = []
         for ntype, type_num in n_nodes_dict.items():
@@ -240,7 +237,7 @@ class HeteroFeature(nn.Module):
         return out_dict
 
     def forward_nodes(self,id_dict):
-        #如果id_dict为tensor，将id_dict从tensor转化dict，并记录对应关系在to_pos中，
+        #Turn "id_dict" into a dictionary if "id_dict" is a tensor, and record the corresponding relationship in "to_pos"
         id_tensor=None
         if torch.is_tensor(id_dict):
             id_tensor=id_dict
@@ -260,10 +257,7 @@ class HeteroFeature(nn.Module):
                     to_pos[now_type].append(i)
             for ntype in id_dict.keys():
                 id_dict[ntype]=torch.tensor(id_dict[ntype])
-            # print('id_dict:',id_dict)
-            # print('to_pos:',to_pos)
 
-        #原本的获取feat的代码
         embed_id_dict={}
         linear_id_dict={}
         for entype,id in id_dict.items():
@@ -280,7 +274,7 @@ class HeteroFeature(nn.Module):
         for entype,id in linear_id_dict.items():
             out_dict[entype]=tmp[entype][id]
 
-        #结果依据对应关系对应到原本的位置
+        #The result corresponds to the original position according to the corresponding relationship
         if id_tensor is not None:
             out_feat=[None]*len(id_tensor)
             for ntype,feat_list in out_dict.items():
