@@ -45,13 +45,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', default='Metapath2vec', type=str, help='name of models')
     parser.add_argument('--gpu', '-g', default='-1', type=int, help='-1 means cpu')
-    parser.add_argument('--mini-batch-flag', action='store_true')
+    parser.add_argument('--meta-path-key', '-mp', default='APA', type=str, help='name of models')
 
     args = parser.parse_args()
 
     ds = MyDataset()
 
     experiment = Experiment(conf_path='./my_config.ini', max_epoch=1, model=args.model, dataset=ds,
-                            task='demo', meta_path_key='APA', mini_batch_flag=args.mini_batch_flag, gpu=args.gpu,
-                            test_flag=False, prediction_flag=False, batch_size=100)
+                            task='demo', meta_path_key=args.meta_path_key, gpu=args.gpu)
     experiment.run()

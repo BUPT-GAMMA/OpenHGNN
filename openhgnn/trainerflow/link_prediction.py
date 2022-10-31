@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
 from ..models import build_model
-from ..utils import extract_embed, EarlyStopping, get_nodes_dict, add_reverse_edges
+from ..utils import EarlyStopping, add_reverse_edges, get_ntypes_from_canonical_etypes
 
 
 @register_flow("link_prediction")
@@ -176,12 +176,11 @@ class LinkPrediction(BaseFlow):
         all_loss = 0
         loader_tqdm = tqdm(self.dataloader, ncols=120)
         for input_nodes, positive_graph, negative_graph, blocks in loader_tqdm:
-            blocks = [b.to(self.device) for b in blocks]
             positive_graph = positive_graph.to(self.device)
             negative_graph = negative_graph.to(self.device)
             if type(input_nodes) == th.Tensor:
                 input_nodes = {self.category: input_nodes}
-            input_features = extract_embed(self.model.input_feature(), input_nodes)
+            input_features = self.model.input_feature.forward_nodes(input_nodes)
             logits = self.model(blocks, input_features)
             loss = self.loss_calculation(positive_graph, negative_graph, logits)
             all_loss += loss.item()
@@ -219,12 +218,7 @@ class LinkPrediction(BaseFlow):
         print('mini test...\n')
         self.model.eval()
         with th.no_grad():
-            ntypes = set()
-            for etype in self.target_link:
-                src = etype[0]
-                dst = etype[2]
-                ntypes.add(src)
-                ntypes.add(dst)
+            ntypes = get_ntypes_from_canonical_etypes(self.target_link)
             embedding = self._mini_embedding(model=self.model, fanouts=self.fanouts, g=self.train_hg,
                                              device=self.args.device, dim=self.model.out_dim, ntypes=ntypes,
                                              batch_size=self.args.batch_size)
@@ -240,13 +234,7 @@ class LinkPrediction(BaseFlow):
     def _mini_prediction_step(self):
         self.model.eval()
         with th.no_grad():
-            ntypes = set()
-            for etype in self.target_link:
-                src = etype[0]
-                dst = etype[2]
-                ntypes.add(src)
-                ntypes.add(dst)
-
+            ntypes = get_ntypes_from_canonical_etypes(self.target_link)
             embedding = self._mini_embedding(model=self.model, fanouts=[-1] * self.args.num_layers, g=self.train_hg,
                                              device=self.args.device, dim=self.model.out_dim, ntypes=ntypes,
                                              batch_size=self.args.batch_size)

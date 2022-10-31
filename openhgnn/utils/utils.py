@@ -97,7 +97,7 @@ class EarlyStopping(object):
         self.save_path = save_path
 
     def step(self, loss, score, model):
-        if isinstance(score ,tuple):
+        if isinstance(score, tuple):
             score = score[0]
         if self.best_loss is None:
             self.best_score = score
@@ -105,7 +105,7 @@ class EarlyStopping(object):
             self.save_model(model)
         elif (loss > self.best_loss) and (score < self.best_score):
             self.counter += 1
-            #print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            # print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -123,7 +123,7 @@ class EarlyStopping(object):
             self.save_model(model)
         elif score < self.best_score:
             self.counter += 1
-            #print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            # print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -183,6 +183,7 @@ def get_nodes_dict(hg):
     for n in hg.ntypes:
         n_dict[n] = hg.num_nodes(n)
     return n_dict
+
 
 def extract_embed(node_embed, input_nodes):
     emb = {}
@@ -278,11 +279,10 @@ def transform_relation_graph_list(hg, category, identity=True):
     loc = (g.ndata[dgl.NTYPE] == category_id)
     category_idx = th.arange(g.num_nodes())[loc]
 
-
     edges = g.edges()
     etype = g.edata[dgl.ETYPE]
     ctx = g.device
-    #g.edata['w'] = th.ones(g.num_edges(), device=ctx)
+    # g.edata['w'] = th.ones(g.num_edges(), device=ctx)
     num_edge_type = th.max(etype).item()
 
     # norm = EdgeWeightNorm(norm='right')
@@ -366,6 +366,7 @@ def extract_metapaths(category, canonical_etypes, self_loop=False):
                             meta_paths_dict[mp_name] = [etype, dst_e]
     return meta_paths_dict
 
+
 # for etype in self.model.hg.etypes:
 # g = self.model.hg[etype]
 # for etype in ['paper-ref-paper','paper-cite-paper']:
@@ -443,13 +444,13 @@ def to_hetero_idx(g, hg, idx):
     input_nodes_dict = {}
     for i in idx:
         if not hg.ntypes[g.ndata['_TYPE'][i]] in input_nodes_dict:
-            a = g.ndata['_ID'][i]
+            a = g.ndata['_ID'][i].cpu()
             a = np.expand_dims(a, 0)
             a = th.tensor(a)
             input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i]]] = a
         else:
-            a = input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i]]]
-            b = g.ndata['_ID'][i]
+            a = input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i].cpu()]]
+            b = g.ndata['_ID'][i].cpu()
             b = np.expand_dims(b, 0)
             b = th.tensor(b)
             input_nodes_dict[hg.ntypes[g.ndata['_TYPE'][i]]] = th.cat((a, b), 0)
@@ -480,3 +481,13 @@ def to_homo_idx(ntypes, num_nodes_dict, idx_dict):
             else:
                 idx = th.cat((idx, th.add(idx_dict[ntype], start_idx[i])), dim=0)
     return idx
+
+
+def get_ntypes_from_canonical_etypes(canonical_etypes=None):
+    ntypes = set()
+    for etype in canonical_etypes:
+        src = etype[0]
+        dst = etype[2]
+        ntypes.add(src)
+        ntypes.add(dst)
+    return ntypes

@@ -67,16 +67,16 @@ python link_prediction_inference.py -m RGCN -g -1 --mini-batch-flag
 
 ```
 cd examples/inference
-python link_prediction_train.py -m RGCN -g -1 --mini-batch-flag
+python graph_representation_learning.py -m Metapath2vec -mp APA -g -1 
 ```
 
 *命令行参数*:
 
-``--model -m ``    模型名 支持模型包括 RGCN
+``--model -m ``    模型名 支持模型包括 Metapath2vec HERec
 
 ``--gpu -g``    控制你使用哪一个GPU，如果没有GPU，设定 -g -1
 
-``--mini-batch-flag``  使用minibatch训练 支持模型包括 RGCN
+``--meta-path-key -mp``   指定进行随机游走时使用的metapath
 
 ## RGCN
 ### 模型简述
@@ -112,3 +112,19 @@ MHNF首先针对每一条meta path逐跳进行消息聚合, 即第k层聚合目�
 ## RSHN
 ### 模型概述
 RSHN首先创建了一个粗线图神经网络(CL-GNN)，挖掘基于粗化的线图的不同类型边的潜在关联的以边为中心的关系结构特征。然后，使用异构图神经网络(H-GNN)来利用来自异构图中相邻节点和节点间传播的边缘的隐式消息。
+
+## HGT
+### 模型概述
+HGT借用Transformer的思想，使用注意力机制完成消息传递。在计算注意力权重系数的时候，利用了节点类型和边类型的信息，从而得到Query，Key和Value，进而计算得到消息的值。但是在聚合的时候，和RGCN不同，它的聚合是不考虑边的类型，类似于同质图中的聚合，使用的程序设计接口也有所不同，最后聚合得到新的结果。
+
+## SimpleHGN
+### 模型概述
+SimpleHGN主要思想是设计一个简单的，能应用在异质图上高效模型。同样使用了注意力机制，在计算注意力权重系数的时候，利用了边类型的信息，结合源节点的特征得到了消息。聚合的时候和HGT类似，不考虑边的类型，完成聚合得到新的结果。
+
+## HetSANN
+### 模型概述
+HetSANN主要思想是充分利用节点和边类型的信息，应用在异质图上的模型。HetSANN利用了注意力机制，但是在完成特征映射的时候利用的是边类型的信息，随后利用映射好的特征，计算注意力权重系数，得到消息。聚合的时候和HGT类似，不考虑边的类型，完成聚合可以得到新的特征。
+
+## ieHGCN
+### 模型概述
+ie-HGCN主要思想和RGCN类似，将图卷积操作应用在不同的关系类型上，从而得到不同关系类型下计算的结果。在聚合的过程中，利用了Transformer中的注意力机制，借助计算消息时得到的映射后的特征，计算Query，Key和Value，从而得到不同关系的注意力权重系数，进而完成最终的聚合。
