@@ -18,7 +18,7 @@ of heterogeneous graph.
 2022-08-02 paper accepted
 </summary>
 <br/>
-Our paper <i>[OpenHGNN: An Open Source Toolkit for Heterogeneous Graph Neural Network](https://dl.acm.org/doi/abs/10.1145/3511808.3557664) </i> is accpeted at CIKM 2022 short paper track.
+Our paper [<i> OpenHGNN: An Open Source Toolkit for Heterogeneous Graph Neural Network </i>](https://dl.acm.org/doi/abs/10.1145/3511808.3557664) is accpeted at CIKM 2022 short paper track.
 </details>
 
 <details>
