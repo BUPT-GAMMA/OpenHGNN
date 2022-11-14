@@ -74,7 +74,7 @@ class SimpleHGN(BaseModel):
         return cls(args.edge_dim,
                    len(hg.etypes),
                    [args.hidden_dim],
-                   args.hidden_dim // args.heads,
+                   args.hidden_dim // args.num_heads,
                    args.out_dim,
                    args.num_layers,
                    heads,
