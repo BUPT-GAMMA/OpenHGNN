@@ -311,7 +311,7 @@ class SimpleHGNConv(nn.Module):
             # h_output = torch.cat(h_prime, dim=1)
 
         g.edata['alpha'] = edge_attention
-        if g.is_block():
+        if g.is_block:
             h = h[:g.num_dst_nodes()]
         if self.residual:
             res = self.residual(h)
