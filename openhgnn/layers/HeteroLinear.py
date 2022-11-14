@@ -1,10 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from dgl.nn import HeteroEmbedding,HeteroLinear
+from dgl.nn import HeteroEmbedding, HeteroLinear
 import numpy as np
 import torch as th
-
 
 
 class GeneralLinear(nn.Module):
@@ -83,13 +82,14 @@ class HeteroLinearLayer(nn.Module):
     >>> out_dict = layer(h_dict)
 
     """
+
     def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, **kwargs):
         super(HeteroLinearLayer, self).__init__()
 
         self.layer = nn.ModuleDict({})
         for name, linear_dim in linear_dict.items():
             self.layer[name] = GeneralLinear(in_features=linear_dim[0], out_features=linear_dim[1], act=act,
-                                                  dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
+                                             dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
 
     def forward(self, dict_h: dict) -> dict:
         r"""
@@ -119,6 +119,7 @@ class HeteroMLPLayer(nn.Module):
         Key of dict can be node type(node name), value of dict is a list contains input, hidden and output dimension.
 
     """
+
     def __init__(self, linear_dict, act=None, dropout=0.0, has_l2norm=True, has_bn=True, final_act=False, **kwargs):
         super(HeteroMLPLayer, self).__init__()
         self.layers = nn.ModuleDict({})
@@ -127,17 +128,17 @@ class HeteroMLPLayer(nn.Module):
             n_layer = len(linear_dim) - 1
             for i in range(n_layer):
                 in_dim = linear_dim[i]
-                out_dim = linear_dim[i+1]
+                out_dim = linear_dim[i + 1]
                 if i == n_layer - 1:
                     if final_act:
                         layer = GeneralLinear(in_features=in_dim, out_features=out_dim, act=act,
                                               dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
                     else:
                         layer = GeneralLinear(in_features=in_dim, out_features=out_dim, act=None,
-                                          dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
+                                              dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
                 else:
                     layer = GeneralLinear(in_features=in_dim, out_features=out_dim, act=act,
-                                      dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
+                                          dropot=dropout, has_l2norm=has_l2norm, has_bn=has_bn)
 
                 nn_list.append(layer)
             self.layers[name] = nn.Sequential(*nn_list)
@@ -196,7 +197,8 @@ class HeteroFeature(nn.Module):
     hetero_linear : HeteroLinearLayer
         A heterogeneous linear layer to transform original feature.
     """
-    def __init__(self,h_dict, n_nodes_dict, embed_size, act=None, need_trans=True, all_feats=True):
+
+    def __init__(self, h_dict, n_nodes_dict, embed_size, act=None, need_trans=True, all_feats=True):
         super(HeteroFeature, self).__init__()
         self.n_nodes_dict = n_nodes_dict
         self.embed_size = embed_size
@@ -210,77 +212,81 @@ class HeteroFeature(nn.Module):
             num_now += type_num
             self.type_node_num_sum.append(num_now)
             self.all_type.append(ntype)
-        self.type_node_num_sum=torch.tensor(self.type_node_num_sum)
+        self.type_node_num_sum = torch.tensor(self.type_node_num_sum)
 
         linear_dict = {}
-        embed_dict={}
+        embed_dict = {}
         for ntype, n_nodes in self.n_nodes_dict.items():
             h = h_dict.get(ntype)
             if h is None:
                 if all_feats:
-                    embed_dict[ntype]=n_nodes
+                    embed_dict[ntype] = n_nodes
             else:
-                linear_dict[ntype]=h.shape[1]
-        self.embes=HeteroEmbedding(embed_dict,embed_size)
+                linear_dict[ntype] = h.shape[1]
+        self.embes = HeteroEmbedding(embed_dict, embed_size)
         if need_trans:
-            self.linear=HeteroLinear(linear_dict,embed_size)
-        self.act=act                                                   #activate
+            self.linear = HeteroLinear(linear_dict, embed_size)
+        self.act = act  # activate
 
     def forward(self):
-        out_dict={}
+        out_dict = {}
         out_dict.update(self.embes.weight)
-        tmp=self.linear(self.h_dict)
-        if self.act:                                                    #activate
-            for x,y in tmp.items():
-                tmp.update({x:self.act(y)})
+        tmp = self.linear(self.h_dict)
+        if self.act:  # activate
+            for x, y in tmp.items():
+                tmp.update({x: self.act(y)})
         out_dict.update(tmp)
         return out_dict
 
-    def forward_nodes(self,id_dict):
-        #Turn "id_dict" into a dictionary if "id_dict" is a tensor, and record the corresponding relationship in "to_pos"
-        id_tensor=None
+    def forward_nodes(self, id_dict):
+        # Turn "id_dict" into a dictionary if "id_dict" is a tensor, and record the corresponding relationship in "to_pos"
+        id_tensor = None
+
         if torch.is_tensor(id_dict):
-            id_tensor=id_dict
-            id_dict={}
-            to_pos={}
-            for i,x in enumerate(id_tensor):
-                tmp=torch.where(self.type_node_num_sum<=x)[0]
-                if len(tmp)>0:
-                    tmp=tmp.max()
-                    now_type=self.all_type[tmp]
-                    now_id=x-self.type_node_num_sum[tmp]
+            id_tensor = id_dict
+            device = id_tensor.device
+            self.type_node_num_sum = self.type_node_num_sum.to(device)
+            id_dict = {}
+            to_pos = {}
+            for i, x in enumerate(id_tensor):
+                tmp = torch.where(self.type_node_num_sum <= x)[0]
+                if len(tmp) > 0:
+                    tmp = tmp.max()
+                    now_type = self.all_type[tmp]
+                    now_id = x - self.type_node_num_sum[tmp]
                     if now_type not in id_dict.keys():
-                        id_dict[now_type]=[]
+                        id_dict[now_type] = []
                     id_dict[now_type].append(now_id)
                     if now_type not in to_pos.keys():
-                        to_pos[now_type]=[]
+                        to_pos[now_type] = []
                     to_pos[now_type].append(i)
             for ntype in id_dict.keys():
-                id_dict[ntype]=torch.tensor(id_dict[ntype])
+                id_dict[ntype] = torch.tensor(id_dict[ntype], device=device)
 
-        embed_id_dict={}
-        linear_id_dict={}
-        for entype,id in id_dict.items():
+        embed_id_dict = {}
+        linear_id_dict = {}
+        for entype, id in id_dict.items():
             if self.h_dict.get(entype) is None:
-                embed_id_dict[entype]=id
+                embed_id_dict[entype] = id
             else:
-                linear_id_dict[entype]=id
-        out_dict={}
-        out_dict.update(self.embes(embed_id_dict))
-        tmp=self.linear(self.h_dict)
-        if self.act:                                                    #activate
-            for x,y in tmp.items():
-                tmp.update({x:self.act(y)})
-        for entype,id in linear_id_dict.items():
-            out_dict[entype]=tmp[entype][id]
+                linear_id_dict[entype] = id
+        out_dict = {}
+        tmp = self.embes(embed_id_dict)
+        out_dict.update(tmp)
+        tmp = self.linear(self.h_dict)
+        if self.act:  # activate
+            for x, y in tmp.items():
+                tmp.update({x: self.act(y)})
+        for entype, id in linear_id_dict.items():
+            out_dict[entype] = tmp[entype][id]
 
-        #The result corresponds to the original position according to the corresponding relationship
+        # The result corresponds to the original position according to the corresponding relationship
         if id_tensor is not None:
-            out_feat=[None]*len(id_tensor)
-            for ntype,feat_list in out_dict.items():
-                for i,feat in enumerate(feat_list):
-                    now_pos=to_pos[ntype][i]
-                    out_feat[now_pos]=feat.data
-            out_dict=torch.stack(out_feat,dim=0)
+            out_feat = [None] * len(id_tensor)
+            for ntype, feat_list in out_dict.items():
+                for i, feat in enumerate(feat_list):
+                    now_pos = to_pos[ntype][i]
+                    out_feat[now_pos] = feat.data
+            out_dict = torch.stack(out_feat, dim=0)
 
         return out_dict
