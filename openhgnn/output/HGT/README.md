@@ -216,8 +216,60 @@ Evaluation metric: Micro/Macro-F1
       <td>88.36</td>
       <td>87.37</td>
    </tr>
+</table>
+
+Evaluation metric using mini-batch: Micro/Macro-F1
+<table>
    <tr>
       <td></td>
+      <td colspan="2" align="center">HGBn-ACM</td>
+      <td colspan="2" align="center">acm4GTN</td>
+      <td colspan="2" align="center">imdb4MAGNN</td>
+      <td colspan="2" align="center">dblp4MAGNN</td>
+   </tr>
+   <tr>
+      <td>Model</td>
+      <td>Micro-F1</td>
+      <td>Macro-F1</td>
+      <td>Micro-F1</td>
+      <td>Macro-F1</td>
+      <td>Micro-F1</td>
+      <td>Macro-F1</td>
+      <td>Micro-F1</td>
+      <td>Macro-F1</td>
+   </tr>
+   <tr>
+      <td>HGT</td>
+      <td>83.98</td>
+      <td>84.23</td>
+      <td>84.33</td>
+      <td>84.43</td>
+      <td>43.88</td>
+      <td>43.12</td>
+      <td>90.91</td>
+      <td>90.29</td>
+   </tr>
+   <tr>
+      <td>SimpleHGN</td>
+      <td><b>88.40</b></td>
+      <td><b>88.69</b></td>
+      <td>86.08</td>
+      <td>86.11</td>
+      <td>46.06</td>
+      <td>44.71</td>
+      <td>89.22</td>
+      <td>88.04</td>
+   </tr>
+   <tr>
+      <td>HetSANN</td>
+      <td>85.08</td>
+      <td>85.64</td>
+      <td><b>86.12</b></td>
+      <td><b>86.25</b></td>
+      <td><b>47.56</b></td>
+      <td><b>46.37</b></td>
+      <td><b>91.96</b></td>
+      <td><b>91.31</b></td>
    </tr>
 </table>
 
