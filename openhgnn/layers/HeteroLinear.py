@@ -241,10 +241,13 @@ class HeteroFeature(nn.Module):
     def forward_nodes(self, id_dict):
         # Turn "id_dict" into a dictionary if "id_dict" is a tensor, and record the corresponding relationship in "to_pos"
         id_tensor = None
+        if torch.is_tensor(id_dict):
+            device = id_dict.device
+        else:
+            device = id_dict.get(next(iter(id_dict))).device
 
         if torch.is_tensor(id_dict):
             id_tensor = id_dict
-            device = id_tensor.device
             self.type_node_num_sum = self.type_node_num_sum.to(device)
             id_dict = {}
             to_pos = {}
@@ -273,6 +276,8 @@ class HeteroFeature(nn.Module):
         out_dict = {}
         tmp = self.embes(embed_id_dict)
         out_dict.update(tmp)
+        for key in self.h_dict:
+            self.h_dict[key] = self.h_dict[key].to(device)
         tmp = self.linear(self.h_dict)
         if self.act:  # activate
             for x, y in tmp.items():

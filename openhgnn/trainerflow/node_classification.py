@@ -56,6 +56,7 @@ class NodeClassification(BaseFlow):
         if self.args.mini_batch_flag:
             self.fanouts = [-1] * self.args.num_layers
             sampler = dgl.dataloading.MultiLayerNeighborSampler(self.fanouts)
+            use_uva = self.args.use_uva
 
             if self.to_homo_flag:
                 loader_g = self.g
@@ -71,7 +72,7 @@ class NodeClassification(BaseFlow):
 
                 self.train_loader = dgl.dataloading.DataLoader(loader_g, loader_train_idx, sampler,
                                                                batch_size=self.args.batch_size, device=self.device,
-                                                               shuffle=True)
+                                                               shuffle=True, use_uva = use_uva)
             if self.train_idx is not None:
                 if self.to_homo_flag:
                     loader_val_idx = to_homo_idx(self.hg.ntypes, self.num_nodes_dict, {self.category: self.val_idx}).to(
@@ -80,7 +81,7 @@ class NodeClassification(BaseFlow):
                     loader_val_idx = {self.category: self.val_idx.to(self.device)}
                 self.val_loader = dgl.dataloading.DataLoader(loader_g, loader_val_idx, sampler,
                                                              batch_size=self.args.batch_size, device=self.device,
-                                                             shuffle=True)
+                                                             shuffle=True, use_uva = use_uva)
             if self.args.test_flag:
                 if self.test_idx is not None:
                     if self.to_homo_flag:
@@ -90,7 +91,7 @@ class NodeClassification(BaseFlow):
                         loader_test_idx = {self.category: self.test_idx.to(self.device)}
                     self.test_loader = dgl.dataloading.DataLoader(loader_g, loader_test_idx, sampler,
                                                                   batch_size=self.args.batch_size, device=self.device,
-                                                                  shuffle=True)
+                                                                  shuffle=True, use_uva = use_uva)
             if self.args.prediction_flag:
                 if self.pred_idx is not None:
                     if self.to_homo_flag:
@@ -100,7 +101,7 @@ class NodeClassification(BaseFlow):
                         loader_pred_idx = {self.category: self.pred_idx.to(self.device)}
                     self.pred_loader = dgl.dataloading.DataLoader(loader_g, loader_pred_idx, sampler,
                                                                   batch_size=self.args.batch_size, device=self.device,
-                                                                  shuffle=True)
+                                                                  shuffle=True, use_uva = use_uva)
 
     def preprocess(self):
         r"""
@@ -221,6 +222,9 @@ class NodeClassification(BaseFlow):
             if self.to_homo_flag:
                 # input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
                 seeds = to_hetero_idx(self.g, self.hg, seeds)
+            elif isinstance(input_nodes, dict):
+                for key in input_nodes:
+                    input_nodes[key] = input_nodes[key].to(self.device)
             # elif not isinstance(input_nodes, dict):
             #     input_nodes = {self.category: input_nodes}
             emb = self.model.input_feature.forward_nodes(input_nodes)

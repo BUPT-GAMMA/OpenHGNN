@@ -133,6 +133,7 @@ class Config(object):
             self.validation = conf.getboolean("RGCN", "validation")
             self.mini_batch_flag = conf.getboolean("RGCN", "mini_batch_flag")
             self.use_self_loop = conf.getboolean("RGCN", "use_self_loop")
+            self.use_uva = conf.getboolean("RGCN", "use_uva")
 
         elif self.model_name == 'CompGCN':
             self.lr = conf.getfloat("CompGCN", "learning_rate")
@@ -269,6 +270,7 @@ class Config(object):
             self.n_heads = conf.getint("RHGNN", "n_heads")
             self.category = conf.get("RHGNN", "category")
             self.out_dim = conf.getint("RHGNN", "out_dim")
+            self.use_uva = conf.getboolean("RHGNN", "use_uva")
 
         elif self.model_name == 'HGNN_AC':
             self.feats_drop_rate = conf.getfloat("HGNN_AC", "feats_drop_rate")
@@ -350,6 +352,7 @@ class Config(object):
             self.norm = conf.getboolean("HGT", "norm")
             self.num_layers = conf.getint("HGT", "num_layers")
             self.num_heads = conf.getint("HGT", "num_heads")
+            self.use_uva = conf.getboolean("HGT", "use_uva")
         elif self.model_name == 'HeCo':
             self.lr = conf.getfloat("HeCo", "learning_rate")
             self.weight_decay = conf.getfloat("HeCo", "weight_decay")
@@ -526,6 +529,7 @@ class Config(object):
             self.mini_batch_flag = conf.getboolean("SimpleHGN", "mini_batch_flag")
             self.fanout = conf.getint("SimpleHGN", "fanout")
             self.batch_size = conf.getint("SimpleHGN", "batch_size")
+            self.use_uva = conf.getboolean("SimpleHGN", "use_uva")
 
         elif self.model_name == 'GATNE-T':
             self.learning_rate = conf.getfloat("GATNE-T", "learning_rate")
@@ -558,6 +562,7 @@ class Config(object):
             self.mini_batch_flag = conf.getboolean("HetSANN", "mini_batch_flag")
             self.batch_size = conf.getint("HetSANN", "batch_size")
             self.fanout = conf.getint("HetSANN", "fanout")
+            self.use_uva = conf.getboolean("HetSANN", "use_uva")
         elif self.model_name == 'ieHGCN':
             self.weight_decay = conf.getfloat("ieHGCN", "weight_decay")
             self.lr = conf.getfloat("ieHGCN", "lr")
