@@ -582,6 +582,20 @@ class Config(object):
             self.patience = conf.getint("HGAT", "patience")
             self.negative_slope = conf.getfloat("HGAT", "negative_slope")
 
+        elif self.model_name == 'HGSL':
+            self.undirected_relations = conf.get('HGSL','undirected_relations')
+            self.gnn_dropout = conf.getfloat('HGSL','gnn_dropout')
+            self.fs_eps = conf.getfloat('HGSL','fs_eps')
+            self.fp_eps = conf.getfloat('HGSL','fp_eps')
+            self.mp_eps = conf.getfloat('HGSL','mp_eps')
+            self.hidden_dim = conf.getint('HGSL','hidden_dim')
+            self.num_heads = conf.getint('HGSL','num_heads')
+            self.gnn_emd_dim = conf.getint('HGSL','gnn_emd_dim')
+            self.lr = conf.getfloat('HGSL','lr')
+            self.weight_decay = conf.getfloat('HGSL','weight_decay')
+            self.mini_batch_flag = False
+            self.max_epoch = conf.getint('HGSL','max_epoch')
+
         elif self.model_name == 'TransE':
             self.seed = conf.getint("TransE", "seed")
             self.patience = conf.getint("TransE", "patience")
