@@ -190,7 +190,9 @@ class HGSL(BaseModel):
                 column_range = node_indexes[canonical_etype[2]]
                 new_homo_adj[row_range[0]:row_range[1], column_range[0]:column_range[1]] = new_adj
 
-            new_homo_adj += new_homo_adj.t()
+            temp = new_homo_adj.clone()
+            new_homo_adj = temp + new_homo_adj.t()
+            # new_homo_adj += new_homo_adj.t()
             new_homo_adj = F.normalize(new_homo_adj, dim=0, p=1)
             return new_homo_adj
 
