@@ -260,7 +260,8 @@ BEST_CONFIGS = {
             'general': {},
             'acm4GTN': {
                 'undirected_relations': 'author-paper,paper-subject', 'gnn_dropout': 0, 'fs_eps': 0.8,
-                'fp_eps': 0.2, 'mp_eps': 0.6,
+                'fp_eps': 0.2, 'mp_eps': 0.6,'hidden_dim': 128,'num_heads': 3,'gnn_emd_dim':128,'lr':0.001,
+                'weight_decay':0.0001,'mini_batch_flag':False,'max_epoch':200,
             }
         },
         'HGT': {
