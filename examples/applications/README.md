@@ -1,20 +1,22 @@
-## 训练与推理脚本
+## 使用OpenHGNN构建应用
 
-### 代码目录结构
+### 使用说明
 
-- link_prediction_train.py 链路预测训练脚本
-- link_prediction_inference.py 链路预测预测脚本
-- node_classification_train.py 节点分类训练脚本
-- node_classification_inference.py 节点分类预测脚本
-- my_config.ini 配置文件
+首先将config复制到该目录下
+
+```
+cp openhgnn/config.ini examples/applications/my_config.ini 
+```
+
+然后根据应用场景选择任务类型进行训练和推理
 
 ### 节点分类任务
 
 #### 训练
 
 ```
-cd examples/inference
-python node_classification_train.py -m RGCN -g -1 --mini-batch-flag
+cd examples/applications/node_classification
+python train.py -m RGCN -g -1 --mini-batch-flag
 ```
 
 *命令行参数*:
@@ -29,7 +31,7 @@ fastGTN
 #### 预测
 
 ```
-python node_classification_inference.py -m RGCN -g -1 --mini-batch-flag
+python inference.py -m RGCN -g -1 --mini-batch-flag
 ```
 
 预测的输出为目标类型节点的下标和预测值
@@ -39,8 +41,8 @@ python node_classification_inference.py -m RGCN -g -1 --mini-batch-flag
 #### 训练
 
 ```
-cd examples/inference
-python link_prediction_train.py -m RGCN -g -1 --mini-batch-flag
+cd examples/applications/link_prediction
+python train.py -m RGCN -g -1 --mini-batch-flag
 ```
 
 *命令行参数*:
@@ -54,7 +56,7 @@ python link_prediction_train.py -m RGCN -g -1 --mini-batch-flag
 #### 预测
 
 ```
-python link_prediction_inference.py -m RGCN -g -1 --mini-batch-flag
+python inference.py -m RGCN -g -1 --mini-batch-flag
 ```
 
 ### 模型参数
@@ -66,7 +68,7 @@ python link_prediction_inference.py -m RGCN -g -1 --mini-batch-flag
 #### 训练
 
 ```
-cd examples/inference
+cd examples/applications/
 python graph_representation_learning.py -m Metapath2vec -mp APA -g -1 
 ```
 

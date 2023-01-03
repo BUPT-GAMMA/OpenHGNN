@@ -50,6 +50,7 @@ class BaseFlow(ABC):
         # args.validation_flag = getattr(args, 'validation_flag', True)
         args.test_flag = getattr(args, 'test_flag', True)
         args.prediction_flag = getattr(args, 'prediction_flag', False)
+        args.use_uva = getattr(args, 'use_uva', False)
 
         self.args = args
         self.logger = self.args.logger
@@ -57,7 +58,7 @@ class BaseFlow(ABC):
         self.model = args.model
         self.device = args.device
         self.task = build_task(args)
-        if self.args.use_uva == True:
+        if self.args.use_uva:
             self.hg = self.task.get_graph()
         else:
             self.hg = self.task.get_graph().to(self.device)

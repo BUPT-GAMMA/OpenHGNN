@@ -16,7 +16,8 @@ class Metapath2VecTrainer(BaseFlow):
         self.model = self.model.to(self.device)
         self.mp2vec_sampler = None
         self.dataloader = None
-        self.embeddings_file_path = os.path.join(self.args.output_dir, self.args.dataset_name + '_mp2vec_embeddings.npy')
+        self.embeddings_file_path = os.path.join(self.args.output_dir, self.args.dataset_name + '_' +
+                                                 self.args.meta_path_key + '_mp2vec_embeddings.npy')
         self.load_trained_embeddings = False
 
     def preprocess(self):

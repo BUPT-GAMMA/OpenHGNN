@@ -1,21 +1,22 @@
-import argparse
-from openhgnn import Experiment
 from openhgnn.dataset import generate_random_hg
 from dgl import transforms as T
 from dgl import DGLHeteroGraph
 from dgl.data import DGLDataset
+import torch as th
 
 category = 'author'
 meta_paths_dict = {'APA': [('author', 'author-paper', 'paper'), ('paper', 'rev_author-paper', 'author')]}
 
 
-class MyDataset(DGLDataset):
+class MyNCDataset(DGLDataset):
     def __init__(self):
-        super().__init__(name='my-dataset')
+        super().__init__(name='my-nc-dataset')
 
     def process(self):
+        # Generate a random heterogeneous graph with labels on target node type.
         self._g = generate_random_citation_hg()
 
+    # Some models require meta paths, you can set meta path dict for this dataset.
     @property
     def meta_paths_dict(self):
         return meta_paths_dict
@@ -28,6 +29,7 @@ class MyDataset(DGLDataset):
 
 
 def generate_random_citation_hg() -> DGLHeteroGraph:
+    num_classes = 5
     num_edges_dict = {
         ('author', 'author-paper', 'paper'): 10000
     }
@@ -37,20 +39,11 @@ def generate_random_citation_hg() -> DGLHeteroGraph:
     }
     hg = generate_random_hg(num_nodes_dict=num_nodes_dict, num_edges_dict=num_edges_dict)
     transform = T.Compose([T.ToSimple(), T.AddReverse()])
+
+    num = hg.num_nodes(category)
     hg = transform(hg)
+    hg.nodes[category].data['label'] = th.randint(low=0, high=num_classes, size=(num,))
+    hg.nodes[category].data['label_mask'] = th.zeros(num).bool()
+    hg.nodes[category].data['label_mask'][0: int(0.8 * num)] = True
+
     return hg
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model', '-m', default='Metapath2vec', type=str, help='name of models')
-    parser.add_argument('--gpu', '-g', default='-1', type=int, help='-1 means cpu')
-    parser.add_argument('--meta-path-key', '-mp', default='APA', type=str, help='name of models')
-
-    args = parser.parse_args()
-
-    ds = MyDataset()
-
-    experiment = Experiment(conf_path='./my_config.ini', max_epoch=1, model=args.model, dataset=ds,
-                            task='demo', meta_path_key=args.meta_path_key, gpu=args.gpu)
-    experiment.run()
