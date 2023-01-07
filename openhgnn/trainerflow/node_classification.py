@@ -54,7 +54,7 @@ class NodeClassification(BaseFlow):
             self.g = dgl.to_homogeneous(self.hg)
 
         if self.args.mini_batch_flag:
-            self.fanouts = [-1] * self.args.num_layers
+            self.fanouts = [args.fanout] * self.args.num_layers
             sampler = dgl.dataloading.MultiLayerNeighborSampler(self.fanouts)
             use_uva = self.args.use_uva
 
