@@ -8,6 +8,7 @@ from .ohgb_dataset import OHGBDataset
 from .gtn_dataset import *
 from .alircd_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
+from .mg2vec_dataset import Mg2vecDataSet
 
 DATASET_REGISTRY = {}
 
@@ -83,6 +84,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'kgcn_recommendation'
     elif dataset in ['yelp4rec']:
         _dataset = 'hin_' + task
+    elif dataset in ['dblp4Mg2vec_4', 'dblp4Mg2vec_5']:
+        _dataset = 'hin_' + task
     elif dataset == 'demo':
         _dataset = 'demo_' + task
     elif dataset in hypergraph_datasets:
@@ -94,12 +97,14 @@ SUPPORTED_DATASETS = {
     "node_classification": "openhgnn.dataset.NodeClassificationDataset",
     "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
     "recommendation": "openhgnn.dataset.RecommendationDataset",
+    "edge_classification": "openhgnn.dataset.EdgeClassificationDataset",
     "hypergraph":"openhgnn.dataset.HypergraphDataset"
 }
 
 from .NodeClassificationDataset import NodeClassificationDataset
 from .LinkPredictionDataset import LinkPredictionDataset
 from .RecommendationDataset import RecommendationDataset
+from .EdgeClassificationDataset import EdgeClassificationDataset
 from .HypergraphDataset import HGraphDataset
 
 def build_dataset_v2(dataset, task):
@@ -138,6 +143,7 @@ __all__ = [
     'GTNDataset',
     'AsLinkPredictionDataset',
     'AsNodeClassificationDataset',
+    'EdgeClassificationDataset'
     'HypergraphDataset'
 ]
 

@@ -9,6 +9,9 @@ import sklearn.metrics as Metric
 from ogb.nodeproppred import Evaluator
 from tqdm import tqdm
 
+from sklearn import metrics, preprocessing
+from sklearn.svm import SVC
+
 class Evaluator():
     def __init__(self, seed):
         self.seed = seed
@@ -86,6 +89,22 @@ class Evaluator():
         Y_pred = LR.predict(X_test)
         macro_f1, micro_f1 = f1_node_classification(Y_test, Y_pred)
         return micro_f1, macro_f1
+
+    def ec_with_SVC(self, C, gamma, emd, labels, train_idx, test_idx):
+        X_train = emd[train_idx]
+        Y_train = labels[train_idx]
+        X_test= emd[test_idx]
+        Y_test = labels[test_idx]
+        scaler = preprocessing.StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+
+        clf = SVC(C=C, gamma=gamma).fit(X_train, Y_train)
+        Y_pred = clf.predict(X_test)
+        macro_f1 = metrics.f1_score(Y_test, Y_pred, average='macro')
+        micro_f1 = metrics.f1_score(Y_test, Y_pred, average='micro')
+        acc = metrics.accuracy_score(Y_test, Y_pred)
+        return micro_f1, macro_f1, acc
 
 def filter(triplets_to_filter, target_s, target_r, target_o, num_entities, mode):
     triplets_to_filter = triplets_to_filter.copy()

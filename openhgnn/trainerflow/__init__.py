@@ -66,6 +66,7 @@ SUPPORTED_FLOWS = {
     'hde_trainer':  'openhgnn.trainerflow.hde_trainer',
     'GATNE_trainer': 'openhgnn.trainerflow.GATNE_trainer',
     'TransX_trainer': 'openhgnn.trainerflow.TransX_trainer',
+    'mg2vec_trainer': 'openhgnn.trainerflow.mg2vec_trainer',
     'DHNE_trainer':'openhgnn.trainerflow.DHNE_trainer',
 }
 
@@ -83,6 +84,7 @@ from .DMGI_trainer import DMGI_trainer
 from .slice_trainer import SLiCETrainer
 from .hde_trainer import hde_trainer
 from .GATNE_trainer import GATNE
+from .mg2vec_trainer import Mg2vecTrainer
 from .DHNE_trainer import DHNE_trainer
 
 __all__ = [
@@ -101,6 +103,7 @@ __all__ = [
     'SLiCETrainer',
     'hde_trainer',
     'GATNE',
+    'Mg2vecTrainer'
     'DHNE_trainer'
 ]
 classes = __all__
