@@ -67,7 +67,7 @@ __all__ = [
     'NodeClassification',
     'LinkPrediction',
     'Recommendation',
-    'EdgeClassification'
+    'EdgeClassification',
     'hypergraph'
 ]
 

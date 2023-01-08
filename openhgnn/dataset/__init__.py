@@ -143,7 +143,7 @@ __all__ = [
     'GTNDataset',
     'AsLinkPredictionDataset',
     'AsNodeClassificationDataset',
-    'EdgeClassificationDataset'
+    'EdgeClassificationDataset',
     'HypergraphDataset'
 ]
 

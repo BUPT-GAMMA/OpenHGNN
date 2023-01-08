@@ -158,7 +158,7 @@ __all__ = [
     'HDE',
     'SimpleHGN',
     'GATNE',
-    'Mg2vec'
+    'Mg2vec',
     'DHNE'
 ]
 classes = __all__

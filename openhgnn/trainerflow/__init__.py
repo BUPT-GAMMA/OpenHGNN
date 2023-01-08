@@ -103,7 +103,7 @@ __all__ = [
     'SLiCETrainer',
     'hde_trainer',
     'GATNE',
-    'Mg2vecTrainer'
+    'Mg2vecTrainer',
     'DHNE_trainer'
 ]
 classes = __all__
