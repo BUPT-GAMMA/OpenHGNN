@@ -6,6 +6,7 @@ from .academic_graph import AcademicDataset
 from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
 from .gtn_dataset import *
+from .alircd_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 from .mg2vec_dataset import Mg2vecDataSet
 
@@ -53,7 +54,7 @@ hgbn_datasets = ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']
 kg_lp_datasets = ['wn18', 'FB15k', 'FB15k-237']
 ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
-
+hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet']
 
 def build_dataset(dataset, task, *args, **kwargs):
     if isinstance(dataset, DGLDataset):
@@ -87,6 +88,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'hin_' + task
     elif dataset == 'demo':
         _dataset = 'demo_' + task
+    elif dataset in hypergraph_datasets:
+        _dataset = task
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
@@ -95,13 +98,14 @@ SUPPORTED_DATASETS = {
     "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
     "recommendation": "openhgnn.dataset.RecommendationDataset",
     "edge_classification": "openhgnn.dataset.EdgeClassificationDataset",
+    "hypergraph":"openhgnn.dataset.HypergraphDataset"
 }
 
 from .NodeClassificationDataset import NodeClassificationDataset
 from .LinkPredictionDataset import LinkPredictionDataset
 from .RecommendationDataset import RecommendationDataset
 from .EdgeClassificationDataset import EdgeClassificationDataset
-
+from .HypergraphDataset import HGraphDataset
 
 def build_dataset_v2(dataset, task):
     if dataset in CLASS_DATASETS:
@@ -124,7 +128,7 @@ def build_dataset_v2(dataset, task):
 
 CLASS_DATASETS = {
     "dblp4GTN": "openhgnn.dataset.DBLP4GTNDataset",
-    "acm4GTN": "openhgnn.dataset.ACM4GTNDataset",
+    # "acm4GTN": "openhgnn.dataset.ACM4GTNDataset",
     "imdb4GTN": "openhgnn.dataset.IMDB4GTNDataset",
 }
 
@@ -140,6 +144,7 @@ __all__ = [
     'AsLinkPredictionDataset',
     'AsNodeClassificationDataset',
     'EdgeClassificationDataset'
+    'HypergraphDataset'
 ]
 
 classes = __all__

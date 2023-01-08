@@ -49,6 +49,7 @@ class Experiment(object):
         'TransR': 'TransX_trainer',
         'TransD': 'TransX_trainer',
         'Mg2vec': 'mg2vec_trainer',
+        'DHNE':'DHNE_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 
