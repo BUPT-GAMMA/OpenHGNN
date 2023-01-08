@@ -51,7 +51,9 @@ class Experiment(object):
         'HAN': {
             'node_classification': 'han_nc_trainer',
             'link_prediction': 'han_lp_trainer',
-        }
+        },
+        'Mg2vec': 'mg2vec_trainer',
+        'DHNE': 'DHNE_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 

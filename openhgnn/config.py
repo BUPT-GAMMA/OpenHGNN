@@ -708,5 +708,31 @@ class Config(object):
             self.dropout = conf.getfloat("Rsage", "dropout")
             self.out_dim = conf.getint("Rsage", "out_dim")
 
+        elif self.model_name == 'Mg2vec':
+            self.lr = conf.getfloat("MG2VEC", "learning_rate")
+            self.max_epoch = conf.getint("MG2VEC", "max_epoch")
+            self.emb_dimension = conf.getint("MG2VEC", "dim")
+            self.batch_size = conf.getint("MG2VEC", "batch_size")
+            self.num_workers = conf.getint("MG2VEC", "num_workers")
+            self.sample_num = conf.getint("MG2VEC", "sample_num")
+            self.alpha = conf.getfloat("MG2VEC", "alpha")
+            self.seed = conf.getint("MG2VEC", "seed")
+
+        elif self.model_name == 'DHNE':
+            self.lr = conf.getfloat("DHNE", "lr")
+            emb_size = conf.getint("DHNE", "embedding_sizes")
+            self.embedding_sizes=[emb_size, emb_size, emb_size]
+            self.prefix_path = conf.get("DHNE", "prefix_path")
+            self.hidden_size = conf.getint("DHNE", "hidden_size")
+            self.epochs_to_train = conf.getint("DHNE", "epochs_to_train")
+            self.max_epoch = conf.getint("DHNE", "max_epoch")
+            self.batch_size = conf.getint("DHNE", "batch_size")
+            self.alpha = conf.getfloat("DHNE", "alpha")
+            self.num_neg_samples = conf.getint("DHNE", "num_neg_samples")
+            self.seed = conf.getint("DHNE", "seed")
+            self.dim_features = conf.get("DHNE", "dim_features")
+            self.max_epoch = conf.getint("DHNE", "max_epoch")
+            self.mini_batch_flag = True
+
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model_name, self.task, self.dataset)
