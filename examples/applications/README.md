@@ -47,11 +47,11 @@ python train.py -m RGCN -g -1 --mini-batch-flag
 
 *命令行参数*:
 
-``--model -m ``    模型名 支持模型包括 RGCN
+``--model -m ``    模型名 支持模型包括 RGCN HAN
 
 ``--gpu -g``    控制你使用哪一个GPU，如果没有GPU，设定 -g -1
 
-``--mini-batch-flag``  使用minibatch训练 支持模型包括 RGCN
+``--mini-batch-flag``  使用minibatch训练 支持模型包括 RGCN HAN
 
 #### 预测
 
@@ -59,17 +59,19 @@ python train.py -m RGCN -g -1 --mini-batch-flag
 python inference.py -m RGCN -g -1 --mini-batch-flag
 ```
 
+预测的输出为目标边的首尾节点标号和边的打分
+
 ### 模型参数
 
-参见 my_config.ini
+参见配置文件
 
 ### 图表示学习任务
 
 #### 训练
 
 ```
-cd examples/applications/
-python graph_representation_learning.py -m Metapath2vec -mp APA -g -1 
+cd examples/applications/graph_representation_learning
+python train.py -m Metapath2vec -mp APA -g -1 
 ```
 
 *命令行参数*:
