@@ -147,6 +147,10 @@ BEST_CONFIGS = {
                 'lr': 0.005, 'num_heads': [8], 'hidden_dim': 128, 'dropout': 0.6, 'weight_decay': 0.001,
                 'num_epochs': 200, 'patience': 100
             },
+            'alircd_session1': {
+                'lr': 0.005, 'num_heads': [8], 'hidden_dim': 128, 'dropout': 0.6, 'weight_decay': 0.001,
+                'num_epochs': 50, 'patience': 10, 'mini_batch_flag': True, 'batch_size': 256, 'fanout': 10
+            },
             'acm4GTN': {
                 'lr': 0.01, 'hidden_dim': 128, 'dropout': 0.46, 'num_heads': [1]
             },
