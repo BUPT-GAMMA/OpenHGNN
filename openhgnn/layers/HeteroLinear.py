@@ -276,14 +276,19 @@ class HeteroFeature(nn.Module):
         out_dict = {}
         tmp = self.embes(embed_id_dict)
         out_dict.update(tmp)
-        for key in self.h_dict:
-            self.h_dict[key] = self.h_dict[key].to(device)
-        tmp = self.linear(self.h_dict)
+        # for key in self.h_dict:
+        #     self.h_dict[key] = self.h_dict[key].to(device)
+        h_dict = {}
+        for key in linear_id_dict:
+            linear_id_dict[key] = linear_id_dict[key].to('cpu')
+        for key in linear_id_dict:
+            h_dict[key] = self.h_dict[key][linear_id_dict[key]].to(device)
+        tmp = self.linear(h_dict)
         if self.act:  # activate
             for x, y in tmp.items():
                 tmp.update({x: self.act(y)})
-        for entype, id in linear_id_dict.items():
-            out_dict[entype] = tmp[entype][id]
+        for entype in linear_id_dict:
+            out_dict[entype] = tmp[entype]
 
         # The result corresponds to the original position according to the corresponding relationship
         if id_tensor is not None:
