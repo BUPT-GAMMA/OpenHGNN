@@ -75,8 +75,11 @@ BEST_CONFIGS = {
                 'hidden_dim': 32, 'num_layers': 2, 'dropout': 0.2, 'comp_fn': 'sub', 'batch_size': 128,
                 'mini_batch_flag': True, 'validation': True
             },
-            'ohgbn-Freebase': {
-                'mini_batch_flag': True, 'batch_size': 128,
+            'ohgbn-Freebase':{
+                'learning_rate' : 0.01, 'weight_decay' : 0.0001, 'dropout' : 0.2, 'seed' : 0, 'num_layers' : 2, 'in_dim' : 32, 'hidden_dim' : 32, 'out_dim' : 32, 'max_epoch' : 500, 'patience' : 100, 'comp_fn' : 'sub', 'validation' : True, 'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True
+            },
+            'alircd_session1':{
+                'learning_rate' : 0.01, 'weight_decay' : 0.0001, 'dropout' : 0.2, 'seed' : 0, 'num_layers' : 2, 'in_dim' : 32, 'hidden_dim' : 32, 'out_dim' : 32, 'max_epoch' : 500, 'patience' : 100, 'comp_fn' : 'sub', 'validation' : True, 'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True
             },
             'ohgbn-acm': {'lr': 0.005, 'hidden_dim': 128, 'dropout': 0.16, 'num_layers': 2,
                           'comp_fn': 'sub', 'evaluation_metric': 'f1'},
@@ -284,8 +287,15 @@ BEST_CONFIGS = {
                            'attn_drop_rate': 0.34, 'feats_drop_rate': 0.4, 'beta': 0.01,
                            'residual': False, 'slope': 0.1, 'max_epoch': 100, 'patience': 50},
 
+        },
+        'RGAT':{
+            'general':{
+                'in_dim' : 64, 'num_layers' : 1, 'hidden_dim' : 64, 'patience' : 100, 'seed' : 0, 'lr' : 0.01, 'weight_decay' : 5e-4, 'max_epoch' : 350, 'dropout' : 0.2, 'num_heads' : 3,'out_dim' : 3
+            },
+            'ohgbn-Freebase':{'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True},
+            'alircd_session1':{'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True}
         }
-
+    
     },
 
     "link_prediction": {
