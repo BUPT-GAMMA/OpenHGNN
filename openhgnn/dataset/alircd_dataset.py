@@ -9,7 +9,7 @@ import numpy as np
 import pickle as pkl
 import dgl
 
-__all__ = ['AliRCDDataset']
+__all__ = ['AliRCDDataset', 'AliRCDSmallDataset', 'AliRCDSession1Dataset', 'AliRCDSession2Dataset']
 
 
 class AliRCDDataset(DGLBuiltinDataset):
@@ -39,7 +39,7 @@ class AliRCDDataset(DGLBuiltinDataset):
         transformed before every access.
     """
 
-    def __init__(self, session='small', raw_dir=None, force_reload=False,
+    def __init__(self, session, raw_dir=None, force_reload=False,
                  verbose=False, transform=None):
         name = 'AliRCD_{}'.format(session)
         self.session = session
@@ -246,3 +246,48 @@ class AliRCDDataset(DGLBuiltinDataset):
 
     def __len__(self):
         return 1
+
+    @property
+    def meta_paths_dict(self):
+        return {'IBI': [('item', 'A', 'b'),
+                        ('b', 'A_1', 'item')],
+                'IFAFI': [('item', 'B_1', 'f'),
+                          ('f', 'G', 'a'),
+                          ('a', 'G_1', 'f'),
+                          ('f', 'B', 'item')],
+                'IFCFI': [('item', 'B_1', 'f'),
+                          ('f', 'D', 'c'),
+                          ('c', 'D_1', 'f'),
+                          ('f', 'B', 'item')],
+                'IFDFI': [('item', 'B_1', 'f'),
+                          ('f', 'C', 'd'),
+                          ('d', 'C_1', 'f'),
+                          ('f', 'B', 'item')],
+                'IFEFI': [('item', 'B_1', 'f'),
+                          ('f', 'F', 'e'),
+                          ('e', 'F_1', 'f'),
+                          ('f', 'B', 'item')],
+                }
+
+
+class AliRCDSmallDataset(AliRCDDataset):
+    def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
+        session = 'small'
+        super(AliRCDSmallDataset, self).__init__(session, raw_dir=raw_dir, force_reload=force_reload, verbose=verbose,
+                                                 transform=transform)
+
+
+class AliRCDSession1Dataset(AliRCDDataset):
+    def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
+        session = 'session1'
+        super(AliRCDSession1Dataset, self).__init__(session, raw_dir=raw_dir, force_reload=force_reload,
+                                                    verbose=verbose,
+                                                    transform=transform)
+
+
+class AliRCDSession2Dataset(AliRCDDataset):
+    def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
+        session = 'session2'
+        super(AliRCDSession2Dataset, self).__init__(session, raw_dir=raw_dir, force_reload=force_reload,
+                                                    verbose=verbose,
+                                                    transform=transform)

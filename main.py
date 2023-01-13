@@ -3,7 +3,6 @@
 # @Email  : tyzhao@bupt.edu.cn
 
 import argparse
-
 from openhgnn.experiment import Experiment
 
 if __name__ == '__main__':

@@ -48,10 +48,11 @@ def try_import_task(task):
 
 
 SUPPORTED_TASKS = {
+    'demo': 'openhgnn.tasks.demo',
     'node_classification': 'openhgnn.tasks.node_classification',
     'link_prediction': 'openhgnn.tasks.link_prediction',
     'recommendation': 'openhgnn.tasks.recommendation',
-    'demo': 'openhgnn.tasks.demo',
+    'embedding': 'openhgnn.tasks.embedding',
     'edge_classification': 'openhgnn.tasks.edge_classification',
     'hypergraph': 'openhgnn.tasks.hypergraph'
 }

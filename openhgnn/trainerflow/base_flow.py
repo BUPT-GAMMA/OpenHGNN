@@ -43,13 +43,25 @@ class BaseFlow(ABC):
                                                  "{}_{}_{}.txt".format(args.model_name, args.dataset_name[5:],
                                                                        args.seed))
 
+        # stage flags: whether to run the corresponding stages
+        # todo: only take effects in node classification trainer flow
+
+        # args.training_flag = getattr(args, 'training_flag', True)
+        # args.validation_flag = getattr(args, 'validation_flag', True)
+        args.test_flag = getattr(args, 'test_flag', True)
+        args.prediction_flag = getattr(args, 'prediction_flag', False)
+        args.use_uva = getattr(args, 'use_uva', False)
+
         self.args = args
         self.logger = self.args.logger
         self.model_name = args.model_name
         self.model = args.model
         self.device = args.device
         self.task = build_task(args)
-        self.hg = self.task.get_graph().to(self.device)
+        if self.args.use_uva:
+            self.hg = self.task.get_graph()
+        else:
+            self.hg = self.task.get_graph().to(self.device)
         self.args.meta_paths_dict = self.task.dataset.meta_paths_dict
         self.patience = args.patience
         self.max_epoch = args.max_epoch
@@ -107,7 +119,7 @@ class BaseFlow(ABC):
                 self.logger.feature_info('feat2, drop features!')
                 self.hg.ndata.pop('h')
             self.input_feature = HeteroFeature({}, get_nodes_dict(self.hg), self.args.hidden_dim,
-                                               act=act).to(self.device)
+                                            act=act).to(self.device)
         elif self.args.feat == 0:
             self.input_feature = self.init_feature(act)
         elif self.args.feat == 1:
@@ -118,18 +130,18 @@ class BaseFlow(ABC):
                 h_dict = self.hg.ndata.pop('h')
                 self.logger.feature_info('feat1, preserve target nodes!')
                 self.input_feature = HeteroFeature({self.category: h_dict[self.category]}, get_nodes_dict(self.hg), self.args.hidden_dim,
-                                                   act=act).to(self.device)
+                                                act=act).to(self.device)
 
     def init_feature(self, act):
         self.logger.feature_info("Feat is 0, nothing to do!")
         if isinstance(self.hg.ndata['h'], dict):
             # The heterogeneous contains more than one node type.
             input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg),
-                                               self.args.hidden_dim, act=act).to(self.device)
+                                            self.args.hidden_dim, act=act).to(self.device)
         elif isinstance(self.hg.ndata['h'], torch.Tensor):
             # The heterogeneous only contains one node type.
             input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg),
-                                               self.args.hidden_dim, act=act).to(self.device)
+                                            self.args.hidden_dim, act=act).to(self.device)
         return input_feature
 
     @abstractmethod

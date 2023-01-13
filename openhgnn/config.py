@@ -29,7 +29,7 @@ class Config(object):
         if isinstance(dataset, str):
             self.dataset_name = dataset
         else:
-            self.dataset_name = type(self.dataset).__name__
+            self.dataset_name = self.dataset.name
         if isinstance(model, str):
             self.model_name = model
         else:
@@ -133,6 +133,7 @@ class Config(object):
             self.validation = conf.getboolean("RGCN", "validation")
             self.mini_batch_flag = conf.getboolean("RGCN", "mini_batch_flag")
             self.use_self_loop = conf.getboolean("RGCN", "use_self_loop")
+            self.use_uva = conf.getboolean("RGCN", "use_uva")
 
         elif self.model_name == 'CompGCN':
             self.lr = conf.getfloat("CompGCN", "learning_rate")
@@ -269,6 +270,7 @@ class Config(object):
             self.n_heads = conf.getint("RHGNN", "n_heads")
             self.category = conf.get("RHGNN", "category")
             self.out_dim = conf.getint("RHGNN", "out_dim")
+            self.use_uva = conf.getboolean("RHGNN", "use_uva")
 
         elif self.model_name == 'HGNN_AC':
             self.feats_drop_rate = conf.getfloat("HGNN_AC", "feats_drop_rate")
@@ -346,9 +348,11 @@ class Config(object):
             self.max_epoch = conf.getint('HGT', 'max_epoch')
             self.num_workers = conf.getint("HGT", "num_workers")
             self.mini_batch_flag = conf.getboolean("HGT", "mini_batch_flag")
+            self.fanout = conf.getint("HGT", "fanout")
             self.norm = conf.getboolean("HGT", "norm")
             self.num_layers = conf.getint("HGT", "num_layers")
             self.num_heads = conf.getint("HGT", "num_heads")
+            self.use_uva = conf.getboolean("HGT", "use_uva")
         elif self.model_name == 'HeCo':
             self.lr = conf.getfloat("HeCo", "learning_rate")
             self.weight_decay = conf.getfloat("HeCo", "weight_decay")
@@ -522,7 +526,10 @@ class Config(object):
             self.num_layers = conf.getint("SimpleHGN", "num_layers")
             self.beta = conf.getfloat("SimpleHGN", "beta")
             self.residual = conf.getboolean("SimpleHGN", "residual")
-            self.mini_batch_flag = False
+            self.mini_batch_flag = conf.getboolean("SimpleHGN", "mini_batch_flag")
+            self.fanout = conf.getint("SimpleHGN", "fanout")
+            self.batch_size = conf.getint("SimpleHGN", "batch_size")
+            self.use_uva = conf.getboolean("SimpleHGN", "use_uva")
 
         elif self.model_name == 'GATNE-T':
             self.learning_rate = conf.getfloat("GATNE-T", "learning_rate")
@@ -552,7 +559,10 @@ class Config(object):
             self.patience = conf.getint("HetSANN", "patience")
             self.slope = conf.getfloat("HetSANN", "slope")
             self.residual = conf.getboolean("HetSANN", "residual")
-            self.mini_batch_flag = False
+            self.mini_batch_flag = conf.getboolean("HetSANN", "mini_batch_flag")
+            self.batch_size = conf.getint("HetSANN", "batch_size")
+            self.fanout = conf.getint("HetSANN", "fanout")
+            self.use_uva = conf.getboolean("HetSANN", "use_uva")
         elif self.model_name == 'ieHGCN':
             self.weight_decay = conf.getfloat("ieHGCN", "weight_decay")
             self.lr = conf.getfloat("ieHGCN", "lr")
@@ -669,6 +679,34 @@ class Config(object):
             self.valid_percent = conf.getfloat("TransD", "valid_percent")
             self.test_percent = conf.getfloat("TransD", "test_percent")
             self.mini_batch_flag = True
+        
+        elif self.model_name == 'RGAT':
+            self.weight_decay = conf.getfloat("RGAT", "weight_decay")
+            self.lr = conf.getfloat("RGAT", "lr")
+            self.max_epoch = conf.getint("RGAT", "max_epoch")
+            self.seed = conf.getint("RGAT", "seed")
+            self.num_layers = conf.getint("RGAT","num_layers")
+            self.mini_batch_flag = False
+            self.hidden_dim = conf.getint("RGAT", "hidden_dim")
+            self.in_dim = conf.getint("RGAT", "in_dim")
+            self.patience = conf.getint("RGAT", "patience")
+            self.num_heads = conf.getint("RGAT", "num_heads")
+            self.dropout = conf.getfloat("RGAT", "dropout")
+            self.out_dim = conf.getint("RGAT", "out_dim")
+        
+        elif self.model_name == 'Rsage':
+            self.weight_decay = conf.getfloat("Rsage", "weight_decay")
+            self.lr = conf.getfloat("Rsage", "lr")
+            self.max_epoch = conf.getint("Rsage", "max_epoch")
+            self.seed = conf.getint("Rsage", "seed")
+            self.num_layers = conf.getint("Rsage","num_layers")
+            self.mini_batch_flag = False
+            self.hidden_dim = conf.getint("Rsage", "hidden_dim")
+            self.in_dim = conf.getint("Rsage", "in_dim")
+            self.patience = conf.getint("Rsage", "patience")
+            self.aggregator_type = conf.get("Rsage", "aggregator_type")
+            self.dropout = conf.getfloat("Rsage", "dropout")
+            self.out_dim = conf.getint("Rsage", "out_dim")
 
         elif self.model_name == 'Mg2vec':
             self.lr = conf.getfloat("MG2VEC", "learning_rate")

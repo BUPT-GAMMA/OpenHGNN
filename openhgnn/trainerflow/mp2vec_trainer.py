@@ -16,7 +16,8 @@ class Metapath2VecTrainer(BaseFlow):
         self.model = self.model.to(self.device)
         self.mp2vec_sampler = None
         self.dataloader = None
-        self.embeddings_file_path = os.path.join(self.args.output_dir, self.args.dataset + '_mp2vec_embeddings.npy')
+        self.embeddings_file_path = os.path.join(self.args.output_dir, self.args.dataset_name + '_' +
+                                                 self.args.meta_path_key + '_mp2vec_embeddings.npy')
         self.load_trained_embeddings = False
 
     def preprocess(self):
@@ -34,10 +35,14 @@ class Metapath2VecTrainer(BaseFlow):
     def train(self):
         emb = self.load_embeddings()
 
-        # todo: only supports node classification now
-        start_idx, end_idx = self.get_ntype_range(self.task.dataset.category)
-        metric = {'test': self.task.downstream_evaluate(logits=emb[start_idx:end_idx], evaluation_metric='f1_lr')}
-        self.logger.train_info(self.logger.metric2str(metric))
+        # if node classification, evaluate and return metric
+        if self.args.task == 'node_classification':
+            start_idx, end_idx = self.get_ntype_range(self.task.dataset.category)
+            metric = {'test': self.task.downstream_evaluate(logits=emb[start_idx:end_idx], evaluation_metric='f1_lr')}
+            self.logger.train_info(self.logger.metric2str(metric))
+            return metric
+        # otherwise, return emb
+        return emb
 
     def load_embeddings(self):
         if not self.load_trained_embeddings or not os.path.exists(self.embeddings_file_path):

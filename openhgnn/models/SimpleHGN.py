@@ -74,20 +74,22 @@ class SimpleHGN(BaseModel):
         return cls(args.edge_dim,
                    len(hg.etypes),
                    [args.hidden_dim],
-                   args.hidden_dim // args.heads,
+                   args.hidden_dim // args.num_heads,
                    args.out_dim,
                    args.num_layers,
                    heads,
                    args.feats_drop_rate,
                    args.slope,
                    True,
-                   args.beta
+                   args.beta,
+                   hg.ntypes
                    )
 
     def __init__(self, edge_dim, num_etypes, in_dim, hidden_dim, num_classes,
                 num_layers, heads, feat_drop, negative_slope,
-                residual, beta):
+                residual, beta, ntypes):
         super(SimpleHGN, self).__init__()
+        self.ntypes = ntypes
         self.num_layers = num_layers
         self.hgn_layers = nn.ModuleList()
         self.activation = F.elu
@@ -156,20 +158,29 @@ class SimpleHGN(BaseModel):
         dict
             The embeddings after the output projection.
         """
-        with hg.local_scope():
-            hg.ndata['h'] = h_dict
-            g = dgl.to_homogeneous(hg, ndata = 'h')
-            h = g.ndata['h']
-            for l in range(self.num_layers):  # noqa E741
-                h = self.hgn_layers[l](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], True)
-                h = h.flatten(1)
+        if hasattr(hg, 'ntypes'):
+            # full graph training,
+            with hg.local_scope():
+                hg.ndata['h'] = h_dict
+                g = dgl.to_homogeneous(hg, ndata = 'h')
+                h = g.ndata['h']
+                for l in range(self.num_layers):  # noqa E741
+                    h = self.hgn_layers[l](g, h, g.ndata['_TYPE'], g.edata['_TYPE'], True)
+                    h = h.flatten(1)
 
-        h_dict = to_hetero_feat(h, g.ndata['_TYPE'], hg.ntypes)
-        # g.ndata['h'] = h
-        # hg = dgl.to_heterogeneous(g, hg.ntypes, hg.etypes)
-        # h_dict = hg.ndata['h']
+            h_dict = to_hetero_feat(h, g.ndata['_TYPE'], hg.ntypes)
+        else:
+            # for minibatch training, input h_dict is a tensor
+            h = h_dict
+            for layer, block in zip(self.hgn_layers, hg):
+                h = layer(block, h, block.ndata['_TYPE']['_N'], block.edata['_TYPE'], presorted=False)
+            h_dict = to_hetero_feat(h, block.ndata['_TYPE']['_N'][:block.num_dst_nodes()], self.ntypes)
 
         return h_dict
+    
+    @property
+    def to_homo_flag(self):
+        return True
 
 class SimpleHGNConv(nn.Module):
     r"""
@@ -289,8 +300,7 @@ class SimpleHGNConv(nn.Module):
             g.srcdata['emb'] = emb
             g.update_all(Fn.u_mul_e('emb', 'alpha', 'm'),
                          Fn.sum('m', 'emb'))
-            # g.apply_edges(Fn.u_mul_e('emb', 'alpha', 'm'))
-            h_output = g.ndata['emb'].view(-1, self.out_dim * self.num_heads)
+            h_output = g.dstdata['emb'].view(-1, self.out_dim * self.num_heads)
             # h_prime = []
             # for i in range(self.num_heads):
             #     g.edata['alpha'] = edge_attention[:, i]
@@ -301,6 +311,8 @@ class SimpleHGNConv(nn.Module):
             # h_output = torch.cat(h_prime, dim=1)
 
         g.edata['alpha'] = edge_attention
+        if g.is_block:
+            h = h[:g.num_dst_nodes()]
         if self.residual:
             res = self.residual(h)
             h_output += res

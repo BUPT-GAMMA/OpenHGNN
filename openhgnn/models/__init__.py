@@ -3,6 +3,7 @@ from .NEW_model import MLP_follow_model
 from .base_model import BaseModel
 from torch import nn
 import sys
+
 sys.path.append("..")
 
 MODEL_REGISTRY = {}
@@ -50,6 +51,7 @@ def build_model(model):
         if not hasattr(model, 'build_model_from_args'):
             def build_model_from_args(args, hg):
                 return model
+
             model.build_model_from_args = build_model_from_args
         return model
     if not try_import_model(model):
@@ -72,13 +74,13 @@ SUPPORTED_MODELS = {
     'fastGTN': 'openhgnn.models.fastGTN',
     'MHNF': 'openhgnn.models.MHNF',
     'MAGNN': 'openhgnn.models.MAGNN',
-    'HeGAN':'openhgnn.models.HeGAN',
+    'HeGAN': 'openhgnn.models.HeGAN',
     'NSHE': 'openhgnn.models.NSHE',
     'NARS': 'openhgnn.models.NARS',
     'RHGNN': 'openhgnn.models.RHGNN',
     'HPN': 'openhgnn.models.HPN',
     'KGCN': 'openhgnn.models.KGCN',
-    'SLiCE':'openhgnn.models.SLiCE',
+    'SLiCE': 'openhgnn.models.SLiCE',
     'HGSL': 'openhgnn.models.HGSL',
     'GCN': 'space4hgnn.homo_models.GCN',
     'GAT': 'space4hgnn.homo_models.GAT',
@@ -94,8 +96,9 @@ SUPPORTED_MODELS = {
     'TransH': 'openhgnn.models.TransH',
     'TransR': 'openhgnn.models.TransR',
     'TransD': 'openhgnn.models.TransD',
+    'Rsage': 'openhgnn.models.Rsage',
     'Mg2vec': 'openhgnn.models.MG2vec',
-    'DHNE': 'openhgnn.models.DHNE',
+    'DHNE': 'openhgnn.models.DHNE'
 }
 
 from .CompGCN import CompGCN
@@ -112,7 +115,7 @@ from .fastGTN import fastGTN
 from .MHNF import MHNF
 from .MAGNN import MAGNN
 from .HeGAN import HeGAN
-from .NSHE import  NSHE
+from .NSHE import NSHE
 from .NARS import NARS
 from .RHGNN import RHGNN
 from .HPN import HPN
@@ -127,6 +130,7 @@ from .HetSANN import HetSANN
 from .ieHGCN import ieHGCN
 from .HGAT import HGAT
 from .GATNE import GATNE
+from .Rsage import Rsage
 from .Mg2vec import Mg2vec
 from .DHNE import DHNE
 
@@ -158,6 +162,7 @@ __all__ = [
     'HDE',
     'SimpleHGN',
     'GATNE',
+    'Rsage',
     'Mg2vec',
     'DHNE'
 ]

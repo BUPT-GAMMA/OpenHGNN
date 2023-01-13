@@ -48,8 +48,12 @@ class Experiment(object):
         'TransH': 'TransX_trainer',
         'TransR': 'TransX_trainer',
         'TransD': 'TransX_trainer',
+        'HAN': {
+            'node_classification': 'han_nc_trainer',
+            'link_prediction': 'han_lp_trainer',
+        },
         'Mg2vec': 'mg2vec_trainer',
-        'DHNE':'DHNE_trainer',
+        'DHNE': 'DHNE_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 
@@ -92,6 +96,8 @@ class Experiment(object):
         self.config.logger = Logger(self.config)
         set_random_seed(self.config.seed)
         trainerflow = self.specific_trainerflow.get(self.config.model, self.config.task)
+        if type(trainerflow) is not str:
+            trainerflow = trainerflow.get(self.config.task)
         if self.config.hpo_search_space is not None:
             # hyper-parameter search
             hpo_experiment(self.config, trainerflow)
