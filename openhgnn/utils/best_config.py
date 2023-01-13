@@ -51,7 +51,10 @@ BEST_CONFIGS = {
                 'lr': 0.01, 'hidden_dim': 128, 'dropout': 0.2, 'num_layers': 4, 'evaluation_metric': 'f1'
             },
             'ohgbn-yelp2': {'lr': 0.001, 'hidden_dim': 64, 'dropout': 0.3696343130196993, 'num_layers': 3,
-                            'use_self_loop': True, 'n_bases': 3}
+                            'use_self_loop': True, 'n_bases': 3},
+            'alircd_session1':{
+                'lr':0.001, 'hidden_dim':64, 'dropout':0.49
+            }
         },
         'CompGCN': {
             'general': {
@@ -277,7 +280,7 @@ BEST_CONFIGS = {
                 'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.1, 'num_layers': 2, 'num_heads': 1
             },
             'ohgbn-imdb': {'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.3, 'num_layers': 2, 'num_heads': 4},
-
+            'ohgbn-Freebase':{'lr':0.001, 'hidden_dim':128, 'dropout': 0.01137822722670511, 'num_heads': 2 }
         },
         'SimpleHGN': {
             'general': {},
@@ -290,6 +293,9 @@ BEST_CONFIGS = {
                            'num_edge': 8,
                            'attn_drop_rate': 0.34, 'feats_drop_rate': 0.4, 'beta': 0.01,
                            'residual': False, 'slope': 0.1, 'max_epoch': 100, 'patience': 50},
+            'ohgbn-Freebase': {
+                'lr':0.001, 'hidden_dim': 128, 'dropout': 0.16263095198267938, 'num_heads': 4, 'feats_drop_rate': 0.13286688066111216, 'edge_dim': 32
+            },
 
         },
         'RGAT':{
@@ -302,6 +308,15 @@ BEST_CONFIGS = {
         'RSage':{
             'general':{'in_dim' : 64, 'num_layers' : 3, 'hidden_dim' : 64, 'patience' : 100, 'seed' : 0, 'lr' : 0.01, 'weight_decay' : 5e-4, 'max_epoch' : 350, 'dropout' : 0.2, 'aggregator_type' : 'pool', 'out_dim' : 3},
             'alircd_session1':{'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True}
+        },
+        'HetSANN':{
+            'general':{'lr' : 0.0001, 'weight_decay' : 0.0005, 'dropout' : 0.2, 'seed' : 0, 'hidden_dim' : 64, 'num_layers' : 2, 'num_heads' : 16, 'max_epoch' : 10000, 'patience' : 100, 'slope' : 0.2, 'residual' : True, 'mini_batch_flag' : True, 'batch_size' : 2048, 'fanout' : 5, 'use_uva' : True},
+            'ohgbn-Freebase':{'lr': 0.001, 'hidden_dim': 128, 'dropout': 0.33, 'num_heads': 8},
+            'alircd_session1':{'lr': 0.01, 'hidden_dim': 32, 'dropout': 0.19},
+        },
+        'ieHGCN':{
+            'general':{'num_layers' : 5, 'hidden_dim' : 64, 'attn_dim' : 32, 'out_dim' : 16, 'patience' : 100, 'seed' : 0, 'lr' : 0.001, 'weight_decay' : 5e-4, 'max_epoch' : 3500, 'mini_batch_flag' : True, 'fanout' : 10, 'batch_size' : 512, 'dropout' : 0.2, 'bias' : True, 'batchnorm' : True},
+            'alircd_session1':{'lr': 0.01, 'hidden_dim': 64, 'dropout': 0.12}
         }
     },
 
