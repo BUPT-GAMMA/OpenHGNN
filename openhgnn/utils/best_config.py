@@ -76,10 +76,10 @@ BEST_CONFIGS = {
                 'mini_batch_flag': True, 'validation': True
             },
             'ohgbn-Freebase':{
-                'learning_rate' : 0.01, 'weight_decay' : 0.0001, 'dropout' : 0.2, 'seed' : 0, 'num_layers' : 2, 'in_dim' : 32, 'hidden_dim' : 32, 'out_dim' : 32, 'max_epoch' : 500, 'patience' : 100, 'comp_fn' : 'sub', 'validation' : True, 'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True
+                'lr' : 0.01, 'weight_decay' : 0.0001, 'dropout' : 0.2, 'seed' : 0, 'num_layers' : 2, 'in_dim' : 32, 'hidden_dim' : 32, 'out_dim' : 32, 'max_epoch' : 500, 'patience' : 100, 'comp_fn' : 'sub', 'validation' : True, 'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True
             },
             'alircd_session1':{
-                'learning_rate' : 0.01, 'weight_decay' : 0.0001, 'dropout' : 0.2, 'seed' : 0, 'num_layers' : 2, 'in_dim' : 32, 'hidden_dim' : 32, 'out_dim' : 32, 'max_epoch' : 500, 'patience' : 100, 'comp_fn' : 'sub', 'validation' : True, 'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True
+                'lr' : 0.01, 'weight_decay' : 0.0001, 'dropout' : 0.2, 'seed' : 0, 'num_layers' : 2, 'in_dim' : 32, 'hidden_dim' : 32, 'out_dim' : 32, 'max_epoch' : 500, 'patience' : 100, 'comp_fn' : 'sub', 'validation' : True, 'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True
             },
             'ohgbn-acm': {'lr': 0.005, 'hidden_dim': 128, 'dropout': 0.16, 'num_layers': 2,
                           'comp_fn': 'sub', 'evaluation_metric': 'f1'},
@@ -298,8 +298,11 @@ BEST_CONFIGS = {
             },
             'ohgbn-Freebase':{'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True},
             'alircd_session1':{'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True}
+        },
+        'RSage':{
+            'general':{'in_dim' : 64, 'num_layers' : 3, 'hidden_dim' : 64, 'patience' : 100, 'seed' : 0, 'lr' : 0.01, 'weight_decay' : 5e-4, 'max_epoch' : 350, 'dropout' : 0.2, 'aggregator_type' : 'pool', 'out_dim' : 3},
+            'alircd_session1':{'fanout' : 5, 'batch_size' : 128, 'mini_batch_flag' : True, 'use_uva' : True}
         }
-    
     },
 
     "link_prediction": {
