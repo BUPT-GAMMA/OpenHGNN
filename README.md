@@ -11,6 +11,23 @@
 OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包，集成了异质图神经网络的前沿模型。
 
 ## 新闻
+
+<details>
+
+<summary>
+2023-01-13 开源0.4版本
+</summary>
+<br/>
+
+我们开源了0.4版本。
+
+- 新增模型
+- 提供构建应用的流程
+- 更多支持采样训练的模型
+- 更新千万节点规模图的评测
+
+</details>
+
 <details>
 <summary>
 2022-08-02 论文接收

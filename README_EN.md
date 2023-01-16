@@ -13,6 +13,22 @@ on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https:/
 of heterogeneous graph.
 
 ## News
+
+<details>
+<summary>
+2023-01-13 release v0.4
+</summary>
+<br/>
+
+We release the latest version v0.4.
+
+- New models
+- Provide pipelines for applications
+- More models supporting mini-batch training
+- Benchmark for million-scale graphs
+
+</details>
+
 <details>
 <summary>
 2022-08-02 paper accepted
