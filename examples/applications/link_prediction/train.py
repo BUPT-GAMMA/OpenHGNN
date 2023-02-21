@@ -5,7 +5,7 @@ from dataset import MyLPDatasetWithPredEdges, target_link, target_link_r
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', '-m', default='RGCN', type=str, help='name of models')
+    parser.add_argument('--model', '-m', default='GIE', type=str, help='name of models')
     parser.add_argument('--gpu', '-g', default='-1', type=int, help='-1 means cpu')
     parser.add_argument('--mini-batch-flag', action='store_true')
 

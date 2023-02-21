@@ -679,7 +679,25 @@ class Config(object):
             self.valid_percent = conf.getfloat("TransD", "valid_percent")
             self.test_percent = conf.getfloat("TransD", "test_percent")
             self.mini_batch_flag = True
-        
+
+        elif self.model_name == 'GIE':
+            self.seed = conf.getint("GIE", "seed")
+            self.patience = conf.getint("GIE", "patience")
+            self.batch_size = conf.getint("GIE", "batch_size")
+            self.neg_size = conf.getint("GIE", "neg_size")
+            self.dis_norm = conf.getint("GIE", "dis_norm")
+            self.margin = conf.getfloat("GIE", "margin")
+            self.hidden_dim = conf.getint("GIE", "hidden_dim")
+            self.optimizer = conf.get("GIE", "optimizer")
+            self.lr = conf.getfloat("GIE", "lr")
+            self.weight_decay = conf.getfloat("GIE", "weight_decay")
+            self.max_epoch = conf.getint("GIE", "max_epoch")
+            self.score_fn = conf.get("GIE", "score_fn")
+            self.filtered = conf.get("GIE", "filtered")
+            self.valid_percent = conf.getfloat("GIE", "valid_percent")
+            self.test_percent = conf.getfloat("GIE", "test_percent")
+            self.mini_batch_flag = True
+
         elif self.model_name == 'RGAT':
             self.weight_decay = conf.getfloat("RGAT", "weight_decay")
             self.lr = conf.getfloat("RGAT", "lr")
