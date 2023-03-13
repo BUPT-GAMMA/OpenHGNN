@@ -45,26 +45,26 @@ class GIE(BaseModel):
     def forward(self, h, r, t):
         h_emb = self.n_emb(h)
         r_emb = self.r_emb(r)
-        ## 欧氏空间投影
+        ## Euclidean space projection
         c = F.softplus(self.c[r])
         r_exp0c = self.expmap0(r_emb, c)
         res_E = self.givens_rotations(self.r_diagE(r), h_emb).view((-1, 1, self.dim))
 
-        ## 双曲空间投影
+        ## hyperbolic space projection
         v = F.softplus(self.v[r])
         h_exp0v = self.expmap0(h_emb, v)
         r_exp0v = self.expmap0(r_emb, v)
         lh_H = self.project(self.mobius_add(h_exp0v, r_exp0v, v), v)
         res_H = self.logmap0(self.givens_rotations(self.r_diagH(r), lh_H), v).view((-1, 1, self.dim))
 
-        ## 超球空间投影
+        ## Hyperspherical Space Projection
         u = F.softplus(self.u[r])
         h_exp0u = self.expmap0(h_emb, u)
         r_exp0u = self.expmap0(r_emb, u)
         lh_S = self.project(self.mobius_add(h_exp0u, r_exp0u, u), u)
         res_S = self.logmap0(self.givens_rotations(self.r_diagS(r), lh_S), u).view((-1, 1, self.dim))
 
-        ## 有权重地聚合
+        ## Aggregation with weights
         cands = th.cat([res_E, res_H, res_S], dim=1)
         context_vec = self.context_vec(r).view((-1, 1, self.dim))
         att_W = self.act(th.sum(context_vec * cands * self.scale, dim=-1, keepdim=True))
@@ -95,7 +95,7 @@ class GIE(BaseModel):
         return Artanh.apply(x)
 
     def givens_rotations(self, r, x):
-        ## 向量旋转映射
+        ## vector rotation
         givens = r.view((r.shape[0], -1, 2))
         givens = givens / th.norm(givens, p=2, dim=-1, keepdim=True).clamp_min(1e-15)
         x = x.view((r.shape[0], -1, 2))
@@ -103,7 +103,7 @@ class GIE(BaseModel):
         return x_rot.view((r.shape[0], -1))
 
     def mobius_add(self, x, y, c):
-        ## 莫比乌斯加法
+        ## Möbius addition
         x2 = th.sum(x * x, dim=-1, keepdim=True)
         y2 = th.sum(y * y, dim=-1, keepdim=True)
         xy = th.sum(x * y, dim=-1, keepdim=True)
