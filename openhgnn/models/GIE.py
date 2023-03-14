@@ -43,8 +43,18 @@ class GIE(BaseModel):
         nn.init.xavier_uniform_(self.r_diagS.weight.data)
         nn.init.xavier_uniform_(self.context_vec.weight.data)
     def forward(self, h, r, t):
+        h = h.to(self.device)
+        r = r.to(self.device)
+        t = t.to(self.device)
+        if h.shape == th.Size([]):
+            h = h.view(1).repeat(t.shape[0])
+        if r.shape == th.Size([]):
+            r = r.view(1).repeat(h.shape[0])
+        if t.shape == th.Size([]):
+            t = t.view(1).repeat(h.shape[0])
         h_emb = self.n_emb(h)
         r_emb = self.r_emb(r)
+        t_emb = self.n_emb(t)
         ## Euclidean space projection
         c = F.softplus(self.c[r])
         r_exp0c = self.expmap0(r_emb, c)
@@ -71,7 +81,7 @@ class GIE(BaseModel):
         ## Inter(E_h, H_h, S_h) = exp_0^c(\lambda_E E_h + \lambda_H log_0^v(H_h) + \lambda_S log_0^u(S_h))
         hr_emb = self.project(self.mobius_add(self.expmap0(th.sum(att_W * cands, dim=1), c), r_exp0c, c),c)
 
-        t_emb = self.n_emb(t)
+
         return self.similarity_score(hr_emb, t_emb, c) + self.margin
 
     def similarity_score(self, x, v, c):
