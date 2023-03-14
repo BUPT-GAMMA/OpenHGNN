@@ -82,7 +82,7 @@ class GIE(BaseModel):
         hr_emb = self.project(self.mobius_add(self.expmap0(th.sum(att_W * cands, dim=1), c), r_exp0c, c),c)
 
 
-        return self.similarity_score(hr_emb, t_emb, c) + self.margin
+        return (self.similarity_score(hr_emb, t_emb, c) + self.margin).view(-1)
 
     def similarity_score(self, x, v, c):
         sqrt_c = c ** 0.5
