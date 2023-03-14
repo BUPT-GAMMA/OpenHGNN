@@ -141,7 +141,7 @@ class HANNodeClassification(BaseFlow):
             mp_name_input_nodes_dict = ntype_mp_name_input_nodes_dict[self.category]
             emb_dict = {}
             for meta_path_name, input_nodes in mp_name_input_nodes_dict.items():
-                emb_dict[meta_path_name] = self.model.input_feature.forward_nodes({self.category: input_nodes})
+                emb_dict[meta_path_name] = self.model.input_feature.forward_nodes({self.category: input_nodes}, ntype_mp_name_block_dict)
             emb_dict = {self.category: emb_dict}
             logits = self.model(ntype_mp_name_block_dict, emb_dict)[self.category]
             lbl = self.labels[seeds].to(self.device)

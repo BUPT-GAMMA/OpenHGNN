@@ -51,7 +51,7 @@ class NodeClassification(BaseFlow):
         self.to_homo_flag = getattr(self.model, 'to_homo_flag', False)
 
         if self.to_homo_flag:
-            self.g = dgl.to_homogeneous(self.hg)
+            self.g = dgl.to_homogeneous(self.hg, ndata=self.hg.ndata)
 
         if self.args.mini_batch_flag:
             self.fanouts = [args.fanout] * self.args.num_layers
@@ -72,7 +72,7 @@ class NodeClassification(BaseFlow):
 
                 self.train_loader = dgl.dataloading.DataLoader(loader_g, loader_train_idx, sampler,
                                                                batch_size=self.args.batch_size, device=self.device,
-                                                               shuffle=True, use_uva = use_uva)
+                                                               shuffle=True, use_uva = use_uva, num_workers = 0)
             if self.train_idx is not None:
                 if self.to_homo_flag:
                     loader_val_idx = to_homo_idx(self.hg.ntypes, self.num_nodes_dict, {self.category: self.val_idx}).to(
@@ -81,7 +81,7 @@ class NodeClassification(BaseFlow):
                     loader_val_idx = {self.category: self.val_idx.to(self.device)}
                 self.val_loader = dgl.dataloading.DataLoader(loader_g, loader_val_idx, sampler,
                                                              batch_size=self.args.batch_size, device=self.device,
-                                                             shuffle=True, use_uva = use_uva)
+                                                             shuffle=True, use_uva = use_uva, num_workers = 0)
             if self.args.test_flag:
                 if self.test_idx is not None:
                     if self.to_homo_flag:
@@ -91,7 +91,7 @@ class NodeClassification(BaseFlow):
                         loader_test_idx = {self.category: self.test_idx.to(self.device)}
                     self.test_loader = dgl.dataloading.DataLoader(loader_g, loader_test_idx, sampler,
                                                                   batch_size=self.args.batch_size, device=self.device,
-                                                                  shuffle=True, use_uva = use_uva)
+                                                                  shuffle=True, use_uva = use_uva, num_workers = 0)
             if self.args.prediction_flag:
                 if self.pred_idx is not None:
                     if self.to_homo_flag:
@@ -101,7 +101,7 @@ class NodeClassification(BaseFlow):
                         loader_pred_idx = {self.category: self.pred_idx.to(self.device)}
                     self.pred_loader = dgl.dataloading.DataLoader(loader_g, loader_pred_idx, sampler,
                                                                   batch_size=self.args.batch_size, device=self.device,
-                                                                  shuffle=True, use_uva = use_uva)
+                                                                  shuffle=True, use_uva = use_uva, num_workers = 0)
 
     def preprocess(self):
         r"""
@@ -205,7 +205,7 @@ class NodeClassification(BaseFlow):
 
     def _full_train_step(self):
         self.model.train()
-        h_dict = self.model.input_feature()
+        h_dict = self.model.input_feature(self.device)
         self.hg = self.hg.to(self.device)
         logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
@@ -214,7 +214,7 @@ class NodeClassification(BaseFlow):
         self.optimizer.step()
         return loss.item()
 
-    def _mini_train_step(self, ):
+    def _mini_train_step(self):
         self.model.train()
         loss_all = 0.0
         loader_tqdm = tqdm(self.train_loader, ncols=120)
@@ -227,7 +227,7 @@ class NodeClassification(BaseFlow):
                     input_nodes[key] = input_nodes[key].to(self.device)
             # elif not isinstance(input_nodes, dict):
             #     input_nodes = {self.category: input_nodes}
-            emb = self.model.input_feature.forward_nodes(input_nodes)
+            emb = self.model.input_feature.forward_nodes(input_nodes, blocks)
             # if self.to_homo_flag:
             #     emb = to_homo_feature(self.hg.ntypes, emb)
             lbl = self.labels[seeds[self.category]].to(self.device)
@@ -259,7 +259,7 @@ class NodeClassification(BaseFlow):
         """
         self.model.eval()
         with torch.no_grad():
-            h_dict = self.model.input_feature()
+            h_dict = self.model.input_feature(self.device)
             h_dict = {k: e.to(self.device) for k, e in h_dict.items()}
             logits = logits if logits else self.model(self.hg, h_dict)[self.category]
             masks = {}
@@ -296,7 +296,7 @@ class NodeClassification(BaseFlow):
                         seeds = to_hetero_idx(self.g, self.hg, seeds)
                     elif not isinstance(input_nodes, dict):
                         input_nodes = {self.category: input_nodes}
-                    emb = self.model.input_feature.forward_nodes(input_nodes)
+                    emb = self.model.input_feature.forward_nodes(input_nodes, blocks)                  
                     # if self.to_homo_flag:
                     #     emb = to_homo_feature(self.hg.ntypes, emb)
                     lbl = self.labels[seeds[self.category]].to(self.device)

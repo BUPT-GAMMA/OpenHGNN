@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from dgl.nn import HeteroEmbedding, HeteroLinear
+from dgl.nn import HeteroEmbedding, HeteroLinear, TypedLinear
 import numpy as np
 import torch as th
 
@@ -216,87 +216,107 @@ class HeteroFeature(nn.Module):
 
         linear_dict = {}
         embed_dict = {}
+        emb_num = 0
         for ntype, n_nodes in self.n_nodes_dict.items():
             h = h_dict.get(ntype)
             if h is None:
                 if all_feats:
                     embed_dict[ntype] = n_nodes
+                    emb_num = n_nodes + emb_num
             else:
                 linear_dict[ntype] = h.shape[1]
-        self.embes = HeteroEmbedding(embed_dict, embed_size)
-        if need_trans:
-            self.linear = HeteroLinear(linear_dict, embed_size)
+        self.Heteroembes = HeteroEmbedding(embed_dict, embed_size)
+        self.Homoembes = torch.nn.Embedding(emb_num, embed_size)
+        if need_trans and linear_dict:
+            self.Heterolinear = HeteroLinear(linear_dict, embed_size)
+            self.Homolinear = TypedLinear(linear_dict[self.all_type[0]], embed_size, len(self.n_nodes_dict))
         self.act = act  # activate
 
-    def forward(self):
+    def forward(self, device):
         out_dict = {}
-        out_dict.update(self.embes.weight)
-        tmp = self.linear(self.h_dict)
+        out_dict.update(self.Heteroembes.weight)
+        for key in self.h_dict:
+            self.h_dict[key] = self.h_dict[key].to(device)
+        tmp = self.Heterolinear(self.h_dict)
         if self.act:  # activate
             for x, y in tmp.items():
                 tmp.update({x: self.act(y)})
         out_dict.update(tmp)
         return out_dict
 
-    def forward_nodes(self, id_dict):
+    def forward_nodes(self, id_dict, blocks):
         # Turn "id_dict" into a dictionary if "id_dict" is a tensor, and record the corresponding relationship in "to_pos"
-        id_tensor = None
+        # id_tensor = None
         if torch.is_tensor(id_dict):
             device = id_dict.device
         else:
             device = id_dict.get(next(iter(id_dict))).device
 
-        if torch.is_tensor(id_dict):
-            id_tensor = id_dict
-            self.type_node_num_sum = self.type_node_num_sum.to(device)
-            id_dict = {}
-            to_pos = {}
-            for i, x in enumerate(id_tensor):
-                tmp = torch.where(self.type_node_num_sum <= x)[0]
-                if len(tmp) > 0:
-                    tmp = tmp.max()
-                    now_type = self.all_type[tmp]
-                    now_id = x - self.type_node_num_sum[tmp]
-                    if now_type not in id_dict.keys():
-                        id_dict[now_type] = []
-                    id_dict[now_type].append(now_id)
-                    if now_type not in to_pos.keys():
-                        to_pos[now_type] = []
-                    to_pos[now_type].append(i)
-            for ntype in id_dict.keys():
-                id_dict[ntype] = torch.tensor(id_dict[ntype], device=device)
+        # if torch.is_tensor(id_dict):
+            # id_tensor = id_dict
+            # self.type_node_num_sum = self.type_node_num_sum.to(device)
+            # id_dict = {}
+            # to_pos = {}
+            # for i, x in enumerate(id_tensor):
+            #     tmp = torch.where(self.type_node_num_sum <= x)[0]
+            #     if len(tmp) > 0:
+            #         tmp = tmp.max()
+            #         now_type = self.all_type[tmp]
+            #         now_id = x - self.type_node_num_sum[tmp]
+            #         if now_type not in id_dict.keys():
+            #             id_dict[now_type] = []
+            #         id_dict[now_type].append(now_id)
+            #         if now_type not in to_pos.keys():
+            #             to_pos[now_type] = []
+            #         to_pos[now_type].append(i)
+            # for ntype in id_dict.keys():
+            #     id_dict[ntype] = torch.tensor(id_dict[ntype], device=device)
 
-        embed_id_dict = {}
-        linear_id_dict = {}
-        for entype, id in id_dict.items():
-            if self.h_dict.get(entype) is None:
-                embed_id_dict[entype] = id
-            else:
-                linear_id_dict[entype] = id
-        out_dict = {}
-        tmp = self.embes(embed_id_dict)
-        out_dict.update(tmp)
+        # embed_id_dict = {}
+        # linear_id_dict = {}
+        # for entype, id in id_dict.items():
+        #     if self.h_dict.get(entype) is None:
+        #         embed_id_dict[entype] = id
+        #     else:
+        #         linear_id_dict[entype] = id
+        # out_dict = {}
+        # tmp = self.embes(embed_id_dict)
+        # out_dict.update(tmp)
         # for key in self.h_dict:
-        #     self.h_dict[key] = self.h_dict[key].to(device)
-        h_dict = {}
-        for key in linear_id_dict:
-            linear_id_dict[key] = linear_id_dict[key].to('cpu')
-        for key in linear_id_dict:
-            h_dict[key] = self.h_dict[key][linear_id_dict[key]].to(device)
-        tmp = self.linear(h_dict)
-        if self.act:  # activate
-            for x, y in tmp.items():
-                tmp.update({x: self.act(y)})
-        for entype in linear_id_dict:
-            out_dict[entype] = tmp[entype]
+        # #     self.h_dict[key] = self.h_dict[key].to(device)
+        # h_dict = {}
+        # for key in linear_id_dict:
+        #     linear_id_dict[key] = linear_id_dict[key].to('cpu')
+        # for key in linear_id_dict:
+        #     h_dict[key] = self.h_dict[key][linear_id_dict[key]].to(device)
+        # tmp = self.linear(h_dict)
+        # for entype in linear_id_dict:
+        #     out_dict[entype] = tmp[entype]
 
         # The result corresponds to the original position according to the corresponding relationship
-        if id_tensor is not None:
-            out_feat = [None] * len(id_tensor)
-            for ntype, feat_list in out_dict.items():
-                for i, feat in enumerate(feat_list):
-                    now_pos = to_pos[ntype][i]
-                    out_feat[now_pos] = feat.data
-            out_dict = torch.stack(out_feat, dim=0)
+        # if id_tensor is not None:
+        #     out_feat = [None] * len(id_tensor)
+        #     for ntype, feat_list in out_dict.items():
+        #         for i, feat in enumerate(feat_list):
+        #             now_pos = to_pos[ntype][i]
+        #             out_feat[now_pos] = feat.data
+        #     out_dict = torch.stack(out_feat, dim=0)
+        if torch.is_tensor(id_dict):
+            if(blocks[0].ndata['h']):
+                embeddings = blocks[0].ndata['h']['_N']
+                type = blocks[0].ndata['_TYPE']['_N']
+                embeddings = self.Homolinear(embeddings, type)
+            else:
+                embeddings = self.Homoembes(id_dict)
+        
+        else:
+            if(blocks[0].ndata['h']):
+                embeddings = blocks[0].ndata['h']
+                embeddings = self.Heterolinear(embeddings)
+            else:
+                embeddings = self.Heteroembes(id_dict)
+        if self.act:  # activate
+            for x, y in embeddings.items():
+                embeddings.update({x: self.act(y)})
 
-        return out_dict
+        return embeddings
