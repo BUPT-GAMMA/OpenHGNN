@@ -50,8 +50,8 @@ class LinkPrediction(BaseTask):
         elif args.score_fn == 'distmult':
             self.ScorePredictor = HeteroDistMultPredictor()
         # deprecated, new score predictor of these score_fn are in their model
-        elif args.score_fn in ['transe', 'transh', 'transr', 'transd', 'gie'] :
-            self.ScorePredictor = HeteroTransXPredictor(args.dis_norm)
+        #elif args.score_fn in ['transe', 'transh', 'transr', 'transd', 'gie'] :
+        #    self.ScorePredictor = HeteroTransXPredictor(args.dis_norm)
 
         self.negative_sampler = Uniform(1)
 
@@ -266,14 +266,14 @@ class HeteroDistMultPredictor(th.nn.Module):
                 score = th.sum(score, dim=1)
             return score
 
-class HeteroTransXPredictor(th.nn.Module):
-    def __init__(self, dis_norm):
-        super(HeteroTransXPredictor, self).__init__()
-        self.dis_norm = dis_norm
-
-    def forward(self, h, r, t):
-        h = F.normalize(h, 2, -1)
-        r = F.normalize(r, 2, -1)
-        t = F.normalize(t, 2, -1)
-        dist = th.norm(h+r-t, self.dis_norm, dim=-1)
-        return dist
+#class HeteroTransXPredictor(th.nn.Module):
+#    def __init__(self, dis_norm):
+#        super(HeteroTransXPredictor, self).__init__()
+#        self.dis_norm = dis_norm
+#
+#    def forward(self, h, r, t):
+#        h = F.normalize(h, 2, -1)
+#        r = F.normalize(r, 2, -1)
+#        t = F.normalize(t, 2, -1)
+#        dist = th.norm(h+r-t, self.dis_norm, dim=-1)
+#        return dist
