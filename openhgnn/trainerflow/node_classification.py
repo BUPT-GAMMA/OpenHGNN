@@ -137,12 +137,13 @@ class NodeClassification(BaseFlow):
             self.train_loader, self.val_loader, self.test_loader = get_node_data_loader(
                 self.args.node_neighbors_min_num,
                 self.args.num_layers,
-                self.hg.to('cpu'),
+                self.hg.to(self.device),
                 batch_size=self.args.batch_size,
                 sampled_node_type=self.category,
-                train_idx=self.train_idx,
-                valid_idx=self.val_idx,
-                test_idx=self.test_idx)
+                train_idx=self.train_idx.to(self.device),
+                valid_idx=self.val_idx.to(self.device),
+                test_idx=self.test_idx.to(self.device),
+                device=self.device)
 
         super(NodeClassification, self).preprocess()
 
