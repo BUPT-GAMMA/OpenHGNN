@@ -93,7 +93,7 @@ class LinkPrediction(BaseFlow):
             self.dataloader = dgl.dataloading.DataLoader(
                 self.train_hg, train_eid_dict, sampler,
                 batch_size=self.args.batch_size,
-                shuffle=True)
+                shuffle=True, device=self.device)
             self.category = self.hg.ntypes[0]
 
     def preprocess(self):
