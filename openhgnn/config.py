@@ -271,6 +271,7 @@ class Config(object):
             self.category = conf.get("RHGNN", "category")
             self.out_dim = conf.getint("RHGNN", "out_dim")
             self.use_uva = conf.getboolean("RHGNN", "use_uva")
+            self.fanout = conf.getint("RHGNN", "fanout")
 
         elif self.model_name == 'HGNN_AC':
             self.feats_drop_rate = conf.getfloat("HGNN_AC", "feats_drop_rate")
