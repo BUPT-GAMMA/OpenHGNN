@@ -48,6 +48,7 @@ class Experiment(object):
         'TransH': 'TransX_trainer',
         'TransR': 'TransX_trainer',
         'TransD': 'TransX_trainer',
+        'GIE': 'TransX_trainer',
         'HAN': {
             'node_classification': 'han_nc_trainer',
             'link_prediction': 'han_lp_trainer',

@@ -710,6 +710,52 @@ class Config(object):
             self.dropout = conf.getfloat("Rsage", "dropout")
             self.out_dim = conf.getint("Rsage", "out_dim")
 
+        elif self.model_name == 'GIE':
+            self.seed = conf.getint("GIE", "seed")
+            self.patience = conf.getint("GIE", "patience")
+            self.batch_size = conf.getint("GIE", "batch_size")
+            self.neg_size = conf.getint("GIE", "neg_size")
+            self.dis_norm = conf.getint("GIE", "dis_norm")
+            self.margin = conf.getfloat("GIE", "margin")
+            self.hidden_dim = conf.getint("GIE", "hidden_dim")
+            self.optimizer = conf.get("GIE", "optimizer")
+            self.lr = conf.getfloat("GIE", "lr")
+            self.weight_decay = conf.getfloat("GIE", "weight_decay")
+            self.max_epoch = conf.getint("GIE", "max_epoch")
+            self.score_fn = conf.get("GIE", "score_fn")
+            self.filtered = conf.get("GIE", "filtered")
+            self.valid_percent = conf.getfloat("GIE", "valid_percent")
+            self.test_percent = conf.getfloat("GIE", "test_percent")
+            self.mini_batch_flag = True
+
+        elif self.model_name == 'RGAT':
+            self.weight_decay = conf.getfloat("RGAT", "weight_decay")
+            self.lr = conf.getfloat("RGAT", "lr")
+            self.max_epoch = conf.getint("RGAT", "max_epoch")
+            self.seed = conf.getint("RGAT", "seed")
+            self.num_layers = conf.getint("RGAT","num_layers")
+            self.mini_batch_flag = False
+            self.hidden_dim = conf.getint("RGAT", "hidden_dim")
+            self.in_dim = conf.getint("RGAT", "in_dim")
+            self.patience = conf.getint("RGAT", "patience")
+            self.num_heads = conf.getint("RGAT", "num_heads")
+            self.dropout = conf.getfloat("RGAT", "dropout")
+            self.out_dim = conf.getint("RGAT", "out_dim")
+        
+        elif self.model_name == 'Rsage':
+            self.weight_decay = conf.getfloat("Rsage", "weight_decay")
+            self.lr = conf.getfloat("Rsage", "lr")
+            self.max_epoch = conf.getint("Rsage", "max_epoch")
+            self.seed = conf.getint("Rsage", "seed")
+            self.num_layers = conf.getint("Rsage","num_layers")
+            self.mini_batch_flag = False
+            self.hidden_dim = conf.getint("Rsage", "hidden_dim")
+            self.in_dim = conf.getint("Rsage", "in_dim")
+            self.patience = conf.getint("Rsage", "patience")
+            self.aggregator_type = conf.get("Rsage", "aggregator_type")
+            self.dropout = conf.getfloat("Rsage", "dropout")
+            self.out_dim = conf.getint("Rsage", "out_dim")
+
         elif self.model_name == 'Mg2vec':
             self.lr = conf.getfloat("MG2VEC", "learning_rate")
             self.max_epoch = conf.getint("MG2VEC", "max_epoch")
