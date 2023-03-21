@@ -227,9 +227,10 @@ class HeteroFeature(nn.Module):
                 linear_dict[ntype] = h.shape[1]
         self.Heteroembes = HeteroEmbedding(embed_dict, embed_size)
         self.Homoembes = torch.nn.Embedding(emb_num, embed_size)
-        if need_trans and linear_dict:
+        if need_trans:
             self.Heterolinear = HeteroLinear(linear_dict, embed_size)
-            self.Homolinear = TypedLinear(linear_dict[self.all_type[0]], embed_size, len(self.n_nodes_dict))
+            if linear_dict:
+                self.Homolinear = TypedLinear(linear_dict[self.all_type[0]], embed_size, len(self.n_nodes_dict))
         self.act = act  # activate
 
     def forward(self, device):
