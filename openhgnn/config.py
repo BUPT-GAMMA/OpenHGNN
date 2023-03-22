@@ -2,19 +2,12 @@ import configparser
 import numpy as np
 import torch as th
 from .utils.activation import act_dict
+import warnings
 
 
 class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
         conf = configparser.ConfigParser()
-        if gpu == -1:
-            self.device = th.device('cpu')
-        elif gpu >= 0:
-            if th.cuda.is_available():
-                self.device = th.device('cuda', int(gpu))
-            else:
-                raise ValueError("cuda is not available, please set 'gpu' -1")
-
         try:
             conf.read(file_path)
         except:
@@ -752,6 +745,19 @@ class Config(object):
             self.dim_features = conf.get("DHNE", "dim_features")
             self.max_epoch = conf.getint("DHNE", "max_epoch")
             self.mini_batch_flag = True
+
+        if gpu == -1:
+            self.device = th.device('cpu')
+        elif gpu >= 0:
+            if not th.cuda.is_available():
+                self.device = th.device('cpu')
+                warnings.warn("cuda is unavailable, the program will use cpu instead. please set 'gpu' to -1.")
+            else:
+                self.device = th.device('cuda', int(gpu))
+
+        if getattr(self, 'use_uva', None):  # use_uva is set True
+            self.use_uva = False
+            warnings.warn("'use_uva' is only available when using cuda. please set 'use_uva' to False.")
 
     def __repr__(self):
         return '[Config Info]\tModel: {},\tTask: {},\tDataset: {}'.format(self.model_name, self.task, self.dataset)
