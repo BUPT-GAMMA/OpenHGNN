@@ -94,6 +94,19 @@ class Experiment(object):
 
     def run(self):
         """ run the experiment """
+
+        # 'line_profiler_func' is for internal use in profiling code execution time, here is an example to use it:
+        # from openhgnn import Experiment
+        # from openhgnn.trainerflow import NodeClassification
+        # Experiment(model='RGCN', dataset='acm4GTN', task='node_classification', gpu=-1, max_epoch=1, line_profiler_func=[NodeClassification.train, ]).run()
+
+        if hasattr(self.config, 'line_profiler_func'):
+            from line_profiler import LineProfiler
+            prof = LineProfiler
+            for func in self.config.line_profiler_func:
+                prof = prof(func)
+            prof.enable_by_count()
+
         self.config.logger = Logger(self.config)
         set_random_seed(self.config.seed)
         trainerflow = self.specific_trainerflow.get(self.config.model, self.config.task)
@@ -105,6 +118,8 @@ class Experiment(object):
         else:
             flow = build_flow(self.config, trainerflow)
             result = flow.train()
+            if hasattr(self.config, 'line_profiler_func'):
+                prof.print_stats()
             return result
 
     def __repr__(self):
