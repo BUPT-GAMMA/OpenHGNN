@@ -276,7 +276,7 @@ def transform_relation_graph_list(hg, category, identity=True):
             category_id = i
     g = dgl.to_homogeneous(hg, ndata='h')
     # find out the target node ids in g
-    loc = (g.ndata[dgl.NTYPE] == category_id)
+    loc = (g.ndata[dgl.NTYPE] == category_id).to('cpu')
     category_idx = th.arange(g.num_nodes())[loc]
 
     edges = g.edges()
