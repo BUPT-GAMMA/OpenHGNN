@@ -164,7 +164,7 @@ class GraphConv(nn.Module):
         with hg.local_scope():
             outputs = {}
             norm = {}
-            aggregate_fn = fn.copy_src('h', 'm')
+            aggregate_fn = fn.copy_u('h', 'm')
             if edge_weight is not None:
                 #assert edge_weight.shape[0] == graph.number_of_edges()
                 hg.edata['_edge_weight'] = edge_weight
