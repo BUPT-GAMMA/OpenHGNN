@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from dgl.nn import HeteroEmbedding, HeteroLinear, TypedLinear
+from dgl.nn.pytorch import HeteroEmbedding, HeteroLinear, TypedLinear
 import numpy as np
 import torch as th
 
@@ -225,20 +225,20 @@ class HeteroFeature(nn.Module):
                     emb_num = n_nodes + emb_num
             else:
                 linear_dict[ntype] = h.shape[1]
-        self.Heteroembes = HeteroEmbedding(embed_dict, embed_size)
-        self.Homoembes = torch.nn.Embedding(emb_num, embed_size)
+        self.hetero_embes = HeteroEmbedding(embed_dict, embed_size)
+        self.homo_embes = torch.nn.Embedding(emb_num, embed_size)
         if need_trans:
-            self.Heterolinear = HeteroLinear(linear_dict, embed_size)
+            self.hetero_linear = HeteroLinear(linear_dict, embed_size)
             if linear_dict:
-                self.Homolinear = TypedLinear(linear_dict[self.all_type[0]], embed_size, len(self.n_nodes_dict))
+                self.homo_linear = TypedLinear(linear_dict[self.all_type[0]], embed_size, len(self.n_nodes_dict))
         self.act = act  # activate
 
     def forward(self, device):
         out_dict = {}
-        out_dict.update(self.Heteroembes.weight)
+        out_dict.update(self.hetero_embes.weight)
         for key in self.h_dict:
             self.h_dict[key] = self.h_dict[key].to(device)
-        tmp = self.Heterolinear(self.h_dict)
+        tmp = self.hetero_linear(self.h_dict)
         if self.act:  # activate
             for x, y in tmp.items():
                 tmp.update({x: self.act(y)})
@@ -303,19 +303,19 @@ class HeteroFeature(nn.Module):
         #             out_feat[now_pos] = feat.data
         #     out_dict = torch.stack(out_feat, dim=0)
         if torch.is_tensor(id_dict):
-            if(blocks[0].ndata['h']):
+            if (blocks[0].ndata['h']):
                 embeddings = blocks[0].ndata['h']['_N']
                 type = blocks[0].ndata['_TYPE']['_N']
-                embeddings = self.Homolinear(embeddings, type)
+                embeddings = self.homo_linear(embeddings, type)
             else:
-                embeddings = self.Homoembes(id_dict)
-        
+                embeddings = self.homo_embes(id_dict)
+
         else:
-            if(blocks[0].ndata['h']):
+            if (blocks[0].ndata['h']):
                 embeddings = blocks[0].ndata['h']
-                embeddings = self.Heterolinear(embeddings)
+                embeddings = self.hetero_linear(embeddings)
             else:
-                embeddings = self.Heteroembes(id_dict)
+                embeddings = self.hetero_embes(id_dict)
         if self.act:  # activate
             for x, y in embeddings.items():
                 embeddings.update({x: self.act(y)})
