@@ -21,16 +21,20 @@ class AcademicDataset(DGLDataset):
         'yelp4rec': 'dataset/yelp4rec.zip',
         'HNE-PubMed': 'dataset/HNE-PubMed.zip',
         'MTWM': 'dataset/MTWM.zip',
-        'amazon4SLICE': 'dataset/amazon4SLICE.zip'
+        'amazon4SLICE': 'dataset/amazon4SLICE.zip',
+        'amazon': 'https://zhiguli.oss-cn-hangzhou.aliyuncs.com/amazon.zip'
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
         assert name in ['acm4GTN', 'acm4NSHE', 'academic4HetGNN', 'imdb4MAGNN', 'imdb4GTN', 'HNE-PubMed', 'MTWM',
-                        'DoubanMovie', 'dblp4MAGNN', 'acm4NARS', 'acm4HeCo', 'yelp4rec', 'yelp4HeGAN', 'amazon4SLICE']
+                        'DoubanMovie', 'dblp4MAGNN', 'acm4NARS', 'acm4HeCo', 'yelp4rec', 'yelp4HeGAN', 'amazon4SLICE','amazon']
         self.data_path = './openhgnn/' + self._urls[name]
         self.g_path = './openhgnn/dataset/' + name + '/graph.bin'
         raw_dir = './openhgnn/dataset'
         url = self._prefix + self._urls[name]
+        if name == 'amazon':
+            url = 'https://zhiguli.oss-cn-hangzhou.aliyuncs.com/amazon.zip'
+            self.data_path = './openhgnn/dataset/amazon.zip'
         super(AcademicDataset, self).__init__(name=name,
                                         url=url,
                                         raw_dir=raw_dir,

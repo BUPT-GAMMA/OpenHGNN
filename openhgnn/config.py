@@ -746,6 +746,17 @@ class Config(object):
             self.max_epoch = conf.getint("DHNE", "max_epoch")
             self.mini_batch_flag = True
 
+        elif self.model_name == 'DiffMG':
+            self.lr = conf.getfloat("DiffMG", "lr")
+            self.wd = conf.getfloat("DiffMG", "wd")
+            self.dropout = conf.getfloat("DiffMG", "dropout")
+            self.max_epoch = conf.getint("DiffMG", "max_epoch")
+            self.n_hid = conf.getint("DiffMG", "n_hid")
+            self.Amazon_train_seed = conf.getint("DiffMG", "Amazon_train_seed")
+            self.Amazon_preprocess_seed = conf.getint("DiffMG", "Amazon_preprocess_seed")
+            self.Amazon_gen_neg_seed = conf.getint("DiffMG", "Amazon_gen_neg_seed")
+            self.embedding_sizes = conf.getint("DiffMG", "embedding_sizes")
+
         if gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:

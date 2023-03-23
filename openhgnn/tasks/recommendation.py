@@ -13,7 +13,8 @@ class Recommendation(BaseTask):
         self.n_dataset = args.dataset
         self.dataset = build_dataset(args.dataset, 'recommendation', logger=self.logger)
         # self.evaluator = Evaluator()
-        self.train_hg, self.val_hg, self.test_hg = self.dataset.get_split()
+        if self.dataset.dataset_name != 'amazon':
+            self.train_hg, self.val_hg, self.test_hg = self.dataset.get_split()
         self.evaluator = Evaluator(args.seed)
 
     def get_graph(self):

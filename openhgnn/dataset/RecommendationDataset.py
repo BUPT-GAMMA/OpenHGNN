@@ -77,6 +77,15 @@ class HINRecommendation(RecommendationDataset):
             self.user_name = 'user'
             self.item_name = 'item'
 
+        elif dataset_name == 'amazon':
+            data_path = './openhgnn/dataset/amazon_graph.bin'
+            dataset = AcademicDataset(name='amazon', raw_dir='')
+            self.g = dataset[0].long()
+            self.target_link = 'ui'
+            # self.target_link_r = 'item-user'
+            self.user_name = 'user'
+            self.item_name = 'item'
+
         self.out_ntypes = [self.user_name, self.item_name]
         # self.process()
         # self.neg_g = self.construct_negative_graph(self.g)

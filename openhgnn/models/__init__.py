@@ -99,7 +99,8 @@ SUPPORTED_MODELS = {
     'GIE':'openhgnn.models.GIE',
     'Rsage': 'openhgnn.models.Rsage',
     'Mg2vec': 'openhgnn.models.MG2vec',
-    'DHNE': 'openhgnn.models.DHNE'
+    'DHNE': 'openhgnn.models.DHNE',
+    'DiffMG': 'openhgnn.models.DiffMG',
 }
 
 from .CompGCN import CompGCN
@@ -134,6 +135,7 @@ from .GATNE import GATNE
 from .Rsage import Rsage
 from .Mg2vec import Mg2vec
 from .DHNE import DHNE
+from .DiffMG import DiffMG
 
 __all__ = [
     'BaseModel',
@@ -165,6 +167,7 @@ __all__ = [
     'GATNE',
     'Rsage',
     'Mg2vec',
-    'DHNE'
+    'DHNE',
+    'DiffMG'
 ]
 classes = __all__
