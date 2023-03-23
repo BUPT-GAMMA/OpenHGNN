@@ -277,6 +277,9 @@ class HIN_NodeClassification(NodeClassificationDataset):
                 pass
             elif name_dataset == 'acm_han_raw':
                 g, category, num_classes, self.in_dim = load_acm_raw(False)
+                self.meta_paths_dict = {'PAP': [('paper', 'pa', 'author'), ('author', 'ap', 'paper')],
+                                        'PFP': [('paper', 'pf', 'field'), ('field', 'fp', 'paper')]
+                                        }
             else:
                 return NotImplementedError('Unsupported dataset {}'.format(name_dataset))
             return g, category, num_classes
