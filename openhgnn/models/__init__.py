@@ -97,6 +97,7 @@ SUPPORTED_MODELS = {
     'TransR': 'openhgnn.models.TransR',
     'TransD': 'openhgnn.models.TransD',
     'GIE':'openhgnn.models.GIE',
+    'GIN':'openhgnn.models.GIN',
     'Rsage': 'openhgnn.models.Rsage',
     'Mg2vec': 'openhgnn.models.MG2vec',
     'DHNE': 'openhgnn.models.DHNE'
