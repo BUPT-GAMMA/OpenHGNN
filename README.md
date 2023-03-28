@@ -11,7 +11,27 @@
 OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包，集成了异质图神经网络的前沿模型。
 
 ## 新闻
+<details>
 
+<summary>
+2023-02-24 优秀孵化奖
+</summary>
+<br/>
+
+OpenHGNN荣获启智社区优秀孵化项⽬奖！详细链接：https://mp.weixin.qq.com/s/PpbwEdP0-8wG9dsvRvRDaA
+
+</details>
+
+<details>
+
+<summary>
+2023-02-21 中国电子学会科技进步一等奖
+</summary>
+<br/>
+
+算法库支撑了北邮牵头，蚂蚁集团、中国移动、海致科技等参与的“大规模复杂异质图数据智能分析技术与规模化应用”项目。该项目获得了2022年电子学会科技进步一等奖。
+
+</details>
 <details>
 
 <summary>

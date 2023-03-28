@@ -13,7 +13,27 @@ on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https:/
 of heterogeneous graph.
 
 ## News
+<details>
 
+<summary>
+2023-02-24 OpenI Excellent Incubation Award
+</summary>
+<br/>
+
+OpenHGNN won the Excellent Incubation Program Award of OpenI Community! For more details：https://mp.weixin.qq.com/s/PpbwEdP0-8wG9dsvRvRDaA
+
+</details>
+
+<details>
+
+<summary>
+2023-02-21 First Prize of CIE
+</summary>
+<br/>
+
+The algorithm library supports the project of "Intelligent Analysis Technology and Scale Application of Large Scale Complex Heterogeneous Graph Data" led by BUPT and participated by ANT GROUP, China Mobile, Haizhi Technology, etc. This project won the first prize of the 2022 Chinese Intitute of Electronics "Science and Technology Progress Award".
+
+</details>
 <details>
 <summary>
 2023-01-13 release v0.4
