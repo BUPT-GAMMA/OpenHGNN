@@ -705,6 +705,7 @@ class Config(object):
             self.patience = conf.getint("GIN", "patience")
             self.mini_batch_flag = conf.getboolean("GIN", "mini_batch_flag")
             self.learn_eps = conf.getboolean("GIN", "learn_eps")
+            self.aggregate = conf.get("GIN", "aggregate")
 
         elif self.model_name == 'RGAT':
             self.weight_decay = conf.getfloat("RGAT", "weight_decay")
