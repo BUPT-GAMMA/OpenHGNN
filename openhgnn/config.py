@@ -700,7 +700,6 @@ class Config(object):
             self.out_dim = conf.getint("GIN", "out_dim")
             self.input_dim = conf.getint("GIN", "input_dim")
             self.weight_decay = conf.getfloat("GIN", "weight_decay")
-            self.mini_batch_flag = False
             self.max_epoch = conf.getint("GIN", "max_epoch")
             self.patience = conf.getint("GIN", "patience")
             self.mini_batch_flag = conf.getboolean("GIN", "mini_batch_flag")
