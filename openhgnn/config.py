@@ -696,8 +696,6 @@ class Config(object):
             self.hidden_dim = conf.getint("GIN", "hidden_dim")
             self.batch_size = conf.getint("GIN", "batch_size")
             self.lr = conf.getfloat("GIN", "lr")
-            self.gamma = conf.getfloat("GIN", "gamma")
-            self.step_size = conf.getint("GIN", "step_size")
             self.num_layers = conf.getint("GIN", "num_layers")
             self.out_dim = conf.getint("GIN", "out_dim")
             self.input_dim = conf.getint("GIN", "input_dim")
@@ -705,6 +703,8 @@ class Config(object):
             self.mini_batch_flag = False
             self.max_epoch = conf.getint("GIN", "max_epoch")
             self.patience = conf.getint("GIN", "patience")
+            self.mini_batch_flag = conf.getboolean("GIN", "mini_batch_flag")
+            self.learn_eps = conf.getboolean("GIN", "learn_eps")
 
         elif self.model_name == 'RGAT':
             self.weight_decay = conf.getfloat("RGAT", "weight_decay")
