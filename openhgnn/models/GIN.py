@@ -14,18 +14,20 @@ class GIN(BaseModel):
                    output_dim=args.out_dim,
                    num_hidden_layers=args.num_layers - 1,
                    rel_names=hg.etypes
-                   learn_eps=args.learn_eps)
-    def __init__(self, input_dim, hidden_dim, output_dim, num_hidden_layers, rel_names, learn_eps):
+                   learn_eps=args.learn_eps
+                   aggregate=args.aggregate)
+    def __init__(self, input_dim, hidden_dim, output_dim, num_hidden_layers, rel_names, learn_eps, aggregate):
         super(GIN, self).__init__()
         self.rel_names = rel_names
         self.learn_eps = learn_eps
+        self.aggregate = aggregate
         self.layers = nn.ModuleList()
         # input 2 hidden
         self.layers.append(GINLayer(
-            input_dim, hidden_dim, self.rel_names, self.learn_eps))
+            input_dim, hidden_dim, self.rel_names, self.learn_eps, self.aggregate))
         for i in range(num_hidden_layers):
             self.layers.append(GINLayer(
-                hidden_dim, hidden_dim, self.rel_names, self.learn_eps
+                hidden_dim, hidden_dim, self.rel_names, self.learn_eps, self.aggregate
             ))
         self.linear_prediction = nn.ModuleList()
         for _ in range(num_hidden_layers + 1):
@@ -58,12 +60,12 @@ class GIN(BaseModel):
         return logits
 
 class GINLayer(nn.Module):
-    def __init__(self, input_dim, output_dim, rel_names, learn_eps):
+    def __init__(self, input_dim, output_dim, rel_names, learn_eps, aggregate):
         super(GINLayer, self).__init__()
         self.conv = dglnn.HeteroGraphConv({
             rel: GINBase(input_dim, output_dim, learn_eps)
             for rel in rel_names
-        })
+        }, aggregate)
     def forward(self, g, h_dict):
         h_dict = self.conv(g, h_dict)
         out_put = {}
