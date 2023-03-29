@@ -13,17 +13,19 @@ class GIN(BaseModel):
                    hidden_dim=args.hidden_dim,
                    output_dim=args.out_dim,
                    num_hidden_layers=args.num_layers - 1,
-                   rel_names=hg.etypes)
-    def __init__(self, input_dim, hidden_dim, output_dim, num_hidden_layers, rel_names):
+                   rel_names=hg.etypes
+                   learn_eps=args.learn_eps)
+    def __init__(self, input_dim, hidden_dim, output_dim, num_hidden_layers, rel_names, learn_eps):
         super(GIN, self).__init__()
         self.rel_names = rel_names
+        self.learn_eps = learn_eps
         self.layers = nn.ModuleList()
         # input 2 hidden
         self.layers.append(GINLayer(
-            input_dim, hidden_dim, self.rel_names))
+            input_dim, hidden_dim, self.rel_names, self.learn_eps))
         for i in range(num_hidden_layers):
             self.layers.append(GINLayer(
-                hidden_dim, hidden_dim, self.rel_names
+                hidden_dim, hidden_dim, self.rel_names, self.learn_eps
             ))
         self.linear_prediction = nn.ModuleList()
         for _ in range(num_hidden_layers + 1):
@@ -56,10 +58,10 @@ class GIN(BaseModel):
         return logits
 
 class GINLayer(nn.Module):
-    def __init__(self, input_dim, output_dim, rel_names):
+    def __init__(self, input_dim, output_dim, rel_names, learn_eps):
         super(GINLayer, self).__init__()
         self.conv = dglnn.HeteroGraphConv({
-            rel: GINBase(input_dim, output_dim)
+            rel: GINBase(input_dim, output_dim, learn_eps)
             for rel in rel_names
         })
     def forward(self, g, h_dict):
@@ -70,11 +72,11 @@ class GINLayer(nn.Module):
         return out_put
 
 class GINBase(nn.Module):
-    def __init__(self, input_dim, output_dim):
+    def __init__(self, input_dim, output_dim, learn_eps):
         super(GINBase, self).__init__()
 
         mlp = MLP(input_dim, output_dim)
-        self.ginlayer = GINConv(mlp, learn_eps=False) # set to True if learning epsilon
+        self.ginlayer = GINConv(mlp, learn_eps=learn_eps) # set to True if learning epsilon
         self.batch_norm = nn.BatchNorm1d(output_dim)
 
     def forward(self, g, h):
