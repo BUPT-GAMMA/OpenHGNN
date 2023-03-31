@@ -760,6 +760,30 @@ class Config(object):
             self.max_epoch = conf.getint("DHNE", "max_epoch")
             self.mini_batch_flag = True
 
+        elif self.model_name == 'DiffMG':
+            self.lr = conf.getfloat("DiffMG", "lr")
+            self.wd = conf.getfloat("DiffMG", "wd")
+            self.dropout = conf.getfloat("DiffMG", "dropout")
+            self.max_epoch = conf.getint("DiffMG", "max_epoch")
+            self.hidden_dim = conf.getint("DiffMG", "hidden_dim")
+            self.Amazon_train_seed = conf.getint("DiffMG", "Amazon_train_seed")
+            self.Amazon_preprocess_seed = conf.getint("DiffMG", "Amazon_preprocess_seed")
+            self.Amazon_gen_neg_seed = conf.getint("DiffMG", "Amazon_gen_neg_seed")
+            self.embedding_sizes = conf.getint("DiffMG", "embedding_sizes")
+            self.mini_batch_flag = conf.getboolean("DiffMG", "mini_batch_flag")
+            self.attn_dim = conf.getint("DiffMG", "attn_dim")
+            self.Amazon_search_seed = conf.getint("DiffMG", "Amazon_search_seed")
+            self.search_lr = conf.getfloat("DiffMG", "search_lr")
+            self.search_wd = conf.getfloat("DiffMG", "search_wd")
+            self.search_alr = conf.getfloat("DiffMG", "search_alr")
+            self.search_eps = conf.getfloat("DiffMG", "search_eps")
+            self.search_decay = conf.getfloat("DiffMG", "search_decay")
+            self.search_steps_s = conf.getint("DiffMG", "search_steps_s")
+            self.search_steps_t = conf.getint("DiffMG", "search_steps_t")
+            self.search_epochs = conf.getint("DiffMG", "search_epochs")
+            # self.use_norm = conf.get("DiffMG", "use_norm")
+            # self.out_nl = conf.get("DiffMG", "out_nl")
+
         if gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
