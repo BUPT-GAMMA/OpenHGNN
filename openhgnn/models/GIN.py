@@ -13,8 +13,8 @@ class GIN(BaseModel):
                    hidden_dim=args.hidden_dim,
                    output_dim=args.out_dim,
                    num_hidden_layers=args.num_layers - 1,
-                   rel_names=hg.etypes
-                   learn_eps=args.learn_eps
+                   rel_names=hg.etypes,
+                   learn_eps=args.learn_eps,
                    aggregate=args.aggregate)
     def __init__(self, input_dim, hidden_dim, output_dim, num_hidden_layers, rel_names, learn_eps, aggregate):
         super(GIN, self).__init__()
