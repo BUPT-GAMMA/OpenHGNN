@@ -164,4 +164,4 @@ The API [dgl.save_graphs](https://docs.dgl.ai/en/latest/generated/dgl.save_graph
 3. Upload the zip file to s3.
 4. If the dataset is Heterogeneous Information Network, you can modify the [AcademicDataset](./academic_graph.py) directly. Or you can refer to it building a new *Class Dataset*.
 
-We give a [demo](https://openhgnn.readthedocs.io/en/latest/install/usage.html#evaluate-a-new-dataset) to build a new dataset.
+We give a [demo](https://openhgnn.readthedocs.io/en/latest/advanced_materials/developer_guide.html#evaluate-a-new-dataset) to build a new dataset.
