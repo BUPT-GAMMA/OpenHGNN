@@ -67,7 +67,7 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'rdf_' + task
     elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp',
                      'dblp4MAGNN', 'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie',
-                     'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB']:
+                     'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB','amazon']:
         _dataset = 'hin_' + task
     elif dataset in ohgbn_datasets + ohgbn_datasets:
         _dataset = 'ohgb_' + task

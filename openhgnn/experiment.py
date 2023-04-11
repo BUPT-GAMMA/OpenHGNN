@@ -55,6 +55,7 @@ class Experiment(object):
         },
         'Mg2vec': 'mg2vec_trainer',
         'DHNE': 'DHNE_trainer',
+        'DiffMG': 'DiffMG_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 
