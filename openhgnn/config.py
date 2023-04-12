@@ -784,6 +784,13 @@ class Config(object):
             # self.use_norm = conf.get("DiffMG", "use_norm")
             # self.out_nl = conf.get("DiffMG", "out_nl")
 
+        elif model == 'MeiREC':
+            self.lr = conf.getfloat("MeiREC", "lr")
+            self.weight_decay = conf.getfloat("MeiREC", "weight_decay")
+            self.vocab = conf.getint("MeiREC", "vocab_size")
+            self.max_epoch = conf.getint("MeiREC", "train_epochs")
+            self.batch_num = conf.getint("MeiREC", "batch_num")
+
         if gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
