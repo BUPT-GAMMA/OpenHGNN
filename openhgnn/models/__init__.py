@@ -102,6 +102,7 @@ SUPPORTED_MODELS = {
     'Mg2vec': 'openhgnn.models.MG2vec',
     'DHNE': 'openhgnn.models.DHNE',
     'DiffMG': 'openhgnn.models.DiffMG',
+    'HGNN_AC': 'openhgnn.models.HGNN_AC'
 }
 
 from .CompGCN import CompGCN
@@ -137,6 +138,7 @@ from .Rsage import Rsage
 from .Mg2vec import Mg2vec
 from .DHNE import DHNE
 from .DiffMG import DiffMG
+from .HGNN_AC import HGNN_AC
 
 __all__ = [
     'BaseModel',

@@ -104,7 +104,7 @@ class HGNN_AC(BaseModel):
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
-        return cls(in_dim = hg.nodes[hg.ntypes[0]].data['emb'].shape[1], 
+        return cls(in_dim = hg.nodes[hg.ntypes[0]].data['h'].shape[1], 
                                 hidden_dim = args.attn_vec_dim, 
                                 dropout = args.dropout, activation = F.elu, 
                                 num_heads = args.num_heads,
