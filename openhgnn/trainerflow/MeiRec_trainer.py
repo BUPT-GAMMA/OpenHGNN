@@ -11,12 +11,6 @@ from . import BaseFlow, register_flow
 from ..tasks import build_task
 
 
-def cycle(iterable):
-    while True:
-        for x in iterable:
-            yield x
-
-
 @register_flow("MeiREC_trainer")
 class MeiRECTrainer(BaseFlow):
 
@@ -32,12 +26,11 @@ class MeiRECTrainer(BaseFlow):
         print("build_model_finish")
         self.model = self.model.to(self.device)
         self.loss_fn = nn.BCELoss(reduction='mean')
-        self.evaluator = self.task.evaluate
+        # self.evaluator = self.task.evaluate
         self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
         self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, 0.99)
         self.patience = args.patience
         self.max_epoch = args.max_epoch
-        self.gpu_support = True if torch.cuda.is_available() else False
 
     def train(self):
         train_loader = self.task.train_loader
@@ -48,7 +41,7 @@ class MeiRECTrainer(BaseFlow):
             if epoch % 3 == 0:
                 for i, data in enumerate(pbar):
                     # train step, data: batch * features
-                    if i != 28:
+                    if i != len(train_loader) - 1:
                         output, train_loss, train_auc, train_acc = self._train_step(data)
                         # record bar
                         pbar.set_description(f"epoch[{epoch}/{self.max_epoch}],\
@@ -186,9 +179,9 @@ class MeiRECTrainer(BaseFlow):
     def forward(self, x):
         inputs = x['data'].T
         labels = x['labels']
-        if self.gpu_support:
-            inputs = inputs.cuda()
-            labels = labels.cuda()
+
+        inputs = inputs.cuda()
+        labels = labels.cuda()
 
         predicts = self.model(inputs)
         # loss

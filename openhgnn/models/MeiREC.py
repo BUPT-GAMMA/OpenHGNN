@@ -5,62 +5,35 @@ from . import BaseModel, register_model
 import torch.nn.functional as F
 
 
-class Config:
-
-    def __init__(self, args):
-        super().__init__()
-        self.device = None
-
-        self.device = torch.device(
-            "cuda:0" if torch.cuda.is_available() else "cpu")
-
-        # 42, user statics params, 39, query statics params, 81
-        self.wide_feat_list_size = 42 + 39
-        # 13, item_terms(10) + item_topcate(1) +
-        # item_leafcate(1) + time_delta(1), 195
-        self.user_item_seq_feat_size = 15 * 13
-        # 16, query_lens(10) + query_topcate_len(3) + query_leafcate_len(3)
-        self.query_feat_size = 10 + 3 + 3
-        # 170 = N * querys
-        self.user_query_seq_feat_size = 170
-        # 100, query item to query term's avg
-        self.query_item_query_feat_size = 100
-        # 100, n * 10, 10: query => item(term ids)
-        self.user_query_item_feat_size = 100
-        # 150, n * 10, 10: item => query(term ids)
-        self.user_item_query_feat_size = 150
-        # 100, item term ids
-        self.query_user_item_feat_size = 100
-
-        # model params
-        self.lr = 0.001
-        self.beta1 = 0.9
-        self.user_seq_length = 15
-        self.user_item_term_length = 10
-        self.user_query_term_length = 10
-        self.query_length = 10
-        self.query_topcate_length = 3
-        self.query_leafcate_length = 3
-        self.embed_size_word = 64
-        self.weight_decay = 0.00001
-        self.vocab_size = 280000
-
-        # training params, 15000, 5000
-        self.train_epochs = 10
-        # self.batch_num = 20
-        self.learning_rate = 1e-3
-        self.num_workers = 8
-        # train one step, we make a validation
-        self.val_frequency = 1
-        # after 10 epoch, save
-        self.save_frequency = 2
-
-
 @register_model('MeiREC')
 class MeiREC(BaseModel):
     r"""
-    Description
-    -----------
+        MeiREC from paper `Metapath-guided Heterogeneous Graph Neural Network for
+        Intent Recommendation <https://dl.acm.org/doi/abs/10.1145/3292500.3330673>`__
+        in KDD_2019.
+
+        `Code from author <https://github.com/googlebaba/KDD2019-MEIRec>`__.
+
+        We leverage metapaths to obtain different-step neighbors of an object, and the embeddings of us
+        ers and queries are the aggregation of their neighbors under different metapaths.And we propose
+        to represent the queries and items with a small number of term embeddings.we need to learn the
+        term embeddings, rather than all object embeddings. This method is able to significantly reduc
+        e the number of parameters.
+
+        Parameters
+        ----------
+        user_seq_length : int
+            Number for process dataset.
+        ...
+        batch_num : int
+            Number of batch.
+        weight_decay : float
+            Number of weight_decay.
+        lr : float
+            learning rate.
+        train_epochs : int
+            Number of train epoch.
+        -----------
     """
 
     @classmethod
@@ -83,8 +56,17 @@ class Model(nn.Module):
 
     def __init__(self, args):
         super().__init__()
-        self.config = Config(args)
         self.args = args
+
+        # model params
+        self.user_seq_length = 15
+        self.user_item_term_length = 10
+        self.user_query_term_length = 10
+        self.query_length = 10
+        self.query_topcate_length = 3
+        self.query_leafcate_length = 3
+        self.embed_size_word = 64
+
         self._generate_model_layer()
 
         # drop out prob
@@ -97,8 +79,8 @@ class Model(nn.Module):
 
         self._word_embed = nn.Parameter(
             Variable(
-                torch.Tensor(self.config.vocab_size,
-                             self.config.embed_size_word),
+                torch.Tensor(self.args.vocab,
+                             self.embed_size_word),
                 requires_grad=True,
             ))
         # self.register_parameter('word_embed', nn.Parameter(self._word_embed))
@@ -152,20 +134,20 @@ class Model(nn.Module):
         # weights & bias
         # wide feats, mlp layers for wide feats, 81 for static feats length
         self.wide_feat_w, self.loss7 = self.get_weights_variables(
-            [64, 81], self.config.weight_decay)
+            [64, 81], self.args.weight_decay)
         self.wide_feat_b = self.get_bias_variables(64)
         # concat query weights, 64 * 7 for concat feats len
         self.concat_query_w, self.loss8 = self.get_weights_variables(
-            [64, 64 * 7], self.config.weight_decay)
+            [64, 64 * 7], self.args.weight_decay)
         self.concat_query_b = self.get_bias_variables(64)
         # concat_query_user_wide,  concat query and
         # user wide infos, then len: 128
         self.concat_query_user_wide_w, self.loss9 = self.get_weights_variables(
-            [64, 128], self.config.weight_decay)
+            [64, 128], self.args.weight_decay)
         self.concat_query_user_wide_b = self.get_bias_variables(64)
         # deep_wide_feat, the last layer mlp => predict val
         self.deep_wide_feat_w, self.loss10 = self.get_weights_variables(
-            [1, 64], self.config.weight_decay)
+            [1, 64], self.args.weight_decay)
         self.deep_wide_feat_b = self.get_bias_variables(1)
 
     @property
@@ -182,7 +164,7 @@ class Model(nn.Module):
 
     def get_regular_loss(self, params):
 
-        return torch.sum(torch.pow(params, 2)) / 2 * self.config.weight_decay
+        return torch.sum(torch.pow(params, 2)) / 2 * self.args.weight_decay
 
     def get_weights_variables(self, shape, weight_decay, trainable=True):
 
@@ -209,12 +191,12 @@ class Model(nn.Module):
         lstm = nn.LSTM(features_num, hidden_size, layers_num, bias=True)
         # weights: num_layers * batch * hidden size
         h_0, regular_loss_h0 = self.get_weights_variables(
-            [layers_num, batches_num, hidden_size], self.config.weight_decay)
+            [layers_num, batches_num, hidden_size], self.args.weight_decay)
         c_0, regular_loss_c0 = self.get_weights_variables(
-            [layers_num, batches_num, hidden_size], self.config.weight_decay)
+            [layers_num, batches_num, hidden_size], self.args.weight_decay)
 
         w_l, regular_loss_wl = self.get_weights_variables(
-            [hidden_size, hidden_size], self.config.weight_decay)
+            [hidden_size, hidden_size], self.args.weight_decay)
         b_l = self.get_bias_variables(hidden_size)
         # hidden_layer = torch.tanh(torch.matmul(w_l, lstm_cell.T) + b_l)
         loss_total = regular_loss_h0 + regular_loss_c0 + regular_loss_wl
@@ -225,7 +207,7 @@ class Model(nn.Module):
         # x: batch * channels * h * w
         # x_input = input.view(-1, 1, nums, features_num)
         conv_w, regular_loss_w = self.get_weights_variables(
-            [12, 1, 2, features_num], self.config.weight_decay)
+            [12, 1, 2, features_num], self.args.weight_decay)
         conv_b, _ = self.get_weights_variables([12], 0)
         # default stride 1, padding valid
         conv = nn.Conv2d(1, 12, kernel_size=(2, features_num), stride=1, padding='valid')
@@ -246,9 +228,9 @@ class Model(nn.Module):
         query_terms, query_topcate, query_leafcate = torch.split(
             query_feat,
             [
-                self.config.query_length,
-                self.config.query_topcate_length,
-                self.config.query_leafcate_length,
+                self.query_length,
+                self.query_topcate_length,
+                self.query_leafcate_length,
             ],
             0,
         )
@@ -268,7 +250,7 @@ class Model(nn.Module):
         step_embedding_list = []
         for raw_word_embed in raw_word_embedding_list:
             item_terms, item_topcate, item_leafcate, time_delta = torch.split(
-                raw_word_embed, [self.config.user_item_term_length, 1, 1, 1],
+                raw_word_embed, [self.user_item_term_length, 1, 1, 1],
                 0)
 
             step_embedding = torch.nn.functional.embedding(item_terms.to(torch.int64), self._word_embed)
@@ -396,7 +378,7 @@ class Model(nn.Module):
                 query_leafcate,
                 time_delta,
             ) = torch.split(raw_user_item_embed,
-                            [self.config.user_query_term_length, 3, 3, 1], 0)
+                            [self.user_query_term_length, 3, 3, 1], 0)
 
             step_embedding = torch.nn.functional.embedding(query_terms.to(torch.int64), self._word_embed)
             input_num = (torch.sum(torch.sign(query_terms))

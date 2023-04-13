@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-FOLD = Path(__file__).resolve().parent / "meirec"   #生成一个路径，存数据集的
+FOLD = Path(__file__).resolve().parent / "meirec"
 
 
 class MeiRECDataset(Dataset):

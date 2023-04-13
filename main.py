@@ -4,7 +4,6 @@
 
 import argparse
 
-import torch.cuda
 
 from openhgnn.experiment import Experiment
 
@@ -21,5 +20,5 @@ if __name__ == '__main__':
 
     experiment = Experiment(model=args.model, dataset=args.dataset, task=args.task, gpu=args.gpu,
                             use_best_config=args.use_best_config, load_from_pretrained=args.load_from_pretrained)
-    #print(torch.cuda.is_available())
+
     experiment.run()

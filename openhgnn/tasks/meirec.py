@@ -16,6 +16,5 @@ class MeiREC(BaseTask):
                                                             logger=self.logger)
 
     def evaluate(self, y_true, y_score):
-        correct_num = sum((y_score > 0.5) == y_true)
-        return correct_num / len(y_true)
+        pass
 
