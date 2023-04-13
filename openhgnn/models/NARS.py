@@ -127,14 +127,14 @@ def preprocess_features(g, mps, args, device, predict):
             new features of each relation subsets
 
     """
-    category_dim = g.nodes[predict].data["h"].shape[1]
+    category_dim = g.nodes[predict].data["feat"].shape[1]
     for ntype in g.ntypes:
-        ntype_dim = g.nodes[ntype].data["h"].shape[1]
+        ntype_dim = g.nodes[ntype].data["feat"].shape[1]
         if category_dim != ntype_dim:
             rand_weight = th.Tensor(ntype_dim, category_dim).uniform_(-0.5, 0.5).to(device)
-            g.nodes[ntype].data["h"] = th.matmul(g.nodes[ntype].data["h"], rand_weight)
+            g.nodes[ntype].data["feat"] = th.matmul(g.nodes[ntype].data["feat"], rand_weight)
 
-    num_paper, feat_size = g.nodes[predict].data["h"].shape
+    num_paper, feat_size = g.nodes[predict].data["feat"].shape
 
     new_feats = [th.zeros(num_paper, len(mps), feat_size) for _ in range(args.num_hops + 1)]
 
@@ -174,10 +174,10 @@ def gen_rel_subset_feature(g, rel_subset, args, device, predict):
     # set node feature and calc deg
     for ntype in ntypes:
         num_nodes = new_g.number_of_nodes(ntype)
-        if num_nodes < g.nodes[ntype].data["h"].shape[0]:
-            new_g.nodes[ntype].data["hop_0"] = g.nodes[ntype].data["h"][:num_nodes, :]
+        if num_nodes < g.nodes[ntype].data["feat"].shape[0]:
+            new_g.nodes[ntype].data["hop_0"] = g.nodes[ntype].data["feat"][:num_nodes, :]
         else:
-            new_g.nodes[ntype].data["hop_0"] = g.nodes[ntype].data["h"]
+            new_g.nodes[ntype].data["hop_0"] = g.nodes[ntype].data["feat"]
         deg = 0
         for etype in new_g.etypes:
             _, _, dtype = new_g.to_canonical_etype(etype)
