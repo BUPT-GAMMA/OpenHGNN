@@ -72,6 +72,7 @@ SUPPORTED_FLOWS = {
     'mg2vec_trainer': 'openhgnn.trainerflow.mg2vec_trainer',
     'DHNE_trainer': 'openhgnn.trainerflow.DHNE_trainer',
     'DiffMG_trainer': 'openhgnn.trainerflow.DiffMG_trainer',
+    'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
 }
 
 from .node_classification import NodeClassification
@@ -93,6 +94,7 @@ from .han_trainer import HANLinkPrediction
 from .mg2vec_trainer import Mg2vecTrainer
 from .DHNE_trainer import DHNE_trainer
 from .DiffMG_trainer import DiffMG_trainer
+from .MeiRec_trainer import MeiRECTrainer
 from .node_classification_ac import NodeClassificationAC
 
 __all__ = [
@@ -115,6 +117,7 @@ __all__ = [
     'HANLinkPrediction',
     'Mg2vecTrainer',
     'DHNE_trainer',
-    'DiffMG_trainer'
+    'DiffMG_trainer',
+    'MeiRECTrainer',
 ]
 classes = __all__
