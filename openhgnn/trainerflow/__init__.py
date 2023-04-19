@@ -49,6 +49,7 @@ def build_flow(args, flow_name):
 SUPPORTED_FLOWS = {
     'entity_classification': 'openhgnn.trainerflow.entity_classification',
     'node_classification': 'openhgnn.trainerflow.node_classification',
+    'node_classification_ac': 'openhgnn.trainerflow.node_classfication_ac',
     'distmult': 'openhgnn.trainerflow.dist_mult',
     'link_prediction': 'openhgnn.trainerflow.link_prediction',
     'recommendation': 'openhgnn.trainerflow.recommendation',
@@ -94,6 +95,7 @@ from .mg2vec_trainer import Mg2vecTrainer
 from .DHNE_trainer import DHNE_trainer
 from .DiffMG_trainer import DiffMG_trainer
 from .MeiRec_trainer import MeiRECTrainer
+from .node_classification_ac import NodeClassificationAC
 
 __all__ = [
     'BaseFlow',

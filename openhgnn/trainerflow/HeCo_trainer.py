@@ -88,9 +88,9 @@ class HeCoTrainer(BaseFlow):
         val_embs = embeds[self.val_idx]
         test_embs = embeds[self.test_idx]
 
-        train_lbls = self.labels[self.train_idx].reshape(-1)
-        val_lbls = self.labels[self.val_idx].reshape(-1)
-        test_lbls = self.labels[self.test_idx].reshape(-1)
+        train_lbls = self.labels[self.train_idx[:,0]].reshape(-1)
+        val_lbls = self.labels[self.val_idx[:,0]].reshape(-1)
+        test_lbls = self.labels[self.test_idx[:,0]].reshape(-1)
         
         accs = []
         micro_f1s = []
@@ -116,14 +116,14 @@ class HeCoTrainer(BaseFlow):
                 opt.zero_grad()
 
                 logits = log(train_embs)
-                loss = xent(logits, train_lbls)
+                loss = xent(logits[:,0], train_lbls)
 
                 loss.backward()
                 opt.step()
 
                 # val
                 logits = log(val_embs)
-                preds = torch.argmax(logits, dim=1)
+                preds = torch.argmax(logits[:,0], dim=1)
     
                 val_acc = torch.sum(preds == val_lbls).float() / val_lbls.shape[0]
                 val_f1_macro = f1_score(val_lbls.cpu(), preds.cpu(), average='macro')
@@ -135,7 +135,7 @@ class HeCoTrainer(BaseFlow):
     
                 # test
                 logits = log(test_embs)
-                preds = torch.argmax(logits, dim=1)
+                preds = torch.argmax(logits[:,0], dim=1)
     
                 test_acc = torch.sum(preds == test_lbls).float() / test_lbls.shape[0]
                 test_f1_macro = f1_score(test_lbls.cpu(), preds.cpu(), average='macro')
@@ -157,7 +157,7 @@ class HeCoTrainer(BaseFlow):
     
             # auc
             best_logits = logits_list[max_iter]
-            best_proba = F.softmax(best_logits, dim=1)
+            best_proba = F.softmax(best_logits[:,0], dim=1)
             auc_score_list.append(roc_auc_score(y_true=test_lbls.detach().cpu().numpy(),
                                                 y_score=best_proba.detach().cpu().numpy(),
                                                 multi_class='ovr'

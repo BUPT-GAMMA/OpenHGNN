@@ -37,6 +37,12 @@ $$
 ## How to run
 
 - Clone the Openhgnn-DGL
+- Run transE model first
+  ```bash
+  # For link prediction task
+  python main.py -m TransE -t link_prediction -d FB15k -g 0 --use_best_config
+  ```
+- Run transR model
 
   ```bash
   # For link prediction task

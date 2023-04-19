@@ -44,7 +44,7 @@ class NodeClassificationAC(BaseFlow):
 
         self.args.category = self.task.dataset.category
         self.category = self.args.category
-        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
+        self.model = build_model(self.model_name).build_model_from_args(self.args, self.hg).to(self.device)
         self.hgnn_ac = build_model(
             "HGNN_AC").build_model_from_args(self.args, self.hg).to(self.device)
         self.optimizer = torch.optim.Adam([{'params': self.model.parameters()},
@@ -111,7 +111,7 @@ class NodeClassificationAC(BaseFlow):
                     matrix[j][i] = 1
             matrix = matrix.to(self.device)
             self.adj[dst] = matrix
-        self.preprocess_feature()
+        super(NodeClassificationAC, self).preprocess()
         
         return
 
@@ -170,15 +170,15 @@ class NodeClassificationAC(BaseFlow):
 
     def _full_train_step(self):
 
-        h = self.input_feature()
+        h = self.model.input_feature()
         feat_src = h[self.ntypes[self.args.src_node_type]]
         # feat_src = self.hg.nodes[self.ntypes[self.args.src_node_type]].data['h']
         # attribute completion
         feat_src_re = self.hgnn_ac(self.adj[self.ntypes[self.args.src_node_type]][:, self.feat_keep_idx],
                                    self.hg.nodes[self.ntypes[self.args.src_node_type]
-                                                 ].data['emb'],
+                                                 ].data['h'],
                                    self.hg.nodes[self.ntypes[self.args.src_node_type]
-                                                 ].data['emb'][self.feat_keep_idx],
+                                                 ].data['h'][self.feat_keep_idx],
                                    feat_src[self.feat_keep_idx]
                                    )
         loss_ac = F.mse_loss(
@@ -189,9 +189,9 @@ class NodeClassificationAC(BaseFlow):
                 if opt == '1':
                     feat_ac = self.hgnn_ac(self.adj[self.ntypes[i]].t(),
                                            self.hg.nodes[self.ntypes[i]
-                                                         ].data['emb'],
+                                                         ].data['h'],
                                            self.hg.nodes[self.ntypes[self.args.src_node_type]
-                                                         ].data['emb'],
+                                                         ].data['h'],
                                            feat_src[self.hg.nodes(self.ntypes[self.args.src_node_type])])
                     h[self.ntypes[i]] = feat_ac
                     
@@ -230,15 +230,14 @@ class NodeClassificationAC(BaseFlow):
                 if self.task.multi_label:
                     pred = (logits[mask].cpu().numpy()>0).astype(int)
                 else:
-                    pred = logits[mask].argmax(dim=1).to('cpu')
-                metric = self.task.evaluate(pred, name=self.metric, mask=mask)
+                    pred = logits.to('cpu')
+                metric = self.task.evaluate(pred)
 
                 return metric, loss
             else:
                 masks = {'train': self.train_idx, 'val': self.valid_idx, 'test': self.test_idx}
-                metrics = {key: self.task.evaluate((logits[mask].cpu().numpy()>0).astype(int) if self.task.multi_label
-                                                   else logits[mask].argmax(dim=1).to('cpu'),
-                                                   name=self.metric, mask=mask) for
+                metrics = {key: self.task.evaluate((logits.cpu().numpy()>0).astype(int) if self.task.multi_label
+                                                   else logits.to('cpu')) for
                            key, mask in masks.items()}
                 losses = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}
                 return metrics, losses
