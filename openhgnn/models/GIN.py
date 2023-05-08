@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import dgl.nn as dglnn
 from openhgnn.models import BaseModel, register_model
 from dgl.nn.pytorch.conv import GINConv
-
+import dgl
 
 @register_model('GIN')
 class GIN(BaseModel):
@@ -16,6 +16,7 @@ class GIN(BaseModel):
                    rel_names=hg.etypes,
                    learn_eps=args.learn_eps,
                    aggregate=args.aggregate)
+
     def __init__(self, input_dim, hidden_dim, output_dim, num_hidden_layers, rel_names, learn_eps, aggregate):
         super(GIN, self).__init__()
         self.rel_names = rel_names
@@ -33,30 +34,51 @@ class GIN(BaseModel):
         for _ in range(num_hidden_layers + 1):
             self.linear_prediction.append(nn.Linear(hidden_dim, output_dim))
         self.drop = nn.Dropout(0.5)
+
     def forward(self, hg, h_dict):
         output_dict = dict()
         logits = dict()
-        for ntype in hg.ntypes:
-            output_dict[ntype] = []
-            logits[ntype] = 0
+        
+        #################################################################
+        ######                  changes done here                  ######
+        #################################################################
+        
         if hasattr(hg, 'ntypes'):
             # full graph training,
+            for ntype in hg.ntypes:
+                output_dict[ntype] = []
+                logits[ntype] = 0
+            # Perform forward pass through all layers of the GNN
             for layer in self.layers:
                 h_dict = layer(hg, h_dict)
                 for ntype in hg.ntypes:
                     output_dict[ntype].append(h_dict[ntype])
+            # perform graph sum pooling over all nodes in each layer
+            for ntype in hg.ntypes:
+                for i, h in enumerate(output_dict[ntype]):
+                    logits[ntype] = logits[ntype] + self.drop(self.linear_prediction[i](h))
+                logits[ntype] = F.softmax(logits[ntype], dim=-1)
+                
         else:
             # minibatch training, block
             for layer, block in zip(self.layers, hg):
+                for ntype in block.ntypes:
+                    output_dict[ntype] = []
+                    logits[ntype] = 0
+                # Perform forward pass through all layers of the GNN
                 h_dict = layer(block, h_dict)
-                for ntype in hg.ntypes:
+                for ntype in block.ntypes:
                     output_dict[ntype].append(h_dict[ntype])
+            # perform graph sum pooling over all nodes in each layer
+            for ntype in block.ntypes:
+                for i, h in enumerate(output_dict[ntype]):
+                    logits[ntype] = logits[ntype] + self.drop(self.linear_prediction[i](h))
+                logits[ntype] = F.softmax(logits[ntype], dim=-1)
+                
+        #################################################################
+        ######                  changes done here                  ######
+        #################################################################
         
-        # perform graph sum pooling over all nodes in each layer
-        for ntype in hg.ntypes:
-            for i, h in enumerate(output_dict[ntype]):
-                logits[ntype] += self.drop(self.linear_prediction[i](h))
-            logits[ntype] = F.softmax(logits[ntype], dim=-1)
         return logits
 
 class GINLayer(nn.Module):
@@ -66,6 +88,7 @@ class GINLayer(nn.Module):
             rel: GINBase(input_dim, output_dim, learn_eps)
             for rel in rel_names
         }, aggregate)
+
     def forward(self, g, h_dict):
         h_dict = self.conv(g, h_dict)
         out_put = {}
