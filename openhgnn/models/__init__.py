@@ -102,6 +102,7 @@ SUPPORTED_MODELS = {
     'Mg2vec': 'openhgnn.models.MG2vec',
     'DHNE': 'openhgnn.models.DHNE',
     'DiffMG': 'openhgnn.models.DiffMG',
+    'MeiREC': 'openhgnn.models.MeiREC',
     'HGNN_AC': 'openhgnn.models.HGNN_AC'
 }
 
@@ -138,6 +139,7 @@ from .Rsage import Rsage
 from .Mg2vec import Mg2vec
 from .DHNE import DHNE
 from .DiffMG import DiffMG
+from .MeiREC import MeiREC
 from .HGNN_AC import HGNN_AC
 
 __all__ = [
@@ -171,6 +173,7 @@ __all__ = [
     'Rsage',
     'Mg2vec',
     'DHNE',
-    'DiffMG'
+    'DiffMG',
+    'MeiREC',
 ]
 classes = __all__

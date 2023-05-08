@@ -58,14 +58,19 @@ class BaseFlow(ABC):
         self.model = args.model
         self.device = args.device
         self.task = build_task(args)
+        self.max_epoch = args.max_epoch
+        self.optimizer = None
+
+        if self.model_name == "MeiREC":
+            return
+
         if self.args.use_uva:
             self.hg = self.task.get_graph()
         else:
             self.hg = self.task.get_graph().to(self.device)
         self.args.meta_paths_dict = self.task.dataset.meta_paths_dict
         self.patience = args.patience
-        self.max_epoch = args.max_epoch
-        self.optimizer = None
+
         self.loss_fn = self.task.get_loss_fn()
 
     def preprocess(self):
