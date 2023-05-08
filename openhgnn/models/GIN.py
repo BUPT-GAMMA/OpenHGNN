@@ -3,7 +3,6 @@ import torch.nn.functional as F
 import dgl.nn as dglnn
 from openhgnn.models import BaseModel, register_model
 from dgl.nn.pytorch.conv import GINConv
-import dgl
 
 @register_model('GIN')
 class GIN(BaseModel):
