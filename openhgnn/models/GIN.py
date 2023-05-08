@@ -39,10 +39,6 @@ class GIN(BaseModel):
         output_dict = dict()
         logits = dict()
         
-        #################################################################
-        ######                  changes done here                  ######
-        #################################################################
-        
         if hasattr(hg, 'ntypes'):
             # full graph training,
             for ntype in hg.ntypes:
@@ -74,10 +70,6 @@ class GIN(BaseModel):
                 for i, h in enumerate(output_dict[ntype]):
                     logits[ntype] = logits[ntype] + self.drop(self.linear_prediction[i](h))
                 logits[ntype] = F.softmax(logits[ntype], dim=-1)
-                
-        #################################################################
-        ######                  changes done here                  ######
-        #################################################################
         
         return logits
 
