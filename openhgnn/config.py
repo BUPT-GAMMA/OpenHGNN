@@ -145,6 +145,8 @@ class Config(object):
             self.comp_fn = conf.get("CompGCN", "comp_fn")
             self.mini_batch_flag = conf.getboolean("CompGCN", "mini_batch_flag")
             self.validation = conf.getboolean("CompGCN", "validation")
+            self.fanout = conf.getint("CompGCN", "fanout")
+            self.batch_size = conf.getint("CompGCN", "batch_size")
             pass
         elif self.model_name == 'HetGNN':
             self.lr = conf.getfloat("HetGNN", "learning_rate")
