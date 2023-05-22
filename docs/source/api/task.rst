@@ -7,10 +7,12 @@ Task
 
 .. autosummary::
     :nosignatures:
-    {% for cls in openhgnn.tasks.classes %}
-      {{ cls }}
-    {% endfor %}
+    :toctree: ../generated
+    :template: _templates/class.rst
 
-.. automodule:: openhgnn.tasks
-    :members:
-    :exclude-members:
+    openhgnn.tasks.BaseTask
+    openhgnn.tasks.NodeClassification
+    openhgnn.tasks.LinkPrediction
+    openhgnn.tasks.Recommendation
+    openhgnn.tasks.EdgeClassification
+    openhgnn.tasks.hypergraph
