@@ -10,7 +10,7 @@ We release a benchmark of heterogeneou graph named [Open Heterogeneous Graph Ben
 
 ### NodeClassificationDataset
 
-- ##### RDF_NodeCLassification
+- ##### RDF_NodeCLassification（Please use lowercase letters）
   
   - [AIFB/MUTAG/BGS/AM](https://github.com/dmlc/dgl/tree/master/examples/pytorch/rgcn-hetero)
 
@@ -38,6 +38,7 @@ We release a benchmark of heterogeneou graph named [Open Heterogeneous Graph Ben
     | dblp4GTN   |        |        |      |       |              |            |            |       |     |       |
     | dblp4MAGNN | 4,057  | 14,328 | 20   | 7,723 | 19,645       | 14,328     | 85,810     | 400   | 400 | 3257  |
 
+    Note: dblp4HAN dataset is not avaliable now.Please use other dataset. metapath2vec embedding is not available for dblp4GTN, one solution is to run metapath2vec on the dataset to generate the embedding and then assign it as node feature before running Model(The embedding file contains all node types in the same order as g.ntypes.)
 - ###### IMDB
   
   |            | Movie | Actor | Director | Movie-Actor | Movie-Director | Train | Val | Test  |
@@ -60,7 +61,7 @@ We release a benchmark of heterogeneou graph named [Open Heterogeneous Graph Ben
   | ----- | ------ | ------- | ---- | ------------ | ----------- | ------------- | ---------- | --- | ---- |
   | 3025  | 5959   | 56      | 1902 | 9949         | 5343        | 3025          | 255619     | 907 | 2118 |
   
-  - HGBn-IMDB
+  - HGBn-IMDB(is not avaliable now)
   
   | movie | actor | director | keyword | actor-movie | director-movie | keyword-movie | train | test |
   | ----- | ----- | -------- | ------- | ----------- | -------------- | ------------- | ----- | ---- |
@@ -90,7 +91,7 @@ We release a benchmark of heterogeneou graph named [Open Heterogeneous Graph Ben
 
 - ##### HIN_LinkPrediction
   
-  - ###### academic4HetGNN
+  - ###### academic4HetGNN(is not avaliable now)
 
 - **HGBl**
   
