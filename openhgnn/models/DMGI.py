@@ -36,6 +36,8 @@ class DMGI(BaseModel):
             The number of all nodes of category in graph
         num_classes : int
             The numbers of category's types
+        nheads : int
+            The numbers of head
         isBias :bool
             If True, adds a learnable bias to the output.Defaults: ``False``.
         isAttn : bool
