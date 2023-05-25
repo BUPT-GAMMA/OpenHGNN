@@ -72,7 +72,8 @@ class HetSANN(BaseModel):
         the negative slope used in the LeakyReLU
     residual: boolean
         if we need the residual operation
-
+    ntypes: list(str)
+        the list of node type
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
@@ -93,6 +94,7 @@ class HetSANN(BaseModel):
         super(HetSANN, self).__init__()
         self.num_layers = num_layers
         self.ntypes = ntypes
+        print(ntypes)
         # self.dropout = nn.Dropout(dropout)
         self.residual = residual
         self.activation = F.elu
