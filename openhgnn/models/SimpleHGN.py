@@ -67,6 +67,8 @@ class SimpleHGN(BaseModel):
         if we need the residual operation
     beta: float
         the hyperparameter used in edge residual
+    ntypes: list
+        the list of node type
     """
     @classmethod
     def build_model_from_args(cls, args, hg):
