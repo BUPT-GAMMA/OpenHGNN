@@ -20,7 +20,7 @@ class AcademicDataset(DGLDataset):
         'yelp4HeGAN': 'dataset/yelp4HeGAN.zip',
         'yelp4rec': 'dataset/yelp4rec.zip',
         'HNE-PubMed': 'dataset/HNE-PubMed.zip',
-        'MTWM': 'dataset/MTWM.zip',
+        'MTWM': 'dataset/MTWM3.zip',
         'amazon4SLICE': 'dataset/amazon4SLICE.zip',
         'amazon': 'https://zhiguli.oss-cn-hangzhou.aliyuncs.com/amazon.zip'
     }

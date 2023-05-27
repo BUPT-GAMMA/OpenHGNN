@@ -139,6 +139,7 @@ CLASS_DATASETS = {
     "imdb4GTN": "openhgnn.dataset.IMDB4GTNDataset",
     "alircd_small": "openhgnn.dataset.AliRCDSmallDataset",
     "alircd_session1": "openhgnn.dataset.AliRCDSession1Dataset",
+    "ICDM":"openhgnn.dataset.AliICDMDataset",
     "ohgbn-alircd_session1": "openhgnn.dataset.AliRCDSession1Dataset",
     "alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
     "ohgbn-alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
