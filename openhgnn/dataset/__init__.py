@@ -55,7 +55,7 @@ hgbn_datasets = ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']
 kg_lp_datasets = ['wn18', 'FB15k', 'FB15k-237']
 ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
-hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet']
+hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
 
 def build_dataset(dataset, task, *args, **kwargs):
     if isinstance(dataset, DGLDataset):
@@ -156,7 +156,8 @@ __all__ = [
     'AsLinkPredictionDataset',
     'AsNodeClassificationDataset',
     'EdgeClassificationDataset',
-    'HypergraphDataset'
+    'HypergraphDataset',
+    'AbnormEventDetectionDataset'
 ]
 
 classes = __all__
