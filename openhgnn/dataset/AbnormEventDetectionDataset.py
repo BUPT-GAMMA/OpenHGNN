@@ -24,10 +24,51 @@ class AbnormEventDetectionDataset(BaseDataset):
     -------------
     g : dgl.DGLHeteroGraph
         The heterogeneous graph.
-    center : str
+    in_dim : int
+        Dimension of node features.
+    event_features : tensor
+        All event features.
+    event_mask : tensor
+        All event mask.
+        It will be used to mask useless features.
+    neg_event_features : tensor
+        The neg event is event with fewer meta paths to target event.
+    pos_event_features : tensor
+        The pos event is event with more meta paths to target event.
+    neg_context_features : tensor
+        The neg context is that context of original event with partially replaced some nodes.
+    neg_entity_features : tensor
+        The neg entity is composed that node not with edge to target node.
+    event_list : list
+        The list composed event.
+    pos_node_set_dict : dict
+        The node's pos node set that node with edge to original node.
+    neg_node_set_dict : dict
+        The node's neg node set that node not with edge to original node.
+    neg_event_set_list : list
+        All event's neg event.
+    pos_event_set_list : list
+        All event's pos event.
+    type_max_num : dict
+        The max in the number of nodes of an event of a certain type.
+    neg_num : int
+        The size of neg entity.
+    type_label_node_list : list
+        All node of a type and a label
+    context_type_num : dict
+        A number used to represent a type.
+    type_num : torch
+        The type num will be used to compute embedding.
+    max_type_features_len : int
+        The max of dimension of all type node features.
+    center_type : str
         The center node type from the event.
-    event :
-        All events from heterogeneous graph
+    context_type : list
+        The context node type from the event.
+    event_label : tensor
+        The event label.
+        0 indicates that it is not an abnormal event.
+        1 indicates that it is an abnormal event.
     """
 
     def __init__(self, dataset_name, *args, **kwargs):
@@ -57,7 +98,27 @@ class AbnormEventDetectionDataset(BaseDataset):
         self.get_complete_events_features()
         print("get features is Ok")
 
+    def set_neg_num(self, neg_num):
+        self.neg_num = neg_num
+
     def get_batch(self, batch_size, shuffle: bool = True, device='cpu'):
+        """
+        Get all batches dataset from the tensor dataset.
+
+        Parameters
+        ----------
+        batch_size
+            Size of each batch.
+        shuffle
+            True: use random shuffle.
+            False: use original shuffle.
+        device
+            Use cpu or gpu to composed.
+
+        Returns
+        -------
+            A list is composed all batch.
+        """
         event_len = self.event_features[self.center_type].shape[0]
         shuffle_list = [n for n in range(event_len)]
         if shuffle:
@@ -158,6 +219,14 @@ class AbnormEventDetectionDataset(BaseDataset):
         return int(self.g.nodes[node[0]].data["label"][node[1]])
 
     def preprocess(self):
+        """
+        Preprocess dataset.
+        Changing heterogeneous graph dataset to that lists or sets are composed node.
+
+        Returns
+        -------
+            None
+        """
         self.context_type_num = dict()
         type_num = 0
         for tp in self.context_type:
@@ -171,7 +240,6 @@ class AbnormEventDetectionDataset(BaseDataset):
 
         with tqdm(range(center_node_number), desc='get event') as tbar:
             for i in tbar:
-                # print("get event:" + str(i) + " / " + str(center_node_number))
                 event = [(self.center_type, i)]
                 edge_types_ = self.g.canonical_etypes
                 event_context_type_node = dict()
@@ -188,7 +256,6 @@ class AbnormEventDetectionDataset(BaseDataset):
 
         with tqdm(range(center_node_number), desc='get type num') as tbar:
             for i in tbar:
-                # print("get type num:" + str(i) + " / " + str(center_node_number))
                 event = self.event_list[i]
                 type_num = dict()
                 for node in event:
@@ -204,11 +271,9 @@ class AbnormEventDetectionDataset(BaseDataset):
                             self.type_max_num[key] = type_num[key]
 
         # get event's positive and negative event
-
         have_the_node_dict = dict()
         with tqdm(range(center_node_number), desc='process pos and neg event') as tbar:
             for i in tbar:
-                # print("process pos and neg event:" + str(i) + " / " + str(center_node_number))
                 for key in events_context_type_node[i].keys():
                     if key not in have_the_node_dict.keys():
                         have_the_node_dict[key] = dict()
@@ -219,7 +284,6 @@ class AbnormEventDetectionDataset(BaseDataset):
 
         with tqdm(range(center_node_number), desc='get pos and neg event') as tbar:
             for i in tbar:
-                # print("get pos and neg event:" + str(i) + " / " + str(center_node_number))
                 pos_event_num_set = set()
                 neg_event_num_set = set()
                 meta_times = dict()
@@ -247,7 +311,6 @@ class AbnormEventDetectionDataset(BaseDataset):
                 for key, value in meta_times.items():
                     if value > maxn:
                         maxn = value
-                # print("maxn=", maxn)
                 if maxn == 0:
                     for j in range(1000):
                         can_use = False
@@ -265,49 +328,11 @@ class AbnormEventDetectionDataset(BaseDataset):
                 self.neg_event_set_list.append(neg_event_num_set)
                 self.pos_event_set_list.append(pos_event_num_set)
 
-            # minn = 100
-            # maxn = 0
-            # for j in range(center_node_number):
-            #     if i != j:
-            #         num = 0
-            #         for key in events_context_type_node[i].keys():
-            #             num += len(set(events_context_type_node[i][key]) & set(events_context_type_node[j][key]))
-            #             # print("i=", i, " j=", j, " key=", key)
-            #             # print(events_context_type_node[i][key], "    ", events_context_type_node[j][key])
-            #             # print("num=", num)
-            #         if num > maxn:
-            #             maxn = num
-            #         if num < minn:
-            #             minn = num
-            # print("minn=", minn, "  maxn=", maxn)
-            # neg_event_set = set()
-            # pos_event_set = set()
-            # for j in range(center_node_number):
-            #     if i != j:
-            #         num = 0
-            #         for key in events_context_type_node[i].keys():
-            #             num += len(set(events_context_type_node[i][key]) & set(events_context_type_node[j][key]))
-            #         if num == maxn:
-            #             pos_event_set.add(j)
-            #         if num == minn:
-            #             neg_event_set.add(j)
-            # if len(neg_event_set) > 20:
-            #     s = random.sample(neg_event_set, 20)
-            #     del neg_event_set
-            #     neg_event_set = set(s)
-            # if len(pos_event_set) > 20:
-            #     s = random.sample(pos_event_set, 20)
-            #     del pos_event_set
-            #     pos_event_set = set(s)
-            # self.neg_event_set_list.append(neg_event_set)
-            # self.pos_event_set_list.append(pos_event_set)
-
         all_type_set = dict()
         relation_type = dict()
         self.pos_node_set_dict = dict()
         with tqdm(range(center_node_number), desc='get pos node') as tbar:
             for i in tbar:
-                # print("get pos node:" + str(i) + " / " + str(center_node_number))
                 event = self.event_list[i]
                 for node in event:
                     if node[0] not in all_type_set.keys():
@@ -329,13 +354,8 @@ class AbnormEventDetectionDataset(BaseDataset):
             self.neg_node_set_dict[key] = dict()
             with tqdm(all_type_set[key], desc='get neg node '+key) as tbar:
                 for node in tbar:
-                    # print(key, '--', node[1])
                     self.neg_node_set_dict[key][node[1]] = set()
                     for tp in relation_type[key]:
-                        # if len(all_type_set[tp]) > 50:
-                        #     all_type_use = random.sample(all_type_set[tp], 50)
-                        # else:
-                        #     all_type_use = all_type_set[tp]
                         for node1 in all_type_set[tp]:
                             if node != node1 and (node1 not in self.pos_node_set_dict[node[0]][node[1]]):
                                 self.neg_node_set_dict[key][node[1]].add(node1)
@@ -361,6 +381,13 @@ class AbnormEventDetectionDataset(BaseDataset):
 
 
     def get_complete_events_features(self):
+        """
+        Get tensor datasets from the node's sets or lists.
+
+        Returns
+        -------
+            None
+        """
         self_events = []
         neg_events = []
         pos_events = []
@@ -369,7 +396,6 @@ class AbnormEventDetectionDataset(BaseDataset):
 
         len_ = len(self.event_list)
         for i in range(len(self.event_list)):
-            # print("get features: ", i, " / ", len_)
             self_event = self.event_list[i]
 
             neg_event_num = random.sample(self.neg_event_set_list[i], 1)[0]
@@ -377,21 +403,6 @@ class AbnormEventDetectionDataset(BaseDataset):
 
             pos_event_num = random.sample(self.pos_event_set_list[i], 1)[0]
             pos_event = self.event_list[pos_event_num]
-
-            # neg_entity = []
-            # type_num = dict()
-            # type_num[self.center_type] = 0
-            # for tp in self.context_type:
-            #     type_num[tp] = 0
-            # for node in self_event:
-            #     c = 10
-            #     nd = random.sample(self.neg_node_set_dict[node[0]][node[1]], 1)[0]
-            #     while c > 0 and type_num[nd[0]] == self.type_max_num[nd[0]]:
-            #         nd = random.sample(self.neg_node_set_dict[node[0]][node[1]], 1)[0]
-            #         c = c - 1
-            #     if type_num[nd[0]] < self.type_max_num[nd[0]]:
-            #         neg_entity.append(nd)
-            #         type_num[nd[0]] += 1
 
             neg_entity = []
             for node in self_event:
@@ -487,7 +498,6 @@ class AbnormEventDetectionDataset(BaseDataset):
                     type_num[key] = [self.context_type_num[key]] * len(event_features[key]) + [0] * (self.type_max_num[key] - len(event_features[key]))
                 event_features[key] += [[0.] * self.max_type_features_len] * (
                             self.type_max_num[key] - len(event_features[key]))
-                # print(self.type_max_num[key], " | ", len(event_features[key]))
                 if key not in events_features.keys():
                     events_features[key] = []
                     masks[key] = []
@@ -498,7 +508,6 @@ class AbnormEventDetectionDataset(BaseDataset):
                 events_features[key].append(event_features[key])
                 masks[key].append(mask[key])
         for key in events_features.keys():
-            # print(events_features[key])
             events_features[key] = torch.FloatTensor(events_features[key])
             masks[key] = torch.FloatTensor(masks[key])
             if key != self.center_type:

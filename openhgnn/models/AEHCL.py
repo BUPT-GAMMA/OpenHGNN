@@ -8,6 +8,41 @@ from openhgnn.models import BaseModel, register_model
 
 @register_model("AEHCL")
 class AEHCL(BaseModel):
+    r"""
+        **Title:** Abnormal Event Detection via Hypergraph Contrastive Learning
+
+        **Authors:** Bo Yan, Cheng Yang, Chuan Shi, Jiawei Liu, Xiaochen Wang
+
+        AEHCL was introduced in `[paper] <http://www.shichuan.org/doc/145.pdf>`_
+        and parameters are defined as follows:
+
+        Parameters
+        ----------
+        center_type: str
+            Center node's type.
+        context_type: list(str)
+            All context node's type.
+        in_dim: int
+            Node features' dimension.
+        out_dim: int
+            Hidden layers' dimension.
+        num_of_attention_heads: int
+            The number of attention heads.
+        batch_size: int
+            The size of each batch.
+        all_len: int
+            The number of nodes of an event.
+        weight_inter: float
+            The weight of inter loss function.
+        weight_intra_multi: float
+            The weight of intra multi loss function.
+        weight_intra_pair: float
+            The weight of intra pair loss function.
+        t: float
+            Temperature.
+
+    """
+
     @classmethod
     def build_model_from_args(cls, args):
         return AEHCL(center_type=args.center_type, context_type=args.context_type, in_dim=args.in_dim,
@@ -18,10 +53,6 @@ class AEHCL(BaseModel):
     def __init__(self, center_type, context_type, in_dim, out_dim, num_of_attention_heads, batch_size, all_len,
                  weight_inter, weight_intra_multi, weight_intra_pair, t):
         super(AEHCL, self).__init__()
-
-        # self.weight_inter = nn.Parameter(th.tensor([weight_inter, ], requires_grad=False))
-        # self.weight_intra_multi = nn.Parameter(th.tensor([weight_intra_multi, ], requires_grad=False))
-        # self.weight_intra_pair = nn.Parameter(th.tensor([weight_intra_pair, ], requires_grad=False))
 
         self.weight_inter = weight_inter
         self.weight_intra_multi = weight_intra_multi
@@ -45,32 +76,7 @@ class AEHCL(BaseModel):
                 if isinstance(model, nn.Linear):
                     nn.init.xavier_normal_(model.weight, gain=1.414)
 
-        # self.fc_inter = nn.ModuleDict()
-        # self.fc_inter[center_type] = nn.Sequential(
-        #     nn.Linear(in_dim, out_dim, bias=True),
-        #     nn.ELU(),
-        #     nn.Linear(out_dim, out_dim, bias=True),
-        # )
-        # for tp in context_type:
-        #     self.fc_inter[tp] = nn.Sequential(
-        #         nn.Linear(in_dim, out_dim, bias=True),
-        #         nn.ELU(),
-        #         nn.Linear(out_dim, out_dim, bias=True),
-        #     )
-        # for key in self.fc_inter.keys():
-        #     for model in self.fc_inter[key]:
-        #         if isinstance(model, nn.Linear):
-        #             nn.init.xavier_normal_(model.weight, gain=1.414)
-
-        # self.batch_norm1d = nn.BatchNorm1d(out_dim)
-        # self.batch_norm2d = nn.BatchNorm2d(out_dim)
-
         self.fc3 = nn.Linear(out_dim * 3, out_dim, bias=False)
-
-        # self.bl = []
-        # for i in range(num_relations):
-        #     self.bl.append(nn.Bilinear(out_dim, out_dim, 1))
-        #     self.bl[i] = self.bl[i].cuda()
 
         self.ebl = nn.Bilinear(out_dim * 2, out_dim * 2, 1)
         self.ebl_t = nn.Bilinear(out_dim, out_dim, 1)
@@ -79,17 +85,11 @@ class AEHCL(BaseModel):
         self.maxpool = nn.MaxPool2d(kernel_size=(all_len - 1, 1))
         self.att = Attention(center_type, context_type, out_dim)
 
-        # self.bias = nn.ModuleDict()
-
-        # for key in self.bias.keys():
-        #     nn.init.xavier_normal_(self.bias[key].data, gain=1.414)
-
         self.sigmoid = nn.Sigmoid()
 
         self.BCE_loss = nn.BCEWithLogitsLoss(reduction='none', pos_weight=torch.tensor([1.], dtype=torch.float32))
 
         self.center_type = center_type
-        # self.all_len = all_len
         self.batch_size = batch_size
         self.t = t
 
@@ -100,16 +100,13 @@ class AEHCL(BaseModel):
         # event
         event_center = event[self.center_type]  # (batch,1,in_dim)
         event_center_z = self.fc[self.center_type](event_center)  # (batch,1,out_dim)
-        # event_center_h = event_center_z  # self.bias[self.center_type](event_center_z)（batch,1,out_dim)
 
         event_context = dict()
         event_context_z = dict()
-        # event_context_h = dict()
         for key in event.keys():
             if key != self.center_type:
                 event_context[key] = event[key]  # (batch,len[key],in_dim)
                 event_context_z[key] = self.fc[key](event_context[key])  # (batch,len[key],out_dim)
-                # event_context_h[key] = self.bias[key](event_context_z[key]) # self.bias[key](event_context_z[key]) (batch,len[key],out_dim)
 
         event_z = dict()
         event_z[self.center_type] = event_center_z
@@ -125,7 +122,6 @@ class AEHCL(BaseModel):
 
         pos_event_features = self.att(pos_event_z)  # (batch,out_dim*2)
         pos_inter = self.ebl(pos_event_features, event_features)  # (batch,1)
-        # pos_inter = self.sigmoid(pos_inter)
 
         # neg
         neg_event_z = dict()
@@ -134,7 +130,6 @@ class AEHCL(BaseModel):
 
         neg_event_features = self.att(neg_event_z)  # (batch,out_dim*2)
         neg_inter = self.ebl(neg_event_features, event_features)  # (batch,1)
-        # neg_inter = self.sigmoid(neg_inter)
 
         # intra_multi
 
@@ -152,13 +147,12 @@ class AEHCL(BaseModel):
         pos_context = self.maxpool(pos_context)  # (batch,1,out_dim)
         pos_multi = self.ebl_t(pos_context, event_center_z)  # (batch,1,1)
         pos_multi = torch.squeeze(pos_multi, -1)  # (batch,1)
-        # pos_multi = self.sigmoid(pos_multi)
 
         # neg
         neg_context_h = dict()
         for key in neg_context.keys():
             if key != self.center_type:
-                neg_context_h[key] = self.fc[key](neg_context[key]) # self.bias[key](self.fc[key](neg_context[key]))
+                neg_context_h[key] = self.fc[key](neg_context[key])
         neg_context_ = None
         for key in neg_context_h.keys():
             if neg_context_ is None:
@@ -169,17 +163,13 @@ class AEHCL(BaseModel):
         neg_context_ = self.maxpool(neg_context_)
         neg_multi = self.ebl_t(neg_context_, event_center_z)  # (batch,1,1)
         neg_multi = torch.squeeze(neg_multi, -1)  # (batch,1)
-        # neg_multi = self.sigmoid(neg_multi)
 
         # intra_pair
 
         # pos
         pos_entity_z = event_center_z  # (batch,1,out_dim)
         pos_entity_mask = event_mask[self.center_type] # (batch,1)
-        # print("---------------------------------pos----------------------------")
-        # print('paper')
         for key in event_context_z.keys():
-            # print(key)
             pos_entity_z = torch.cat((pos_entity_z, event_context_z[key]), 1)  # (batch,all_len,out_dim)
             pos_entity_mask = torch.cat((pos_entity_mask, event_mask[key]), -1) # (batch,all_len)
         pos_norm = torch.norm(pos_entity_z, dim=-1, keepdim=True)
@@ -196,7 +186,6 @@ class AEHCL(BaseModel):
         # neg
         neg_entity_z = None
         for key in neg_entity.keys():
-            # print(key)
             if neg_entity_z is None:
                 neg_entity_z = self.fc[key](neg_entity[key])
             else:
@@ -231,8 +220,6 @@ class AEHCL(BaseModel):
         intra_multi_loss = torch.mean(intra_multi_loss)
         intra_pair_loss = torch.mean(intra_pair_loss)
 
-        # print("inter_loss=", inter_loss, "intra_multi_loss=", intra_multi_loss, "intra_pair_loss=", intra_pair_loss)
-        # self.weight_inter * inter_loss + self.weight_intra_multi * intra_multi_loss + self.weight_intra_pair * intra_pair_loss
         loss = self.weight_inter * inter_loss + self.weight_intra_multi * intra_multi_loss + self.weight_intra_pair * intra_pair_loss
 
         if self.training:
@@ -244,7 +231,6 @@ class AEHCL(BaseModel):
             intra_multi_score = self.sigmoid(pos_multi)  # (batch,1)
             intra_multi_score = torch.squeeze(intra_multi_score) # (batch)
 
-            # print(pos_matrix.shape)
             mask = torch.eye(pos_matrix.shape[1]) * 10000000.0  # (all_len,all_len)
             mask = torch.unsqueeze(mask, 0) # (1,all_len,all_len)
             mask = mask.to(pos_matrix.device)
@@ -262,12 +248,8 @@ class AEHCL(BaseModel):
             intra_pair_score = torch.FloatTensor(intra_pair_score).to(pos_matrix.device) #
             intra_pair_score = self.sigmoid(intra_pair_score)
 
-            # print(inter_score)
-            # print(intra_multi_score) - self.weight_inter * inter_score - self.weight_intra_multi * intra_multi_score
-            # print(intra_pair_score)
-            # - self.weight_inter * inter_score - self.weight_intra_multi * intra_multi_score - self.weight_intra_pair * intra_pair_score
             score = - self.weight_inter * inter_score - self.weight_intra_multi * intra_multi_score - self.weight_intra_pair * intra_pair_score # (batch)
-            # print(score)
+
             return score
 
 
@@ -299,7 +281,7 @@ class Attention(nn.Module):
                 else:
                     context_z = torch.cat((context_z, event[key]), 1)  # (batch,all_len-1,out_dim)
                     context_k = torch.cat((context_k, context_k_), 1)  # (batch,all_len-1,out_dim)
-        # assert isinstance(context_k, torch.tensor)
+
         context_coef = context_k.matmul(torch.transpose(center, 1, 2))  # (batch,all_len-1,1)
         context_coef = torch.squeeze(context_coef)  # (batch,all_len-1)
         att = self.leakyrelu(context_coef)
@@ -323,15 +305,9 @@ class SelfAttention(nn.Module):
         self.key = nn.Linear(out_dim, self.all_head_size)
         self.value = nn.Linear(out_dim, self.all_head_size)
 
-        # nn.init.xavier_normal_(self.query.weight, gain=1.414)
-        # nn.init.xavier_normal_(self.key.weight, gain=1.414)
-        # nn.init.xavier_normal_(self.value.weight, gain=1.414)
-
         self.dense = nn.Linear(self.all_head_size, out_dim)
 
         self.type_embedding = nn.Embedding(type_n, out_dim, padding_idx=0)
-
-        # nn.init.xavier_normal_(self.dense.weight, gain=1.414)
 
     def transpose_for_scores(self, x):
         new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)

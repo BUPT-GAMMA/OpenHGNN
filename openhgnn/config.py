@@ -803,6 +803,7 @@ class Config(object):
             self.weight_decay = conf.getfloat("AEHCL", "weight_decay")
             self.eval_epoch = conf.getint("AEHCL", "eval_epoch")
             self.max_epoch = conf.getint("AEHCL", "max_epoch")
+            self.neg_num = conf.getint("AEHCL", "neg_num")
 
         if gpu == -1:
             self.device = th.device('cpu')

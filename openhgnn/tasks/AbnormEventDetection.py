@@ -6,6 +6,7 @@ from sklearn.metrics import roc_auc_score, average_precision_score
 
 @register_task("abnorm_event_detection")
 class AbnormalEventDetection(BaseTask):
+    """Abnormal event detection task"""
     def __init__(self, args):
         super(AbnormalEventDetection, self).__init__()
         self.logger = args.logger
