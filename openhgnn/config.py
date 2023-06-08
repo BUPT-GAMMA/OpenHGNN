@@ -794,6 +794,25 @@ class Config(object):
             self.max_epoch = conf.getint("MeiREC", "train_epochs")
             self.batch_num = conf.getint("MeiREC", "batch_num")
 
+        elif self.model_name == 'KGAT':
+            self.seed = conf.getint("KGAT", "seed")
+            self.max_epoch = conf.getint("KGAT", "max_epoch")
+            self.stopping_steps = conf.getint("KGAT", "stopping_steps")
+            self.use_pretrain = conf.getint("KGAT", "use_pretrain")
+            self.lr = conf.getfloat("KGAT", "lr")
+            self.aggregation_type = conf.get("KGAT", "aggregation_type")
+            self.entity_dim = conf.getint("KGAT", "entity_dim")
+            self.relation_dim = conf.getint("KGAT", "relation_dim")
+            self.conv_dim_list = conf.get("KGAT", "conv_dim_list")
+            self.mess_dropout = conf.get("KGAT", "mess_dropout")
+            self.cf_l2loss_lambda = conf.getfloat("KGAT", "cf_l2loss_lambda")
+            self.kg_l2loss_lambda = conf.getfloat("KGAT", "kg_l2loss_lambda")
+            self.cf_batch_size = conf.getint("KGAT", "cf_batch_size")
+            self.kg_batch_size = conf.getint("KGAT", "kg_batch_size")
+            self.test_batch_size = conf.getint("KGAT", "test_batch_size")
+            self.multi_gpu = conf.getboolean("KGAT", "multi_gpu")
+            self.K = conf.getint("KGAT", "K")
+
         if gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
