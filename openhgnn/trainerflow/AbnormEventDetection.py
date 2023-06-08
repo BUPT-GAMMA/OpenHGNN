@@ -24,8 +24,8 @@ class AbnormEventDetection(BaseFlow):
             all_len += self.task.dataset.type_max_num[tp]
         args.all_len = all_len
         self.model = build_model(self.model).build_model_from_args(self.args).to(self.device)
-        self.metric = args.metric
-        self.evaluator = self.task.get_evaluator(self.metric)
+        self.ap = self.task.get_evaluator('AP')
+        self.auc = self.task.get_evaluator('AUC')
         self.batch_size = args.batch_size
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         self.eval_epoch = args.eval_epoch
@@ -50,8 +50,10 @@ class AbnormEventDetection(BaseFlow):
             for j in range(self.eval_epoch):
                 the_score += scores[j][i]
             the_score_all.append(the_score)
-        metric = self.evaluator(event_label, the_score_all)
-        print(self.metric+":", metric)
+        ap = self.ap(event_label, the_score_all)
+        auc = self.auc(event_label, the_score_all)
+        print("AP:", ap)
+        print("AUC:", auc)
 
     def _full_train_step(self):
         self.model.train()

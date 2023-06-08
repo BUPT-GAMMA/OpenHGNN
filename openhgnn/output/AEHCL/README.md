@@ -23,13 +23,13 @@ Evaluation metric: AUC
 
 | Method    | Aminer |
 |-----------|--------|
-| **AEHCL** | 88.    |
+| **AEHCL** | 88.54  |
 
 Evaluation metric: AP
 
 | Method    | Aminer |
 |-----------|--------|
-| **AEHCL** | 88.    |
+| **AEHCL** | 50.81  |
 
 ## TrainerFlow: [abnormal event detection](../../trainerflow/AbnormEventDetection.py)
 
