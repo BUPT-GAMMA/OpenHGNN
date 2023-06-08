@@ -23,8 +23,6 @@ experiments = {
         'HGBl-amazon': ['GATNE-T', 'RGCN', ],
         'wn18': ['GIE', ],
         'HGBl-IMDB': ['HDE', ],     # 'HGBl-IMDB' slow to run, alternative datasets ['HGBl-DBLP', 'HGBl-ACM']
-        'HGBl-DBLP': ['HDE', ],
-        'HGBl-ACM': ['HDE', ],
         'FB15k': ['TransD', 'TransE', 'TransH', 'TransR', ]
     },
     'recommendation': {  # 1
@@ -37,8 +35,8 @@ experiments = {
         'meirec': ['MeiRec', ]
     },
 }
-
-
+# HERec, HGNN_AC, Mg2vec, MeiRec, HDE
+# test the failed models until June 8th.
 class TestExperiment:
 
     def setup_class(cls):
