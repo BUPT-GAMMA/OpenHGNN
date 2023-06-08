@@ -159,9 +159,10 @@ class CompGraphConvLayer(nn.Module):
             if hg.is_block:
                 inputs_src = n_in_feats
                 inputs_dst = {k: v[:hg.number_of_dst_nodes(k)] for k, v in n_in_feats.items()}
+                outputs = self.conv(hg, (inputs_src, inputs_dst), mod_kwargs=wdict)
             else:
                 inputs_src = inputs_dst = n_in_feats
-            outputs = self.conv(hg, inputs_src, mod_kwargs=wdict)
+                outputs = self.conv(hg, inputs_src, mod_kwargs=wdict)
 
             for n, emd in outputs.items():
                 # Step 4: add results of self-loop

@@ -182,6 +182,9 @@ class GTNDataset(DGLBuiltinDataset):
         self._g = gs[0]
         self._num_classes = len(th.unique(self._g.nodes[self.target_ntype].data['label']))
         self._in_dim = self._g.ndata['h'][self.target_ntype].shape[1]
+    
+    def has_cache(self):
+        return os.path.isfile(os.path.join(self.save_path, 'graph.bin'))
 
     @property
     def target_ntype(self):

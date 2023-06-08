@@ -145,6 +145,8 @@ class Config(object):
             self.comp_fn = conf.get("CompGCN", "comp_fn")
             self.mini_batch_flag = conf.getboolean("CompGCN", "mini_batch_flag")
             self.validation = conf.getboolean("CompGCN", "validation")
+            self.fanout = conf.getint("CompGCN", "fanout")
+            self.batch_size = conf.getint("CompGCN", "batch_size")
             pass
         elif self.model_name == 'HetGNN':
             self.lr = conf.getfloat("HetGNN", "learning_rate")
@@ -705,6 +707,7 @@ class Config(object):
             self.mini_batch_flag = conf.getboolean("GIN", "mini_batch_flag")
             self.learn_eps = conf.getboolean("GIN", "learn_eps")
             self.aggregate = conf.get("GIN", "aggregate")
+            self.fanout = conf.getint("GIN", "fanout")
 
         elif self.model_name == 'RGAT':
             self.weight_decay = conf.getfloat("RGAT", "weight_decay")

@@ -95,3 +95,36 @@ def plot_number_metapath(g, meta_paths_dict, save_path=None, **kwargs):
         plt.show()
     else:
         plt.savefig(save_path)
+
+
+def vis_emb(emb, label, save_path=None):
+    """
+    This is a demo of embedding visualization.
+    Arguments:
+        `emb` (numpy.ndarray): node embeddings 
+        `label` (numpy.ndarray): node labels
+        `save_path` (str): figure path to save. 
+    
+    After training is done, using like following in your trainer:
+    ``` python
+    from openhgnn.utils import vis_emb
+    emb = self.model.get_emb()
+    label = self.task.get_labels()
+    vis_emb(emb, label, "path_to_save")
+    ```
+    """
+
+    import matplotlib.pyplot as plt
+    from sklearn import manifold
+
+    tsne = manifold.TSNE(n_components=2, init='pca', random_state=501)
+    X_tsne = tsne.fit_transform(emb)
+    x_min, x_max = X_tsne.min(0), X_tsne.max(0)
+    X_norm = (X_tsne - x_min) / (x_max - x_min)
+    color_values = label/len(set(label))
+    plt.scatter(X_norm[:,0], X_norm[:,1], cmap=plt.get_cmap('jet'), c=color_values)
+
+    if save_path is None:
+        plt.show()
+    else:
+        plt.savefig(save_path)

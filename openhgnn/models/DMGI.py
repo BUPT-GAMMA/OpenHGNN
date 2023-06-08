@@ -42,7 +42,8 @@ class DMGI(BaseModel):
             If True, adopt the attention mechanism to calculate loss . Defaults: ``False``.
         isSemi : bool
             If True, add isSemi's loss to calculate loss
-
+        nheads : int
+            the num of attention head
 
     Parameters
     ----------
