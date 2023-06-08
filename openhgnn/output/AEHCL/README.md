@@ -15,6 +15,28 @@ Code: https://github.com/BUPT-GAMMA/AEHCL
   
   If you do not have gpu, set -g -1.
 
+## Performance
+
+#### Task: Abnormal Event Detection
+
+Evaluation metric: AUC
+
+| Method    | Aminer |
+|-----------|--------|
+| **AEHCL** | 88.    |
+
+Evaluation metric: AP
+
+| Method    | Aminer |
+|-----------|--------|
+| **AEHCL** | 88.    |
+
+## TrainerFlow: [abnormal event detection](../../trainerflow/AbnormEventDetection.py)
+
+### Model
+
+- [AEHCL](https://github.com/BUPT-GAMMA/AEHCL/tree/main)
+
 ## Hyper-parameter specific to the model
 
   You can modify the parameters in openhgnn/config.ini
