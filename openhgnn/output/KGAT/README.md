@@ -1,7 +1,6 @@
 # KGAT[KDD2019]
 
-Paper: [**KGAT: Knowledge Graph Attention Network forRecommendation**](https://arxiv.org/pdf/1905.07854v2.pdf)
--   
+-   Paper: [**KGAT: Knowledge Graph Attention Network for Recommendation**](https://arxiv.org/pdf/1905.07854v2.pdf)
 -   The author's [codes](https://github.com/xiangwang1223/knowledge_graph_attention_network) is written by tensorflow.
 -   Our KGAT is reproduced based on a pytorch version provided by [here](https://github.com/LunaBlack/KGAT-pytorch)
 
@@ -9,25 +8,51 @@ Paper: [**KGAT: Knowledge Graph Attention Network forRecommendation**](https://a
 
 - Clone the Openhgnn-DGL
 
-Candidate dataset: yelp2018,amazon-book,last-fm
+Candidate dataset: yelp2018, amazon-book, last-fm
 
-To distinguish it from other models' datasets, we changed their names:
+To distinguish it from other models' datasets, we change their names:
  * yelp2018_KGAT for yelp2018
  * amazon-book_KGAT for amazon-book
  * LastFM_KGAT for last-fm
- 
- haha
- 
-  ```bash
-  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 
-  ```
+
+- Arguments
+
+``
+--lr                     Learning rate                                                                                Default is 0.0001.
+--max_epoch              Max_epoch                                                                                    Default is 1000.
+--stopping_steps         Early stopping                                                                               Default is 20.
+--use_pretrain               0: No pretrain, 1: Pretrain with the learned embeddings, 2: Pretrain with stored model   Default is 1.
+--aggregation_type       Specify the type of the aggregation layer from {gcn, graphsage, bi-interaction}              Default is bi-interaction.
+--entity_dim             User / entity Embedding size                                                                 Default is 64.
+--relation_dim           Relation Embedding size                                                                      Default is 64.
+--conv_dim_list          Output sizes of every aggregation layer                                                      Default is [64, 32, 16].
+--mess_dropout           message dropout for each deep layer                                                          Default is [0.1, 0.1, 0.1].
+--cf_l2loss_lambda       Lambda when calculating cf l2 loss                                                           Default is 1e-5.
+--kg_l2loss_lambda       Lambda when calculating kg l2 loss                                                           Default is 1e-5.
+--cf_batch_size          CF batch size                                                                                Default is 1024.
+--kg_batch_size          KG batch size                                                                                Default is 1024. 
+--test_batch_size        Test batch size (the user number to test every batch)                                        Default is 1024. 
+--multi_gpu              train with multi_gpu                                                                         Default is False.
+--K                      Calculate metric@K when evaluating                                                           Default is 20. 
+--pretrain_model_path    Trained model                                                                                Default is None.
+```
+  
+  We use pretrain embedding provided by author by default. The embedding is trained using bprmf proposed in [BPR: Bayesian Personalized Ranking from Implicit Feedback](https://dl.acm.org/citation.cfm?id=1795167)
   
   ```bash
   python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 
   ```
   
+  If you want to train your model without pretrain embedding, please set pretrain to 0 and adjust stopping_steps. Or the result will be really bad.
+ 
   ```bash
-  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 
+  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 --pretrain 0 --stopping_steps 800
+  ```
+  
+  If you want to use a trained model, please set pretrain to 2 and point out pretrain_model_path.
+  
+  ```bash
+  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 --use_pretrain 2 --pretrain_model_path (up to you) 
   ```
 
   If you do not have gpu, set -gpu -1.
@@ -35,7 +60,8 @@ To distinguish it from other models' datasets, we changed their names:
 
 ## Datasets
 
--   We process the KGCN dataset given by [KGCN](https://github.com/hwwang55/KGCN). It saved as dgl.heterograph and can be loaded by [dgl.load_graphs](https://docs.dgl.ai/en/latest/generated/dgl.load_graphs.html)
+-   We implement class: KGAT_recommendation to download and process the datasets. 
+-   Note: VPN is needed to download the datasets. Or you can still run the code and follow the instruction to download the datasets and place them on the right path.
 
 | | | Amazon-book | Last-FM | Yelp2018 |
 |:---:|:---|---:|---:|---:|
@@ -47,8 +73,6 @@ To distinguish it from other models' datasets, we changed their names:
 | | Triplets | 2,557,746 | 464,567 | 1,853,704|
 
 ## Performance:
-
-* Note:
 
 * `amazon-book`：
 
@@ -70,6 +94,8 @@ To distinguish it from other models' datasets, we changed their names:
 | :---: | :---                   | :---:      | :---:                | :---:               | :---:               |
 | paper | all test users         | --         | ---------            | 0.0712              | 0.0867              |
 | ours  | all test users         | 16         | 0.0160               | 0.0678              | 0.0446              |
+
+* Note: Recall@20 matches the performance of the original model, but NDCG@20 does not match the performance of the original model. This is probably because NDCG@20 is implemented differently in the pytorch version from the source code. We will fix this in the future.
 
 ## TrainerFlow: kgat_trainer
 
