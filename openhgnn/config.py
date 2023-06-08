@@ -794,6 +794,8 @@ class Config(object):
             self.max_epoch = conf.getint("MeiREC", "train_epochs")
             self.batch_num = conf.getint("MeiREC", "batch_num")
 
+        if hasattr(self, 'device'):
+            self.device = th.device(self.device)
         if gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
