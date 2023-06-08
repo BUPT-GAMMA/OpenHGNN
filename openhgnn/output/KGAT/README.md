@@ -1,81 +1,91 @@
 # KGAT[KDD2019]
 
 Paper: [**KGAT: Knowledge Graph Attention Network forRecommendation**](https://arxiv.org/pdf/1905.07854v2.pdf)
+-   
+-   The author's [codes](https://github.com/xiangwang1223/knowledge_graph_attention_network) is written by tensorflow.
+-   Our KGAT is reproduced based on a pytorch version provided by [here](https://github.com/LunaBlack/KGAT-pytorch)
 
-The author's [codes](https://github.com/xiangwang1223/knowledge_graph_attention_network) is written by tensorflow. 
-Our implement is reproduced based on a pytorch version provided by [LunaBlack](https://github.com/LunaBlack/KGAT-pytorch)
+## How to run
 
-#### How to run
-
-Clone the Openhgnn-DGL
+- Clone the Openhgnn-DGL
 
 Candidate dataset: yelp2018,amazon-book,last-fm
+
 To distinguish it from other models' datasets, we changed their names:
-  ·yelp2018_KGAT for yelp2018
-  ·amazon-book_KGAT for amazon-book
-  ·LastFM_KGAT for last-fm
+ * yelp2018_KGAT for yelp2018
+ * amazon-book_KGAT for amazon-book
+ * LastFM_KGAT for last-fm
+ 
+ haha
+ 
+  ```bash
+  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 
+  ```
+  
+  ```bash
+  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 
+  ```
+  
+  ```bash
+  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 
+  ```
 
-```bash
-python main.py -m HPN -t node_classification -d acm_han_raw -g 0
-```
-
-If you do not have gpu, set -gpu -1.
-
-#### Performance
-
-| HPN[OpenHGNN] | Macro-F1 | Micro-F1 |
-| ------------- | -------- | -------- |
-| acm_han_raw   | 91.80    | 91.80    |
-| acm4GTN       | 91.04    | 90.92    |
-| imdb4GTN      | 60.96    | 64.00    |
+  If you do not have gpu, set -gpu -1.
 
 
+## Datasets
 
-### TrainerFlow: node_classification
+-   We process the KGCN dataset given by [KGCN](https://github.com/hwwang55/KGCN). It saved as dgl.heterograph and can be loaded by [dgl.load_graphs](https://docs.dgl.ai/en/latest/generated/dgl.load_graphs.html)
 
-The model is  trained in semi-supervisied node classification.
+| | | Amazon-book | Last-FM | Yelp2018 |
+|:---:|:---|---:|---:|---:|
+|User-Item Interaction| Users | 70,679 | 23,566 | 45,919|
+| | Items | 24,915 | 48,123 | 45,538|
+| | Interactions | 847,733 | 3,034,796 | 1,185,068|
+|Knowledge Graph | Entities | 88,572 | 58,266 | 90,961 |
+| | Relations | 39 | 9 | 42 |
+| | Triplets | 2,557,746 | 464,567 | 1,853,704|
+
+## Performance:
+
+* Note:
+
+* `amazon-book`：
+
+| Model | Valid Data             | Best Epoch | Precision@20         | Recall@20           | NDCG@20             |
+| :---: | :---                   | :---:      | :---:                | :---:               | :---:               |
+| paper | all test users         | --         | ---------            | 0.1489              | 0.1006              |
+| ours  | all test users         | 39         | 0.0149               | 0.1431              | 0.0769              |
+
+* `last-fm`：
+
+| Model | Valid Data             | Best Epoch | Precision@20         | Recall@20           | NDCG@20             |
+| :---: | :---                   | :---:      | :---:                | :---:               | :---:               |
+| paper | all test users         | --         | ---------            | 0.0870              | 0.1325              |
+| ours  | all test users         | 82         | 0.0332               | 0.0832              | 0.0721              |
+
+* `yelp2018`：
+
+| Model | Valid Data             | Best Epoch | Precision@20         | Recall@20           | NDCG@20             |
+| :---: | :---                   | :---:      | :---:                | :---:               | :---:               |
+| paper | all test users         | --         | ---------            | 0.0712              | 0.0867              |
+| ours  | all test users         | 16         | 0.0160               | 0.0678              | 0.0446              |
+
+## TrainerFlow: kgat_trainer
 
 #### model
 
-HPNLayer
-
-SemanticFusion
-
-### Dataset
-
-Supported dataset: [acm_han_raw](../../dataset/#ACM), [acm4GTN](../../dataset/#ACM), [imdb4GTN](../../dataset/#IMDB)
-
-You can download the dataset by
-
-```
-wget https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/acm_han_raw.zip
-wget https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/acm4GTN.zip
-wget https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/imdb4GTN.zip
-```
-
-### Hyper-parameter specific to the model
-
-```python
-k_layer = 1 # iterations in Semantic Propagation
-alpha = 0.1 # Value of restart probability
-out_embedsize = 64 # Dimension of the final embedding
-edge_drop = 0 # the dropout rate on edges that controls the messages received by each node
-```
-
-Best config can be found in [best_config](../../utils/best_config.py)
-
-### Related API in DGL
-
-[dgl.metapath_reachable_graph](https://docs.dgl.ai/en/latest/generated/dgl.metapath_reachable_graph.html)
-
-[APPNPConv](https://docs.dgl.ai/en/latest/api/python/nn.pytorch.html#appnpconv)
+* KGAT
+    * Key point:
+        * Model the high-order relations in collaborative knowledge graph to provide better recommendation with item side information.
+        * Train KG part and CF part in turns.
 
 ## More
 
-#### Contirbutor
+#### Contributor
 
-Donglin Xia[GAMMA LAB]
+Yifei Shao
 
 #### If you have any questions,
 
-Submit an issue or email to [donglin.xia@bupt.edu.cn](mailto:donglin.xia@bupt.edu.cn).
+Submit an issue or email to  [myth@bupt.edu.cn](mailto:myth@bupt.edu.cn).
