@@ -438,7 +438,8 @@ class Config(object):
             self.aggregate = conf.get("KGCN", "aggregate")
             self.n_item = conf.getint("KGCN", "n_relation")
             self.n_user = conf.getint("KGCN", "n_user")
-            self.epoch_iter = conf.getint("KGCN", "epoch_iter")
+            # self.epoch_iter = conf.getint("KGCN", "epoch_iter")
+            self.max_epoch = conf.getint("KGCN", "max_epoch")
 
         elif self.model_name == 'general_HGNN':
             self.lr = conf.getfloat("general_HGNN", "lr")
@@ -787,12 +788,23 @@ class Config(object):
             # self.use_norm = conf.get("DiffMG", "use_norm")
             # self.out_nl = conf.get("DiffMG", "out_nl")
 
-        elif model == 'MeiREC':
+        elif self.model_name == 'MeiREC':
             self.lr = conf.getfloat("MeiREC", "lr")
             self.weight_decay = conf.getfloat("MeiREC", "weight_decay")
             self.vocab = conf.getint("MeiREC", "vocab_size")
             self.max_epoch = conf.getint("MeiREC", "train_epochs")
             self.batch_num = conf.getint("MeiREC", "batch_num")
+
+        elif self.model_name == 'lightGCN':
+            self.lr = conf.getfloat("lightGCN", "lr")
+            self.weight_decay = conf.getfloat("lightGCN", "weight_decay")
+            self.max_epoch = conf.getint("lightGCN", "max_epoch")
+            self.batch_size = conf.getint("lightGCN", "batch_size")
+            self.embedding_size = conf.getint("lightGCN", "embedding_size")
+            self.num_layers = conf.getint("lightGCN", "num_layers")
+            self.test_u_batch_size = conf.getint("lightGCN", "test_u_batch_size")
+            self.topks = conf.getint("lightGCN", "topks")
+            # self.alpha = conf.getfloat("lightGCN", "alpha")
 
         if gpu == -1:
             self.device = th.device('cpu')

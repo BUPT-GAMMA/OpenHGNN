@@ -57,6 +57,7 @@ class Experiment(object):
         'DHNE': 'DHNE_trainer',
         'DiffMG': 'DiffMG_trainer',
         'MeiREC': 'MeiREC_trainer',
+        'lightGCN': 'lightGCN_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 

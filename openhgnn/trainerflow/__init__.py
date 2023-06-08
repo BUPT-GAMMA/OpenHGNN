@@ -73,6 +73,7 @@ SUPPORTED_FLOWS = {
     'DHNE_trainer': 'openhgnn.trainerflow.DHNE_trainer',
     'DiffMG_trainer': 'openhgnn.trainerflow.DiffMG_trainer',
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
+    'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
 }
 
 from .node_classification import NodeClassification
@@ -96,6 +97,7 @@ from .DHNE_trainer import DHNE_trainer
 from .DiffMG_trainer import DiffMG_trainer
 from .MeiRec_trainer import MeiRECTrainer
 from .node_classification_ac import NodeClassificationAC
+from .lightGCN_trainer import lightGCNTrainer
 
 __all__ = [
     'BaseFlow',
@@ -119,5 +121,6 @@ __all__ = [
     'DHNE_trainer',
     'DiffMG_trainer',
     'MeiRECTrainer',
+    'lightGCNTrainer',
 ]
 classes = __all__

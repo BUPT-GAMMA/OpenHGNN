@@ -103,7 +103,8 @@ SUPPORTED_MODELS = {
     'DHNE': 'openhgnn.models.DHNE',
     'DiffMG': 'openhgnn.models.DiffMG',
     'MeiREC': 'openhgnn.models.MeiREC',
-    'HGNN_AC': 'openhgnn.models.HGNN_AC'
+    'HGNN_AC': 'openhgnn.models.HGNN_AC',
+    'lightGCN': 'openhgnn.models.lightGCN',
 }
 
 from .CompGCN import CompGCN
@@ -141,6 +142,7 @@ from .DHNE import DHNE
 from .DiffMG import DiffMG
 from .MeiREC import MeiREC
 from .HGNN_AC import HGNN_AC
+from .lightGCN import lightGCN
 
 __all__ = [
     'BaseModel',
@@ -175,5 +177,6 @@ __all__ = [
     'DHNE',
     'DiffMG',
     'MeiREC',
+    'lightGCN',
 ]
 classes = __all__
