@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from . import BaseFlow, register_flow
 from ..models import build_model
 from ..utils import EarlyStopping, add_reverse_edges, get_ntypes_from_canonical_etypes
+import warnings
 
 
 @register_flow("link_prediction")
@@ -83,7 +84,13 @@ class LinkPrediction(BaseFlow):
 
         self.positive_graph = self.train_hg.edge_type_subgraph(self.target_link).to(self.device)
         if self.args.mini_batch_flag:
-            self.fanouts = [-1] * self.args.num_layers
+            if not hasattr(args, 'fanout'):
+                warnings.warn("please set fanout when using mini batch training.")
+                args.fanout = -1
+            if isinstance(args.fanout, list):
+                self.fanouts = args.fanout
+            else:
+                self.fanouts = [args.fanout] * self.args.num_layers
             train_eid_dict = {
                 etype: self.train_hg.edges(etype=etype, form='eid')
                 for etype in self.target_link}
