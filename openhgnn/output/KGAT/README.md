@@ -1,20 +1,25 @@
-# HPN[TKDE2021]
+# KGAT[KDD2019]
 
-Paper: [**Heterogeneous Graph Propagation Network**](https://ieeexplore.ieee.org/abstract/document/9428609)
+Paper: [**KGAT: Knowledge Graph Attention Network forRecommendation**](https://arxiv.org/pdf/1905.07854v2.pdf)
 
-The author did not provide codes. So, we complete it according to the implementation of HAN
+The author's [codes](https://github.com/xiangwang1223/knowledge_graph_attention_network) is written by tensorflow. 
+Our implement is reproduced based on a pytorch version provided by [LunaBlack](https://github.com/LunaBlack/KGAT-pytorch)
 
 #### How to run
 
 Clone the Openhgnn-DGL
+
+Candidate dataset: yelp2018,amazon-book,last-fm
+To distinguish it from other models' datasets, we changed their names:
+  ·yelp2018_KGAT for yelp2018
+  ·amazon-book_KGAT for amazon-book
+  ·LastFM_KGAT for last-fm
 
 ```bash
 python main.py -m HPN -t node_classification -d acm_han_raw -g 0
 ```
 
 If you do not have gpu, set -gpu -1.
-
-Candidate dataset: acm_han_raw, acm4GTN, imdb4GTN
 
 #### Performance
 
