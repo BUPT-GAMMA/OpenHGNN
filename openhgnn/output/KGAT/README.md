@@ -1,8 +1,8 @@
 # KGAT[KDD2019]
 
 -   Paper: [**KGAT: Knowledge Graph Attention Network for Recommendation**](https://arxiv.org/pdf/1905.07854v2.pdf)
--   The author's [codes](https://github.com/xiangwang1223/knowledge_graph_attention_network) is written by tensorflow.
--   Our KGAT is reproduced based on a pytorch version provided by [here](https://github.com/LunaBlack/KGAT-pytorch)
+-   The author's [code](https://github.com/xiangwang1223/knowledge_graph_attention_network) is written by tensorflow.
+-   Our KGAT is reproduced based on a pytorch version [here](https://github.com/LunaBlack/KGAT-pytorch)
 
 ## How to run
 
