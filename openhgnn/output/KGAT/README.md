@@ -44,13 +44,13 @@
   python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 
   ```
   
-  If you want to train your model without pretrain embedding, please set pretrain to 0 and adjust stopping_steps. Or the result will be really bad.
+  If you want to train your model without pretrain embedding, please set use_pretrain to 0 and adjust stopping_steps. 
  
   ```bash
-  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 --pretrain 0 --stopping_steps 800
+  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 --use_pretrain 0 --stopping_steps 800
   ```
   
-  If you want to use a trained model, please set pretrain to 2 and point out pretrain_model_path.
+  If you want to use a trained model, please set use_pretrain to 2 and point out pretrain_model_path.
   
   ```bash
   python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 --use_pretrain 2 --pretrain_model_path (up to you) 
