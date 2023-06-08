@@ -8,12 +8,13 @@
 
 - Clone the Openhgnn-DGL
 
-Candidate dataset: yelp2018, amazon-book, last-fm
+- Candidate dataset: yelp2018, amazon-book, last-fm
 
-To distinguish it from other models' datasets, we change their names:
- * yelp2018_KGAT for yelp2018
- * amazon-book_KGAT for amazon-book
- * LastFM_KGAT for last-fm
+- To distinguish it from other models' datasets, we change their names:
+
+     * yelp2018_KGAT for yelp2018
+     * amazon-book_KGAT for amazon-book
+     * LastFM_KGAT for last-fm
 
 - Arguments
 
@@ -37,7 +38,7 @@ To distinguish it from other models' datasets, we change their names:
 --pretrain_model_path    Trained model                                                                                Default is None.
 ```
   
-  We use pretrain embedding provided by author by default. The embedding is trained using bprmf proposed in [BPR: Bayesian Personalized Ranking from Implicit Feedback](https://dl.acm.org/citation.cfm?id=1795167)
+  We use pretrain embedding provided by author by default. The embedding is trained using [bprmf](https://dl.acm.org/citation.cfm?id=1795167)
   
   ```bash
   python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 
