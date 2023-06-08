@@ -63,8 +63,8 @@ class KGCNTrainer(BaseFlow):
         return
 
     def train(self):   
-        epoch_iter = self.args.epoch_iter
-        for self.epoch in range(epoch_iter):
+        max_epoch = self.max_epoch
+        for self.epoch in range(max_epoch):
             self._mini_train_step()
             print('train_data:')
             self.evaluate(self.trainIndex)
