@@ -17,7 +17,7 @@ To distinguish it from other models' datasets, we change their names:
 
 - Arguments
 
-``
+```
 --lr                     Learning rate                                                                                Default is 0.0001.
 --max_epoch              Max_epoch                                                                                    Default is 1000.
 --stopping_steps         Early stopping                                                                               Default is 20.
