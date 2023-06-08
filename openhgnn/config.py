@@ -796,7 +796,7 @@ class Config(object):
 
         if hasattr(self, 'device'):
             self.device = th.device(self.device)
-        if gpu == -1:
+        elif gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
             if not th.cuda.is_available():
