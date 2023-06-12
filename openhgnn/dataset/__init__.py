@@ -76,7 +76,7 @@ def build_dataset(dataset, task, *args, **kwargs):
                      'dblp4MAGNN', 'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie',
                      'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB','amazon']:
         _dataset = 'hin_' + task
-    elif dataset in ohgbn_datasets + ohgbn_datasets:
+    elif dataset in ohgbn_datasets + ohgbl_datasets:
         _dataset = 'ohgb_' + task
     elif dataset in ['ogbn-mag']:
         _dataset = 'ogbn_' + task
