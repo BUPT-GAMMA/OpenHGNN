@@ -90,7 +90,7 @@ class HGSL(BaseModel):
             feat_dims[ntype] = hg.nodes[ntype].data['h'].shape[1]
 
         # Extract undirected_relations
-        und_rels = args.undirected_relations
+        und_rels = args.undirected_relations.split(',')
         undirected_relations = list()
         for etype in hg.canonical_etypes:
             if etype[1] in und_rels:
