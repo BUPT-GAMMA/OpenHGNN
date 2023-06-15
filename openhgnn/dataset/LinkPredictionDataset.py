@@ -447,6 +447,11 @@ class OHGB_LinkPrediction(LinkPredictionDataset):
             g = dataset[0].long()
             self.target_link = [('business', 'described-with', 'phrase')]
             self.target_link_r = [('business', 'described-with-rev', 'phrase')]
+        elif dataset_name == 'ohgbl-Freebase':
+            dataset = OHGBDataset(name=dataset_name, raw_dir='')
+            g = dataset[0].long()
+            self.target_link = [('BOOK','BOOK-and-BOOK','BOOK')]
+            self.target_link_r = [('BOOK','BOOK-and-BOOK-rev','BOOK')]
         self.g = g
     
     
