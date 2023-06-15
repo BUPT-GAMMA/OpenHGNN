@@ -192,8 +192,21 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         elif dataset_name == 'MTWM':
             dataset = AcademicDataset(name='MTWM', raw_dir='')
             g = dataset[0].long()
+            g = add_reverse_edges(g)
             self.target_link = [('user', 'user-buy-spu', 'spu')]
-            #self.target_link_r = [('spu', 'user-buy-spu-rev', 'user')]
+            self.target_link_r = [('spu', 'user-buy-spu-rev', 'user')]
+            self.meta_paths_dict = {
+                'UPU1':[('user','user-buy-poi','poi'),('poi','user-buy-poi-rev','user')],
+                'UPU2':[('user','user-click-poi','poi'),('poi','user-click-poi-rev','user')],
+                'USU':[('user','user-buy-spu','spu'),('spu','user-buy-spu-rev','user')],
+                'UPSPU1': [('user','user-buy-poi','poi'),('poi','poi-contain-spu','spu'),
+                           ('spu','poi-contain-spu-rev','poi'),('poi','user-buy-poi-rev','user')
+                           ],
+                'UPSPU2':[
+                        ('user','user-click-poi','poi'), ('poi','poi-contain-spu','spu'),
+                        ('spu','poi-contain-spu-rev','poi'),('poi','user-click-poi-rev','user')
+                    ]
+            }
             self.node_type = ['user', 'spu']
         elif dataset_name == 'HGBl-ACM':
             dataset = HGBDataset(name='HGBn-ACM', raw_dir='')
