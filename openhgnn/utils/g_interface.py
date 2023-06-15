@@ -16,8 +16,8 @@ def construct_dataset(name,task):
                     'alircd_session1',
                     'ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb',
                     'dblp4GTN',
-                    'HNE-PubMed', #修复：应该在节点里，而不是链路预测
-                    'ogbn-mag',#下载比较慢
+                    'HNE-PubMed', #Fixed: should be in 'node_classification' task, instead of 'link_prediction'
+                    'ogbn-mag',# Download speed low ...
                     'aifb', 'mutag', 'bgs', 'am',
                     'alircd_small',
                     'ICDM',
@@ -29,20 +29,19 @@ def construct_dataset(name,task):
         elif name  == "academic4HetGNN":
             return AcademicDataset("academic4HetGNN")
         
-        #修复：dblp4Mg2vec_4、dblp4Mg2vec_5大写需要改成 dblp4mg2vec_4 dblp4mg2vec_5
-        #无mg2vec这个算法，该数据集无node label
-
+        # Fixed: change 'dblp4Mg2vec_4'、'dblp4Mg2vec_5' into 'dblp4mg2vec_4'、'dblp4mg2vec_5'.
+        # No model named 'mg2vec', corresponding dataset had no node labels.
 
     elif task == 'link_prediction':
-        #amazon4SLICE 使用了节点分类的代码，先去掉
-        if name in ['amazon4SLICE', #应该在链路预测，节点分类去掉
+        #amazon4SLICE can't use for now.
+        if name in ['amazon4SLICE', 
                     'MTWM', 'HGBl-ACM',
                     'HGBl-DBLP', 'HGBl-IMDB',
                     'wn18', 'FB15k', 'FB15k-237',
                     'HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed',
                     'ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']:   
             return build_dataset(dataset=name, task=task, logger=None)
-        elif name in ['DoubanMovie']: #修复，需要单独拿出来，原来hin_link_prediction注册类里面没有
+        elif name in ['DoubanMovie']: # Fixed, no class registered in hin_link_prediction
             ds = AcademicDataset('DoubanMovie')
             ds.g = ds[0]
             return ds
