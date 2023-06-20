@@ -74,9 +74,9 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'rdf_' + task
     elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp',
                      'dblp4MAGNN', 'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie',
-                     'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB','amazon']:
+                     'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB','amazon', 'yelp4HGSL']:
         _dataset = 'hin_' + task
-    elif dataset in ohgbn_datasets + ohgbn_datasets:
+    elif dataset in ohgbn_datasets + ohgbl_datasets:
         _dataset = 'ohgb_' + task
     elif dataset in ['ogbn-mag']:
         _dataset = 'ogbn_' + task
@@ -139,6 +139,7 @@ CLASS_DATASETS = {
     "imdb4GTN": "openhgnn.dataset.IMDB4GTNDataset",
     "alircd_small": "openhgnn.dataset.AliRCDSmallDataset",
     "alircd_session1": "openhgnn.dataset.AliRCDSession1Dataset",
+    "ICDM":"openhgnn.dataset.AliICDMDataset",
     "ohgbn-alircd_session1": "openhgnn.dataset.AliRCDSession1Dataset",
     "alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
     "ohgbn-alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",

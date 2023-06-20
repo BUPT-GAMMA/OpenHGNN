@@ -35,6 +35,8 @@ class HGT(BaseModel):
         the feature drop rate
     norm: boolean
         if we need the norm operation
+    ntypes: list
+        the list of node type
     """
 
     @classmethod

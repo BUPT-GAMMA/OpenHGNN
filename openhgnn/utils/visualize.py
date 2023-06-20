@@ -77,6 +77,9 @@ def plot_number_metapath(g, meta_paths_dict, save_path=None, **kwargs):
     for meta_path_name, meta_path in meta_paths_dict.items():
         meta_path_names.append(meta_path_name)
         for i, etype in enumerate(meta_path):
+            if(isinstance(etype,list)):
+                _new_type = (etype[0],etype[1],etype[2])
+                etype = _new_type
             if i == 0:
                 adj = g.adj(etype=etype)
             else:

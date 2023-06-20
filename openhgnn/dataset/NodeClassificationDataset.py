@@ -260,6 +260,19 @@ class HIN_NodeClassification(NodeClassificationDataset):
             category = 'business'
             g = dataset[0].long()
             num_classes = 3
+        elif name_dataset == 'yelp4HGSL':
+            # yelp used for HGSL
+            dataset = AcademicDataset(name = 'yelp4HGSL', raw_dir='')
+            category = 'b'
+            g = dataset[0].long()
+            num_classes = 4
+            self.meta_paths_dict = {'bub': [('b', 'b-u', 'u'), ('u', 'u-b', 'b')],
+                                    'bsb': [('b', 'b-s', 's'), ('s', 's-b', 'b')],
+                                    'bublb': [('b', 'b-u', 'u'), ('u', 'u-b', 'b'),
+                                                ('b', 'b-l', 'l'), ('l', 'l-b', 'b')],
+                                    'bubsb': [('b', 'b-u', 'u'), ('u', 'u-b', 'b'),
+                                                ('b', 'b-s', 's'), ('s', 's-b', 'b')]
+                                    }
         elif name_dataset == 'HNE-PubMed':
             # which is used in HeGAN
             dataset = AcademicDataset(name='HNE-PubMed', raw_dir='')
