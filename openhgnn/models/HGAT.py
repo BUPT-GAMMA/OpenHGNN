@@ -196,7 +196,7 @@ class TypeAttention(nn.Module):
                     norm = torch.reshape(norm, shp)
                     feat_src = feat_src * norm
                     rel_graph.srcdata['h'] = feat_src
-                    rel_graph.update_all(Fn.copy_src('h', 'm'), Fn.sum(msg='m', out='h'))
+                    rel_graph.update_all(Fn.copy_u('h', 'm'), Fn.sum(msg='m', out='h'))
                     rst = rel_graph.dstdata['h']
                     degs = rel_graph.in_degrees().float().clamp(min=1)
                     norm = torch.pow(degs, -0.5)
@@ -212,7 +212,7 @@ class TypeAttention(nn.Module):
                                     srctype: torch.zeros((rel_graph.num_nodes(ntype = srctype),)).to(edge_attention.device)}
                     # print(rel_graph.ndata)
                     reverse_graph = dgl.reverse(rel_graph)
-                    reverse_graph.apply_edges(Fn.copy_src('m', 'alpha'))
+                    reverse_graph.apply_edges(Fn.copy_u('m', 'alpha'))
                 
                 hg.edata['alpha'] = {(srctype, etype, dsttype): reverse_graph.edata['alpha']}
                 
