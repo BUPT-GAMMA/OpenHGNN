@@ -8,6 +8,7 @@ from . import BaseFlow, register_flow
 from ..models import build_model
 from ..utils import EarlyStopping, add_reverse_edges, get_ntypes_from_canonical_etypes
 import warnings
+from torch.utils.tensorboard import SummaryWriter
 
 
 @register_flow("link_prediction")
@@ -102,6 +103,7 @@ class LinkPrediction(BaseFlow):
                 batch_size=self.args.batch_size,
                 shuffle=True, device=self.device)
             self.category = self.hg.ntypes[0]
+        self.writer = SummaryWriter(f'./openhgnn/output/{self.model_name}/')
 
     def preprocess(self):
         """
@@ -125,11 +127,14 @@ class LinkPrediction(BaseFlow):
                 val_metric = self._test_step('valid')
                 self.logger.train_info(
                     f"Epoch: {epoch:03d}, train loss: {loss:.4f}. " + self.logger.metric2str(val_metric))
+                self.writer.add_scalar('train_loss', loss, global_step=epoch)
+                self.writer.add_scalars('val_metric', val_metric['valid'], global_step=epoch)
                 early_stop = stopper.loss_step(val_metric['valid']['loss'], self.model)
                 if early_stop:
                     self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}.')
                     break
         stopper.load_model(self.model)
+        self.writer.close()
         # Test
         if self.args.test_flag:
             if self.args.dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:

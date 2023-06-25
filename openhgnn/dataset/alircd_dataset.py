@@ -9,7 +9,7 @@ import numpy as np
 import pickle as pkl
 import dgl
 
-__all__ = ['AliRCDDataset', 'AliRCDSmallDataset', 'AliRCDSession1Dataset', 'AliRCDSession2Dataset']
+__all__ = ['AliRCDDataset', 'AliRCDSmallDataset', 'AliRCDSession1Dataset', 'AliRCDSession2Dataset','AliICDMDataset']
 
 
 class AliRCDDataset(DGLBuiltinDataset):
@@ -118,6 +118,19 @@ class AliRCDDataset(DGLBuiltinDataset):
                 if new_id is not None:
                     test_mask[new_id] = True
         g.nodes[self.category].data['test_mask'] = test_mask
+
+        if self.session == "ICDM" :
+            test_labels_path = os.path.join(self.save_path, '{}_test_labels.csv'.format(self.name))
+            with open(test_labels_path, 'r') as f:
+                csvreader = csv.reader(f)
+                for row in csvreader:
+                    line = row[0].split('\t')
+                    test_label = int(float(line[1]))
+                    test_id = int(line[0])
+                    new_id = self._item_map.get(test_id)
+                    if new_id is not None:
+                        g.nodes[self.category].data['label'][new_id] = test_label
+
         self._g = g
         if self.verbose:
             print(self._g)
@@ -289,5 +302,12 @@ class AliRCDSession2Dataset(AliRCDDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
         session = 'session2'
         super(AliRCDSession2Dataset, self).__init__(session, raw_dir=raw_dir, force_reload=force_reload,
+                                                    verbose=verbose,
+                                                    transform=transform)
+        
+class AliICDMDataset(AliRCDDataset):
+    def __init__(self, raw_dir=None, force_reload=False, verbose=False, transform=None):
+        session = 'ICDM'
+        super(AliICDMDataset, self).__init__(session, raw_dir=raw_dir, force_reload=force_reload,
                                                     verbose=verbose,
                                                     transform=transform)

@@ -194,6 +194,16 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get more basic and depth usage.
 
+#### Use TensorBoard to visualize your train result
+```bash
+tensorboard --logdir=./openhgnn/output/{model_name}/
+```
+e.g.：
+```bash
+tensorboard --logdir=./openhgnn/output/RGCN/
+```
+**Note**: To visualize results, you need to train the model first.
+
 ## [Models](../openhgnn/models/#Model)
 
 ### Supported Models with specific task
