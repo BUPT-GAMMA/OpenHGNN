@@ -68,6 +68,7 @@ SUPPORTED_MODELS = {
     'Metapath2vec': 'openhgnn.models.SkipGram',
     'HERec': 'openhgnn.models.SkipGram',
     'HAN': 'openhgnn.models.HAN',
+    'RoHe': 'openhgnn.models.RoHe',
     'HeCo': 'openhgnn.models.HeCo',
     'HGT': 'openhgnn.models.HGT',
     'GTN': 'openhgnn.models.GTN_sparse',
@@ -113,6 +114,7 @@ from .RGAT import RGAT
 from .RSHN import RSHN
 from .SkipGram import SkipGram
 from .HAN import HAN
+from .RoHe import RoHe
 from .HeCo import HeCo
 from .HGT import HGT
 from .GTN_sparse import GTN
