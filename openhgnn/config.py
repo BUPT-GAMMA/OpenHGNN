@@ -438,7 +438,7 @@ class Config(object):
             self.aggregate = conf.get("KGCN", "aggregate")
             self.n_item = conf.getint("KGCN", "n_relation")
             self.n_user = conf.getint("KGCN", "n_user")
-            self.epoch_iter = conf.getint("KGCN", "max_epoch")
+            self.epoch_iter = conf.getint("KGCN", "epoch_iter")
 
         elif self.model_name == 'general_HGNN':
             self.lr = conf.getfloat("general_HGNN", "lr")
