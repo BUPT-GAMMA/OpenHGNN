@@ -4,6 +4,7 @@ import torch as th
 import numpy as np
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
+from dgl.data import CoraGraphDataset,PubmedGraphDataset,TexasDataset,CornellDataset
 import scipy.sparse as sp
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
@@ -558,3 +559,41 @@ class OGB_NodeClassification(NodeClassificationDataset):
             del hg2.nodes[ntype].data['deg']
 
         return hg2
+
+@register_dataset('common_node_classification')
+class Common_NodeClassification(NodeClassificationDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(Common_NodeClassification, self).__init__(*args, **kwargs)
+        self.g, self.category, self.num_classes = self.load_Common_dgl(dataset_name)
+        self.has_feature = True
+
+    def load_Common_dgl(self,dataset_name):
+        if dataset_name == 'Cora':
+            dataset = CoraGraphDataset()
+            g = dataset[0]
+            num_classes = dataset.num_classes
+            category = None
+        elif dataset_name == 'Pubmed':
+            dataset = PubmedGraphDataset()
+            g = dataset[0]
+            num_classes = dataset.num_classes
+            category = None
+
+        elif dataset_name == 'Texas':
+            dataset = TexasDataset()
+            g = dataset[0]
+            # g = dgl.to_bidirected(g)
+            num_classes = dataset.num_classes
+            category = None
+
+        elif dataset_name == 'Cornell':
+            dataset = CornellDataset()
+            g = dataset[0]
+            num_classes = dataset.num_classes
+            category = None
+
+        else:
+            raise ValueError()
+
+        return g,category,num_classes
+
