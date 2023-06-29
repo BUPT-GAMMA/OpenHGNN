@@ -97,6 +97,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'demo_' + task
     elif dataset in hypergraph_datasets:
         _dataset = task
+    elif dataset in common:
+        _dataset = 'common_' + task
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
