@@ -103,7 +103,7 @@ SUPPORTED_MODELS = {
     'DHNE': 'openhgnn.models.DHNE',
     'DiffMG': 'openhgnn.models.DiffMG',
     'MeiREC': 'openhgnn.models.MeiREC',
-    'HGNN_AC': 'openhgnn.models.HGNN_AC'
+    'HGNN_AC': 'openhgnn.models.HGNN_AC',
     'DSSL_openhgnn': 'openhgnn.models.DSSL_openhgnn'
 }
 
