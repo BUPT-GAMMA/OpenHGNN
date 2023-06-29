@@ -10,12 +10,19 @@ from ..utils.utils import extract_metapaths, get_ntypes_from_canonical_etypes
 
 
 
-@register_model('ATT_HGCN')
+@register_model('SHGP')
 class ATT_HGCN(BaseModel):
 
     @classmethod
     def build_model_from_args(cls, args, hg):
         ntypes = set()
+        return cls(
+                net_schema=args.net_schema,
+                layer_shape=args.layer_shape,
+                label_keys=list(args.label.keys()),
+                type_fusion=args.type_fusion,
+                type_att_size=args.type_att_size,
+        )
 
     def __init__(self, net_schema, layer_shape, label_keys, type_fusion='att', type_att_size=64):
         super(ATT_HGCN, self).__init__()

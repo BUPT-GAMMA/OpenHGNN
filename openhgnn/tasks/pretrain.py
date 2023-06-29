@@ -13,9 +13,8 @@ class Pretrain(BaseTask):
         super(Pretrain, self).__init__()
         self.args = args
         self.n_dataset = args.dataset
-        # self.dataset = build_dataset(args.dataset, 'demo')
-        # todo
-        self.dataset = MagDataset(args.train_percent)
+        self.logger = args.logger
+        self.dataset = build_dataset(args.dataset, 'pretrain', logger=self.logger, train_percent=args.train_percent)
         # self.evaluator = Evaluator()
         self.evaluator = Evaluator(args.seed)
 

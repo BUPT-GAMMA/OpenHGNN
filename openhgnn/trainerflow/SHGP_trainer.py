@@ -25,11 +25,12 @@ class SHGPTrainer(BaseFlow):
     """
 
     def __init__(self, args):
-        # super(SHGPTrainer, self).__init__(args)
+        super(SHGPTrainer, self).__init__(args)
         self.args = args
         self.target_type = args.target_type
-        # todo: self.dataset = build_dataset(args.dataset, 'pretrain')
-        self.dataset = MagDataset(args.train_percent)
+        self.logger = args.logger
+        self.train_percent = args.train_percent
+        self.dataset = self.task.dataset
         self.label = self.dataset.label
         self.ft_dict = self.dataset.ft_dict
         self.adj_dict = self.dataset.adj_dict
@@ -47,14 +48,17 @@ class SHGPTrainer(BaseFlow):
         self.layer_shape.append(self.output_layer_shape)
 
         self.net_schema = dict([(k, list(self.adj_dict[k].keys())) for k in self.adj_dict.keys()])
-        # todo
-        self.model = ATT_HGCN(
-            net_schema=self.net_schema,
-            layer_shape=self.layer_shape,
-            label_keys=list(self.label.keys()),
-            type_fusion=args.type_fusion,
-            type_att_size=args.type_att_size,
-        )
+        self.args.net_schema = self.net_schema
+        self.args.layer_shape = self.layer_shape
+        self.args.label = self.label
+        self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
+        # self.model = ATT_HGCN(
+        #     net_schema=self.net_schema,
+        #     layer_shape=self.layer_shape,
+        #     label_keys=list(self.label.keys()),
+        #     type_fusion=args.type_fusion,
+        #     type_att_size=args.type_att_size,
+        # )
 
     def preprocess(self):
         # super(SHGPTrainer, self).preprocess()

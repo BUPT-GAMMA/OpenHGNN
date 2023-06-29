@@ -1,14 +1,16 @@
-from abc import ABC, ABCMeta, abstractmethod
-
 import numpy as np
 import scipy.sparse as sp
 import torch
-from dgl.data.utils import load_graphs
 import dgl
 
+from . import BaseDataset, register_dataset
 
-class MagDataset(ABC):
-    def __init__(self, train_percent):
+
+@register_dataset('mag_dataset')
+class MagDataset(BaseDataset):
+    def __init__(self, *args, **kwargs):
+        train_percent = kwargs.pop('train_percent', 0.1)
+        super(MagDataset, self).__init__(*args, **kwargs)
         self.data_path = 'openhgnn/dataset/data/mag/'
         self.train_percent = train_percent
         self.load_odbmag_4017(self.train_percent)
@@ -60,29 +62,85 @@ class MagDataset(ABC):
         self.adj_dict = adj_dict
 
         # todo
-        graph_data = {
-            ('drug', 'interacts', 'drug'): (torch.tensor([0, 1]), torch.tensor([1, 2])),
-            ('drug', 'interacts', 'gene'): (torch.tensor([0, 1]), torch.tensor([2, 3])),
-            ('drug', 'treats', 'disease'): (torch.tensor([1]), torch.tensor([2]))
-        }
+        graph_data = {}
+
+        # Add entries for 'a' -> 'i' relationship
+        source_type = 'a'
+        edge_type = 'i'
+        target_type = 'i'
+        coo_matrix = sp_a_i.tocoo()
+        source_nodes = torch.from_numpy(coo_matrix.row)
+        target_nodes = torch.from_numpy(coo_matrix.col)
+        graph_data[(source_type, edge_type, target_type)] = (source_nodes, target_nodes)
+
+        # Add entries for 'a' -> 'p' relationship
+        source_type = 'a'
+        edge_type = 'p'
+        target_type = 'p'
+        coo_matrix = sp_a_p.tocoo()
+        source_nodes = torch.from_numpy(coo_matrix.row)
+        target_nodes = torch.from_numpy(coo_matrix.col)
+        graph_data[(source_type, edge_type, target_type)] = (source_nodes, target_nodes)
+
+        # Add entries for 'i' -> 'a' relationship
+        source_type = 'i'
+        edge_type = 'a'
+        target_type = 'a'
+        coo_matrix = sp_i_a.tocoo()
+        source_nodes = torch.from_numpy(coo_matrix.row)
+        target_nodes = torch.from_numpy(coo_matrix.col)
+        graph_data[(source_type, edge_type, target_type)] = (source_nodes, target_nodes)
+
+        # Add entries for 'f' -> 'p' relationship
+        source_type = 'f'
+        edge_type = 'p'
+        target_type = 'p'
+        coo_matrix = sp_f_p.tocoo()
+        source_nodes = torch.from_numpy(coo_matrix.row)
+        target_nodes = torch.from_numpy(coo_matrix.col)
+        graph_data[(source_type, edge_type, target_type)] = (source_nodes, target_nodes)
+
+        # Add entries for 'p' -> 'a' relationship
+        source_type = 'p'
+        edge_type = 'a'
+        target_type = 'a'
+        coo_matrix = sp_p_a.tocoo()
+        source_nodes = torch.from_numpy(coo_matrix.row)
+        target_nodes = torch.from_numpy(coo_matrix.col)
+        graph_data[(source_type, edge_type, target_type)] = (source_nodes, target_nodes)
+
+        # Add entries for 'p' -> 'f' relationship
+        source_type = 'p'
+        edge_type = 'f'
+        target_type = 'f'
+        coo_matrix = sp_p_f.tocoo()
+        source_nodes = torch.from_numpy(coo_matrix.row)
+        target_nodes = torch.from_numpy(coo_matrix.col)
+        graph_data[(source_type, edge_type, target_type)] = (source_nodes, target_nodes)
+
+        # Add entries for 'p' -> 'citing_p' relationship
+        source_type = 'p'
+        edge_type = 'citing_p'
+        target_type = 'p'
+        coo_matrix = sp_p_cp.tocoo()
+        source_nodes = torch.from_numpy(coo_matrix.row)
+        target_nodes = torch.from_numpy(coo_matrix.col)
+        graph_data[(source_type, edge_type, target_type)] = (source_nodes, target_nodes)
+
+        # Add entries for 'p' -> 'cited_p' relationship
+        source_type = 'p'
+        edge_type = 'cited_p'
+        target_type = 'p'
+        coo_matrix = sp_cp_p.tocoo()
+        source_nodes = torch.from_numpy(coo_matrix.row)
+        target_nodes = torch.from_numpy(coo_matrix.col)
+        graph_data[(source_type, edge_type, target_type)] = (source_nodes, target_nodes)
+
+        # 转换成 DGL 的异构图数据格式
         self.g = dgl.heterograph(graph_data)
-        # # 构造邻接矩阵字典
-        # self.graph_data = {
-        #     ('a', 'i', 'p'): sp_coo_2_sp_tensor(sp_a_i.tocoo()).to_dense(),
-        #     ('a', 'p', 'p'): sp_coo_2_sp_tensor(sp_a_p.tocoo()).to_dense(),
-        #     ('i', 'a', 'p'): sp_coo_2_sp_tensor(sp_i_a.tocoo()).to_dense(),
-        #     ('f', 'p', 'p'): sp_coo_2_sp_tensor(sp_f_p.tocoo()).to_dense(),
-        #     ('p', 'a', 'a'): sp_coo_2_sp_tensor(sp_p_a.tocoo()).to_dense(),
-        #     ('p', 'f', 'p'): sp_coo_2_sp_tensor(sp_p_f.tocoo()).to_dense(),
-        #     ('p', 'citing_p', 'p'): sp_coo_2_sp_tensor(sp_p_cp.tocoo()).to_dense(),
-        #     ('p', 'cited_p', 'p'): sp_coo_2_sp_tensor(sp_cp_p.tocoo()).to_dense()
-        # }
-        #
-        # # 转换成 DGL 的异构图数据格式
-        # self.g = dgl.heterograph(self.graph_data)
-        # # 将特征数据添加到异构图的节点上
-        # for ntype in self.ft_dict:
-        #     self.g.nodes[ntype].data['features'] = self.ft_dict[ntype]
+        # 将特征数据添加到异构图的节点上
+        for ntype in self.ft_dict:
+            self.g.nodes[ntype].data['features'] = self.ft_dict[ntype]
 
 
 
