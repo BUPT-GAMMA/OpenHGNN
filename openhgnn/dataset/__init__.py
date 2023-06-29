@@ -50,6 +50,7 @@ def try_import_task_dataset(task):
     return True
 
 
+common = ['Cora','Pubmed','Texas','Cornell']
 hgbl_datasets = ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']
 hgbn_datasets = ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']
 kg_lp_datasets = ['wn18', 'FB15k', 'FB15k-237']
