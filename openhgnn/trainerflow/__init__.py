@@ -73,9 +73,11 @@ SUPPORTED_FLOWS = {
     'DHNE_trainer': 'openhgnn.trainerflow.DHNE_trainer',
     'DiffMG_trainer': 'openhgnn.trainerflow.DiffMG_trainer',
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
+    'DSSL_trainerflow': 'openhgnn.trainerflow.DSSL_trainerflow'
 }
 
 from .node_classification import NodeClassification
+from .node_classification import DSSL_trainerflow
 from .link_prediction import LinkPrediction
 from .recommendation import Recommendation
 from .hetgnn_trainer import HetGNNTrainer

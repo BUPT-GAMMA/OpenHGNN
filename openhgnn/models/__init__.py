@@ -104,6 +104,7 @@ SUPPORTED_MODELS = {
     'DiffMG': 'openhgnn.models.DiffMG',
     'MeiREC': 'openhgnn.models.MeiREC',
     'HGNN_AC': 'openhgnn.models.HGNN_AC'
+    'DSSL_openhgnn': 'openhgnn.models.DSSL_openhgnn'
 }
 
 from .CompGCN import CompGCN
@@ -141,6 +142,7 @@ from .DHNE import DHNE
 from .DiffMG import DiffMG
 from .MeiREC import MeiREC
 from .HGNN_AC import HGNN_AC
+from .DSSL_openhgnn import DSSL_openhgnn
 
 __all__ = [
     'BaseModel',
