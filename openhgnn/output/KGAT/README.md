@@ -22,7 +22,7 @@
 --lr                     Learning rate                                                                                Default is 0.0001.
 --max_epoch              Max_epoch                                                                                    Default is 1000.
 --stopping_steps         Early stopping                                                                               Default is 20.
---use_pretrain               0: No pretrain, 1: Pretrain with the learned embeddings, 2: Pretrain with stored model   Default is 1.
+--use_pretrain           0: No pretrain, 1: Pretrain with the learned embeddings, 2: Pretrain with stored model       Default is 1.
 --aggregation_type       Specify the type of the aggregation layer from {gcn, graphsage, bi-interaction}              Default is bi-interaction.
 --entity_dim             User / entity Embedding size                                                                 Default is 64.
 --relation_dim           Relation Embedding size                                                                      Default is 64.
@@ -39,21 +39,30 @@
 ```
   
   We use pretrain embedding provided by author by default. The embedding is trained using [bprmf](https://dl.acm.org/citation.cfm?id=1795167)
+  Since we use some custom parameters, we need to instantiate the Experiment class ourselves.
   
   ```bash
-  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 
+  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0
+  #or
+  from openhgnn import Experiment
+  e=Experiment(model='KGAT',dataset='yelp2018_KGAT',gpu=-1,task='recommendation',use_pretrain=1)
+  e.run()
   ```
   
   If you want to train your model without pretrain embedding, please set use_pretrain to 0 and adjust stopping_steps. 
  
   ```bash
-  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 --use_pretrain 0 --stopping_steps 800
+  from openhgnn import Experiment
+  e=Experiment(model='KGAT',dataset='yelp2018_KGAT',gpu=-1,task='recommendation',use_pretrain=0,stopping_steps=800)
+  e.run()
   ```
   
   If you want to use a trained model, please set use_pretrain to 2 and point out pretrain_model_path.
   
   ```bash
-  python main.py -m KGAT -d amazon-book_KGAT -t recommendation -g 0 --use_pretrain 2 --pretrain_model_path (up to you) 
+  from openhgnn import Experiment
+  e=Experiment(model='KGAT',dataset='yelp2018_KGAT',gpu=-1,task='recommendation',use_pretrain=2,pretrain_model_path=(up to you))
+  e.run()
   ```
 
   If you do not have gpu, set -gpu -1.
