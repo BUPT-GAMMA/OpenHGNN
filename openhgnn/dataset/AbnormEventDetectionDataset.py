@@ -1,18 +1,12 @@
 import dgl
+import os
 import random
-
 import torch
-from dgl.data.utils import load_graphs
+from dgl.data.utils import load_graphs, download, extract_archive
 import torch as th
 from . import BaseDataset, register_dataset
-
 from tqdm import tqdm
 
-
-# class Node:
-#     def __init__(self, type, num):
-#         self.type = type
-#         self.num = num
 
 
 @register_dataset('abnorm_event_detection')
@@ -200,8 +194,12 @@ class AbnormEventDetectionDataset(BaseDataset):
 
     def get_graph(self, name_dataset):
         if name_dataset == 'aminer4AEHCL':
-            data_path = './openhgnn/dataset/aminer4aehcl.bin'
-            g, label = load_graphs(data_path)
+            data_path = './openhgnn/dataset/aminer4aehcl.zip'
+            if not os.path.exists(data_path):
+                # download file
+                download(url='https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/aminer4aehcl.zip', path='./openhgnn/dataset/')
+            extract_archive(data_path, './openhgnn/dataset/aminer4aehcl')
+            g, label = load_graphs('./openhgnn/dataset/aminer4aehcl/aminer4aehcl.bin')
             g = g[0]
             event_label = label["event_label"]
             center = 'paper'
