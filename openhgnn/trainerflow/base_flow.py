@@ -28,8 +28,10 @@ class BaseFlow(ABC):
         """
         super(BaseFlow, self).__init__()
         self.evaluator = None
-        self.evaluate_interval = 1
-        if hasattr(args, '_checkpoint'):
+        self.evaluate_interval = getattr(args, 'evaluate_interval', 1)
+        if hasattr(args, 'model_path'):
+            self._checkpoint = args.model_path
+        elif hasattr(args, '_checkpoint'):
             self._checkpoint = os.path.join(args._checkpoint, f"{args.model_name}_{args.dataset_name}.pt")
         else:
             if hasattr(args, 'load_from_pretrained'):

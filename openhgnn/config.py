@@ -808,7 +808,9 @@ class Config(object):
             self.max_epoch = conf.getint("AEHCL", "max_epoch")
             self.neg_num = conf.getint("AEHCL", "neg_num")
 
-        if gpu == -1:
+        if hasattr(self, 'device'):
+            self.device = th.device(self.device)
+        elif gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
             if not th.cuda.is_available():

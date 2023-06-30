@@ -5,6 +5,8 @@ from ..utils.sampler import get_node_data_loader
 from ..models import build_model
 from . import BaseFlow, register_flow
 from ..utils import EarlyStopping, to_hetero_idx, to_homo_feature, to_homo_idx
+import warnings
+from torch.utils.tensorboard import SummaryWriter
 
 
 @register_flow("node_classification")
@@ -49,12 +51,19 @@ class NodeClassification(BaseFlow):
         self.labels = self.task.get_labels().to(self.device)
         self.num_nodes_dict = {ntype: self.hg.num_nodes(ntype) for ntype in self.hg.ntypes}
         self.to_homo_flag = getattr(self.model, 'to_homo_flag', False)
+        self.writer = SummaryWriter(f'./openhgnn/output/{self.model_name}/')
 
         if self.to_homo_flag:
             self.g = dgl.to_homogeneous(self.hg)
 
         if self.args.mini_batch_flag:
-            self.fanouts = [args.fanout] * self.args.num_layers
+            if not hasattr(args, 'fanout'):
+                warnings.warn("please set fanout when using mini batch training.")
+                args.fanout = -1
+            if isinstance(args.fanout, list):
+                self.fanouts = args.fanout
+            else:
+                self.fanouts = [args.fanout] * self.args.num_layers
             sampler = dgl.dataloading.MultiLayerNeighborSampler(self.fanouts)
             use_uva = self.args.use_uva
 
@@ -72,7 +81,7 @@ class NodeClassification(BaseFlow):
 
                 self.train_loader = dgl.dataloading.DataLoader(loader_g, loader_train_idx, sampler,
                                                                batch_size=self.args.batch_size, device=self.device,
-                                                               shuffle=True, use_uva = use_uva)
+                                                               shuffle=True, use_uva=use_uva)
             if self.train_idx is not None:
                 if self.to_homo_flag:
                     loader_val_idx = to_homo_idx(self.hg.ntypes, self.num_nodes_dict, {self.category: self.val_idx}).to(
@@ -81,7 +90,7 @@ class NodeClassification(BaseFlow):
                     loader_val_idx = {self.category: self.val_idx.to(self.device)}
                 self.val_loader = dgl.dataloading.DataLoader(loader_g, loader_val_idx, sampler,
                                                              batch_size=self.args.batch_size, device=self.device,
-                                                             shuffle=True, use_uva = use_uva)
+                                                             shuffle=True, use_uva=use_uva)
             if self.args.test_flag:
                 if self.test_idx is not None:
                     if self.to_homo_flag:
@@ -91,7 +100,7 @@ class NodeClassification(BaseFlow):
                         loader_test_idx = {self.category: self.test_idx.to(self.device)}
                     self.test_loader = dgl.dataloading.DataLoader(loader_g, loader_test_idx, sampler,
                                                                   batch_size=self.args.batch_size, device=self.device,
-                                                                  shuffle=True, use_uva = use_uva)
+                                                                  shuffle=True, use_uva=use_uva)
             if self.args.prediction_flag:
                 if self.pred_idx is not None:
                     if self.to_homo_flag:
@@ -101,7 +110,7 @@ class NodeClassification(BaseFlow):
                         loader_pred_idx = {self.category: self.pred_idx.to(self.device)}
                     self.pred_loader = dgl.dataloading.DataLoader(loader_g, loader_pred_idx, sampler,
                                                                   batch_size=self.args.batch_size, device=self.device,
-                                                                  shuffle=True, use_uva = use_uva)
+                                                                  shuffle=True, use_uva=use_uva)
 
     def preprocess(self):
         r"""
@@ -169,11 +178,13 @@ class NodeClassification(BaseFlow):
                 val_loss = losses['valid']
                 self.logger.train_info(f"Epoch: {epoch}, Train loss: {train_loss:.4f}, Valid loss: {val_loss:.4f}. "
                                        + self.logger.metric2str(metric_dict))
+                self.writer.add_scalars('loss', {'train': train_loss, 'valid': val_loss}, global_step=epoch)
+                for mode in modes:
+                    self.writer.add_scalars(f'metric_{mode}', metric_dict[mode], global_step=epoch)
                 early_stop = stopper.loss_step(val_loss, self.model)
                 if early_stop:
                     self.logger.train_info('Early Stop!\tEpoch:' + str(epoch))
                     break
-
         stopper.load_model(self.model)
         if self.args.prediction_flag:
             if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
@@ -203,6 +214,7 @@ class NodeClassification(BaseFlow):
                 metric_dict, _ = self._full_test_step(modes=['valid', 'test'])
             self.logger.train_info('[Test Info]' + self.logger.metric2str(metric_dict))
             return dict(metric=metric_dict, epoch=epoch)
+        self.writer.close()
 
     def _full_train_step(self):
         self.model.train()

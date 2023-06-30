@@ -189,6 +189,16 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 请参考 [文档](https://openhgnn.readthedocs.io/en/latest/index.html) 了解更多的基础和进阶的使用方法。
 
+#### 使用TensorBoard可视化训练结果
+```bash
+tensorboard --logdir=./openhgnn/output/{model_name}/
+```
+示例：
+```bash
+tensorboard --logdir=./openhgnn/output/RGCN/
+```
+**提示**:需要先运行一次你想要可视化的模型，才能用以上命令可视化结果。
+
 ## [模型](./openhgnn/models/#Model)
 
 ### 特定任务下支持的模型

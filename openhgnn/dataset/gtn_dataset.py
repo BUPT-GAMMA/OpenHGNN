@@ -110,63 +110,68 @@ class GTNDataset(DGLBuiltinDataset):
         target_ntype = self.target_ntype
         canonical_etypes = self._canonical_etypes
 
-        with open(self.raw_path + '/node_features.pkl', 'rb') as f:
-            node_features = pickle.load(f)
-        with open(self.raw_path + '/edges.pkl', 'rb') as f:
-            edges = pickle.load(f)
-        with open(self.raw_path + '/labels.pkl', 'rb') as f:
-            labels = pickle.load(f)
+        if os.path.isfile(os.path.join(self.save_path, 'graph.bin')):# Has cache
+            graph_path = os.path.join(self.save_path, 'graph.bin')
+            gs, _ = load_graphs(graph_path)
+            g = gs[0]
+        else:
+            with open(self.raw_path + '/node_features.pkl', 'rb') as f:
+                node_features = pickle.load(f)
+            with open(self.raw_path + '/edges.pkl', 'rb') as f:
+                edges = pickle.load(f)
+            with open(self.raw_path + '/labels.pkl', 'rb') as f:
+                labels = pickle.load(f)
 
-        num_nodes = edges[0].shape[0]
-        assert len(canonical_etypes) == len(edges)
+            num_nodes = edges[0].shape[0]
+            assert len(canonical_etypes) == len(edges)
 
-        ntype_mask = dict()
-        ntype_idmap = dict()
-        ntypes = set()
-        data_dict = {}
+            ntype_mask = dict()
+            ntype_idmap = dict()
+            ntypes = set()
+            data_dict = {}
 
-        # create dgl graph
-        for etype in canonical_etypes:
-            ntypes.add(etype[0])
-            ntypes.add(etype[2])
-        for ntype in ntypes:
-            ntype_mask[ntype] = np.zeros(num_nodes, dtype=bool)
-            ntype_idmap[ntype] = np.full(num_nodes, -1, dtype=int)
-        for i, etype in enumerate(canonical_etypes):
-            src_nodes = edges[i].nonzero()[0]
-            dst_nodes = edges[i].nonzero()[1]
-            src_ntype = etype[0]
-            dst_ntype = etype[2]
-            ntype_mask[src_ntype][src_nodes] = True
-            ntype_mask[dst_ntype][dst_nodes] = True
-        for ntype in ntypes:
-            ntype_idx = ntype_mask[ntype].nonzero()[0]
-            ntype_idmap[ntype][ntype_idx] = np.arange(ntype_idx.size)
-        for i, etype in enumerate(canonical_etypes):
-            src_nodes = edges[i].nonzero()[0]
-            dst_nodes = edges[i].nonzero()[1]
-            src_ntype = etype[0]
-            dst_ntype = etype[2]
-            data_dict[etype] = \
-                (th.from_numpy(ntype_idmap[src_ntype][src_nodes]).type(th.int64),
-                 th.from_numpy(ntype_idmap[dst_ntype][dst_nodes]).type(th.int64))
-        g = dgl.heterograph(data_dict)
+            # create dgl graph
+            for etype in canonical_etypes:
+                ntypes.add(etype[0])
+                ntypes.add(etype[2])
+            for ntype in ntypes:
+                ntype_mask[ntype] = np.zeros(num_nodes, dtype=bool)
+                ntype_idmap[ntype] = np.full(num_nodes, -1, dtype=int)
+            for i, etype in enumerate(canonical_etypes):
+                src_nodes = edges[i].nonzero()[0]
+                dst_nodes = edges[i].nonzero()[1]
+                src_ntype = etype[0]
+                dst_ntype = etype[2]
+                ntype_mask[src_ntype][src_nodes] = True
+                ntype_mask[dst_ntype][dst_nodes] = True
+            for ntype in ntypes:
+                ntype_idx = ntype_mask[ntype].nonzero()[0]
+                ntype_idmap[ntype][ntype_idx] = np.arange(ntype_idx.size)
+            for i, etype in enumerate(canonical_etypes):
+                src_nodes = edges[i].nonzero()[0]
+                dst_nodes = edges[i].nonzero()[1]
+                src_ntype = etype[0]
+                dst_ntype = etype[2]
+                data_dict[etype] = \
+                    (th.from_numpy(ntype_idmap[src_ntype][src_nodes]).type(th.int64),
+                    th.from_numpy(ntype_idmap[dst_ntype][dst_nodes]).type(th.int64))
+            g = dgl.heterograph(data_dict)
 
-        # split and label
-        all_label = np.full(g.num_nodes(target_ntype), -1, dtype=int)
-        for i, split in enumerate(['train', 'val', 'test']):
-            node = np.array(labels[i])[:, 0]
-            label = np.array(labels[i])[:, 1]
-            all_label[node] = label
-            g.nodes[target_ntype].data['{}_mask'.format(split)] = \
-                th.from_numpy(idx2mask(node, g.num_nodes(target_ntype))).type(th.bool)
-        g.nodes[target_ntype].data['label'] = th.from_numpy(all_label).type(th.long)
+            # split and label
+            all_label = np.full(g.num_nodes(target_ntype), -1, dtype=int)
+            for i, split in enumerate(['train', 'val', 'test']):
+                node = np.array(labels[i])[:, 0]
+                label = np.array(labels[i])[:, 1]
+                all_label[node] = label
+                g.nodes[target_ntype].data['{}_mask'.format(split)] = \
+                    th.from_numpy(idx2mask(node, g.num_nodes(target_ntype))).type(th.bool)
+            g.nodes[target_ntype].data['label'] = th.from_numpy(all_label).type(th.long)
 
-        # node feature
-        node_features = th.from_numpy(node_features).type(th.FloatTensor)
-        for ntype in ntypes:
-            idx = ntype_mask[ntype].nonzero()[0]
-            g.nodes[ntype].data['h'] = node_features[idx]
+            # node feature
+            node_features = th.from_numpy(node_features).type(th.FloatTensor)
+            for ntype in ntypes:
+                idx = ntype_mask[ntype].nonzero()[0]
+                g.nodes[ntype].data['h'] = node_features[idx]
 
         self._g = g
         self._num_classes = len(th.unique(self._g.nodes[self.target_ntype].data['label']))

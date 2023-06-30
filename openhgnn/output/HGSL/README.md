@@ -19,10 +19,20 @@ If you do not have gpu, set -gpu -1.
 
 Node classification
 
-| Node classification | acm4GTN macro-f1 | acm4GTN micro-f1 |
+| Node classification | acm4GTN macro-f1 | acm4GTN micro-f1 | 
 | ------------------- | ----------------  | ----------------  |
 | paper               | 93.48             | 93.37             |
 | OpenHGNN            | 93.28             | 93.18             |
+
+| Node classification | dblp4GTN macro-f1 | dblp4GTN micro-f1 | 
+| ------------------- | ----------------  | ----------------  |
+| paper               | 91.92             | 92.77             |
+| OpenHGNN            | 91.28             | 92.18             |
+
+| Node classification | yelp4HGSL macro-f1 | yelp4HGSL micro-f1 | 
+| ------------------- | ----------------  | ----------------  |
+| paper               | 93.55             | 92.76             |
+| OpenHGNN            | 93.27             | 92.09             |
 
 ### TrainerFlow: node_classification
 
@@ -45,7 +55,7 @@ The model is trained in semi-supervisied node classification.
 
 ### Dataset
 
-Supported dataset: acm4GTN
+Supported dataset: acm4GTN, dblp4GTN, yelp4HGSL
 
 We process the [acm4GTN](../../dataset/#ACM) dataset with adding the metapath2vec embeddings obtained from the dataset of the author's code.
 
