@@ -794,6 +794,20 @@ class Config(object):
             self.max_epoch = conf.getint("MeiREC", "train_epochs")
             self.batch_num = conf.getint("MeiREC", "batch_num")
 
+        elif self.model_name == 'AEHCL':
+            self.lr = conf.getfloat("AEHCL", "lr")
+            self.hidden_dim = conf.getint("AEHCL", "hidden_dim")
+            self.weight_intra_pair = conf.getfloat("AEHCL", "weight_intra_pair")
+            self.weight_intra_multi = conf.getfloat("AEHCL", "weight_intra_multi")
+            self.weight_inter = conf.getfloat("AEHCL", "weight_inter")
+            self.num_of_attention_heads = conf.getint("AEHCL", "num_of_attention_heads")
+            self.t = conf.getfloat("AEHCL", "t")
+            self.batch_size = conf.getint("AEHCL", "batch_size")
+            self.weight_decay = conf.getfloat("AEHCL", "weight_decay")
+            self.eval_epoch = conf.getint("AEHCL", "eval_epoch")
+            self.max_epoch = conf.getint("AEHCL", "max_epoch")
+            self.neg_num = conf.getint("AEHCL", "neg_num")
+
         if hasattr(self, 'device'):
             self.device = th.device(self.device)
         elif gpu == -1:
