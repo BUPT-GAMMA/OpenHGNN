@@ -11,7 +11,6 @@ Code from author: https://github.com/seongjunyun/Graph_Transformer_Networks
 Clone the OpenHGNN
 
 ```bash
-# Run GTN
 python main.py -m SHGP -t pretrain -d mag -g 0 --use_best_config
 ```
 
@@ -34,16 +33,6 @@ Node classification
 ### TrainerFlow: SHGO_trainerflow
 
 The model is pre_trained by SHGP, then evaluated.
-
-#### model
-
-- [transform_relation_graph_list](../../utils/utils.py)
-  - Extract a  graph list where every graph just contains a relation.
-- [GTLayer](../../models/GTN_sparse.py)
-  - Contain GTConv
-  - Contain the product of the adjacency matrices of two graphs getting from GTConv.
-- [GTConv](../../models/GTN_sparse.py)
-  - Create a weighted graph whose adjacency matrix is the sum of the adjacency matrices of the given graph list.
 
 ### Dataset
 
