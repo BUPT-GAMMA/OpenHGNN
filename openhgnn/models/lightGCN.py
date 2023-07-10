@@ -9,6 +9,38 @@ from dgl.utils import expand_as_pair
 @register_model('lightGCN')
 class lightGCN(BaseModel):
 
+    r"""
+        This module lightGCN was introduced in `lightGCN <https://dl.acm.org/doi/abs/10.1145/3397271.3401063>`__.
+
+        The difference with GCN is that aggregate the entity representation and its neighborhood representation into the entity's embedding, but don't use feature transformation and nonlinear
+        activation.
+        The message function is defined as follow:
+
+        :math:`\mathbf{e}_u^{(k+1)}=\operatorname{AGG}\left(\mathbf{e}_u^{(k)},\left\{\mathbf{e}_i^{(k)}: i \in \mathcal{N}_u\right\}\right)`
+
+        The AGG is an aggregation function — the core of graph convolution — that considers the k-th layer’s representation of the target node and its neighbor nodes.
+
+
+        In LightGCN, we adopt the simple weighted sum aggregator and abandon the use of feature transformation and nonlinear activation.
+        :math:`\mathbf{e}_u^{(k+1)}=\sum_{i \in \mathcal{N}_u} \frac{1}{\sqrt{\left|\mathcal{N}_u\right|} \sqrt{\left|\mathcal{N}_i\right|}}`
+        :math:`\mathbf{e}_i^{(k)}, \\ & \mathbf{e}_i^{(k+1)}=\sum_{u \in \mathcal{N}_i} \frac{1}{\sqrt{\left|\mathcal{N}_i\right|} \sqrt{\left|\mathcal{N}_u\right|}} \mathbf{e}_u^{(k)}`
+
+        In the above equations, :math:`\sigma` is the nonlinear function and
+        :math:`\mathrm{W}` and :math:`\mathrm{b}` are transformation weight and bias.
+        the representation of an item is bound up with its neighbors by aggregation
+
+        The model prediction is defined as the inner product of user and
+        item final representations:
+
+        :math:`\hat{y}_{u i}=\mathbf{e}_u^T \mathbf{e}_i`
+
+        Parameters
+        ----------
+        g : DGLGraph
+            A knowledge Graph preserves relationships between entities
+        args : Config
+            Model's config
+        """
     @classmethod
     def build_model_from_args(cls, args, g):
         return cls(g, args)
