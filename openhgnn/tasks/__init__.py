@@ -56,6 +56,7 @@ SUPPORTED_TASKS = {
     'edge_classification': 'openhgnn.tasks.edge_classification',
     'hypergraph': 'openhgnn.tasks.hypergraph',
     'meirec': 'openhgnn.tasks.meirec',
+    'pretrain': 'openhgnn.tasks.pretrain',
 }
 
 from .node_classification import NodeClassification
@@ -70,7 +71,8 @@ __all__ = [
     'LinkPrediction',
     'Recommendation',
     'EdgeClassification',
-    'hypergraph'
+    'hypergraph',
+    'pretrain'
 ]
 
 classes = __all__

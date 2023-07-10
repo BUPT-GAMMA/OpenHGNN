@@ -73,6 +73,7 @@ SUPPORTED_FLOWS = {
     'DHNE_trainer': 'openhgnn.trainerflow.DHNE_trainer',
     'DiffMG_trainer': 'openhgnn.trainerflow.DiffMG_trainer',
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
+    'SHGP_trainer': 'openhgnn.trainerflow.SHGP_trainer',
 }
 
 from .node_classification import NodeClassification

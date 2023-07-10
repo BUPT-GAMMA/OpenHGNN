@@ -95,6 +95,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'hin_' + task
     elif dataset == 'demo':
         _dataset = 'demo_' + task
+    elif dataset == 'mag':
+        _dataset = 'mag_dataset'
     elif dataset in hypergraph_datasets:
         _dataset = task
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
@@ -105,7 +107,8 @@ SUPPORTED_DATASETS = {
     "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
     "recommendation": "openhgnn.dataset.RecommendationDataset",
     "edge_classification": "openhgnn.dataset.EdgeClassificationDataset",
-    "hypergraph":"openhgnn.dataset.HypergraphDataset"
+    "hypergraph":"openhgnn.dataset.HypergraphDataset",
+    "pretrain":"openhgnn.dataset.mag_dataset"
 }
 
 from .NodeClassificationDataset import NodeClassificationDataset
@@ -143,6 +146,7 @@ CLASS_DATASETS = {
     "ohgbn-alircd_session1": "openhgnn.dataset.AliRCDSession1Dataset",
     "alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
     "ohgbn-alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
+    "pretrain":"openhgnn.dataset.mag_dataset"
 }
 
 __all__ = [
@@ -157,7 +161,8 @@ __all__ = [
     'AsLinkPredictionDataset',
     'AsNodeClassificationDataset',
     'EdgeClassificationDataset',
-    'HypergraphDataset'
+    'HypergraphDataset',
+    'mag_dataset',
 ]
 
 classes = __all__
