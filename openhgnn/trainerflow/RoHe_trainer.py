@@ -11,6 +11,7 @@ import random
 import pickle as pkl
 import copy
 import warnings
+import urllib.request
 
 from . import BaseFlow, register_flow
 from ..models import build_model
@@ -353,7 +354,7 @@ class RoHeTrainer(BaseFlow):
 
     def generate_attacks_metric_dict(self, raw=False):
         warnings.filterwarnings('ignore')
-        tar_nodes_num = 100  # Follow the author, take 100 target nodes as example, which can be change to 500 in codes.
+        tar_nodes_num = 100
         tar_idx = sorted(random.sample(range(self.hg.num_nodes(self.category)), tar_nodes_num))
         if raw:
             print(
@@ -373,10 +374,15 @@ class RoHeTrainer(BaseFlow):
             _, micro_f1, macro_f1 = self.score(logits[tar_idx], self.labels[tar_idx])
             print(f"RoHe-HAN in raw data:  Micro-F1: {micro_f1:.3f} Macro-F1: {macro_f1:.3f}")
 
-        n_perturbation = 1
-        adv_filename = './openhgnn/output/RoHe/adv_acm_pap_pa_' + str(n_perturbation) + '.pkl'
-        # load adversarial attacks for each target node
-        with open(adv_filename, 'rb') as f:
+        n_perturbation = [1, 3, 5]
+        adv_filename = 'adv_acm_pap_pa_' + str(n_perturbation[0]) + '.pkl'
+        file_local_path = './openhgnn/output/RoHe/' + adv_filename
+        # download adversarial attacks
+        if not os.path.exists(file_local_path):
+            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/" + adv_filename
+            urllib.request.urlretrieve(url, file_local_path)
+        # 1.load adversarial attacks for each target node
+        with open(file_local_path, 'rb') as f:
             modified_opt = pkl.load(f)
         # 2.attack
         logits_adv = []
