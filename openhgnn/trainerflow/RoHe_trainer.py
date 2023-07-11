@@ -18,6 +18,7 @@ from ..models import build_model
 from ..layers.HeteroLinear import HeteroFeature
 from ..utils import EarlyStopping
 from ..utils.utils import get_nodes_dict
+from ..sampler import HANSampler
 
 
 @register_flow("RoHe_trainer")
