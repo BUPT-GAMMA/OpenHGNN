@@ -53,6 +53,7 @@ class Experiment(object):
             'node_classification': 'han_nc_trainer',
             'link_prediction': 'han_lp_trainer',
         },
+        'RoHe': 'RoHe_trainer',
         'Mg2vec': 'mg2vec_trainer',
         'DHNE': 'DHNE_trainer',
         'DiffMG': 'DiffMG_trainer',

@@ -105,7 +105,7 @@ class EarlyStopping(object):
             self.save_model(model)
         elif (loss > self.best_loss) and (score < self.best_score):
             self.counter += 1
-            # print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -136,11 +136,11 @@ class EarlyStopping(object):
 
     def loss_step(self, loss, model):
         """
-        
+
         Parameters
         ----------
         loss Float or torch.Tensor
-        
+
         model torch.nn.Module
 
         Returns
@@ -393,11 +393,11 @@ def extract_metapaths(category, canonical_etypes, self_loop=False):
 
 def to_hetero_feat(h, type, name):
     """Feature convert API.
-    
+
     It uses information about the type of the specified node
     to convert features ``h`` in homogeneous graph into a heteorgeneous
     feature dictionay ``h_dict``.
-    
+
     Parameters
     ----------
     h: Tensor
@@ -407,15 +407,15 @@ def to_hetero_feat(h, type, name):
         It should correspond to the parameter ``name``.
     name: list
         The node or edge types list.
-    
+
     Return
     ------
     h_dict: dict
         output feature dictionary of heterogeneous graph
-    
+
     Example
     -------
-    
+
     >>> h = torch.tensor([[1, 2, 3],
                           [1, 1, 1],
                           [0, 2, 1],
@@ -431,7 +431,7 @@ def to_hetero_feat(h, type, name):
     [0, 2, 1],
     [1, 3, 3]]), 'paper': tensor([[1, 1, 1],
     [2, 1, 1]])}
-    
+
     """
     h_dict = {}
     for index, ntype in enumerate(name):
