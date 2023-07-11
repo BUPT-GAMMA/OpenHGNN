@@ -103,9 +103,11 @@ SUPPORTED_MODELS = {
     'DHNE': 'openhgnn.models.DHNE',
     'DiffMG': 'openhgnn.models.DiffMG',
     'MeiREC': 'openhgnn.models.MeiREC',
-    'HGNN_AC': 'openhgnn.models.HGNN_AC'
+    'HGNN_AC': 'openhgnn.models.HGNN_AC',
+    'HGCL': 'openhgnn.models.HGCL'
 }
 
+from .HGCL import HGCL
 from .CompGCN import CompGCN
 from .HetGNN import HetGNN
 from .RGCN import RGCN
