@@ -73,8 +73,10 @@ SUPPORTED_FLOWS = {
     'DHNE_trainer': 'openhgnn.trainerflow.DHNE_trainer',
     'DiffMG_trainer': 'openhgnn.trainerflow.DiffMG_trainer',
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
+     'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer'
 }
 
+from .hgcl_trainer import HGCLtrainer
 from .node_classification import NodeClassification
 from .link_prediction import LinkPrediction
 from .recommendation import Recommendation
@@ -119,5 +121,6 @@ __all__ = [
     'DHNE_trainer',
     'DiffMG_trainer',
     'MeiRECTrainer',
+    'HGCLtrainer'
 ]
 classes = __all__
