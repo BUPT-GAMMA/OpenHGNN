@@ -794,6 +794,26 @@ class Config(object):
             self.max_epoch = conf.getint("MeiREC", "train_epochs")
             self.batch_num = conf.getint("MeiREC", "batch_num")
 
+        elif model == 'HGCL':
+            self.lr = conf.getfloat("HGCL", "lr")
+            self.batch = conf.getint("HGCL", "batch")
+            self.wu1 = conf.getfloat('HGCL', "wu1")
+            self.wu2 = conf.getfloat("HGCL", "wu2")
+            self.wi1 = conf.getfloat("HGCL", "wi1")
+            self.wi2 = conf.getfloat("HGCL", "wi2")
+            self.epochs = conf.getint("HGCL", "epochs")
+            self.topk = conf.getint("HGCL", "topk")
+            self.hide_dim = conf.getint("HGCL", "hide_dim")
+            self.reg = conf.getfloat("HGCL", "reg")
+            self.metareg = conf.getfloat("HGCL", "metareg")
+            self.ssl_temp = conf.getfloat("HGCL", "ssl_temp")
+            self.ssl_ureg = conf.getfloat("HGCL", "ssl_ureg")
+            self.ssl_ireg = conf.getfloat("HGCL", "ssl_ireg")
+            self.ssl_reg = conf.getfloat("HGCL", "ssl_reg")
+            self.ssl_beta = conf.getfloat("HGCL", "ssl_beta")
+            self.rank = conf.getint("HGCL", "rank")
+            self.Layers = conf.getint("HGCL", "Layers")
+            
         if gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
