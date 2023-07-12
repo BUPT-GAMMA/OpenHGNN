@@ -75,7 +75,7 @@ SUPPORTED_FLOWS = {
     'DiffMG_trainer': 'openhgnn.trainerflow.DiffMG_trainer',
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
     'abnorm_event_detection': 'openhgnn.trainerflow.AbnormEventDetection',
-    'KGAT_trainer': 'openhgnn.trainerflow.KGAT_trainer'
+    'KGAT_trainer': 'openhgnn.trainerflow.KGAT_trainer',
     'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer'
 
 }
