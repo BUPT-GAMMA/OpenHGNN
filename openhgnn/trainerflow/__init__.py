@@ -75,6 +75,7 @@ SUPPORTED_FLOWS = {
     'DiffMG_trainer': 'openhgnn.trainerflow.DiffMG_trainer',
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
     'abnorm_event_detection': 'openhgnn.trainerflow.AbnormEventDetection',
+    'KGAT_trainer': 'openhgnn.trainerflow.KGAT_trainer'
 }
 
 from .node_classification import NodeClassification
@@ -98,6 +99,7 @@ from .mg2vec_trainer import Mg2vecTrainer
 from .DHNE_trainer import DHNE_trainer
 from .DiffMG_trainer import DiffMG_trainer
 from .MeiRec_trainer import MeiRECTrainer
+from .kgat_trainer import KGAT_Trainer
 from .node_classification_ac import NodeClassificationAC
 
 __all__ = [
@@ -122,5 +124,6 @@ __all__ = [
     'DHNE_trainer',
     'DiffMG_trainer',
     'MeiRECTrainer',
+    'KGAT_Trainer'
 ]
 classes = __all__

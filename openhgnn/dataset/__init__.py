@@ -97,6 +97,11 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'demo_' + task
     elif dataset in hypergraph_datasets:
         _dataset = task
+    elif dataset in ['LastFM_KGAT','yelp2018_KGAT','amazon-book_KGAT']:
+        change_name={'LastFM_KGAT':'last-fm','yelp2018_KGAT':'yelp2018','amazon-book_KGAT':'amazon-book'}
+        dataset=change_name[dataset]
+        _dataset='kgat_recommendation'
+
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
