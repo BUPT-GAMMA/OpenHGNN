@@ -51,7 +51,7 @@ def update_moving_average(target_ema_updater, ma_model, current_model):
 
 class GCN(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers=2,
-                 dropout=0.5, save_mem=False, use_bn=True):
+                 dropout=0.5, device='cpu', save_mem=False, use_bn=True):
         super(GCN, self).__init__()
         cached = False
         add_self_loops = True
@@ -81,7 +81,7 @@ class GCN(nn.Module):
         self.dropout = dropout
         self.activation = F.relu
         self.use_bn = use_bn
-        self.device = 'cuda:{}'.format(0) if torch.cuda.is_available() else 'cpu'
+        self.device = device
 
     def reset_parameters(self):
         for conv in self.convs:
@@ -130,7 +130,8 @@ class DSSL(BaseModel):
                           hidden_channels=args.hidden_channels,
                           out_channels=args.hidden_channels,
                           num_layers=args.num_layers, use_bn=not args.no_bn,
-                          dropout=args.dropout).to(args.device)
+                          dropout=args.dropout,
+                          device = args.device).to(args.device)
         return cls(encoder,args.hidden_channels,args.dataset,args.device,args.cluster_num,args.alpha,args.gamma,args.tao,
             args.beta,args.tau)
 

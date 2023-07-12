@@ -10,7 +10,7 @@ from openhgnn.experiment import Experiment
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', default='DSSL', type=str, help='name of models')
-    parser.add_argument('--task', '-t', default='DSSL', type=str, help='name of task')
+    parser.add_argument('--task', '-t', default='DSSL_trainer', type=str, help='name of task')
     # link_prediction / node_classification
     parser.add_argument('--dataset', '-d', default='Cora', type=str, help='name of datasets')
     parser.add_argument('--gpu', '-g', default='-1', type=int, help='-1 means cpu')
