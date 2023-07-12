@@ -182,7 +182,7 @@ __all__ = [
     'DHNE',
     'DiffMG',
     'MeiREC',
-    'KGAT'
+    'KGAT',
     'DSSL'
 ]
 classes = __all__

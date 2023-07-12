@@ -10,9 +10,9 @@ from openhgnn.experiment import Experiment
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', default='DSSL', type=str, help='name of models')
-    parser.add_argument('--task', '-t', default='node_classification', type=str, help='name of task')
+    parser.add_argument('--task', '-t', default='DSSL', type=str, help='name of task')
     # link_prediction / node_classification
-    parser.add_argument('--dataset', '-d', default='acm4GTN', type=str, help='name of datasets')
+    parser.add_argument('--dataset', '-d', default='Cora', type=str, help='name of datasets')
     parser.add_argument('--gpu', '-g', default='-1', type=int, help='-1 means cpu')
     parser.add_argument('--use_best_config', action='store_true', help='will load utils.best_config')
     parser.add_argument('--load_from_pretrained', action='store_true', help='load model from the checkpoint')
