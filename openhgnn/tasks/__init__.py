@@ -57,6 +57,7 @@ SUPPORTED_TASKS = {
     'hypergraph': 'openhgnn.tasks.hypergraph',
     'meirec': 'openhgnn.tasks.meirec',
     'abnorm_event_detection': 'openhgnn.tasks.AbnormEventDetection'
+    'DSSL_trainer': 'openhgnn.tasks.DSSL_task'
 }
 
 from .node_classification import NodeClassification
@@ -64,6 +65,7 @@ from .link_prediction import LinkPrediction
 from .recommendation import Recommendation
 from .edge_classification import EdgeClassification
 from .hypergraph import hypergraph
+from .node_classification import DSSL_task
 
 __all__ = [
     'BaseTask',

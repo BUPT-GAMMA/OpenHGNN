@@ -76,6 +76,8 @@ SUPPORTED_FLOWS = {
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
     'abnorm_event_detection': 'openhgnn.trainerflow.AbnormEventDetection',
     'KGAT_trainer': 'openhgnn.trainerflow.KGAT_trainer'
+    'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer'
+
 }
 
 from .node_classification import NodeClassification
@@ -101,6 +103,7 @@ from .DiffMG_trainer import DiffMG_trainer
 from .MeiRec_trainer import MeiRECTrainer
 from .kgat_trainer import KGAT_Trainer
 from .node_classification_ac import NodeClassificationAC
+from .DSSL_trainer import DSSL_trainer
 
 __all__ = [
     'BaseFlow',
@@ -125,5 +128,6 @@ __all__ = [
     'DiffMG_trainer',
     'MeiRECTrainer',
     'KGAT_Trainer'
+    'DSSL_trainer'
 ]
 classes = __all__
