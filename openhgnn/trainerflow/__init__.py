@@ -127,7 +127,7 @@ __all__ = [
     'DHNE_trainer',
     'DiffMG_trainer',
     'MeiRECTrainer',
-    'KGAT_Trainer'
+    'KGAT_Trainer',
     'DSSL_trainer'
 ]
 classes = __all__

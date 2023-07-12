@@ -7,7 +7,7 @@ from ..models import build_model
 from . import BaseFlow, register_flow
 from ..utils import EarlyStopping, to_hetero_idx, to_homo_feature, to_homo_idx
 import math
-from ..models.DSSL_openhgnn import LogisticRegression
+from ..models.DSSL import LogisticRegression
 
 import numpy as np
 

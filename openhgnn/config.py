@@ -863,7 +863,7 @@ class Config(object):
             self.gamma = conf.getfloat("DSSL", "gamma")
             self.entropy = conf.getfloat("DSSL", "entropy")
             self.tau = conf.getfloat("DSSL", "tau")
-            self.encoder = conf.getstring("DSSL", "encoder")
+            self.encoder = conf.get("DSSL", "encoder")
             self.mlp_bool = conf.getint("DSSL", "mlp_bool")
             self.tao = conf.getint("DSSL", "tao")
             self.beta = conf.getint("DSSL", "beta")

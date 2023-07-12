@@ -56,7 +56,7 @@ SUPPORTED_TASKS = {
     'edge_classification': 'openhgnn.tasks.edge_classification',
     'hypergraph': 'openhgnn.tasks.hypergraph',
     'meirec': 'openhgnn.tasks.meirec',
-    'abnorm_event_detection': 'openhgnn.tasks.AbnormEventDetection'
+    'abnorm_event_detection': 'openhgnn.tasks.AbnormEventDetection',
     'DSSL_trainer': 'openhgnn.tasks.DSSL_task'
 }
 
