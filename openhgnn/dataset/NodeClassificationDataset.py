@@ -582,6 +582,7 @@ class Common_NodeClassification(NodeClassificationDataset):
         elif dataset_name == 'Texas':
             dataset = TexasDataset()
             g = dataset[0]
+            g = dgl.add_self_loop(g)
             # g = dgl.to_bidirected(g)
             num_classes = dataset.num_classes
             category = None
@@ -589,6 +590,7 @@ class Common_NodeClassification(NodeClassificationDataset):
         elif dataset_name == 'Cornell':
             dataset = CornellDataset()
             g = dataset[0]
+            g = dgl.add_self_loop(g)
             num_classes = dataset.num_classes
             category = None
 
