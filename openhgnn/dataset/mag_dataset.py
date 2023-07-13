@@ -1,7 +1,10 @@
+import os
+
 import numpy as np
 import scipy.sparse as sp
 import torch
 import dgl
+from dgl.data import download, extract_archive
 
 from . import BaseDataset, register_dataset
 
@@ -11,14 +14,20 @@ class MagDataset(BaseDataset):
     def __init__(self, *args, **kwargs):
         train_percent = kwargs.pop('train_percent', 0.1)
         super(MagDataset, self).__init__(*args, **kwargs)
-        self.data_path = 'openhgnn/dataset/data/mag/'
+        self.data_path = 'openhgnn/dataset/data/mag.zip'
+        self.raw_dir = 'openhgnn/dataset/data/'
+        self.g_path = 'openhgnn/dataset/data/mag/mag/'
+        self.name = 'mag'
+        self.url = 'https://raw.githubusercontent.com/MoonLight-Sherry/OpenHGNN/main/openhgnn/dataset/data/test/mag.zip'
+        # self.url = 'http://localhost:8000/mag.zip'
         self.train_percent = train_percent
+        self.download()
         self.load_odbmag_4017(self.train_percent)
 
 
 
     def load_odbmag_4017(self, train_percent):
-        feats = np.load(self.data_path + 'feats.npz', allow_pickle=True)
+        feats = np.load(self.g_path + 'feats.npz', allow_pickle=True)
         p_ft = feats['p_ft']
         a_ft = feats['a_ft']
         i_ft = feats['i_ft']
@@ -30,7 +39,7 @@ class MagDataset(BaseDataset):
         ft_dict['i'] = torch.FloatTensor(i_ft)
         ft_dict['f'] = torch.FloatTensor(f_ft)
 
-        p_label = np.load(self.data_path + 'p_label.npy', allow_pickle=True)
+        p_label = np.load(self.g_path + 'p_label.npy', allow_pickle=True)
         p_label = torch.LongTensor(p_label)
 
         idx_train_p, idx_val_p, idx_test_p = train_val_test_split(p_label.shape[0], train_percent)
@@ -38,14 +47,14 @@ class MagDataset(BaseDataset):
         label = {}
         label['p'] = [p_label, idx_train_p, idx_val_p, idx_test_p]
 
-        sp_a_i = sp.load_npz(self.data_path + 'norm_sp_a_i.npz')
-        sp_i_a = sp.load_npz(self.data_path + 'norm_sp_i_a.npz')
-        sp_a_p = sp.load_npz(self.data_path + 'norm_sp_a_p.npz')
-        sp_p_a = sp.load_npz(self.data_path + 'norm_sp_p_a.npz')
-        sp_p_f = sp.load_npz(self.data_path + 'norm_sp_p_f.npz')
-        sp_f_p = sp.load_npz(self.data_path + 'norm_sp_f_p.npz')
-        sp_p_cp = sp.load_npz(self.data_path + 'norm_sp_p_cp.npz')
-        sp_cp_p = sp.load_npz(self.data_path + 'norm_sp_cp_p.npz')
+        sp_a_i = sp.load_npz(self.g_path + 'norm_sp_a_i.npz')
+        sp_i_a = sp.load_npz(self.g_path + 'norm_sp_i_a.npz')
+        sp_a_p = sp.load_npz(self.g_path + 'norm_sp_a_p.npz')
+        sp_p_a = sp.load_npz(self.g_path + 'norm_sp_p_a.npz')
+        sp_p_f = sp.load_npz(self.g_path + 'norm_sp_p_f.npz')
+        sp_f_p = sp.load_npz(self.g_path + 'norm_sp_f_p.npz')
+        sp_p_cp = sp.load_npz(self.g_path + 'norm_sp_p_cp.npz')
+        sp_cp_p = sp.load_npz(self.g_path + 'norm_sp_cp_p.npz')
 
         adj_dict = {'p': {}, 'a': {}, 'i': {}, 'f': {}}
         adj_dict['a']['i'] = sp_coo_2_sp_tensor(sp_a_i.tocoo())
@@ -61,7 +70,6 @@ class MagDataset(BaseDataset):
         self.ft_dict = ft_dict
         self.adj_dict = adj_dict
 
-        # todo
         graph_data = {}
 
         # Add entries for 'a' -> 'i' relationship
@@ -141,6 +149,17 @@ class MagDataset(BaseDataset):
         # 将特征数据添加到异构图的节点上
         for ntype in self.ft_dict:
             self.g.nodes[ntype].data['features'] = self.ft_dict[ntype]
+
+    def download(self):
+        # download raw data to local disk
+        # path to store the file
+        if os.path.exists(self.data_path):  # pragma: no cover
+           pass
+        else:
+            file_path = os.path.join(self.raw_dir)
+            # download file
+            download(self.url, path=file_path)
+        extract_archive(self.data_path, os.path.join(self.raw_dir, self.name))
 
 
 

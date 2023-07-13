@@ -5,18 +5,12 @@ import numpy as np
 import torch as th
 from sklearn.metrics import f1_score
 from torch import nn
-from torch_geometric.graphgym import optim
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
 from . import BaseFlow, register_flow
-from ..dataset.mag_dataset import MagDataset
 from ..models import build_model
-from ..dataset import build_dataset
-from ..models.ATT_HGCN import ATT_HGCN
 from ..models.LogReg import LogReg
-from ..utils import EarlyStopping, add_reverse_edges, get_ntypes_from_canonical_etypes
-
 
 @register_flow("SHGP_trainer")
 class SHGPTrainer(BaseFlow):
@@ -81,7 +75,7 @@ class SHGPTrainer(BaseFlow):
             loss_list = []
             init_pseudo_label = 0
             pseudo_pseudo_label = 0
-            optimizer = optim.Adam(self.model.parameters(), lr=self.args.lr, weight_decay=self.args.l2_coef)
+            optimizer = torch.optim.Adam(self.model.parameters(), lr=self.args.lr, weight_decay=self.args.l2_coef)
             for epoch in range(self.args.epochs):
                 self.model.train()
                 optimizer.zero_grad()
