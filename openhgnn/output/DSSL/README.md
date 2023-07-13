@@ -8,7 +8,7 @@ Paper: [**Decoupled Self-supervised Learning for Graphs
 
 - Clone the Openhgnn-DGL
 
-- Candidate dataset: Cora, Pubmed, Texas
+- Candidate dataset: Cora, Pubmed, Citeseer
 
   ```bash
   python main.py -m DSSL -t DSSL_trainer -d Cora -g 0
