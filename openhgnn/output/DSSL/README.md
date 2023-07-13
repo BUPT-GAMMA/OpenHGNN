@@ -32,6 +32,9 @@ encoder with GCNConv(pyg):
 |-----------|--------|----------|------------|
 | **DSSL**  |   80   |     82   |     67     |
 
+Note:Since our openhgnn supports at least version 0.8 of DGL, this model does not support the Texas and Cornell heterogeneous graph datasets newly added by version 1.1 of DGL. At the same time, the tests of the Penn94 and Twitch datasets in the original paper used the datasets of the PYG library, but DGL still does not support them.
+When our minimum supported DGL version is updated, we will update the model to support the above dataset
+
 ## TrainerFlow: [DSSL_trainer(node classfication)](../../trainerflow/DSSL_trainer.py)
 
 ### Model
