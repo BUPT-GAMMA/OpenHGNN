@@ -4,7 +4,8 @@ import torch as th
 import numpy as np
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
-from dgl.data import CoraGraphDataset,CiteseerGraphDataset,PubmedGraphDataset,TexasDataset,CornellDataset
+from dgl.data import CoraGraphDataset,CiteseerGraphDataset,PubmedGraphDataset
+# from dgl.data import TexasDataset,CornellDataset
 import scipy.sparse as sp
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
@@ -584,20 +585,20 @@ class Common_NodeClassification(NodeClassificationDataset):
             num_classes = dataset.num_classes
             category = None
 
-        elif dataset_name == 'Texas':
-            dataset = TexasDataset()
-            g = dataset[0]
-            g = dgl.add_self_loop(g)
-            # g = dgl.to_bidirected(g)
-            num_classes = dataset.num_classes
-            category = None
-
-        elif dataset_name == 'Cornell':
-            dataset = CornellDataset()
-            g = dataset[0]
-            g = dgl.add_self_loop(g)
-            num_classes = dataset.num_classes
-            category = None
+        # elif dataset_name == 'Texas':
+        #     dataset = TexasDataset()
+        #     g = dataset[0]
+        #     g = dgl.add_self_loop(g)
+        #     # g = dgl.to_bidirected(g)
+        #     num_classes = dataset.num_classes
+        #     category = None
+        #
+        # elif dataset_name == 'Cornell':
+        #     dataset = CornellDataset()
+        #     g = dataset[0]
+        #     g = dgl.add_self_loop(g)
+        #     num_classes = dataset.num_classes
+        #     category = None
 
         else:
             raise ValueError()
