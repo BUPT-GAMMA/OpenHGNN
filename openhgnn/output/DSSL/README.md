@@ -20,11 +20,17 @@ Paper: [**Decoupled Self-supervised Learning for Graphs
 Task: node classfication
 Evaluation : ACC
 
-| Method    |  Cora  |  Pubmed  |  Texas  |
-|-----------|--------|----------|---------|
-| **DSSL**  |   76   |    80    |    52   |
+If GCNConv of the pyg library is used as the encoder of the model DSSL, the accuracy of the model on dataset will be higher than that of the GraphConv encoder of the DGL library.
 
-If GCNConv of the pyg library is used as the encoder of the model DSSL, the accuracy of the model on the PubMed dataset will be about five percent higher than that of the GraphConv encoder of the DGL library.
+encoder with GraphConv(dgl):
+| Method    |  Cora  |  Pubmed  |  Citeseer  |
+|-----------|--------|----------|------------|
+| **DSSL**  |   77   |     75   |     64     |
+
+encoder with GCNConv(pyg):
+| Method    |  Cora  |  Pubmed  |  Citeseer  |
+|-----------|--------|----------|------------|
+| **DSSL**  |   80   |     82   |     67     |
 
 ## TrainerFlow: [DSSL_trainer(node classfication)](../../trainerflow/DSSL_trainer.py)
 
