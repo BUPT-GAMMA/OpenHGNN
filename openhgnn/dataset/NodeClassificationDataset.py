@@ -4,7 +4,7 @@ import torch as th
 import numpy as np
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
-from dgl.data import CoraGraphDataset,PubmedGraphDataset,TexasDataset,CornellDataset
+from dgl.data import CoraGraphDataset,CiteseerGraphDataset,PubmedGraphDataset,TexasDataset,CornellDataset
 import scipy.sparse as sp
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
@@ -570,6 +570,11 @@ class Common_NodeClassification(NodeClassificationDataset):
     def load_Common_dgl(self,dataset_name):
         if dataset_name == 'Cora':
             dataset = CoraGraphDataset()
+            g = dataset[0]
+            num_classes = dataset.num_classes
+            category = None
+        elif dataset_name == 'Citeseer':
+            dataset = CiteseerGraphDataset()
             g = dataset[0]
             num_classes = dataset.num_classes
             category = None
