@@ -8,7 +8,7 @@ from torch.utils.data.sampler import BatchSampler
 from torch.utils.data import TensorDataset
 from openhgnn.trainerflow.base_flow import BaseFlow
 import dgl
-from networkx.algorithms.centrality.betweenness import edge_betweenness
+from networkx.algorithms.centrality.betweenness import edge_betweenness_centrality
 import numpy as np
 import torch
 import torch.nn as nn

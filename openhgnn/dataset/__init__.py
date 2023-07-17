@@ -95,6 +95,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'hin_' + task
     elif dataset == 'demo':
         _dataset = 'demo_' + task
+    elif dataset == 'mag':
+        _dataset = 'mag_dataset'
     elif dataset in hypergraph_datasets:
         _dataset = task
     elif dataset in ['LastFM_KGAT','yelp2018_KGAT','amazon-book_KGAT']:
@@ -110,7 +112,8 @@ SUPPORTED_DATASETS = {
     "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
     "recommendation": "openhgnn.dataset.RecommendationDataset",
     "edge_classification": "openhgnn.dataset.EdgeClassificationDataset",
-    "hypergraph":"openhgnn.dataset.HypergraphDataset"
+    "hypergraph":"openhgnn.dataset.HypergraphDataset",
+    "pretrain":"openhgnn.dataset.mag_dataset"
 }
 
 from .NodeClassificationDataset import NodeClassificationDataset
@@ -148,6 +151,7 @@ CLASS_DATASETS = {
     "ohgbn-alircd_session1": "openhgnn.dataset.AliRCDSession1Dataset",
     "alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
     "ohgbn-alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
+    "pretrain":"openhgnn.dataset.mag_dataset"
 }
 
 __all__ = [
@@ -164,6 +168,7 @@ __all__ = [
     'EdgeClassificationDataset',
     'HypergraphDataset',
     'AbnormEventDetectionDataset'
+    'mag_dataset',
 ]
 
 classes = __all__

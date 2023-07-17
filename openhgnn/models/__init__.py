@@ -107,6 +107,7 @@ SUPPORTED_MODELS = {
     'HGNN_AC': 'openhgnn.models.HGNN_AC',
     'AEHCL': 'openhgnn.models.AEHCL',
     'KGAT': 'openhgnn.models.KGAT',
+    'SHGP': 'openhgnn.models.ATT_HGCN',
 }
 
 from .CompGCN import CompGCN
@@ -180,6 +181,10 @@ __all__ = [
     'DHNE',
     'DiffMG',
     'MeiREC',
+<<<<<<< HEAD
     'KGAT'
+=======
+    'ATT_HGCN'
+>>>>>>> 50ad83434d39d84a5dc44464f36564b451e941e7
 ]
 classes = __all__

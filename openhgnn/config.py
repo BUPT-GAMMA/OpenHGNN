@@ -1,4 +1,6 @@
 import configparser
+import re
+
 import numpy as np
 import torch as th
 from .utils.activation import act_dict
@@ -841,6 +843,21 @@ class Config(object):
             self.multi_gpu = conf.getboolean("KGAT", "multi_gpu")
             self.K = conf.getint("KGAT", "K")
             
+        elif model == 'SHGP':
+            self.dataset = conf.get("SHGP", 'dataset')
+            self.target_type = conf.get("SHGP", 'target_type')
+            self.train_percent = conf.getfloat("SHGP", 'train_percent')
+            self.hidden_dim = re.findall(r'\[(.*?)\]', conf.get("SHGP", 'hidden_dim'))[0]
+            self.hidden_dim = [int(s) for s in self.hidden_dim.split(',')]
+            self.epochs = conf.getint("SHGP", 'epochs')
+            self.lr = conf.getfloat("SHGP", 'lr')
+            self.l2_coef = conf.getfloat("SHGP", 'l2_coef')
+            self.type_fusion = conf.get("SHGP", 'type_fusion')
+            self.type_att_size = conf.getint("SHGP", 'type_att_size')
+            self.warm_epochs = conf.getint("SHGP", 'warm_epochs')
+            self.compress_ratio = conf.getfloat("SHGP", 'compress_ratio')
+            self.cuda = conf.getint("SHGP", 'cuda')
+
         if hasattr(self, 'device'):
             self.device = th.device(self.device)
         elif gpu == -1:

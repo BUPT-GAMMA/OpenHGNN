@@ -59,6 +59,7 @@ class Experiment(object):
         'DiffMG': 'DiffMG_trainer',
         'MeiREC': 'MeiREC_trainer',
         'KGAT': 'KGAT_trainer'
+        'SHGP': 'SHGP_trainer'
     }
     immutable_params = ['model', 'dataset', 'task']
 

@@ -76,6 +76,7 @@ SUPPORTED_FLOWS = {
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
     'abnorm_event_detection': 'openhgnn.trainerflow.AbnormEventDetection',
     'KGAT_trainer': 'openhgnn.trainerflow.KGAT_trainer'
+    'SHGP_trainer': 'openhgnn.trainerflow.SHGP_trainer',
 }
 
 from .node_classification import NodeClassification
