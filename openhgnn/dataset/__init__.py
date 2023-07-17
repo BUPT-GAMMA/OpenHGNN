@@ -50,6 +50,7 @@ def try_import_task_dataset(task):
     return True
 
 
+common = ['Cora','Citeseer','Pubmed','Texas','Cornell']
 hgbl_datasets = ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']
 hgbn_datasets = ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']
 kg_lp_datasets = ['wn18', 'FB15k', 'FB15k-237']
@@ -103,7 +104,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         change_name={'LastFM_KGAT':'last-fm','yelp2018_KGAT':'yelp2018','amazon-book_KGAT':'amazon-book'}
         dataset=change_name[dataset]
         _dataset='kgat_recommendation'
-
+    elif dataset in common:
+        _dataset = 'common_' + task
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
