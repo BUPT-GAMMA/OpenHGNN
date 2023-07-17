@@ -6,6 +6,7 @@ from dgl.data.utils import load_graphs
 from .multigraph import MultiGraphDataset
 from ..sampler.negative_sampler import Uniform_exclusive
 from . import AcademicDataset
+from .HGCLDataset import HGCLDataset
 
 
 @register_dataset('recommendation')
