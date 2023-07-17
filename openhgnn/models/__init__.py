@@ -108,6 +108,7 @@ SUPPORTED_MODELS = {
     'AEHCL': 'openhgnn.models.AEHCL',
     'KGAT': 'openhgnn.models.KGAT',
     'SHGP': 'openhgnn.models.ATT_HGCN',
+    'DSSL': 'openhgnn.models.DSSL'
 }
 
 from .CompGCN import CompGCN
@@ -147,6 +148,7 @@ from .DiffMG import DiffMG
 from .MeiREC import MeiREC
 from .HGNN_AC import HGNN_AC
 from .KGAT import KGAT
+from .DSSL import DSSL
 
 __all__ = [
     'BaseModel',
@@ -182,9 +184,14 @@ __all__ = [
     'DiffMG',
     'MeiREC',
 <<<<<<< HEAD
+<<<<<<< HEAD
     'KGAT'
 =======
     'ATT_HGCN'
 >>>>>>> 50ad83434d39d84a5dc44464f36564b451e941e7
+=======
+    'KGAT',
+    'DSSL'
+>>>>>>> e1d95c140eccfdb60975128ed8168dfc5ca6ec1f
 ]
 classes = __all__
