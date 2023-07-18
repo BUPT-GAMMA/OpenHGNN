@@ -109,8 +109,10 @@ SUPPORTED_MODELS = {
     'KGAT': 'openhgnn.models.KGAT',
     'SHGP': 'openhgnn.models.ATT_HGCN',
     'DSSL': 'openhgnn.models.DSSL'
+    'HGCL': 'openhgnn.models.HGCL'
 }
 
+from .HGCL import HGCL
 from .CompGCN import CompGCN
 from .HetGNN import HetGNN
 from .RGCN import RGCN

@@ -60,6 +60,7 @@ class Experiment(object):
         'MeiREC': 'MeiREC_trainer',
         'KGAT': 'KGAT_trainer'
         'SHGP': 'SHGP_trainer'
+        'HGCL': 'hgcltrainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 
