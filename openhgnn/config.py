@@ -889,6 +889,26 @@ class Config(object):
             self.compress_ratio = conf.getfloat("SHGP", 'compress_ratio')
             self.cuda = conf.getint("SHGP", 'cuda')
 
+        elif model == 'HGCL':
+            self.lr = conf.getfloat("HGCL", "lr")
+            self.batch = conf.getint("HGCL", "batch")
+            self.wu1 = conf.getfloat('HGCL', "wu1")
+            self.wu2 = conf.getfloat("HGCL", "wu2")
+            self.wi1 = conf.getfloat("HGCL", "wi1")
+            self.wi2 = conf.getfloat("HGCL", "wi2")
+            self.epochs = conf.getint("HGCL", "epochs")
+            self.topk = conf.getint("HGCL", "topk")
+            self.hide_dim = conf.getint("HGCL", "hide_dim")
+            self.reg = conf.getfloat("HGCL", "reg")
+            self.metareg = conf.getfloat("HGCL", "metareg")
+            self.ssl_temp = conf.getfloat("HGCL", "ssl_temp")
+            self.ssl_ureg = conf.getfloat("HGCL", "ssl_ureg")
+            self.ssl_ireg = conf.getfloat("HGCL", "ssl_ireg")
+            self.ssl_reg = conf.getfloat("HGCL", "ssl_reg")
+            self.ssl_beta = conf.getfloat("HGCL", "ssl_beta")
+            self.rank = conf.getint("HGCL", "rank")
+            self.Layers = conf.getint("HGCL", "Layers")
+            
         if hasattr(self, 'device'):
             self.device = th.device(self.device)
         elif gpu == -1:

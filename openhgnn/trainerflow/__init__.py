@@ -78,9 +78,10 @@ SUPPORTED_FLOWS = {
     'SHGP_trainer': 'openhgnn.trainerflow.SHGP_trainer',
     'KGAT_trainer': 'openhgnn.trainerflow.KGAT_trainer',
     'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer',
-
+    'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer'
 }
 
+from .hgcl_trainer import HGCLtrainer
 from .node_classification import NodeClassification
 from .link_prediction import LinkPrediction
 from .recommendation import Recommendation
@@ -128,7 +129,11 @@ __all__ = [
     'DHNE_trainer',
     'DiffMG_trainer',
     'MeiRECTrainer',
+<<<<<<< HEAD
     'KGAT_Trainer',
     'DSSL_trainer'
+=======
+    'HGCLtrainer'
+>>>>>>> a8f8928e3ae66f22a19b31c7a8e95b9db2643b5b
 ]
 classes = __all__

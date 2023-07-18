@@ -6,6 +6,7 @@ from dgl.data.utils import download,load_graphs,save_graphs,save_info,load_info
 from .multigraph import MultiGraphDataset
 from ..sampler.negative_sampler import Uniform_exclusive
 from . import AcademicDataset
+from .HGCLDataset import HGCLDataset
 
 #add more lib for KGAT
 import time
@@ -51,7 +52,29 @@ class KGCN_Recommendation(RecommendationDataset):
     def get_labels(self):
         return self.label
 
+@register_dataset('hgcl_recommendation')
+class HGCLRecommendation(RecommendationDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(RecommendationDataset, self).__init__(*args, **kwargs)
+        dataset = HGCLDataset(name=dataset_name, raw_dir='')
+        self.g = dataset[0].long()
 
+    def get_split(self, validation=True):
+        ratingsGraph = self.g
+        n_edges = ratingsGraph.num_edges()
+        random_int = th.randperm(n_edges)
+        train_idx = random_int[:int(n_edges * 0.6)]
+        val_idx = random_int[int(n_edges * 0.6):int(n_edges * 0.8)]
+        test_idx = random_int[int(n_edges * 0.6):int(n_edges * 0.8)]
+
+        return train_idx, val_idx, test_idx
+
+    def get_train_data(self):
+        pass
+
+    def get_labels(self):
+        return self.label
+        
 @register_dataset('hin_recommendation')
 class HINRecommendation(RecommendationDataset):
     def __init__(self, dataset_name, *args, **kwargs):
