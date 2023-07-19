@@ -14,6 +14,20 @@ of heterogeneous graph.
 
 ## News
 <details>
+<summary>
+2023-07-17 release v0.5
+</summary>
+<br/>
+
+We release the latest version v0.5.0
+
+- New models and datasets.
+- 4 New tasks: pretrain, recommendation, graph attacks and defenses, abnorm_event detection.
+- TensorBoard visualization.
+- Maintenance and test module.
+
+</details>
+<details>
 
 <summary>
 2023-02-24 OpenI Excellent Incubation Award
