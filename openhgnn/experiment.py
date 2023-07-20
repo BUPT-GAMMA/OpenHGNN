@@ -58,8 +58,8 @@ class Experiment(object):
         'DHNE': 'DHNE_trainer',
         'DiffMG': 'DiffMG_trainer',
         'MeiREC': 'MeiREC_trainer',
-        'KGAT': 'KGAT_trainer'
-        'SHGP': 'SHGP_trainer'
+        'KGAT': 'KGAT_trainer',
+        'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
     }
