@@ -75,11 +75,9 @@ class HGCLRecommendation(RecommendationDataset):
     def get_train_data(self):
         pass
 
-<<<<<<< HEAD
     def get_labels(self):
         return self.label
         
-=======
 @register_dataset('lightGCN_recommendation')
 class lightGCN_Recommendation(RecommendationDataset):
 
@@ -252,7 +250,6 @@ class lightGCN_Recommendation(RecommendationDataset):
                     exit()
 
 
->>>>>>> 6a501a7d28f6ee992cc1de3a1e28ba5289513609
 @register_dataset('hin_recommendation')
 class HINRecommendation(RecommendationDataset):
     def __init__(self, dataset_name, *args, **kwargs):

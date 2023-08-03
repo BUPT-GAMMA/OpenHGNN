@@ -173,7 +173,7 @@ __all__ = [
     'AsNodeClassificationDataset',
     'EdgeClassificationDataset',
     'HypergraphDataset',
-    'AbnormEventDetectionDataset'
+    'AbnormEventDetectionDataset',
     'mag_dataset',
 ]
 

@@ -108,8 +108,8 @@ SUPPORTED_MODELS = {
     'AEHCL': 'openhgnn.models.AEHCL',
     'KGAT': 'openhgnn.models.KGAT',
     'SHGP': 'openhgnn.models.ATT_HGCN',
-    'DSSL': 'openhgnn.models.DSSL'
-    'HGCL': 'openhgnn.models.HGCL'
+    'DSSL': 'openhgnn.models.DSSL',
+    'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
 }
 
@@ -150,12 +150,9 @@ from .DHNE import DHNE
 from .DiffMG import DiffMG
 from .MeiREC import MeiREC
 from .HGNN_AC import HGNN_AC
-<<<<<<< HEAD
 from .KGAT import KGAT
 from .DSSL import DSSL
-=======
 from .lightGCN import lightGCN
->>>>>>> 6a501a7d28f6ee992cc1de3a1e28ba5289513609
 
 __all__ = [
     'BaseModel',
@@ -190,19 +187,10 @@ __all__ = [
     'DHNE',
     'DiffMG',
     'MeiREC',
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    'KGAT'
-=======
-    'ATT_HGCN'
->>>>>>> 50ad83434d39d84a5dc44464f36564b451e941e7
-=======
     'KGAT',
-    'DSSL'
->>>>>>> e1d95c140eccfdb60975128ed8168dfc5ca6ec1f
-=======
+    'ATT_HGCN',
+    'KGAT',
+    'DSSL',
     'lightGCN',
->>>>>>> 6a501a7d28f6ee992cc1de3a1e28ba5289513609
 ]
 classes = __all__
