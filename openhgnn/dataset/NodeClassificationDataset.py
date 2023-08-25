@@ -505,7 +505,7 @@ class OGB_NodeClassification(NodeClassificationDataset):
     def __init__(self, dataset_name, *args, **kwargs):
         super(OGB_NodeClassification, self).__init__(*args, **kwargs)
         if dataset_name == 'ogbn-mag':
-            dataset = DglNodePropPredDataset(name='ogbn-mag')
+            dataset = DglNodePropPredDataset(name='ogbn-mag', root='openhgnn/dataset/data/')
             self.category = 'paper'  # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         else:
             raise ValueError
