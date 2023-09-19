@@ -1,7 +1,5 @@
-import os
 import dgl
 import dgl.function as fn
-import sparse_tools
 import torch as th
 import numpy as np
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
@@ -15,7 +13,6 @@ from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset, OHGBDataset
 from .utils import sparse_mx_to_torch_sparse_tensor
 from ..utils import add_reverse_edges
-from torch_sparse import SparseTensor
 
 
 @register_dataset('node_classification')
@@ -508,7 +505,7 @@ class OGB_NodeClassification(NodeClassificationDataset):
     def __init__(self, dataset_name, *args, **kwargs):
         super(OGB_NodeClassification, self).__init__(*args, **kwargs)
         if dataset_name == 'ogbn-mag':
-            dataset = DglNodePropPredDataset(name='ogbn-mag')
+            dataset = DglNodePropPredDataset(name='ogbn-mag', root='openhgnn/dataset/data/')
             self.category = 'paper'  # graph: dgl graph object, label: torch tensor of shape (num_nodes, num_tasks)
         else:
             raise ValueError
@@ -518,7 +515,6 @@ class OGB_NodeClassification(NodeClassificationDataset):
         self.train_idx, self.valid_idx, self.test_idx = split_idx["train"][self.category], split_idx["valid"][
             self.category], split_idx["test"][self.category]
         self.g, self.label_dict = dataset[0]
-        self.SeHGNN_g = self.mag4sehgnn(dataset)
         self.g = self.mag4HGT(self.g)
         self.label = self.label_dict[self.category].squeeze(dim=-1)
         # 2-dim label
@@ -532,83 +528,6 @@ class OGB_NodeClassification(NodeClassificationDataset):
     def get_labels(self):
         return self.label
 
-    def mag4sehgnn(self, dataset):
-        g, _ = dataset[0]
-        embed_size = g.nodes['paper'].data['feat'].size(0)
-
-        author_emb = th.Tensor(g.num_nodes('author'), 256).uniform_(-0.5, 0.5)
-        topic_emb = th.Tensor(g.num_nodes('field_of_study'), 256).uniform_(-0.5, 0.5)
-        institution_emb = th.Tensor(g.num_nodes('institution'), 256).uniform_(-0.5, 0.5)
-
-        g.nodes['author'].data['feat'] = author_emb
-        g.nodes['institution'].data['feat'] = institution_emb
-        g.nodes['field_of_study'].data['feat'] = topic_emb
-
-        adjs = []
-        for i, etype in enumerate(g.etypes):
-            src, dst, eid = g._graph.edges(i)
-            adj = SparseTensor(row=dst, col=src)
-            adjs.append(adj)
-
-        # F --- *P --- A --- I
-        # paper : [736389, 128]
-        # author: [1134649, 256]
-        # institution [8740, 256]
-        # field_of_study [59965, 256]
-
-        new_edges = {}
-        ntypes = set()
-
-        etypes = [  # src->tgt
-            ('A', 'A-I', 'I'),
-            ('A', 'A-P', 'P'),
-            ('P', 'P-P', 'P'),
-            ('P', 'P-F', 'F'),
-        ]
-
-        adjs[2] = adjs[2].to_symmetric()
-        assert th.all(adjs[2].get_diag() == 0)
-
-        for etype, adj in zip(etypes, adjs):
-            stype, rtype, dtype = etype
-            dst, src, _ = adj.coo()
-            src = src.numpy()
-            dst = dst.numpy()
-            if stype == dtype:
-                new_edges[(stype, rtype, dtype)] = (np.concatenate((src, dst)), np.concatenate((dst, src)))
-            else:
-                new_edges[(stype, rtype, dtype)] = (src, dst)
-                new_edges[(dtype, rtype[::-1], stype)] = (dst, src)
-            ntypes.add(stype)
-            ntypes.add(dtype)
-
-        new_g = dgl.heterograph(new_edges)
-        new_g.nodes['P'].data['P'] = g.nodes['paper'].data['feat']
-        new_g.nodes['A'].data['A'] = g.nodes['author'].data['feat']
-        new_g.nodes['I'].data['I'] = g.nodes['institution'].data['feat']
-        new_g.nodes['F'].data['F'] = g.nodes['field_of_study'].data['feat']
-
-        IA, PA, PP, FP = adjs
-
-        diag_name = f'ogbn_mag_PFP_diag.pt'
-        if not os.path.exists(diag_name):
-            PF = FP.t()
-            PFP_diag = sparse_tools.spspmm_diag_sym_ABA(PF)
-            th.save(PFP_diag, diag_name)
-
-        diag_name = f'ogbn_mag_PPP_diag.pt'
-        if not os.path.exists(diag_name):
-            # PP = PP.to_symmetric()
-            # assert torch.all(PP.get_diag() == 0)
-            PPP_diag = sparse_tools.spspmm_diag_sym_AAA(PP)
-            th.save(PPP_diag, diag_name)
-
-        diag_name = f'ogbn_mag_PAP_diag.pt'
-        if not os.path.exists(diag_name):
-            PAP_diag = sparse_tools.spspmm_diag_sym_ABA(PA)
-            th.save(PAP_diag, diag_name)
-
-        return new_g
     def mag4HGT(self, hg):
         # Add reverse edge types
 

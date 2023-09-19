@@ -124,26 +124,6 @@ class L2Norm(nn.Module):
 
 @register_model('SeHGNN')
 class SeHGNN(BaseModel):
-    r"""
-    This is a model SimpleHGN from `Simple and Efficient Heterogeneous Graph Neural Network
-    <https://doi.org/10.48550/arXiv.2207.02547>`__
-    This model is a metapath-based model. It put the neighbor aggregation in the preprocessing step, and using
-    the single-layer structure and long metapaths. It performed over the state-of-the-arts on both accuracy and training speed.
-
-    the neighbor aggregation
-    .. math::
-        \mathrm{X}^{P} = \hat{A}_{c,c_{1}}\hat{A}_{c_{1},c_{2}}...\hat{A}_{c_{l-1},c_{l}} \mathrm{X}^{c_{l}}
-    feature projection
-    .. math::
-        {\mathrm{H}^{'}}^{P} = MLP_{P}(\mathrm{X}^{P})
-    semantic fusion (transformer):
-    .. math::
-        q^{\mathcal{P}_{i}}=W_{Q} h^{\prime \mathcal{P}_{i}}, k^{\mathcal{P}_{i}}=W_{K} h^{\prime \mathcal{P}_{i}}, v^{\mathcal{P}_{i}}=W_{V} h^{\prime \mathcal{P}_{i}}, \mathcal{P}_{i} \in \Phi_{X} \\
-    .. math::
-        \alpha_{\left(\mathcal{P}_{i}, \mathcal{P}_{j}\right)}=\frac{\exp \left(q^{\mathcal{P}_{i}} \cdot k^{{\mathcal{P}_{j}}^{T}}\right)}{\sum_{\mathcal{P}_{t} \in \Phi_{X}} \exp \left(q^{\mathcal{P}_{i}} \cdot k^{{\mathcal{P}_{t}}^{T}}\right)}
-    .. math::
-        h^{\mathcal{P}_{i}}=\beta \sum_{\mathcal{P}_{j} \in \Phi_{X}} \alpha_{\left(\mathcal{P}_{i}, \mathcal{P}_{j}\right)} v^{\mathcal{P}_{j}}+h^{\prime \mathcal{P}_{i}}
-    """
     @classmethod
     def build_model_from_args(cls, args):
         return cls(args)
@@ -283,16 +263,7 @@ class SeHGNN(BaseModel):
                     if layer.bias is not None:
                         nn.init.zeros_(layer.bias)
 
-    def forward(self, fk):
-        r"""
-
-        Parameters
-        ----------
-        fk = feats_dict, layer_feats_dict, label_emb
-
-        """
-
-        feats_dict, layer_feats_dict, label_emb = fk['0'], fk['1'], fk['2']
+    def forward(self, feats_dict, layer_feats_dict, label_emb):
         if self.embedings is not None:
             for k, v in feats_dict.items():
                 if k in self.embedings:

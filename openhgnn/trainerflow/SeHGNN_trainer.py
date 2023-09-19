@@ -36,71 +36,98 @@ from contextlib import closing
 import multiprocessing as mp
 from multiprocessing import Pool
 from tqdm import tqdm
-from ..tasks import NodeClassification
 
 @register_flow("SeHGNN_trainer")
 class SeHGNNtrainer(BaseFlow):
     def __init__(self,args):
         args.stages = [int(item.strip()) for item in args.stages.split(',')]
         self.args = args
-        self.flow = NodeClassification(args)
     def train(self):
         args = self.args
         if args.seed > 0:
             self.set_random_seed(args.seed)
-        num_nodes = self.flow.dataset.SeHGNN_g.num_nodes("P")
-        n_classes = int(self.flow.labels.max()) + 1
-        evaluator = self.flow.get_evaluator("acc")
+        g, init_labels, num_nodes, n_classes, train_nid, val_nid, test_nid, evaluator = self.load_dataset(args)
+
         # =======
         # rearange node idx (for feats & labels)
         # =======
-        train_node_nums = len(self.flow.train_idx)
-        valid_node_nums = len(self.flow.val_idx)
-        test_node_nums = len(self.flow.test_idx)
+        train_node_nums = len(train_nid)
+        valid_node_nums = len(val_nid)
+        test_node_nums = len(test_nid)
         trainval_point = train_node_nums
         valtest_point = trainval_point + valid_node_nums
-        total_num_nodes = len(self.flow.train_idx) + len(self.flow.val_idx) + len(self.flow.test_idx)
+        total_num_nodes = len(train_nid) + len(val_nid) + len(test_nid)
 
         if total_num_nodes < num_nodes:
             flag = torch.ones(num_nodes, dtype=bool)
-            flag[self.flow.train_idx] = 0
-            flag[self.flow.val_idx] = 0
-            flag[self.flow.test_idx] = 0
+            flag[train_nid] = 0
+            flag[val_nid] = 0
+            flag[test_nid] = 0
             extra_nid = torch.where(flag)[0]
             print(f'Find {len(extra_nid)} extra nid for dataset {args.dataset}')
         else:
             extra_nid = torch.tensor([], dtype=torch.long)
 
-        init2sort = torch.cat([self.flow.train_idx, self.flow.val_idx, self.flow.test_idx, extra_nid])
+        init2sort = torch.cat([train_nid, val_nid, test_nid, extra_nid])
         sort2init = torch.argsort(init2sort)
-        assert torch.all(self.flow.labels[init2sort][sort2init] == self.flow.labels)
-        labels = self.flow.labels[init2sort]
+        assert torch.all(init_labels[init2sort][sort2init] == init_labels)
+        labels = init_labels[init2sort]
 
         # =======
         # features propagate alongside the metapath
         # =======
         prop_tic = datetime.datetime.now()
-        tgt_type = 'P'
+        if args.dataset in ['ogbn-proteins', 'ogbn-products']: # homogeneous
+            tgt_type = 'hop_0'
 
-        extra_metapath = [] # ['AIAP', 'PAIAP']
-        extra_metapath = [ele for ele in extra_metapath if len(ele) > args.num_hops + 1]
+            g.ndata['hop_0'] = g.ndata.pop('feat')
+            for hop in range(args.num_hops):
+                g.update_all(fn.copy_u(f'hop_{hop}', 'm'), fn.mean('m', f'hop_{hop+1}'))
+            keys = list(g.ndata.keys())
+            print(f'Involved feat keys {keys}')
+            feats = {k: g.ndata.pop(k) for k in keys}
 
-        print(f'Current num hops = {args.num_hops}')
-        if len(extra_metapath):
-            max_hops = max(args.num_hops + 1, max([len(ele) for ele in extra_metapath]))
+        elif args.dataset in ['ogbn-arxiv', 'ogbn-papers100M']: # single-node-type & double-edge-types
+            tgt_type = 'P'
+
+            for hop in range(1, args.num_hops + 1):
+                for k in list(g.ndata.keys()):
+                    if len(k) == hop:
+                        g['cite'].update_all(
+                            fn.copy_u(k, 'msg'),
+                            fn.mean('msg', f'm{k}'), etype='cite')
+                        g['cited_by'].update_all(
+                            fn.copy_u(k, 'msg'),
+                            fn.mean('msg', f't{k}'), etype='cited_by')
+
+            keys = list(g.ndata.keys())
+            print(f'Involved feat keys {keys}')
+            feats = {k: g.ndata.pop(k) for k in keys}
+
+        elif args.dataset == 'ogbn-mag': # multi-node-types & multi-edge-types
+            tgt_type = 'P'
+
+            extra_metapath = [] # ['AIAP', 'PAIAP']
+            extra_metapath = [ele for ele in extra_metapath if len(ele) > args.num_hops + 1]
+
+            print(f'Current num hops = {args.num_hops}')
+            if len(extra_metapath):
+                max_hops = max(args.num_hops + 1, max([len(ele) for ele in extra_metapath]))
+            else:
+                max_hops = args.num_hops + 1
+
+            # compute k-hop feature
+            g = self.hg_propagate(g, tgt_type, args.num_hops, max_hops, extra_metapath, echo=False)
+
+            feats = {}
+            keys = list(g.nodes[tgt_type].data.keys())
+            print(f'Involved feat keys {keys}')
+            for k in keys:
+                feats[k] = g.nodes[tgt_type].data.pop(k)
+
+            g = self.clear_hg(g, echo=False)
         else:
-            max_hops = args.num_hops + 1
-
-        # compute k-hop feature
-        self.flow.dataset.SeHGNN_g = self.hg_propagate(self.flow.dataset.SeHGNN_g, tgt_type, args.num_hops, max_hops, extra_metapath, echo=False)
-
-        feats = {}
-        keys = list(self.flow.dataset.SeHGNN_g.nodes[tgt_type].data.keys())
-        print(f'Involved feat keys {keys}')
-        for k in keys:
-            feats[k] = self.flow.dataset.SeHGNN_g.nodes[tgt_type].data.pop(k)
-
-        self.flow.dataset.SeHGNN_g = self.clear_hg(self.flow.dataset.SeHGNN_g, echo=False)
+            assert 0
 
         feats = {k: v[init2sort] for k, v in feats.items()}
 
@@ -108,10 +135,13 @@ class SeHGNNtrainer(BaseFlow):
         print(f'Time used for feat prop {prop_toc - prop_tic}')
         gc.collect()
 
+        # train_loader = torch.utils.data.DataLoader(
+        #     torch.arange(train_node_nums), batch_size=args.batch_size, shuffle=True, drop_last=False)
+        # eval_loader = full_loader = []
         all_loader = torch.utils.data.DataLoader(
             torch.arange(num_nodes), batch_size=args.batch_size, shuffle=False, drop_last=False)
 
-        checkpt_folder = f'./openhgnn/output/SeHGNN/{args.dataset}/'
+        checkpt_folder = f'./output/{args.dataset}/'
         if not os.path.exists(checkpt_folder):
             os.makedirs(checkpt_folder)
 
@@ -130,7 +160,7 @@ class SeHGNNtrainer(BaseFlow):
             epochs = args.stages[stage]
 
             if len(args.reload):
-                pt_path = f'./openhgnn/output/SeHGNN/ogbn-mag/{args.reload}_{stage-1}.pt'
+                pt_path = f'output/ogbn-mag/{args.reload}_{stage-1}.pt'
                 assert os.path.exists(pt_path)
                 print(f'Reload raw_preds from {pt_path}', flush=True)
                 raw_preds = torch.load(pt_path, map_location='cpu')
@@ -163,10 +193,10 @@ class SeHGNNtrainer(BaseFlow):
                 print(f'\t\ttest confident nodes: {len(test_enhance_nid)} / {test_node_nums}, test confident_level: {test_confident_level}')
 
                 del train_loader
-                train_batch_size = int(args.batch_size * len(self.flow.train_idx) / (len(enhance_nid) + len(self.flow.train_idx)))
+                train_batch_size = int(args.batch_size * len(train_nid) / (len(enhance_nid) + len(train_nid)))
                 train_loader = torch.utils.data.DataLoader(
                     torch.arange(train_node_nums), batch_size=train_batch_size, shuffle=True, drop_last=False)
-                enhance_batch_size = int(args.batch_size * len(enhance_nid) / (len(enhance_nid) + len(self.flow.train_idx)))
+                enhance_batch_size = int(args.batch_size * len(enhance_nid) / (len(enhance_nid) + len(train_nid)))
                 enhance_loader = torch.utils.data.DataLoader(
                     enhance_nid, batch_size=enhance_batch_size, shuffle=True, drop_last=False)
             else:
@@ -182,35 +212,105 @@ class SeHGNNtrainer(BaseFlow):
                     label_onehot = predict_prob[sort2init].clone()
                 else:
                     label_onehot = torch.zeros((num_nodes, n_classes))
-                label_onehot[self.flow.train_idx] = F.one_hot(self.flow.labels[self.flow.train_idx], n_classes).float()
+                label_onehot[train_nid] = F.one_hot(init_labels[train_nid], n_classes).float()
 
-                self.flow.dataset.SeHGNN_g.nodes['P'].data['P'] = label_onehot
+                if args.dataset in ['ogbn-proteins', 'ogbn-products']: # homogeneous
+                    g.ndata['s'] = label_onehot
+                    for hop in range(args.num_label_hops):
+                        g.update_all(fn.copy_u('m'*hop+'s', 'msg'), fn.mean('msg', 'm'*(hop+1)+'s'))
+                    keys = [k[:-1] for k in g.ndata.keys() if k != 's']
+                    print(f'Involved label keys {keys}')
+                    label_feats = {k: g.ndata.pop(k+'s') for k in keys}
+                    g = self.clear_hg(g, echo=False)
 
-                extra_metapath = [] # ['PAIAP']
-                extra_metapath = [ele for ele in extra_metapath if len(ele) > args.num_label_hops + 1]
+                    # remove self effect on label feats
+                    mm_diag, mmm_diag = torch.load(f'{args.dataset}_diag.pt')
+                    diag_values = {'mm': mm_diag, 'mmm': mmm_diag}
+                    for k in diag_values:
+                        if k in label_feats:
+                            label_feats[k] = label_feats[k] - diag_values[k].unsqueeze(-1) * label_onehot
+                            assert torch.all(label_feats[k] > -1e-6)
+                            print(k, torch.sum(label_feats[k] < 0), label_feats[k].min())
 
-                print(f'Current num label hops = {args.num_label_hops}')
-                if len(extra_metapath):
-                    max_hops = max(args.num_label_hops + 1, max([len(ele) for ele in extra_metapath]))
-                else:
-                    max_hops = args.num_label_hops + 1
+                    condition = lambda ra,rb,rc,k: True
+                    self.check_acc(label_feats, condition, init_labels, train_nid, val_nid, test_nid)
 
-                self.flow.dataset.SeHGNN_g = self.hg_propagate(self.flow.dataset.SeHGNN_g, tgt_type, args.num_label_hops, max_hops, extra_metapath, echo=False)
+                    label_emb = label_feats['mmmmmmmmm']
+                    # label_emb = (label_feats['m'] + label_feats['mm'] + label_feats['mmm']) / 3
+                    self.check_acc({'label_emb': label_emb}, condition, init_labels, train_nid, val_nid, test_nid)
 
-                keys = list(self.flow.dataset.SeHGNN_g.nodes[tgt_type].data.keys())
-                print(f'Involved label keys {keys}')
-                for k in keys:
-                    if k == tgt_type: continue
-                    label_feats[k] = self.flow.dataset.SeHGNN_g.nodes[tgt_type].data.pop(k)
-                self.flow.dataset.SeHGNN_g = self.clear_hg(self.flow.dataset.SeHGNN_g, echo=False)
+                elif args.dataset in ['ogbn-arxiv', 'ogbn-papers100M']: # single-node-type & double-edge-types
+                    g.ndata[tgt_type] = label_onehot
 
-                for k in ['PPP', 'PAP', 'PFP', 'PPPP', 'PAPP', 'PPAP', 'PFPP', 'PPFP']:
-                    if k in label_feats:
-                        diag = torch.load(f'{args.dataset}_{k}_diag.pt')
-                        label_feats[k] = label_feats[k] - diag.unsqueeze(-1) * label_onehot
-                        assert torch.all(label_feats[k] > -1e-6)
-                        print(k, torch.sum(label_feats[k] < 0), label_feats[k].min())
-                label_emb = (label_feats['PPP'] + label_feats['PAP'] + label_feats['PP'] + label_feats['PFP']) / 4
+                    for hop in range(1, args.num_hops + 1):
+                        for k in list(g.ndata.keys()):
+                            if len(k) == hop:
+                                g['cite'].update_all(
+                                    fn.copy_u(k, 'msg'),
+                                    fn.mean('msg', f'm{k}'), etype='cite')
+                                g['cited_by'].update_all(
+                                    fn.copy_u(k, 'msg'),
+                                    fn.mean('msg', f't{k}'), etype='cited_by')
+
+                    keys = list(g.ndata.keys())
+                    print(f'Involved label keys {keys}')
+                    for k in keys:
+                        if k == tgt_type: continue
+                        label_feats[k[:-1]] = g.ndata.pop(k)
+                    g = self.clear_hg(g, echo=False)
+
+                    condition = lambda ra,rb,rc,k: True
+                    self.check_acc(label_feats, condition, init_labels, train_nid, val_nid, test_nid)
+
+                    # remove self effect on label feats
+                    mm_diag, mt_diag, tm_diag, tt_diag = torch.load(f'{args.dataset}_diag.pt')
+                    diag_values = {'mm': mm_diag, 'mt': mt_diag, 'tm': tm_diag, 'tt': tt_diag}
+                    for k in diag_values:
+                        if k in label_feats:
+                            label_feats[k] = label_feats[k] - diag_values[k].unsqueeze(-1) * label_onehot
+                            assert torch.all(label_feats[k] > -1e-6)
+                            print(k, torch.sum(label_feats[k] < 0), label_feats[k].min())
+
+                    condition = lambda ra,rb,rc,k: True
+                    self.check_acc(label_feats, condition, init_labels, train_nid, val_nid, test_nid)
+
+                    label_emb = (label_feats['t'] + label_feats['tm'] + label_feats['mt'] + label_feats['tt']) / 4
+                    self.check_acc({'label_emb': label_emb}, condition, init_labels, train_nid, val_nid, test_nid)
+
+                elif args.dataset == 'ogbn-mag':
+                    g.nodes['P'].data['P'] = label_onehot
+
+                    extra_metapath = [] # ['PAIAP']
+                    extra_metapath = [ele for ele in extra_metapath if len(ele) > args.num_label_hops + 1]
+
+                    print(f'Current num label hops = {args.num_label_hops}')
+                    if len(extra_metapath):
+                        max_hops = max(args.num_label_hops + 1, max([len(ele) for ele in extra_metapath]))
+                    else:
+                        max_hops = args.num_label_hops + 1
+
+                    g = self.hg_propagate(g, tgt_type, args.num_label_hops, max_hops, extra_metapath, echo=False)
+
+                    keys = list(g.nodes[tgt_type].data.keys())
+                    print(f'Involved label keys {keys}')
+                    for k in keys:
+                        if k == tgt_type: continue
+                        label_feats[k] = g.nodes[tgt_type].data.pop(k)
+                    g = self.clear_hg(g, echo=False)
+
+                    # label_feats = remove_self_effect_on_label_feats(label_feats, label_onehot)
+                    for k in ['PPP', 'PAP', 'PFP', 'PPPP', 'PAPP', 'PPAP', 'PFPP', 'PPFP']:
+                        if k in label_feats:
+                            diag = torch.load(f'{args.dataset}_{k}_diag.pt')
+                            label_feats[k] = label_feats[k] - diag.unsqueeze(-1) * label_onehot
+                            assert torch.all(label_feats[k] > -1e-6)
+                            print(k, torch.sum(label_feats[k] < 0), label_feats[k].min())
+
+                    condition = lambda ra,rb,rc,k: True
+                    self.check_acc(label_feats, condition, init_labels, train_nid, val_nid, test_nid)
+
+                    label_emb = (label_feats['PPP'] + label_feats['PAP'] + label_feats['PP'] + label_feats['PFP']) / 4
+                    self.check_acc({'label_emb': label_emb}, condition, init_labels, train_nid, val_nid, test_nid)
             else:
                 label_emb = torch.zeros((num_nodes, n_classes))
 
@@ -284,8 +384,7 @@ class SeHGNNtrainer(BaseFlow):
                             batch_feats = {k: v.to(device) for k,v in batch_feats.items()}
                             batch_label_feats = {k: v.to(device) for k,v in batch_label_feats.items()}
                             batch_labels_emb = batch_labels_emb.to(device)
-                            fk = {'0': batch_feats, '1': batch_label_feats, '2': batch_labels_emb}
-                            raw_preds.append(model(fk).cpu())
+                            raw_preds.append(model(batch_feats, batch_label_feats, batch_labels_emb).cpu())
                         raw_preds = torch.cat(raw_preds, dim=0)
 
                         loss_val = loss_fcn(raw_preds[:valid_node_nums], labels[trainval_point:valtest_point]).item()
@@ -318,6 +417,73 @@ class SeHGNNtrainer(BaseFlow):
             model.load_state_dict(torch.load(checkpt_file+f'_{stage}.pkl'))
             raw_preds = self.gen_output_torch(model, feats, label_feats, label_emb, all_loader, device)
             torch.save(raw_preds, checkpt_file+f'_{stage}.pt')
+
+
+    def parse_args(self, args=None):
+        parser = argparse.ArgumentParser(description='SeHGNN')
+        ## For environment costruction
+        parser.add_argument("--seeds", nargs='+', type=int, default=[1],
+                            help="the seed used in the training")
+        parser.add_argument("--dataset", type=str, default="ogbn-mag")
+        parser.add_argument("--gpu", type=int, default=0)
+        parser.add_argument("--cpu", action='store_true', default=False)
+        parser.add_argument("--root", type=str, default='../data/')
+        parser.add_argument("--stages", nargs='+',type=int, default=[300, 300, 300, 300],
+                            help="The epoch setting for each stage.")
+        ## For pre-processing
+        parser.add_argument("--emb_path", type=str, default='../data/')
+        parser.add_argument("--extra-embedding", type=str, default='',
+                            help="the name of extra embeddings")
+        parser.add_argument("--embed-size", type=int, default=256,
+                            help="inital embedding size of nodes with no attributes")
+        parser.add_argument("--num-hops", type=int, default=2,
+                            help="number of hops for propagation of raw labels")
+        parser.add_argument("--label-feats", action='store_true', default=False,             #True
+                            help="whether to use the label propagated features")
+        parser.add_argument("--num-label-hops", type=int, default=2,
+                            help="number of hops for propagation of raw features")
+        ## For network structure
+        parser.add_argument("--hidden", type=int, default=512)
+        parser.add_argument("--dropout", type=float, default=0.5,
+                            help="dropout on activation")
+        parser.add_argument("--n-layers-1", type=int, default=2,
+                            help="number of layers of feature projection")
+        parser.add_argument("--n-layers-2", type=int, default=2,
+                            help="number of layers of the downstream task")
+        parser.add_argument("--n-layers-3", type=int, default=4,
+                            help="number of layers of residual label connection")
+        parser.add_argument("--input-drop", type=float, default=0.1,
+                            help="input dropout of input features")
+        parser.add_argument("--att-drop", type=float, default=0.,
+                            help="attention dropout of model")
+        parser.add_argument("--label-drop", type=float, default=0.,
+                            help="label feature dropout of model")
+        parser.add_argument("--residual", action='store_true', default=False,           #True
+                            help="whether to connect the input features")
+        parser.add_argument("--act", type=str, default='leaky_relu',
+                            help="the activation function of the model")
+        parser.add_argument("--bns", action='store_true', default=False,               #True
+                            help="whether to process the input features")
+        parser.add_argument("--label-bns", action='store_true', default=False,          #True
+                            help="whether to process the input label features")
+        ## for training
+        parser.add_argument("--amp", action='store_true', default=False,                   #True
+                            help="whether to amp to accelerate training with float16(half) calculation")
+        parser.add_argument("--lr", type=float, default=0.001)
+        parser.add_argument("--weight-decay", type=float, default=0)
+        parser.add_argument("--eval-every", type=int, default=1)
+        parser.add_argument("--batch-size", type=int, default=10000)
+        parser.add_argument("--patience", type=int, default=100,
+                            help="early stop of times of the experiment")
+        parser.add_argument("--threshold", type=float, default=0.75,
+                            help="the threshold of multi-stage learning, confident nodes "
+                               + "whose score above this threshold would be added into the training set")
+        parser.add_argument("--gama", type=float, default=10,
+                            help="parameter for the KL loss")
+        parser.add_argument("--start-stage", type=int, default=0)
+        parser.add_argument("--reload", type=str, default='')
+
+        return parser.parse_args(args)
 
     def set_random_seed(self, seed=0):
         random.seed(seed)
@@ -382,6 +548,39 @@ class SeHGNNtrainer(BaseFlow):
                     new_g.nodes[ntype].data.pop(k)
         return new_g
 
+    def check_acc(self, preds_dict, condition, init_labels, train_nid, val_nid, test_nid):
+        mask_train, mask_val, mask_test = [], [], []
+        remove_label_keys = []
+        na, nb, nc = len(train_nid), len(val_nid), len(test_nid)
+
+        for k, v in preds_dict.items():
+            pred = v.argmax(1)
+
+            a, b, c = pred[train_nid] == init_labels[train_nid], \
+                      pred[val_nid] == init_labels[val_nid], \
+                      pred[test_nid] == init_labels[test_nid]
+            ra, rb, rc = a.sum() / len(train_nid), b.sum() / len(val_nid), c.sum() / len(test_nid)
+
+            vv = torch.log((v / (v.sum(1, keepdim=True) + 1e-6)).clamp(1e-6, 1 - 1e-6))
+            la, lb, lc = F.nll_loss(vv[train_nid], init_labels[train_nid]), \
+                         F.nll_loss(vv[val_nid], init_labels[val_nid]), \
+                         F.nll_loss(vv[test_nid], init_labels[test_nid])
+
+            if condition(ra, rb, rc, k):
+                mask_train.append(a)
+                mask_val.append(b)
+                mask_test.append(c)
+            else:
+                remove_label_keys.append(k)
+            print(k, ra, rb, rc, la, lb, lc, (ra / rb - 1) * 100, (ra / rc - 1) * 100, (1 - la / lb) * 100,
+                  (1 - la / lc) * 100)
+
+        print(set(list(preds_dict.keys())) - set(remove_label_keys))
+        print((torch.stack(mask_train, dim=0).sum(0) > 0).sum() / len(train_nid))
+        print((torch.stack(mask_val, dim=0).sum(0) > 0).sum() / len(val_nid))
+        print((torch.stack(mask_test, dim=0).sum(0) > 0).sum() / len(test_nid))
+        return remove_label_keys
+
     def run(self, model, train_loader, loss_fcn, optimizer, evaluator, device,
               feats, label_feats, labels_cuda, label_emb, mask=None, scalar=None):
         model.train()
@@ -402,8 +601,7 @@ class SeHGNNtrainer(BaseFlow):
             optimizer.zero_grad()
             if scalar is not None:
                 with torch.cuda.amp.autocast():
-                    fk = {'0': batch_feats, '1' :batch_labels_feats, '2': batch_label_emb}
-                    output_att = model(fk)
+                    output_att = model(batch_feats, batch_labels_feats, batch_label_emb)
                     if isinstance(loss_fcn, nn.BCELoss):
                         output_att = torch.sigmoid(output_att)
                     loss_train = loss_fcn(output_att, batch_y)
@@ -411,8 +609,7 @@ class SeHGNNtrainer(BaseFlow):
                 scalar.step(optimizer)
                 scalar.update()
             else:
-                fk = {'0': batch_feats, '1': batch_labels_feats,'2': batch_label_emb}
-                output_att = model(fk)
+                output_att = model(batch_feats, batch_labels_feats, batch_label_emb)
                 if isinstance(loss_fcn, nn.BCELoss):
                     output_att = torch.sigmoid(output_att)
                 L1 = loss_fcn(output_att, batch_y)
@@ -455,8 +652,7 @@ class SeHGNNtrainer(BaseFlow):
             optimizer.zero_grad()
             if scalar is not None:
                 with torch.cuda.amp.autocast():
-                    fk = {'0': batch_feats, '1': batch_labels_feats, '2': batch_label_emb}
-                    output_att = model(fk)
+                    output_att = model(batch_feats, batch_labels_feats, batch_label_emb)
                     L1 = loss_fcn(output_att[:len(idx_1)], y)
                     L2 = F.cross_entropy(output_att[len(idx_1):], extra_y, reduction='none')
                     L2 = (L2 * extra_weight).sum() / len(idx_2)
@@ -465,10 +661,7 @@ class SeHGNNtrainer(BaseFlow):
                 scalar.step(optimizer)
                 scalar.update()
             else:
-                while True:
-                    print("Yy")
-                fk = {'0': batch_feats, '1': label_emb[idx].to(device)}
-                output_att = model(fk)
+                output_att = model(batch_feats, label_emb[idx].to(device))
                 L1 = loss_fcn(output_att[:len(idx_1)], y)
                 L2 = F.cross_entropy(output_att[len(idx_1):], extra_y, reduction='none')
                 L2 = (L2 * extra_weight).sum() / len(idx_2)
@@ -511,4 +704,163 @@ class SeHGNNtrainer(BaseFlow):
             "y_pred": preds.view(-1, 1),
         })["acc"]
 
+    def load_dataset(self, args):
+            return self.load_mag(args)
 
+    def load_homo(self, args):
+        dataset = DglNodePropPredDataset(name=args.dataset, root=args.root)
+        splitted_idx = dataset.get_idx_split()
+
+        g, init_labels = dataset[0]
+        splitted_idx = dataset.get_idx_split()
+        train_nid = splitted_idx['train']
+        val_nid = splitted_idx['valid']
+        test_nid = splitted_idx['test']
+
+        # features = g.ndata['feat'].float()
+        init_labels = init_labels.squeeze()
+        n_classes = dataset.num_classes
+        evaluator = self.get_ogb_evaluator(args.dataset)
+
+        diag_name = f'{args.dataset}_diag.pt'
+        if not os.path.exists(diag_name):
+            src, dst, eid = g._graph.edges(0)
+            m = SparseTensor(row=dst, col=src, sparse_sizes=(g.num_nodes(), g.num_nodes()))
+
+            if args.dataset in ['ogbn-proteins', 'ogbn-products']:
+                if args.dataset == 'ogbn-products':
+                    m = remove_diag(m)
+                assert torch.all(m.get_diag() == 0)
+                mm_diag = sparse_tools.spspmm_diag_sym_AAA(m, num_threads=16)
+                tic = datetime.datetime.now()
+                mmm_diag = sparse_tools.spspmm_diag_sym_AAAA(m, num_threads=28)
+                toc = datetime.datetime.now()
+                torch.save([mm_diag, mmm_diag], diag_name)
+            else:
+                assert torch.all(m.get_diag() == 0)
+                t = m.t()
+                mm_diag = sparse_tools.spspmm_diag_ABA(m, m, num_threads=16)
+                mt_diag = sparse_tools.spspmm_diag_ABA(m, t, num_threads=16)
+                tm_diag = sparse_tools.spspmm_diag_ABA(t, m, num_threads=28)
+                tt_diag = sparse_tools.spspmm_diag_ABA(t, t, num_threads=28)
+                torch.save([mm_diag, mt_diag, tm_diag, tt_diag], diag_name)
+
+        if args.dataset in ['ogbn-arxiv', 'ogbn-papers100M']:
+            src, dst, eid = g._graph.edges(0)
+
+            new_edges = {}
+            new_edges[('P', 'cite', 'P')] = (src, dst)
+            new_edges[('P', 'cited_by', 'P')] = (dst, src)
+
+            new_g = dgl.heterograph(new_edges, {'P': g.num_nodes()})
+            new_g.nodes['P'].data['P'] = g.ndata.pop('feat')
+            g = new_g
+
+        return g, init_labels, g.num_nodes(), n_classes, train_nid, val_nid, test_nid, evaluator
+
+    def load_mag(self, args, symmetric=True):
+        dataset = DglNodePropPredDataset(name=args.dataset, root=args.root)
+        splitted_idx = dataset.get_idx_split()
+
+        g, init_labels = dataset[0]
+        splitted_idx = dataset.get_idx_split()
+        train_nid = splitted_idx['train']['paper']
+        val_nid = splitted_idx['valid']['paper']
+        test_nid = splitted_idx['test']['paper']
+
+        features = g.nodes['paper'].data['feat']
+        if len(args.extra_embedding):
+            print(f'Use extra embeddings generated with the {args.extra_embedding} method')
+            path = os.path.join(args.emb_path, f'{args.extra_embedding}_nars')
+            author_emb = torch.load(os.path.join(path, 'author.pt'), map_location=torch.device('cpu')).float()
+            topic_emb = torch.load(os.path.join(path, 'field_of_study.pt'), map_location=torch.device('cpu')).float()
+            institution_emb = torch.load(os.path.join(path, 'institution.pt'), map_location=torch.device('cpu')).float()
+        else:
+            author_emb = torch.Tensor(g.num_nodes('author'), args.embed_size).uniform_(-0.5, 0.5)
+            topic_emb = torch.Tensor(g.num_nodes('field_of_study'), args.embed_size).uniform_(-0.5, 0.5)
+            institution_emb = torch.Tensor(g.num_nodes('institution'), args.embed_size).uniform_(-0.5, 0.5)
+
+        g.nodes['paper'].data['feat'] = features
+        g.nodes['author'].data['feat'] = author_emb
+        g.nodes['institution'].data['feat'] = institution_emb
+        g.nodes['field_of_study'].data['feat'] = topic_emb
+
+        init_labels = init_labels['paper'].squeeze()
+        n_classes = int(init_labels.max()) + 1
+        evaluator = self.get_ogb_evaluator(args.dataset)
+
+        # for k in g.ntypes:
+        #     print(k, g.ndata['feat'][k].shape)
+        for k in g.ntypes:
+            print(k, g.nodes[k].data['feat'].shape)
+
+        adjs = []
+        for i, etype in enumerate(g.etypes):
+            src, dst, eid = g._graph.edges(i)
+            adj = SparseTensor(row=dst, col=src)
+            adjs.append(adj)
+            print(g.to_canonical_etype(etype), adj)
+
+        # F --- *P --- A --- I
+        # paper : [736389, 128]
+        # author: [1134649, 256]
+        # institution [8740, 256]
+        # field_of_study [59965, 256]
+
+        new_edges = {}
+        ntypes = set()
+
+        etypes = [  # src->tgt
+            ('A', 'A-I', 'I'),
+            ('A', 'A-P', 'P'),
+            ('P', 'P-P', 'P'),
+            ('P', 'P-F', 'F'),
+        ]
+
+        if symmetric:
+            adjs[2] = adjs[2].to_symmetric()
+            assert torch.all(adjs[2].get_diag() == 0)
+
+        for etype, adj in zip(etypes, adjs):
+            stype, rtype, dtype = etype
+            dst, src, _ = adj.coo()
+            src = src.numpy()
+            dst = dst.numpy()
+            if stype == dtype:
+                new_edges[(stype, rtype, dtype)] = (np.concatenate((src, dst)), np.concatenate((dst, src)))
+            else:
+                new_edges[(stype, rtype, dtype)] = (src, dst)
+                new_edges[(dtype, rtype[::-1], stype)] = (dst, src)
+            ntypes.add(stype)
+            ntypes.add(dtype)
+
+        new_g = dgl.heterograph(new_edges)
+        new_g.nodes['P'].data['P'] = g.nodes['paper'].data['feat']
+        new_g.nodes['A'].data['A'] = g.nodes['author'].data['feat']
+        new_g.nodes['I'].data['I'] = g.nodes['institution'].data['feat']
+        new_g.nodes['F'].data['F'] = g.nodes['field_of_study'].data['feat']
+
+        IA, PA, PP, FP = adjs
+
+        diag_name = f'{args.dataset}_PFP_diag.pt'
+        if not os.path.exists(diag_name):
+            PF = FP.t()
+            PFP_diag = sparse_tools.spspmm_diag_sym_ABA(PF)
+            torch.save(PFP_diag, diag_name)
+
+        if symmetric:
+            diag_name = f'{args.dataset}_PPP_diag.pt'
+            if not os.path.exists(diag_name):
+                # PP = PP.to_symmetric()
+                # assert torch.all(PP.get_diag() == 0)
+                PPP_diag = sparse_tools.spspmm_diag_sym_AAA(PP)
+                torch.save(PPP_diag, diag_name)
+        else:
+            assert False
+
+        diag_name = f'{args.dataset}_PAP_diag.pt'
+        if not os.path.exists(diag_name):
+            PAP_diag = sparse_tools.spspmm_diag_sym_ABA(PA)
+            torch.save(PAP_diag, diag_name)
+
+        return new_g, init_labels, new_g.num_nodes('P'), n_classes, train_nid, val_nid, test_nid, evaluator
