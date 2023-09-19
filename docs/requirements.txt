@@ -1,5 +1,0 @@
-sphinx
-sphinx_rtd_theme
-sphinx-markdown-tables
-recommonmark
-sphinx_copybutton==0.4.0
