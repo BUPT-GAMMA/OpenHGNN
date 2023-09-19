@@ -1,0 +1,467 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2021, GAMMA LAB
+# This file is distributed under the same license as the OpenHGNN package.
+# FIRST AUTHOR <zhanghongyi@bupt.edu.cn>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: OpenHGNN \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-06 14:51+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Hongyi Zhang <zhanghongyi@bupt.edu.cn>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.0\n"
+
+#: ../../install/index.rst:2
+msgid "Install and Setup"
+msgstr "安装和配置"
+
+#: ../../install/index.rst:5
+msgid "System requirements"
+msgstr "系统要求"
+
+#: ../../install/index.rst:6
+msgid "OpenHGNN works with the following operating systems:"
+msgstr "OpenHGNN可以在下列操作系统中使用"
+
+#: ../../install/index.rst:8
+msgid "Ubuntu 16.04"
+msgstr ""
+
+#: ../../install/index.rst:9
+msgid "macOS X"
+msgstr ""
+
+#: ../../install/index.rst:10
+msgid "Windows 10"
+msgstr ""
+
+#: ../../install/index.rst:12
+msgid "OpenHGNN requires Python version 3.6, 3.7, 3.8, or 3.9."
+msgstr "OpenHGNN要求Python版本 3.6, 3.7, 3.8, or 3.9."
+
+#: ../../install/index.rst:15
+msgid "Install"
+msgstr "安装"
+
+#: ../../install/index.rst:17
+msgid "Python environment requirments"
+msgstr "Python"
+
+#: ../../install/index.rst:19
+msgid "`Python <https://www.python.org/>`_ >= 3.6"
+msgstr ""
+
+#: ../../install/index.rst:20
+msgid "`PyTorch <https://pytorch.org/get-started/>`_  >= 1.9.0"
+msgstr ""
+
+#: ../../install/index.rst:21
+msgid "`DGL <https://github.com/dmlc/dgl>`_ >= 0.8.0"
+msgstr ""
+
+#: ../../install/index.rst:24
+msgid ""
+"**1. Python environment (Optional):** We recommend using Conda package "
+"manager"
+msgstr "**1. Python 环境 (可选):** 推荐使用 Conda 包管理 "
+
+#: ../../install/index.rst:32
+msgid "**2. Pytorch:** Install `PyTorch <https://pytorch.org/>`_. For example:"
+msgstr "**2. Pytorch:** 安装Pytorch, 参考 `PyTorch安装文档 <https://pytorch.org/get-started/>`_ . "
+
+#: ../../install/index.rst:40
+msgid ""
+"**3. DGL:** Install `DGL <https://github.com/dmlc/dgl>`_, follow their "
+"instructions. For example:"
+msgstr "**3. DGL:** 安装 DGL, 参考 `DGL安装文档 <https://www.dgl.ai/pages/start.html>`_ ."
+
+#: ../../install/index.rst:48
+msgid "**4. Install openhgnn:**"
+msgstr "**4. 下载OpenHGNN, 安装依赖:**"
+
+#: ../../install/usage.rst:2
+msgid "Basic Usage"
+msgstr "基础使用"
+
+#: ../../install/usage.rst:5
+msgid "Run experiments"
+msgstr "运行实验"
+
+#: ../../install/usage.rst:6
+msgid ""
+"Running an existing baseline model on an existing benchmark :ref:`task "
+"<api_dataset>`"
+msgstr "在已有的评测上运行已有的基线模型 :ref:`任务 "
+"<api_dataset>`"
+
+#: ../../install/usage.rst:14
+msgid "Optional arguments are as follows:"
+msgstr "可选参数"
+
+#: ../../install/usage.rst:16
+msgid ""
+"``--model MODEL``, ``-m MODEL`` name of models.  Please refer to the "
+"`model list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_ for "
+"supported models and their names."
+msgstr ""
+"``--model MODEL``, ``-m MODEL`` 模型名. 请在 "
+"`模型列表 <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_ 查看支持的模型."
+
+#: ../../install/usage.rst:17
+msgid ""
+"``--task TASK``, ``-t TASK`` name of task.  Please refer to `tasks "
+"<https://github.com/BUPT-"
+"GAMMA/OpenHGNN/tree/main/openhgnn/tasks#Supported task>`_  for the list "
+"of tasks."
+msgstr ""
+"``--task TASK``, ``-t TASK`` 任务名.  请在 `任务 "
+"<https://github.com/BUPT-"
+"GAMMA/OpenHGNN/tree/main/openhgnn/tasks#Supported task>`_  查看支持的任务."
+
+#: ../../install/usage.rst:18
+msgid ""
+"``--dataset DATASET``, ``-d DATASET`` name of datasets.  Please refer to "
+"`datasets <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/tree/main/openhgnn/dataset#Dataset>`_ for the list of "
+"datasets."
+msgstr ""
+"``--dataset DATASET``, ``-d DATASET`` 数据集名.  请在 "
+"`数据集 <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/tree/main/openhgnn/dataset#Dataset>`_ 查看支持的数据集."
+
+#: ../../install/usage.rst:19
+msgid ""
+"``--gpu GPU``, ``-g GPU`` controls which GPU you will use. If you do not "
+"have GPU, set ``-g -1``."
+msgstr ""
+"``--gpu GPU``, ``-g GPU`` 控制你使用哪一个GPU, 如果没有GPU, 设定 -g -1."
+
+#: ../../install/usage.rst:20
+msgid ""
+"``--use_best_config`` use the best config OpenHGNN has found in the "
+"dataset with the model. If you want to set the different hyper-parameter,"
+" modify the `config.ini <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ file manually."
+msgstr ""
+"``--use_best_config`` use_best_config 意味着你使用该模型在该数据集下最优的配置, 如果你想要设定不同的超参数,请手动修改 `配置文件 <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ "
+
+#: ../../install/usage.rst:21
+msgid "``--use_hpo`` use hyper-parameter optimization from optuna."
+msgstr "``--use_hpo`` 使用optuna进行超参数优化. "
+
+#: ../../install/usage.rst:22
+msgid "``--load_from_pretrained`` will load the model from a default checkpoint."
+msgstr "``--load_from_pretrained`` 从检查点加载模型."
+
+#: ../../install/usage.rst:24
+msgid "e.g.:"
+msgstr "例如:"
+
+#: ../../install/usage.rst:31
+msgid "Hyper-parameter optimization"
+msgstr "超参数优化"
+
+#: ../../install/usage.rst:32
+msgid "Running an experiment with optuna"
+msgstr "使用optuna运行实验"
+
+#: ../../install/usage.rst:38
+msgid "OpenHGNN will determine hyperparameters in the following order:"
+msgstr "OpenHGNN按如下的顺序决定超参数"
+
+#: ../../install/usage.rst:40
+msgid ""
+"If ``--use_hpo`` is enabled, search for the best hyperparameter by "
+"optuna. This is controlled by :func:`func_search` in "
+"``./openhgnn/auto/hpo.py``. Please refer `here <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_ for more details."
+msgstr ""
+"如果使用 ``--use_hpo`` 会通过optuna查找最佳超参数. 这个功能在``./openhgnn/auto/hpo.py`` 中的 :func:`func_search` 实现. "
+"请在 `这里 <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/tree/main/openhgnn/auto>`_ 查看更多细节."
+
+#: ../../install/usage.rst:41
+msgid ""
+"Otherwise, if ``--use_best_config`` is enabled, load the best "
+"hyperparameters built within OpenHGNN. The configurations are in "
+"``./openhgnn/utils/best_config.py``."
+msgstr ""
+"否则, 如果使用 ``--use_best_config`` 则加载OpenHGNN内置的最佳超参数. 配置在 "
+"``./openhgnn/utils/best_config.py``."
+
+#: ../../install/usage.rst:42
+msgid "Otherwise, load the hyperparameters in ``./openhgnn/config.ini``."
+msgstr "否则, 从 ``./openhgnn/config.ini`` 加载超参数."
+
+#: ../../install/usage.rst:45
+msgid "Evaluate a new dataset"
+msgstr "评测一个新的数据集"
+
+#: ../../install/usage.rst:46
+msgid ""
+"You can specify your dataset if necessary. In this section we use HGBn-"
+"ACM as an example for the node classification dataset."
+msgstr "如果需要的话，你可以指定你的数据集。在这一节中，我们以HGBn-ACM为例构建节点分类数据集。"
+
+#: ../../install/usage.rst:49
+msgid "How to build a new dataset"
+msgstr "如何构建一个新的数据集"
+
+#: ../../install/usage.rst:51
+msgid "**First step: Process dataset**"
+msgstr "**第一步：处理数据集**"
+
+#: ../../install/usage.rst:53
+msgid ""
+"We give a `demo <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/debug/HGBn-ACM2dgl.py>`_ to process the"
+" HGBn-ACM, which is a node classification dataset."
+msgstr ""
+"我们给出了一个节点分类数据集HGBn-ACM的处理 `demo <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/debug/HGBn-ACM2dgl.py>`_。"
+
+#: ../../install/usage.rst:56
+msgid ""
+"First, download the HGBn-ACM from the `Link "
+"<https://www.biendata.xyz/hgb/#/datasets>`_. After that, we process it as"
+" a `dgl.heterograph <https://docs.dgl.ai/en/latest/guide/graph-"
+"heterogeneous.html#guide-graph-heterogeneous>`_."
+msgstr ""
+"首先我们先下载 `HGBn-ACM <https://www.biendata.xyz/hgb/#/datasets>`_。之后，我们将他处理成 "
+"`dgl.heterograph <https://docs.dgl.ai/en/latest/guide/graph-"
+"heterogeneous.html#guide-graph-heterogeneous>`_。"
+
+#: ../../install/usage.rst:59
+msgid ""
+"The following code snippet is an example of creating a heterogeneous "
+"graph in DGL."
+msgstr "以下代码片段演示了如何在DGL中创建异质图。"
+
+#: ../../install/usage.rst:82
+msgid "We recommend to set the feature name as ``'h'``."
+msgstr "我们推荐将特征命名为``'h'``。"
+
+#: ../../install/usage.rst:88
+msgid ""
+"DGL provides :func:`dgl.save_graphs` and :func:`dgl.load_graphs` "
+"respectively for saving and loading heterogeneous graphs in binary "
+"format. So we can use `dgl.save_graphs "
+"<https://docs.dgl.ai/en/latest/generated/dgl.save_graphs.html#>`_ to "
+"store graphs into the disk."
+msgstr ""
+"DGL提供了 :func:`dgl.save_graphs` 和 :func:`dgl.load_graphs` "
+"分别用于保存和加载二进制格式的异质图。所以我们可以使用 `dgl.save_graphs "
+"<https://docs.dgl.ai/en/latest/generated/dgl.save_graphs.html#>`_ "
+"来将图保存到磁盘中。"
+
+#: ../../install/usage.rst:96
+msgid "**Second step: Add extra information**"
+msgstr "**第二步：添加额外信息**"
+
+#: ../../install/usage.rst:98
+msgid ""
+"We can get a binary file named *demo_graph.bin* after the first step, and"
+" we should move it into the directory *openhgnn/dataset/*. The next step "
+"is to specify information in the `NodeClassificationDataset.py "
+"<https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/dataset/NodeClassificationDataset.py#L145>`_"
+msgstr ""
+"我们在第一步之后得到了一个二进制文件 *demo_graph.bin* ，并且我们需要将它放到目录 *openhgnn/dataset/* "
+"中。下一步是在 `NodeClassificationDataset.py <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/dataset/NodeClassificationDataset.py#L145>`_"
+" 中指定信息。"
+
+#: ../../install/usage.rst:101
+msgid ""
+"For example, we should set the *category*, *num_classes* and "
+"*multi_label* (if necessary) with ``\"paper\"``, ``3``, ``True``, "
+"representing the node type to predict classes for, the number of classes,"
+" and whether the task is multi-label classification respectively. Please "
+"refer to :ref:`Base Node Classification Dataset <api-base-node-dataset>` "
+"for more details."
+msgstr ""
+"例如，我们要将 *category*， *num_classes* 和 *multi_label* （如果必要的话）设置为 "
+"``\"paper\"``，``3``，``True``，分别代表要预测类别的节点类型，类别的数目，任务是否是多标签分类。更多细节请参考 "
+":ref:`Base Node Classification Dataset <api-base-node-dataset>`。"
+
+#: ../../install/usage.rst:115
+msgid "**Third step: optional**"
+msgstr "**第三步：可选**"
+
+#: ../../install/usage.rst:117
+msgid ""
+"We can use ``demo_graph`` as our dataset name to evaluate an existing "
+"model."
+msgstr "我们可以使用 ``demo_graph`` 作为我们的数据集名称来评测现有的模型。"
+
+#: ../../install/usage.rst:123
+msgid ""
+"If you have another dataset name, you should also modify the "
+"`build_dataset <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/dataset/__init__.py>`_."
+msgstr ""
+"如果你有其他的数据集名称，你也需要在 `build_dataset <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/dataset/__init__.py>`_ 中改变名称。"
+
+#: ../../install/usage.rst:126
+msgid "Apply a new model"
+msgstr "应用一个新模型"
+
+#: ../../install/usage.rst:127
+msgid ""
+"In this section, we will create a model named RGAT, which is not in our "
+"`models package <api-model>`."
+msgstr "这一节中，我们将创建一个并不在我们 `模型包<api-model>` 中的模型，叫做RGAT"
+
+#: ../../install/usage.rst:131
+msgid "How to build a new model"
+msgstr "如何创建一个新模型"
+
+#: ../../install/usage.rst:132
+msgid "**First step: Register model**"
+msgstr "**第一步：注册模型**"
+
+#: ../../install/usage.rst:134
+msgid ""
+"We should create a class ``RGAT`` that inherits the :ref:`Base Model "
+"<api-model>` and register the model with ``@register_model(str)``."
+msgstr ""
+"我们要创建一个继承 :ref:`Base Model <api-model>` 的类 ``RGAT`` ，并使用 "
+"``@register_model(str)`` 注册模型。"
+
+#: ../../install/usage.rst:144
+msgid "**Second step: Implement functions**"
+msgstr "**第二步：实现函数**"
+
+#: ../../install/usage.rst:146
+msgid ""
+"We must implement the class method ``build_model_from_args``, other "
+"functions like ``__init__``, ``forward``, etc."
+msgstr ""
+"我们必须实现 ``build_model_from_args`` 类方法，以及其他的例如 ``__init__`` ， ``forward`` "
+"等函数。"
+
+#: ../../install/usage.rst:182
+msgid ""
+"Here we do not give the implementation details of ``RGATLayer``. For more"
+" reading, check out: `RGATLayer <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/models/RGAT.py>`_."
+msgstr ""
+"这里，我们并没有给出 ``RGATLayer`` 的实现细节。更多内容请参考 `RGATLayer <https://github.com"
+"/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/models/RGAT.py>`_。"
+
+#: ../../install/usage.rst:187
+msgid ""
+"In OpenHGNN, we preprocess the features of the dataset outside of the "
+"model. Specifically, we use a linear layer with bias for each node type "
+"to map all node features to a shared feature space. So the parameter "
+"``h_dict`` of ``forward`` in the model are not original features, and "
+"your model does not need feature preprocessing."
+msgstr ""
+"在OpenHGNN中，我们在模型外预处理数据集的特征。具体来说，我们对每一个节点类型应用一个带偏置线性层，将所有的节点特征映射到一个共享的特征空间。所以模型的"
+" ``forward`` 中的参数 ``h_dict`` 并不是原始的特征，你的模型也不需要特征预处理。"
+
+#: ../../install/usage.rst:191
+msgid "**Third step: Add to supported models dictionary**"
+msgstr "**第三步：添加到支持模型字典中**"
+
+#: ../../install/usage.rst:193
+msgid ""
+"We should add a new entry to ``SUPPORTED_MODELS`` in `models/init.py "
+"<https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/models/__init__.py>`_"
+msgstr ""
+"我们要在 `models/init.py <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/models/__init__.py>`_ 的 "
+"``SUPPORTED_MODELS`` 中添加一个新的入口。"
+
+#: ../../install/usage.rst:196
+msgid "Apply to a new scenario"
+msgstr "应用到一个新的场景"
+
+#: ../../install/usage.rst:197
+msgid ""
+"In this section, we will apply to a recommendation scenario, which "
+"involves building a new task and trainerflow."
+msgstr "在本节中，我们将应用到一个推荐场景，包括创建一个新的任务和训练流。"
+
+#: ../../install/usage.rst:200
+msgid "How to build a new task"
+msgstr "如何创建一个新的任务"
+
+#: ../../install/usage.rst:201
+msgid "**First step: Register task**"
+msgstr "**第一步：注册任务**"
+
+#: ../../install/usage.rst:203
+msgid ""
+"We should create a class ``Recommendation`` that inherits the "
+":ref:`BaseTask <api-task>` and register it with ``@register_task(str)``."
+msgstr ""
+"我们要创建一个继承 :ref:`BaseTask <api-task>` 的类 ``Recommendation`` ，并使用 "
+"``@register_task(str)`` 注册。"
+
+#: ../../install/usage.rst:213 ../../install/usage.rst:254
+msgid "**Second step: Implement methods**"
+msgstr "**第二步：实现方法**"
+
+#: ../../install/usage.rst:215
+msgid ""
+"We should implement the methods involved with evaluation metrics and loss"
+" functions."
+msgstr "我们要实现的方法包括评测指标和损失函数。"
+
+#: ../../install/usage.rst:236 ../../install/usage.rst:290
+msgid "**Finally**"
+msgstr "**最后**"
+
+#: ../../install/usage.rst:238
+msgid ""
+"We should add a new entry to ``SUPPORTED_TASKS`` in `task/init.py "
+"<https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/tasks/__init__.py>`_"
+msgstr ""
+"我们要在 `task/init.py <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/tasks/__init__.py>`_ 的 "
+"``SUPPORTED_TASKS`` 中添加一个新的入口。"
+
+#: ../../install/usage.rst:241
+msgid "How to build a new trainerflow"
+msgstr "如何创建一个新的训练流"
+
+#: ../../install/usage.rst:242
+msgid "**First step: Register trainerflow**"
+msgstr "**第一步：注册训练流**"
+
+#: ../../install/usage.rst:244
+msgid ""
+"We should create a class that inherits the :ref:`BaseFlow <api-"
+"trainerflow>` and register the trainerflow with "
+"``@register_trainer(str)``."
+msgstr ""
+"我们创建一个继承 :ref:`BaseFlow <api-trainerflow>` 的类，并使用 "
+"``@register_trainer(str)`` 注册。"
+
+#: ../../install/usage.rst:256
+msgid ""
+"We declared the function ``train()`` as an abstract method.  So the "
+"train() must be overridden, or the trainerflow cannot be instantiated.  "
+"The following gives an example of the training loop."
+msgstr "我们将函数 ``train()`` 声明为一个抽象方法。因此train()需要被重写，否则不能实例化训练流，以下演示了训练循环的过程。"
+
+#: ../../install/usage.rst:292
+msgid ""
+"We should add a new entry to ``SUPPORTED_FLOWS`` in `trainerflow/init.py "
+"<https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/trainerflow/__init__.py>`_"
+msgstr ""
+"我们应当在 `trainerflow/init.py <https://github.com/BUPT-"
+"GAMMA/OpenHGNN/blob/main/openhgnn/trainerflow/__init__.py>`_ 的 "
+"``SUPPORTED_FLOWS`` 中添加一个新入口。"
+
