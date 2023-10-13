@@ -13,15 +13,11 @@ import os
 import sys
 import gc
 import random
-import sparse_tools
-import dgl
 import dgl.function as fn
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_sparse import SparseTensor
-from torch_sparse import remove_diag, set_diag
 
 import numpy as np
 import scipy.sparse as sp
@@ -41,6 +37,7 @@ from ..tasks import NodeClassification
 @register_flow("SeHGNN_trainer")
 class SeHGNNtrainer(BaseFlow):
     def __init__(self,args):
+        super(SeHGNNtrainer, self).__init__(args)
         args.stages = [int(item.strip()) for item in args.stages.split(',')]
         self.args = args
         self.flow = NodeClassification(args)
@@ -61,53 +58,25 @@ class SeHGNNtrainer(BaseFlow):
         valtest_point = trainval_point + valid_node_nums
         total_num_nodes = len(self.flow.train_idx) + len(self.flow.val_idx) + len(self.flow.test_idx)
 
-        if total_num_nodes < num_nodes:
-            flag = torch.ones(num_nodes, dtype=bool)
-            flag[self.flow.train_idx] = 0
-            flag[self.flow.val_idx] = 0
-            flag[self.flow.test_idx] = 0
-            extra_nid = torch.where(flag)[0]
-            print(f'Find {len(extra_nid)} extra nid for dataset {args.dataset}')
-        else:
-            extra_nid = torch.tensor([], dtype=torch.long)
-
-        init2sort = torch.cat([self.flow.train_idx, self.flow.val_idx, self.flow.test_idx, extra_nid])
+        init2sort = torch.cat([self.flow.train_idx, self.flow.val_idx, self.flow.test_idx])
         sort2init = torch.argsort(init2sort)
         assert torch.all(self.flow.labels[init2sort][sort2init] == self.flow.labels)
         labels = self.flow.labels[init2sort]
-
         # =======
         # features propagate alongside the metapath
         # =======
-        prop_tic = datetime.datetime.now()
         tgt_type = 'P'
-
-        extra_metapath = [] # ['AIAP', 'PAIAP']
-        extra_metapath = [ele for ele in extra_metapath if len(ele) > args.num_hops + 1]
-
-        print(f'Current num hops = {args.num_hops}')
-        if len(extra_metapath):
-            max_hops = max(args.num_hops + 1, max([len(ele) for ele in extra_metapath]))
-        else:
-            max_hops = args.num_hops + 1
-
+        max_hops = args.num_hops + 1
         # compute k-hop feature
-        self.flow.dataset.SeHGNN_g = self.hg_propagate(self.flow.dataset.SeHGNN_g, tgt_type, args.num_hops, max_hops, extra_metapath, echo=False)
-
+        self.flow.dataset.SeHGNN_g = self.hg_propagate(self.flow.dataset.SeHGNN_g, tgt_type, args.num_hops, max_hops, echo=False)
         feats = {}
         keys = list(self.flow.dataset.SeHGNN_g.nodes[tgt_type].data.keys())
         print(f'Involved feat keys {keys}')
         for k in keys:
             feats[k] = self.flow.dataset.SeHGNN_g.nodes[tgt_type].data.pop(k)
-
         self.flow.dataset.SeHGNN_g = self.clear_hg(self.flow.dataset.SeHGNN_g, echo=False)
-
         feats = {k: v[init2sort] for k, v in feats.items()}
-
-        prop_toc = datetime.datetime.now()
-        print(f'Time used for feat prop {prop_toc - prop_tic}')
         gc.collect()
-
         all_loader = torch.utils.data.DataLoader(
             torch.arange(num_nodes), batch_size=args.batch_size, shuffle=False, drop_last=False)
 
@@ -119,10 +88,8 @@ class SeHGNNtrainer(BaseFlow):
             scalar = torch.cuda.amp.GradScaler()
         else:
             scalar = None
-
         device = "cuda:{}".format(args.gpu) if not args.cpu else 'cpu'
         labels_cuda = labels.long().to(device)
-
         checkpt_file = checkpt_folder + uuid.uuid4().hex
         print(checkpt_file)
 
@@ -183,19 +150,10 @@ class SeHGNNtrainer(BaseFlow):
                 else:
                     label_onehot = torch.zeros((num_nodes, n_classes))
                 label_onehot[self.flow.train_idx] = F.one_hot(self.flow.labels[self.flow.train_idx], n_classes).float()
-
                 self.flow.dataset.SeHGNN_g.nodes['P'].data['P'] = label_onehot
-
-                extra_metapath = [] # ['PAIAP']
-                extra_metapath = [ele for ele in extra_metapath if len(ele) > args.num_label_hops + 1]
-
                 print(f'Current num label hops = {args.num_label_hops}')
-                if len(extra_metapath):
-                    max_hops = max(args.num_label_hops + 1, max([len(ele) for ele in extra_metapath]))
-                else:
-                    max_hops = args.num_label_hops + 1
-
-                self.flow.dataset.SeHGNN_g = self.hg_propagate(self.flow.dataset.SeHGNN_g, tgt_type, args.num_label_hops, max_hops, extra_metapath, echo=False)
+                max_hops = args.num_label_hops + 1
+                self.flow.dataset.SeHGNN_g = self.hg_propagate(self.flow.dataset.SeHGNN_g, tgt_type, args.num_label_hops, max_hops, echo=False)
 
                 keys = list(self.flow.dataset.SeHGNN_g.nodes[tgt_type].data.keys())
                 print(f'Involved label keys {keys}')
@@ -335,17 +293,14 @@ class SeHGNNtrainer(BaseFlow):
             pp += nn
         return pp
 
-    def hg_propagate(self, new_g, tgt_type, num_hops, max_hops, extra_metapath, echo=False):
+    def hg_propagate(self, new_g, tgt_type, num_hops, max_hops, echo=False):
         for hop in range(1, max_hops):
-            reserve_heads = [ele[:hop] for ele in extra_metapath if len(ele) > hop]
             for etype in new_g.etypes:
                 stype, _, dtype = new_g.to_canonical_etype(etype)
-
                 for k in list(new_g.nodes[stype].data.keys()):
                     if len(k) == hop:
                         current_dst_name = f'{dtype}{k}'
-                        if (hop == num_hops and dtype != tgt_type and k not in reserve_heads) \
-                                or (hop > num_hops and k not in reserve_heads):
+                        if (hop == num_hops and dtype != tgt_type) or (hop > num_hops):
                             continue
                         if echo: print(k, etype, current_dst_name)
                         new_g[etype].update_all(
@@ -472,10 +427,6 @@ class SeHGNNtrainer(BaseFlow):
                 L1 = loss_fcn(output_att[:len(idx_1)], y)
                 L2 = F.cross_entropy(output_att[len(idx_1):], extra_y, reduction='none')
                 L2 = (L2 * extra_weight).sum() / len(idx_2)
-                # teacher_soft = predict_prob[idx_2].to(device)
-                # teacher_prob = torch.max(teacher_soft, dim=1, keepdim=True)[0]
-                # L3 = (teacher_prob*(teacher_soft*(torch.log(teacher_soft+1e-8)-torch.log_softmax(output_att[len(idx_1):], dim=1)))).sum(1).mean()*(len(idx_2)*1.0/(len(idx_1)+len(idx_2)))
-                # loss = L1 + L3*gama
                 loss_train = L1_ratio * L1 + gama * L2_ratio * L2
                 loss_train.backward()
                 optimizer.step()

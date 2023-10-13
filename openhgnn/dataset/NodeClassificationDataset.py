@@ -1,22 +1,22 @@
 import os
 import dgl
 import dgl.function as fn
-import sparse_tools
 import torch as th
 import numpy as np
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
 from dgl.data import CoraGraphDataset,CiteseerGraphDataset,PubmedGraphDataset
+from dgl import sparse as dglsp
 # from dgl.data import TexasDataset,CornellDataset
 import scipy.sparse as sp
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
 from . import BaseDataset, register_dataset
 from . import AcademicDataset, HGBDataset, OHGBDataset
-from .utils import sparse_mx_to_torch_sparse_tensor
+from .utils import sparse_mx_to_torch_sparse_tensor, to_symmetric, row_norm
 from ..utils import add_reverse_edges
-from torch_sparse import SparseTensor
-
+#import sparse_tools
+#from torch_sparse import SparseTensor
 
 @register_dataset('node_classification')
 class NodeClassificationDataset(BaseDataset):
@@ -545,11 +545,12 @@ class OGB_NodeClassification(NodeClassificationDataset):
         g.nodes['field_of_study'].data['feat'] = topic_emb
 
         adjs = []
-        for i, etype in enumerate(g.etypes):
+        i = 0
+        for src_type, edge_type, dst_type in g.canonical_etypes:
             src, dst, eid = g._graph.edges(i)
-            adj = SparseTensor(row=dst, col=src)
+            adj = dglsp.spmatrix(indices = th.stack((src, dst)), shape = (g.number_of_nodes(src_type), g.number_of_nodes(dst_type)))
             adjs.append(adj)
-
+            i += 1
         # F --- *P --- A --- I
         # paper : [736389, 128]
         # author: [1134649, 256]
@@ -566,14 +567,10 @@ class OGB_NodeClassification(NodeClassificationDataset):
             ('P', 'P-F', 'F'),
         ]
 
-        adjs[2] = adjs[2].to_symmetric()
-        assert th.all(adjs[2].get_diag() == 0)
-
+        adjs[2] = to_symmetric(adjs[2])
         for etype, adj in zip(etypes, adjs):
             stype, rtype, dtype = etype
-            dst, src, _ = adj.coo()
-            src = src.numpy()
-            dst = dst.numpy()
+            src, dst = adj.coo()
             if stype == dtype:
                 new_edges[(stype, rtype, dtype)] = (np.concatenate((src, dst)), np.concatenate((dst, src)))
             else:
@@ -590,23 +587,30 @@ class OGB_NodeClassification(NodeClassificationDataset):
 
         IA, PA, PP, FP = adjs
 
-        diag_name = f'ogbn_mag_PFP_diag.pt'
+        diag_name = f'ogbn-mag_PP_diag.pt'
         if not os.path.exists(diag_name):
-            PF = FP.t()
-            PFP_diag = sparse_tools.spspmm_diag_sym_ABA(PF)
-            th.save(PFP_diag, diag_name)
+            PP_rm_diag = row_norm(PP)
+            th.save(PP_rm_diag, diag_name)
 
-        diag_name = f'ogbn_mag_PPP_diag.pt'
+        diag_name = f'ogbn-mag_PPP_diag.pt'
         if not os.path.exists(diag_name):
-            # PP = PP.to_symmetric()
-            # assert torch.all(PP.get_diag() == 0)
-            PPP_diag = sparse_tools.spspmm_diag_sym_AAA(PP)
-            th.save(PPP_diag, diag_name)
+            PP_rm_diag = row_norm(PP)
+            PPP_rm_diag = dglsp.spspmm(PP_rm_diag, PP_rm_diag)
+            th.save(PPP_rm_diag, diag_name)
 
-        diag_name = f'ogbn_mag_PAP_diag.pt'
+        diag_name = f'ogbn-mag_PAP_diag.pt'
         if not os.path.exists(diag_name):
-            PAP_diag = sparse_tools.spspmm_diag_sym_ABA(PA)
-            th.save(PAP_diag, diag_name)
+            PA_rm_diag = row_norm(PA)
+            AP_rm_diag = row_norm(PA.T)
+            PAP_rm_diag = dglsp.spspmm(PA_rm_diag, AP_rm_diag)
+            th.save(PAP_rm_diag, diag_name)
+
+        diag_name = f'ogbn-mag_PFP_diag.pt'
+        if not os.path.exists(diag_name):
+            PF_rm_diag = row_norm(FP.T)
+            FP_rm_diag = row_norm(FP)
+            PFP_rm_diag = dglsp.spspmm(PF_rm_diag, FP_rm_diag)
+            th.save(PFP_rm_diag, diag_name)
 
         return new_g
     def mag4HGT(self, hg):

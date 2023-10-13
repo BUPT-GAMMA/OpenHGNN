@@ -131,16 +131,23 @@ class SeHGNN(BaseModel):
     the single-layer structure and long metapaths. It performed over the state-of-the-arts on both accuracy and training speed.
 
     the neighbor aggregation
+
     .. math::
         \mathrm{X}^{P} = \hat{A}_{c,c_{1}}\hat{A}_{c_{1},c_{2}}...\hat{A}_{c_{l-1},c_{l}} \mathrm{X}^{c_{l}}
+
     feature projection
+    
     .. math::
         {\mathrm{H}^{'}}^{P} = MLP_{P}(\mathrm{X}^{P})
+
     semantic fusion (transformer):
+
     .. math::
         q^{\mathcal{P}_{i}}=W_{Q} h^{\prime \mathcal{P}_{i}}, k^{\mathcal{P}_{i}}=W_{K} h^{\prime \mathcal{P}_{i}}, v^{\mathcal{P}_{i}}=W_{V} h^{\prime \mathcal{P}_{i}}, \mathcal{P}_{i} \in \Phi_{X} \\
+
     .. math::
         \alpha_{\left(\mathcal{P}_{i}, \mathcal{P}_{j}\right)}=\frac{\exp \left(q^{\mathcal{P}_{i}} \cdot k^{{\mathcal{P}_{j}}^{T}}\right)}{\sum_{\mathcal{P}_{t} \in \Phi_{X}} \exp \left(q^{\mathcal{P}_{i}} \cdot k^{{\mathcal{P}_{t}}^{T}}\right)}
+
     .. math::
         h^{\mathcal{P}_{i}}=\beta \sum_{\mathcal{P}_{j} \in \Phi_{X}} \alpha_{\left(\mathcal{P}_{i}, \mathcal{P}_{j}\right)} v^{\mathcal{P}_{j}}+h^{\prime \mathcal{P}_{i}}
     """
@@ -150,76 +157,70 @@ class SeHGNN(BaseModel):
 
     def __init__(self, args):
         super(SeHGNN, self).__init__()
-        dataset = args.dataset
-        data_size = args.data_size
-        nfeat = args.nfeat
-        hidden = args.hidden
-        nclass = args.nclass
-        num_feats = args.num_feats
-        num_label_feats = args.num_label_feats
-        tgt_key = args.tgt_key
-        dropout = args.dropout
-        input_drop = args.input_drop
-        att_drop = args.att_drop
-        label_drop = args.label_drop
-        n_layers_1 = args.n_layers_1
-        n_layers_2 = args.n_layers_2
-        n_layers_3 = args.n_layers_3
-        act = args.act
-        residual = args.residual
-        bns = args.bns
-        label_bns = args.label_bns
-        label_residual = args.label_residual
+        self.data_size = args.data_size
+        self.nfeat = args.nfeat
+        self.hidden = args.hidden
+        self.nclass = args.nclass
+        self.num_feats = args.num_feats
+        self.num_label_feats = args.num_label_feats
+        self.dropout = args.dropout
+        self.input_drop = args.input_drop
+        self.att_drop = args.att_drop
+        self.label_drop = args.label_drop
+        self.n_layers_1 = args.n_layers_1
+        self.n_layers_2 = args.n_layers_2
+        self.n_layers_3 = args.n_layers_3
+        self.act = args.act
+        self.residual = args.residual
+        self.bns = args.bns
+        self.label_bns = args.label_bns
+        self.label_residual = args.label_residual
+        self.dataset = args.dataset
+        self.tgt_key = args.tgt_key
 
-        self.dataset = dataset
-        self.residual = residual
-        self.tgt_key = tgt_key
-        self.label_residual = label_residual
-
-        if any([v != nfeat for k, v in data_size.items()]):
+        if any([v != self.nfeat for k, v in self.data_size.items()]):
             self.embedings = nn.ParameterDict({})
-            for k, v in data_size.items():
-                if v != nfeat:
+            for k, v in self.data_size.items():
+                if v != self.nfeat:
                     self.embedings[k] = nn.Parameter(
-                        torch.Tensor(v, nfeat).uniform_(-0.5, 0.5))
+                        torch.Tensor(v, self.nfeat).uniform_(-0.5, 0.5))
         else:
             self.embedings = None
 
         self.feat_project_layers = nn.Sequential(
-            Conv1d1x1(nfeat, hidden, num_feats, bias=True, cformat='channel-first'),
-            nn.LayerNorm([num_feats, hidden]),
+            Conv1d1x1(self.nfeat, self.hidden, self.num_feats, bias=True, cformat='channel-first'),
+            nn.LayerNorm([self.num_feats, self.hidden]),
             nn.PReLU(),
-            nn.Dropout(dropout),
-            Conv1d1x1(hidden, hidden, num_feats, bias=True, cformat='channel-first'),
-            nn.LayerNorm([num_feats, hidden]),
+            nn.Dropout(self.dropout),
+            Conv1d1x1(self.hidden, self.hidden, self.num_feats, bias=True, cformat='channel-first'),
+            nn.LayerNorm([self.num_feats, self.hidden]),
             nn.PReLU(),
-            nn.Dropout(dropout),
+            nn.Dropout(self.dropout),
         )
-        if num_label_feats > 0:
+        if self.num_label_feats > 0:
             self.label_feat_project_layers = nn.Sequential(
-                Conv1d1x1(nclass, hidden, num_label_feats, bias=True, cformat='channel-first'),
-                nn.LayerNorm([num_label_feats, hidden]),
+                Conv1d1x1(self.nclass, self.hidden, self.num_label_feats, bias=True, cformat='channel-first'),
+                nn.LayerNorm([self.num_label_feats, self.hidden]),
                 nn.PReLU(),
-                nn.Dropout(dropout),
-                Conv1d1x1(hidden, hidden, num_label_feats, bias=True, cformat='channel-first'),
-                nn.LayerNorm([num_label_feats, hidden]),
+                nn.Dropout(self.dropout),
+                Conv1d1x1(self.hidden, self.hidden, self.num_label_feats, bias=True, cformat='channel-first'),
+                nn.LayerNorm([self.num_label_feats, self.hidden]),
                 nn.PReLU(),
-                nn.Dropout(dropout),
+                nn.Dropout(self.dropout),
             )
         else:
             self.label_feat_project_layers = None
 
-        self.semantic_aggr_layers = Transformer(hidden, att_drop, act)
-        if self.dataset != 'products':
-            self.concat_project_layer = nn.Linear((num_feats + num_label_feats) * hidden, hidden)
+        self.semantic_aggr_layers = Transformer(self.hidden, self.att_drop, self.act)
+        self.concat_project_layer = nn.Linear((self.num_feats + self.num_label_feats) * self.hidden, self.hidden)
 
         if self.residual:
-            self.res_fc = nn.Linear(nfeat, hidden, bias=False)
+            self.res_fc = nn.Linear(self.nfeat, self.hidden, bias=False)
 
         def add_nonlinear_layers(nfeats, dropout, bns=False):
             if bns:
                 return [
-                    nn.BatchNorm1d(hidden),
+                    nn.BatchNorm1d(self.hidden),
                     nn.PReLU(),
                     nn.Dropout(dropout)
                 ]
@@ -230,25 +231,25 @@ class SeHGNN(BaseModel):
                 ]
 
         lr_output_layers = [
-            [nn.Linear(hidden, hidden, bias=not bns)] + add_nonlinear_layers(hidden, dropout, bns)
-            for _ in range(n_layers_2-1)]
+            [nn.Linear(self.hidden, self.hidden, bias=not self.bns)] + add_nonlinear_layers(self.hidden, self.dropout, self.bns)
+            for _ in range(self.n_layers_2-1)]
         self.lr_output = nn.Sequential(*(
             [ele for li in lr_output_layers for ele in li] + [
-            nn.Linear(hidden, nclass, bias=False),
-            nn.BatchNorm1d(nclass)]))
+            nn.Linear(self.hidden, self.nclass, bias=False),
+            nn.BatchNorm1d(self.nclass)]))
 
         if self.label_residual:
             label_fc_layers = [
-                [nn.Linear(hidden, hidden, bias=not bns)] + add_nonlinear_layers(hidden, dropout, bns)
-                for _ in range(n_layers_3-2)]
+                [nn.Linear(self.hidden, self.hidden, bias=not self.bns)] + add_nonlinear_layers(self.hidden, self.dropout, self.bns)
+                for _ in range(self.n_layers_3-2)]
             self.label_fc = nn.Sequential(*(
-                [nn.Linear(nclass, hidden, bias=not bns)] + add_nonlinear_layers(hidden, dropout, bns) \
-                + [ele for li in label_fc_layers for ele in li] + [nn.Linear(hidden, nclass, bias=True)]))
-            self.label_drop = nn.Dropout(label_drop)
+                [nn.Linear(self.nclass, self.hidden, bias=not self.bns)] + add_nonlinear_layers(self.hidden, self.dropout, self.bns) \
+                + [ele for li in label_fc_layers for ele in li] + [nn.Linear(self.hidden, self.nclass, bias=True)]))
+            self.label_drop = nn.Dropout(self.label_drop)
 
         self.prelu = nn.PReLU()
-        self.dropout = nn.Dropout(dropout)
-        self.input_drop = nn.Dropout(input_drop)
+        self.dropout = nn.Dropout(self.dropout)
+        self.input_drop = nn.Dropout(self.input_drop)
 
         self.reset_parameters()
 
