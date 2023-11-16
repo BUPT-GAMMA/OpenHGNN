@@ -62,6 +62,7 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
+        'SeHGNN': 'SeHGNN_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 
