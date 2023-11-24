@@ -34,7 +34,6 @@ class KTN(BaseTask):
     """
     def __init__(self, args):
         super(KTN, self).__init__()
-        print("starting ktn task")
         self.logger = args.logger
         self.dataset = build_dataset(args.dataset, "ktn", logger=self.logger)
         self.g = self.dataset.g

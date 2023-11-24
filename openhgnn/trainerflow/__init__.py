@@ -31,7 +31,6 @@ def register_flow(name):
 
 
 def try_import_flow(flow):
-    print(flow)
     if flow not in FLOW_REGISTRY:
         if flow in SUPPORTED_FLOWS:
             importlib.import_module(SUPPORTED_FLOWS[flow])

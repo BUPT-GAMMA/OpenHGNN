@@ -141,6 +141,7 @@ class KTNTrainer(BaseFlow):
             ],
             lr=self.args.lr,
         )
+        self.logger.info("Source domain: {} | Target domain: {} | Task type: {}".format(self.source_type, self.target_type, self.task_type))
         self.writer = SummaryWriter(f"./openhgnn/output/{self.model_name}/")
 
     def train(self):

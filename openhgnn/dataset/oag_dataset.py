@@ -74,7 +74,6 @@ class OAGDataset(BaseDataset):
             pass
         else:
             file_path = os.path.join(self.raw_dir)
-            print("Downloading", self.url, "to", file_path)
             download(self.url, path=file_path)
         extract_archive(self.data_path, os.path.join(self.raw_dir))
 
