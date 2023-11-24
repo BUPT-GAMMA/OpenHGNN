@@ -72,9 +72,6 @@ class KTNTrainer(BaseFlow):
             args.source_test_batch = 50
         if not hasattr(args, "target_test_batch"):
             args.target_test_batch = 50
-        if not hasattr(args, "patience"):
-            args.patience = 10
-            self.patience = 10
         if not hasattr(args, "matching_coeff"):
             args.matching_coeff = 1
         if not hasattr(args, "mini_batch_flag"):

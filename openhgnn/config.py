@@ -931,6 +931,7 @@ class Config(object):
             self.num_layers = conf.getint("HMPNN", "num_layers")
             self.hid_dim = conf.getint("HMPNN", "hid_dim")
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
+            self.batch_size= conf.getint("HMPNN", "batch_size")
 
         if hasattr(self, "device"):
             self.device = th.device(self.device)
