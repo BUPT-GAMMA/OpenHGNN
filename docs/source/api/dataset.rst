@@ -21,3 +21,4 @@ Dataset
     openhgnn.dataset.AsLinkPredictionDataset
     openhgnn.dataset.AsNodeClassificationDataset
     openhgnn.dataset.EdgeClassificationDataset
+    openhgnn.dataset.OAGDataset

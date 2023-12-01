@@ -11,26 +11,39 @@ from sklearn import metrics
 @register_task("ktn")
 class KTN(BaseTask):
     r"""
-    Knowledge Transfer Network (KTN) task.
+    Knowledge Transfer Network (KTN) Task
+    
+    KTN is a zero-shot cross-type transfer learning method for heterogeneous graphs.
+    It aims to transfer knowledge from a label-abundant source node type 
+    to a label-scarce target node type in the same heterogeneous graph.
     
     Attributes
-    -----------
-    dataset : NodeClassificationDataset
-        Task-related dataset
-
-    classifier : Classifier
-        custom classifier for node classification task
-
+    ----------
+    dataset: 
+        The heterogeneous graph dataset. 
+    
+    classifier:
+        Classifier for node classification, trained on source labels.
+        
     Methods
-    ---------
-    get_graph :
-        return a graph
-    get_loss_fn :
-        return a loss function
-    get_loss :
-        return a loss value
-    evaluate :
-        return a evaluation metric value
+    -------    
+    get_graph: 
+        Return the heterogeneous graph 
+    
+    get_split:
+        Return train/val/test split for source and target nodes.
+    
+    get_labels:
+        Return node labels used for training classifier
+        
+    get_loss_fn:
+        Return the loss function for node classification
+        
+    get_loss:
+        Compute classification loss on source nodes and transfer loss L_KTN
+    
+    evaluate: 
+        Evaluate performance using the given metric  
     """
     def __init__(self, args):
         super(KTN, self).__init__()

@@ -33,8 +33,27 @@ def process_category(labels: torch.tensor, num_classes: int) -> torch.tensor:
 class KTNTrainer(BaseFlow):
     r"""
     Knowledge Transfer Learning flow.
+
     `Link to the paper <https://arxiv.org/abs/2203.02018>`__
+
+    KTN is designed to tackle the issue of HGNNs learning different feature
+    extractors for different node types, which hinders direct transfer across types.
+
+    The core of KTN is a learnable graph convolution network :math:`t_{KTN}` that transforms
+    target node embeddings into the source embedding space:
+
+    .. math:: t_{KTN}(H^L_t) = A_{ts} H^L_t  T_{ts}
+
+    Where :math:`H^L_t` is the L-th layer embeddings of target nodes, :math:`A_{ts}` is the adjacency
+    matrix from target to source types, and :math:`T_{ts}` is a learnable transformation matrix.
+
+    By minimizing the L2 distance between source embeddings :math:`H^L_s` and mapped target
+    embeddings :math:`t_{KTN}(H^L_t)`, :math:`T_{ts}` learns to project target nodes into source space.
+
+    At test time, the learned :math:`t_{KTN}` is simply applied to transform :math:`H^L_t`, which is
+    then fed into the source classifier for prediction.
     """
+
 
     def __init__(self, args):
         r"""
@@ -83,8 +102,6 @@ class KTNTrainer(BaseFlow):
         self.max_epoch = args.max_epoch
         self.device = args.device
         self.hg = self.task.get_graph().to(self.device)
-        self.source_type = args.source_type
-        self.target_type = args.target_type
         self.source_type = args.source_type
         self.target_type = args.target_type
         self.dataset = self.task.dataset
