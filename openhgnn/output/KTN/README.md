@@ -17,6 +17,7 @@ And loss is now calculated by:
 $$
 \mathcal{L}_{\text{KTN}} = \left\|H^{(L)}_{s} - \textbf{t}_{\text{KTN}}(H^{(L)}_{t})\right\|_{2}
 $$
+
 Where $H^{(L)}_t$ is the L-th layer embeddings of target nodes, $A_{ts}$ is the adjacency matrix from target to source types, and $T_{ts}$ is a learnable transformation matrix. By minimizing the L2 distance between source embeddings $H^{(L)}_s$ and mapped target embeddings $t_{KTN}(H^{(L)}_t)$, $T_{ts}$ learns to project target nodes into source space.
 
 At test time, the learned $t_{KTN}$ is simply applied to transform $H^{(L)}_t$, which is then fed into the source classifier for prediction.
