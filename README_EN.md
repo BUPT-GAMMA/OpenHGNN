@@ -257,7 +257,7 @@ The link will give some basic usage.
 | [HDE](../openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
 | [HetSANN](../openhgnn/output/HGT)[AAAI 2020]               | :heavy_check_mark:  |                    |                    |
 | [ieHGCN](../openhgnn/output/HGT)[TKDE 2021]                | :heavy_check_mark:  |                    |                    |
-| [KTN](./openhgnn/output/KTN)[NIPS 2022]                  | :heavy_check_mark: |                    |                    |
+| [KTN](../openhgnn/output/KTN)[NIPS 2022]                  | :heavy_check_mark: |                    |                    |
 
 ### Candidate models
 
