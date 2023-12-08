@@ -430,4 +430,12 @@ BEST_CONFIGS = {
             },
         }
     },
+    "ktn": {
+        'HMPNN': {
+            "general": {},
+            'OAG_CS': {
+                'lr': 0.001, 'patience':10, 'max_epoch': 1000, 'hid_dim':128, 'evaluation_metric':'ndcg', 'evaluate_interval':10, 'batch_size':3072, 'max_epoch':1000
+            },
+        }
+    }
 }
