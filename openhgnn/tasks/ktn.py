@@ -9,7 +9,7 @@ from sklearn import metrics
 
 
 @register_task("ktn")
-class KTN(BaseTask):
+class KTN4MultiLabelNodeClassification(BaseTask):
     r"""
     Knowledge Transfer Network (KTN) Task
     
@@ -46,7 +46,7 @@ class KTN(BaseTask):
         Evaluate performance using the given metric  
     """
     def __init__(self, args):
-        super(KTN, self).__init__()
+        super(KTN4MultiLabelNodeClassification, self).__init__()
         self.logger = args.logger
         self.dataset = build_dataset(args.dataset, "ktn", logger=self.logger)
         self.g = self.dataset.g

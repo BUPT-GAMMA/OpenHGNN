@@ -70,7 +70,7 @@ from .recommendation import Recommendation
 from .edge_classification import EdgeClassification
 from .hypergraph import hypergraph
 from .node_classification import DSSL_task
-from .ktn import KTN
+from .ktn import KTN4MultiLabelNodeClassification
 
 __all__ = [
     "BaseTask",

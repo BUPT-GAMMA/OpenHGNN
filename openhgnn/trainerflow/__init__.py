@@ -109,7 +109,7 @@ from .kgat_trainer import KGAT_Trainer
 from .node_classification_ac import NodeClassificationAC
 from .DSSL_trainer import DSSL_trainer
 from .lightGCN_trainer import lightGCNTrainer
-from .KTN_trainer import KTNTrainer
+from .KTN_trainer import KTN_NodeClassification
 
 __all__ = [
     'BaseFlow',
@@ -137,6 +137,6 @@ __all__ = [
     'DSSL_trainer',
     'HGCLtrainer',
     'lightGCNTrainer',
-    'KTNTrainer'
+    'KTN_NodeClassification'
 ]
 classes = __all__

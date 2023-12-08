@@ -30,7 +30,7 @@ def process_category(labels: torch.tensor, num_classes: int) -> torch.tensor:
 
 
 @register_flow("KTN_trainer")
-class KTNTrainer(BaseFlow):
+class KTN_NodeClassification(BaseFlow):
     r"""
     Knowledge Transfer Learning flow.
 
@@ -97,11 +97,10 @@ class KTNTrainer(BaseFlow):
             args.mini_batch_flag = False
         if not hasattr(args, "task_type"):
             args.task_type = "L1"
-        super(KTNTrainer, self).__init__(args)
+        super(KTN_NodeClassification, self).__init__(args)
         self.args = args
         self.max_epoch = args.max_epoch
         self.device = args.device
-        self.hg = self.task.get_graph().to(self.device)
         self.source_type = args.source_type
         self.target_type = args.target_type
         self.dataset = self.task.dataset
@@ -135,7 +134,7 @@ class KTNTrainer(BaseFlow):
         self.model_name = args.model
         self.model = (
             build_model(self.model)
-            .build_model_from_args(self.args, self.hg)
+            .build_model_from_args(self.args, self.g)
             .to(self.device)
         )
         matching_w = {}
@@ -208,7 +207,7 @@ class KTNTrainer(BaseFlow):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        return loss.item(), matching_loss.item()
+        return training_loss.item(), matching_loss.item()
 
     def _mini_train_step(
         self,
@@ -238,7 +237,7 @@ class KTNTrainer(BaseFlow):
             h_T = h[self.target_type]
             matching_loss = self.get_matching_loss(h_S, h_T, sg)
             all_loss += loss.item()
-            all_matching_loss += loss.item()
+            all_matching_loss += matching_loss.item()
             loss = loss + self.matching_coeff * matching_loss
             self.optimizer.zero_grad()
             loss.backward()
