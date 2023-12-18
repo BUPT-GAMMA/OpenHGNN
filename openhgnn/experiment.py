@@ -62,6 +62,7 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
+        'NBF':'NBF_trainer'
     }
     immutable_params = ['model', 'dataset', 'task']
 
@@ -123,6 +124,7 @@ class Experiment(object):
             # hyper-parameter search
             hpo_experiment(self.config, trainerflow)
         else:
+            # 构建NBF_trainer对象
             flow = build_flow(self.config, trainerflow)
             result = flow.train()
             if hasattr(self.config, 'line_profiler_func'):

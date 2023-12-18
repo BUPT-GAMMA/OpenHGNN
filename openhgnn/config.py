@@ -40,6 +40,28 @@ class Config(object):
             self.seed = conf.getint("General", "seed")
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
+
+        elif self.model_name == "NBF" and self.dataset_name =="NBF_WN18RR":
+
+            self.input_dim = conf.getint("NBF", "input_dim")
+            self.hidden_dims = [32, 32, 32, 32, 32, 32]
+            self.message_func = conf.get("NBF", "message_func")
+            self.aggregate_func = conf.get("NBF", "aggregate_func")
+            self.short_cut = conf.getboolean("NBF","short_cut")
+            self.layer_norm = conf.getboolean("NBF","layer_norm")
+            self.dependent = conf.getboolean("NBF","dependent")
+
+            self.num_negative = conf.getint("NBF","num_negative")
+            self.strict_negative = conf.getboolean("NBF","strict_negative")
+            self.adversarial_temperature = conf.getint("NBF", "adversarial_temperature")
+            self.metric = ['mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@10_50']
+
+            self.lr = conf.getfloat("NBF","lr")
+            self.gpus = [0]       
+            self.batch_size = conf.getint("NBF","batch_size")
+            self.num_epoch = conf.getint("NBF","num_epoch")
+            self.log_interval = conf.getint("NBF","log_interval")
+
         elif self.model_name == "NSHE":
             self.dim_size = {}
             self.dim_size['emd'] = conf.getint("NSHE", "emd_dim")

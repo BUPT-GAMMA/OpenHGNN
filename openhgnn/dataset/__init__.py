@@ -10,16 +10,16 @@ from .alircd_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 from .mg2vec_dataset import Mg2vecDataSet
 from .meirec_dataset import MeiRECDataset, get_data_loader
-
+from .NBF_dataset import NBF_Dataset
 DATASET_REGISTRY = {}
 
 
-def register_dataset(name):
+def register_dataset(name): # 新注册一个数据集
     """
     New dataset types can be added to cogdl with the :func:`register_dataset`
     function decorator.
 
-    For example::
+    For example::新注册一个数据集的方法
 
         @register_dataset('my_dataset')
         class MyDataset():
@@ -58,7 +58,7 @@ ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
 hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
 
-def build_dataset(dataset, task, *args, **kwargs):
+def build_dataset(dataset, task, *args, **kwargs): # dataset == "NBF_WN18RR",task == "link_prediction"
     if isinstance(dataset, DGLDataset):
         return dataset
 
@@ -110,7 +110,9 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset='kgat_recommendation'
     elif dataset in common:
         _dataset = 'common_' + task
-    return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
+    elif dataset in ['NBF_WN18RR','NBF_FB15k-237']:
+        _dataset = 'NBF_' + task  #  == 'NBF_link_prediction'
+    return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger']) # 707行
 
 
 SUPPORTED_DATASETS = {

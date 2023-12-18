@@ -11,7 +11,7 @@ class TransXTrainer(BaseFlow):
     """TransX flows."""
 
     def __init__(self, args):
-        super(TransXTrainer, self).__init__(args)
+        super(TransXTrainer, self).__init__(args) # build_task，生成self.task.dataset
 
         self.args = args
         self.model_name = args.model

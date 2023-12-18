@@ -33,7 +33,7 @@ def register_flow(name):
 def try_import_flow(flow):
     if flow not in FLOW_REGISTRY:
         if flow in SUPPORTED_FLOWS:
-            importlib.import_module(SUPPORTED_FLOWS[flow])
+            importlib.import_module(SUPPORTED_FLOWS[flow])# 把py文件中头几行的模块导入
         else:
             print(f"Failed to import {flow} flows.")
             return False
@@ -80,6 +80,7 @@ SUPPORTED_FLOWS = {
     'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer',
     'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer',
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
+    'NBF_trainer':'openhgnn.trainerflow.NBF_trainer',
 }
 
 from .hgcl_trainer import HGCLtrainer
@@ -108,6 +109,7 @@ from .kgat_trainer import KGAT_Trainer
 from .node_classification_ac import NodeClassificationAC
 from .DSSL_trainer import DSSL_trainer
 from .lightGCN_trainer import lightGCNTrainer
+from .NBF_trainer import *
 
 __all__ = [
     'BaseFlow',

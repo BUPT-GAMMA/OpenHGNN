@@ -240,11 +240,11 @@ class NodeClassification(BaseFlow):
                     input_nodes[key] = input_nodes[key].to(self.device)
             # elif not isinstance(input_nodes, dict):
             #     input_nodes = {self.category: input_nodes}
-            emb = self.model.input_feature.forward_nodes(input_nodes)
+            emb = self.model.input_feature.forward_nodes(input_nodes)  #这里emb就是h_dict，把input_nodes变成h_dict
             # if self.to_homo_flag:
             #     emb = to_homo_feature(self.hg.ntypes, emb)
-            lbl = self.labels[seeds[self.category]].to(self.device)
-            logits = self.model(blocks, emb)[self.category]
+            lbl = self.labels[seeds[self.category]].to(self.device)    
+            logits = self.model(blocks, emb)[self.category]            #这里emb就是h_dict，blocks对应hg,
             loss = self.loss_fn(logits, lbl)
             loss_all += loss.item()
             self.optimizer.zero_grad()

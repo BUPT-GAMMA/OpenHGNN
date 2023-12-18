@@ -5,7 +5,7 @@ import numpy as np
 import torch as th
 from dgl.data.knowledge_graph import load_data
 from . import BaseDataset, register_dataset
-from . import AcademicDataset, HGBDataset, OHGBDataset
+from . import AcademicDataset, HGBDataset, OHGBDataset , NBF_Dataset
 from ..utils import add_reverse_edges
 
 __all__ = ['LinkPredictionDataset', 'HGB_LinkPrediction']
@@ -490,18 +490,19 @@ class KG_LinkPrediction(LinkPredictionDataset):
     def __init__(self, dataset_name, *args, **kwargs):
         super(KG_LinkPrediction, self).__init__(*args, **kwargs)
         if dataset_name in ['wn18', 'FB15k', 'FB15k-237']:
-            dataset = load_data(dataset_name)
+            dataset = load_data(dataset_name) #return WN18Dataset()，这个对象会包括download和process
             g = dataset[0]
             self.num_rels = dataset.num_rels
             self.num_nodes = dataset.num_nodes
 
             self.train_hg, self.train_triplets = self._build_hg(g, 'train')
             self.valid_hg, self.valid_triplets = self._build_hg(g, 'valid')
-            self.test_hg, self.test_triplets = self._build_hg(g, 'test')
+            self.test_hg, self.test_triplets = self._build_hg(g, 'test')    # 得到三元组就足够了
 
             self.g = self.train_hg
             self.category = '_N'
             self.target_link = self.test_hg.canonical_etypes
+            print("数据集构建完成, 其中self.train_triplets就是全部的三元组")
 
     def _build_hg(self, g, mode):
         sub_g = dgl.edge_subgraph(g, g.edata[mode+'_edge_mask'], relabel_nodes=False)
@@ -698,3 +699,28 @@ def sample_edge_uniform(adj_list, degrees, n_triplets, sample_size):
     """Sample edges uniformly from all the edges."""
     all_edges = np.arange(n_triplets)
     return np.random.choice(all_edges, sample_size, replace=False)
+
+
+
+
+@register_dataset('NBF_link_prediction')
+class NBF_LinkPrediction(LinkPredictionDataset):
+    r"""
+    The NBF dataset will be used in task *link prediction*.
+
+    """
+
+    def __init__(self, dataset_name ,*args, **kwargs): # dataset_name in ['NBF_WN18RR','NBF_FB15k-237']
+
+        self.dataset = NBF_Dataset(root="/home/lfq/nbfnet/OpenHGNN", name=dataset_name[4:], version="v1")
+        
+
+
+
+
+
+
+
+
+
+

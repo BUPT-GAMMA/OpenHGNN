@@ -32,7 +32,7 @@ class LinkPrediction(BaseTask):
         super(LinkPrediction, self).__init__()
         self.name_dataset = args.dataset
         self.logger = args.logger
-        self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger)
+        self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger) # dataset = 'NBF_WN18RR' 或者 'NBF_FB15k-237'
         # self.evaluator = Evaluator()
         self.train_hg, self.val_hg, self.test_hg, self.neg_val_graph, self.neg_test_graph = self.dataset.get_split()
         self.pred_hg = getattr(self.dataset, 'pred_graph', None)
@@ -277,3 +277,21 @@ class HeteroDistMultPredictor(th.nn.Module):
 #        t = F.normalize(t, 2, -1)
 #        dist = th.norm(h+r-t, self.dis_norm, dim=-1)
 #        return dist
+
+
+
+
+@register_task("NBF_link_prediction")
+class NBF_LinkPrediction(BaseTask):
+    r"""
+    Link prediction tasks for NBF
+
+    """
+
+    def __init__(self, args):
+        super(NBF_LinkPrediction, self).__init__()
+        self.logger = None
+        self.dataset = build_dataset(args.dataset, 'link_prediction',logger=self.logger) # dataset = 'NBF_WN18RR' 或者 'NBF_FB15k-237'
+    
+    def evaluate(self):
+        return None

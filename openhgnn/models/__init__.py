@@ -111,6 +111,7 @@ SUPPORTED_MODELS = {
     'DSSL': 'openhgnn.models.DSSL',
     'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
+    'NBF': 'openhgnn.models.NBF',
 }
 
 from .HGCL import HGCL

@@ -18,6 +18,8 @@ if __name__ == '__main__':
     parser.add_argument('--load_from_pretrained', action='store_true', help='load model from the checkpoint')
     args = parser.parse_args()
 
+    #python main.py -m NBF -d NBF_WN18RR -t NBF_link_prediction -g 0 
+
     experiment = Experiment(model=args.model, dataset=args.dataset, task=args.task, gpu=args.gpu,
                             use_best_config=args.use_best_config, load_from_pretrained=args.load_from_pretrained)
 
