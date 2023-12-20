@@ -67,7 +67,7 @@ class Experiment(object):
     immutable_params = ['model', 'dataset', 'task']
 
     def __init__(self, model, dataset, task,
-                 gpu: int,
+                 gpu: int=-1,
                  use_best_config: bool = False,
                  load_from_pretrained: bool = False,
                  hpo_search_space=None,
