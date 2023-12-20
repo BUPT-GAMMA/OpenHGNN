@@ -5,7 +5,7 @@ import numpy as np
 import torch as th
 from dgl.data.knowledge_graph import load_data
 from . import BaseDataset, register_dataset
-from . import AcademicDataset, HGBDataset, OHGBDataset
+from . import AcademicDataset, HGBDataset, OHGBDataset, NBF_Dataset
 from ..utils import add_reverse_edges
 
 __all__ = ['LinkPredictionDataset', 'HGB_LinkPrediction']
@@ -698,3 +698,17 @@ def sample_edge_uniform(adj_list, degrees, n_triplets, sample_size):
     """Sample edges uniformly from all the edges."""
     all_edges = np.arange(n_triplets)
     return np.random.choice(all_edges, sample_size, replace=False)
+
+
+@register_dataset('NBF_link_prediction') 
+class NBF_LinkPrediction(LinkPredictionDataset):
+    r"""
+    The NBF dataset will be used in task *link prediction*.
+
+    """
+
+    def __init__(self, dataset_name ,*args, **kwargs): # dataset_name in ['NBF_WN18RR','NBF_FB15k-237']
+
+        self.dataset = NBF_Dataset(root='./openhgnn/dataset/', name=dataset_name[4:], version="v1")
+        
+

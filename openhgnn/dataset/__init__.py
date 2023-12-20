@@ -10,7 +10,7 @@ from .alircd_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 from .mg2vec_dataset import Mg2vecDataSet
 from .meirec_dataset import MeiRECDataset, get_data_loader
-
+from .NBF_dataset import NBF_Dataset 
 DATASET_REGISTRY = {}
 
 
@@ -110,6 +110,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset='kgat_recommendation'
     elif dataset in common:
         _dataset = 'common_' + task
+    elif dataset in ['NBF_WN18RR','NBF_FB15k-237']:
+        _dataset = 'NBF_' + task  
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
