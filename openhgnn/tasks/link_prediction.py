@@ -279,3 +279,18 @@ class HeteroDistMultPredictor(th.nn.Module):
 #        t = F.normalize(t, 2, -1)
 #        dist = th.norm(h+r-t, self.dis_norm, dim=-1)
 #        return dist
+
+@register_task("NBF_link_prediction")    
+class NBF_LinkPrediction(BaseTask):
+    r"""
+    Link prediction tasks for NBF
+
+    """
+
+    def __init__(self, args):
+        super(NBF_LinkPrediction, self).__init__()
+        self.logger = None
+        self.dataset = build_dataset(args.dataset, 'link_prediction',logger=self.logger) # dataset = 'NBF_WN18RR' or 'NBF_FB15k-237'
+    
+    def evaluate(self):
+        return None

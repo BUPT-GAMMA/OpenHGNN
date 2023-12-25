@@ -10,7 +10,8 @@ from .alircd_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 from .mg2vec_dataset import Mg2vecDataSet
 from .meirec_dataset import MeiRECDataset, get_data_loader
-
+from .NBF_dataset import NBF_Dataset 
+from .Ingram_dataset import Ingram_KG_TrainData, Ingram_KG_TestData
 DATASET_REGISTRY = {}
 
 
@@ -64,6 +65,13 @@ def build_dataset(dataset, task, *args, **kwargs):
     model = args.model
     if isinstance(dataset, DGLDataset):
         return dataset
+    #-------------------更改部分-------------------
+    if dataset == 'NL-100':
+        train_dataloader = Ingram_KG_TrainData('',dataset)
+        valid_dataloader = Ingram_KG_TestData('', dataset,'valid')
+        test_dataloader = Ingram_KG_TestData('',dataset,'test')
+        return train_dataloader,valid_dataloader,test_dataloader
+    # -------------------更改部分-------------------
 
     if dataset == 'meirec':
         train_dataloader = get_data_loader("train", batch_size=args[0])
@@ -124,6 +132,8 @@ def build_dataset(dataset, task, *args, **kwargs):
             return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'], args=kwargs['args'])
         else:
             _dataset = 'common_' + task
+    elif dataset in ['NBF_WN18RR','NBF_FB15k-237']:
+        _dataset = 'NBF_' + task  
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 

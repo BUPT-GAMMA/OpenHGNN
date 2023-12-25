@@ -14,7 +14,7 @@ from os.path import join as joinpath
 from os.path import isfile
 from dgl.data.knowledge_graph import load_data
 from . import BaseDataset, register_dataset
-from . import AcademicDataset, HGBDataset, OHGBDataset
+from . import AcademicDataset, HGBDataset, OHGBDataset, NBF_Dataset
 from ..utils import add_reverse_edges
 
 __all__ = ['LinkPredictionDataset', 'HGB_LinkPrediction']
@@ -1902,3 +1902,15 @@ class ConstantDict:
             return const in self[key]
         else:
             return False
+
+@register_dataset('NBF_link_prediction') 
+class NBF_LinkPrediction(LinkPredictionDataset):
+    r"""
+    The NBF dataset will be used in task *link prediction*.
+
+    """
+
+    def __init__(self, dataset_name ,*args, **kwargs): # dataset_name in ['NBF_WN18RR','NBF_FB15k-237']
+
+        self.dataset = NBF_Dataset(root='./openhgnn/dataset/', name=dataset_name[4:], version="v1")
+        

@@ -65,6 +65,8 @@ class BaseFlow(ABC):
 
         if self.model_name == "MeiREC" or self.model_name == 'ExpressGNN':
             return
+        if self.model_name == "Ingram":
+            return
 
         if self.args.use_uva:
             self.hg = self.task.get_graph()

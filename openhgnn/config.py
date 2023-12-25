@@ -920,6 +920,20 @@ class Config(object):
             self.test_u_batch_size = conf.getint("lightGCN", "test_u_batch_size")
             self.topks = conf.getint("lightGCN", "topks")
             # self.alpha = conf.getfloat("lightGCN", "alpha")
+        elif self.model_name == 'Ingram':
+            self.margin = conf.getint("Ingram", "margin")
+            self.lr = conf.getfloat("Ingram", "lr")
+            self.nle = conf.getint("Ingram", "nle")
+            self.nlr = conf.getint("Ingram", "nlr")
+            self.d_e = conf.getint("Ingram", "d_e")
+            self.d_r = conf.getint("Ingram", "d_r")
+            self.hdr_e = conf.getint("Ingram", "hdr_e")
+            self.hdr_r = conf.getint("Ingram", "hdr_r")
+            self.num_bin = conf.getint("Ingram", "num_bin")
+            self.num_epoch = conf.getint("Ingram", "num_epoch")
+            self.validation_epoch = conf.getint("Ingram", "validation_epoch")
+            self.num_head = conf.getint("Ingram", "num_head")
+            self.num_neg = conf.getint("Ingram", "num_neg")
 
         elif self.model_name == 'ExpressGNN':
             self.embedding_size = conf.getint('ExpressGNN', 'embedding_size')

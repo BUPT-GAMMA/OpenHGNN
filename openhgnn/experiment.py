@@ -63,6 +63,8 @@ class Experiment(object):
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
         'ExpressGNN': 'ExpressGNN_trainer'
+        'NBF':'NBF_trainer',
+        'Ingram': 'Ingram_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 
