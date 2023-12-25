@@ -9,7 +9,7 @@ import warnings
 
 class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
-        conf = configparser.ConfigParser()
+        conf = configparser.ConfigParser( )
         try:
             conf.read(file_path)
         except:
@@ -935,12 +935,51 @@ class Config(object):
             self.num_head = conf.getint("Ingram", "num_head")
             self.num_neg = conf.getint("Ingram", "num_neg")
 
+        elif self.model_name == 'ExpressGNN':
+            self.embedding_size = conf.getint('ExpressGNN', 'embedding_size')
+            self.gcn_free_size = conf.getint("ExpressGNN", "gcn_free_size")
+            self.filtered = conf.get("ExpressGNN", "filtered")
+            self.hidden_dim = conf.getint("ExpressGNN", "hidden_dim")
+            self.rule_weights_learning = conf.getint("ExpressGNN", "rule_weights_learning")
+            self.load_method = conf.getint("ExpressGNN", "load_method")
+            self.num_epochs = conf.getint("ExpressGNN", "num_epochs")
+
+            self.slice_dim = conf.getint("ExpressGNN", "slice_dim")
+            self.no_train = conf.getint("ExpressGNN", "no_train")
+            self.hidden_dim = conf.getint("ExpressGNN", "hidden_dim")
+            self.num_epochs = conf.getint("ExpressGNN", "num_epochs")
+            self.batchsize = conf.getint("ExpressGNN", "batchsize")
+            self.trans = conf.getint("ExpressGNN", "trans")
+            self.num_hops = conf.getint("ExpressGNN", "num_hops")
+            self.num_mlp_layers = conf.getint("ExpressGNN", "num_mlp_layers")
+            self.num_epochs = conf.getint("ExpressGNN", "num_epochs")
+
+            self.num_batches = conf.getint("ExpressGNN", "num_batches")
+            self.learning_rate = conf.getfloat("ExpressGNN", "learning_rate")
+            self.lr_decay_factor = conf.getfloat("ExpressGNN", "lr_decay_factor")
+            self.lr_decay_patience = conf.getint("ExpressGNN", "lr_decay_patience")
+            self.lr_decay_min = conf.getfloat("ExpressGNN", "lr_decay_min")
+            self.patience = conf.getint("ExpressGNN", "patience")
+            self.l2_coef = conf.getfloat("ExpressGNN", "l2_coef")
+            self.observed_prob = conf.getfloat("ExpressGNN", "observed_prob")
+            self.entropy_temp = conf.getint("ExpressGNN", "entropy_temp")
+            self.no_entropy = conf.getint("ExpressGNN", "no_entropy")
+            self.learning_rate_rule_weights = conf.getfloat("ExpressGNN", "learning_rate_rule_weights")
+            self.epoch_mode = conf.getint("ExpressGNN", "epoch_mode")
+            self.shuffle_sampling = conf.getint("ExpressGNN", "shuffle_sampling")
+
+            self.load_method = conf.getint("ExpressGNN", "load_method")
+            self.load_s = conf.getint("ExpressGNN", "load_s")
+            self.use_gcn = conf.getint("ExpressGNN", "use_gcn")
+            self.filter_latent = conf.getint("ExpressGNN", "filter_latent")
+            self.closed_world = conf.getint("ExpressGNN", "closed_world")
+
         if hasattr(self, 'device'):
             self.device = th.device(self.device)
         elif gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
-            if not th.cuda.is_available():
+            if not th.cuda.is_available( ):
                 self.device = th.device('cpu')
                 warnings.warn("cuda is unavailable, the program will use cpu instead. please set 'gpu' to -1.")
             else:

@@ -62,6 +62,7 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
+        'ExpressGNN': 'ExpressGNN_trainer'
         'NBF':'NBF_trainer',
         'Ingram': 'Ingram_trainer',
     }
