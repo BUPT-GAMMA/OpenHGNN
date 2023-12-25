@@ -48,6 +48,7 @@ class Experiment(object):
         'TransH': 'TransX_trainer',
         'TransR': 'TransX_trainer',
         'TransD': 'TransX_trainer',
+        'RedGNN': 'RedGNN_trainer',
         'GIE': 'TransX_trainer',
         'HAN': {
             'node_classification': 'han_nc_trainer',
@@ -62,7 +63,7 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
-        'ExpressGNN': 'ExpressGNN_trainer'
+        'ExpressGNN': 'ExpressGNN_trainer',
         'NBF':'NBF_trainer',
         'Ingram': 'Ingram_trainer',
     }

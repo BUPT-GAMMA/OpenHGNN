@@ -111,9 +111,10 @@ SUPPORTED_MODELS = {
     'DSSL': 'openhgnn.models.DSSL',
     'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
-    'ExpressGNN': 'openhgnn.models.ExpressGNN'
+    'ExpressGNN': 'openhgnn.models.ExpressGNN',
     'NBF': 'openhgnn.models.NBF', 
-    'Ingram':'openhgnn.models.Ingram',
+    'Ingram': 'openhgnn.models.Ingram',
+    'RedGNN': 'openhgnn.models.RedGNN',
 }
 
 from .HGCL import HGCL

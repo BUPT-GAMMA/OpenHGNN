@@ -934,6 +934,20 @@ class Config(object):
             self.validation_epoch = conf.getint("Ingram", "validation_epoch")
             self.num_head = conf.getint("Ingram", "num_head")
             self.num_neg = conf.getint("Ingram", "num_neg")
+        elif self.model_name == 'RedGNN':
+            self.seed = conf.getint("RedGNN", "seed")
+            self.patience = conf.getint("RedGNN", "patience")
+            self.batch_size = conf.getint("RedGNN", "batch_size")
+            self.optimizer = conf.get("RedGNN", "optimizer")
+            self.lr = conf.getfloat("RedGNN", "lr")
+            self.weight_decay = conf.getfloat("RedGNN", "weight_decay")
+            self.max_epoch = conf.getint("RedGNN", "max_epoch")
+            self.decay_rate = conf.getfloat("RedGNN", "decay_rate")
+            self.hidden_dim = conf.getint("RedGNN", "hidden_dim")
+            self.attn_dim = conf.getint("RedGNN", "attn_dim")
+            self.dropout = conf.getfloat("RedGNN", "dropout")
+            self.act = conf.get("RedGNN", "act")
+            self.n_layer = conf.getint("RedGNN", "n_layer")
 
         elif self.model_name == 'ExpressGNN':
             self.embedding_size = conf.getint('ExpressGNN', 'embedding_size')

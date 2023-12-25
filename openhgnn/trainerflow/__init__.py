@@ -80,9 +80,10 @@ SUPPORTED_FLOWS = {
     'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer',
     'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer',
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
-    'ExpressGNN_trainer': 'openhgnn.trainerflow.ExpressGNN_trainer'
+    'ExpressGNN_trainer': 'openhgnn.trainerflow.ExpressGNN_trainer',
     'NBF_trainer':'openhgnn.trainerflow.NBF_trainer',
     'Ingram_Trainer' : 'openhgnn.trainerflow.Ingram_trainer',
+    'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
 }
 
 from .hgcl_trainer import HGCLtrainer
