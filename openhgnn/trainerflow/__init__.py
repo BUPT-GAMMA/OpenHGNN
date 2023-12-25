@@ -142,7 +142,7 @@ __all__ = [
     'DSSL_trainer',
     'HGCLtrainer',
     'lightGCNTrainer',
-    'ExpressGNNTrainer'
+    'ExpressGNNTrainer',
     'Ingram_trainer',
 ]
 classes = __all__
