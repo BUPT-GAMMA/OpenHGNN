@@ -213,7 +213,7 @@ class NBF_trainer(BaseFlow):
     """
 
     def __init__(self, args):  # args == self.config
-
+        args.task = args.model +"_" +args.task # task: NBF_link_prediction
         self.args = args  
         self.model_name = args.model
         self.device = args.device
