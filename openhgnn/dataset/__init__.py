@@ -11,6 +11,7 @@ from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 from .mg2vec_dataset import Mg2vecDataSet
 from .meirec_dataset import MeiRECDataset, get_data_loader
 from .NBF_dataset import NBF_Dataset 
+from .Ingram_dataset import Ingram_KG_TrainData, Ingram_KG_TestData
 DATASET_REGISTRY = {}
 
 
@@ -58,9 +59,17 @@ ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
 hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
 
+
 def build_dataset(dataset, task, *args, **kwargs):
     if isinstance(dataset, DGLDataset):
         return dataset
+    #-------------------更改部分-------------------
+    if dataset == 'NL-100':
+        train_dataloader = Ingram_KG_TrainData('',dataset)
+        valid_dataloader = Ingram_KG_TestData('', dataset,'valid')
+        test_dataloader = Ingram_KG_TestData('',dataset,'test')
+        return train_dataloader,valid_dataloader,test_dataloader
+    # -------------------更改部分-------------------
 
     if dataset == 'meirec':
         train_dataloader = get_data_loader("train", batch_size=args[0])
