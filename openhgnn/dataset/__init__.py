@@ -93,6 +93,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'hin_' + task
     elif dataset in ['dblp4Mg2vec_4', 'dblp4Mg2vec_5']:
         _dataset = 'hin_' + task
+    elif dataset in ['last-fm', 'movie-lens']:
+        _dataset = 'kacl_recommendation'
     elif dataset == 'demo':
         _dataset = 'demo_' + task
     elif dataset in hypergraph_datasets:
