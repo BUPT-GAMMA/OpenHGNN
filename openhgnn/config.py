@@ -793,6 +793,35 @@ class Config(object):
             self.vocab = conf.getint("MeiREC", "vocab_size")
             self.max_epoch = conf.getint("MeiREC", "train_epochs")
             self.batch_num = conf.getint("MeiREC", "batch_num")
+        
+        elif model == 'KACL':
+            self.pretrain = conf.getint("KACL", "pretrain")
+            self.verbose = conf.getint("KACL", "verbose")
+            self.epoch = conf.getint("KACL", "epoch")
+            self.embed_size = conf.getint("KACL", "embed_size")
+            self.kge_size = conf.getint("KACL", "kge_size")
+            self.batch_size = conf.getint("KACL", "batch_size")
+            self.batch_size_kg = conf.getint("KACL", "batch_size_kg")
+            self.batch_size_cl = conf.getint("KACL", "batch_size_cl")
+            self.lr = conf.getfloat("KACL", "lr")
+            self.kg_lr = conf.getfloat("KACL", "kg_lr")
+            self.cl_lr = conf.getfloat("KACL", "cl_lr")
+            self.drop_rate = conf.getfloat("KACL", "drop_rate")
+            self.temperature = conf.getfloat("KACL", "temperature")
+            self.K = conf.getint("KACL", "K")
+            self.head = conf.getint("KACL", "head")
+            self.weight_decay = conf.getfloat("KACL", "weight_decay")
+            self.kg_weight_decay = conf.getfloat("KACL", "kg_weight_decay")
+            self.alpha = conf.getfloat("KACL", "alpha")
+            self.cl_alpha = conf.getfloat("KACL", "cl_alpha")
+            self.feat_drop = conf.getfloat("KACL", "feat_drop")
+            self.attn_drop = conf.getfloat("KACL", "attn_drop")
+            self.negative_slope = conf.getfloat("KACL", "negative_slope")
+            self.residual = conf.getboolean("KACL", "residual")
+            self.show_step = conf.getint("KACL", "show_step")
+            self.threshold = conf.getfloat("KACL", "threshold")
+            self.layer_size = [64, 32, 16]
+            self.sub_layer_size = [64, 32, 16]
 
         if gpu == -1:
             self.device = th.device('cpu')
