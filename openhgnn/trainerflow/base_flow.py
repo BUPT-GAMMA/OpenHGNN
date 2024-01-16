@@ -65,6 +65,8 @@ class BaseFlow(ABC):
 
         if self.model_name == "MeiREC":
             return
+        if self.model_name == "AdapropT":
+            return
 
         if self.args.use_uva:
             self.hg = self.task.get_graph()

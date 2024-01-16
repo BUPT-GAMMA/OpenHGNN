@@ -32,6 +32,9 @@ class LinkPrediction(BaseTask):
         super(LinkPrediction, self).__init__()
         self.name_dataset = args.dataset
         self.logger = args.logger
+        if(args.dataset=='AdapropT'):
+            self.dataloader = build_dataset(args, 'AdapropT')
+            return
         self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger)
         # self.evaluator = Evaluator()
         self.train_hg, self.val_hg, self.test_hg, self.neg_val_graph, self.neg_test_graph = self.dataset.get_split()
