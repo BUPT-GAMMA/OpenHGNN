@@ -10,6 +10,7 @@ from .alircd_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 from .mg2vec_dataset import Mg2vecDataSet
 from .meirec_dataset import MeiRECDataset, get_data_loader
+from .SACN_dataset import *
 
 DATASET_REGISTRY = {}
 
@@ -66,7 +67,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         train_dataloader = get_data_loader("train", batch_size=args[0])
         test_dataloader = get_data_loader("test", batch_size=args[0])
         return train_dataloader, test_dataloader
-
+    if dataset.dataset_name == 'SACN':
+        return
     if dataset in CLASS_DATASETS:
         return build_dataset_v2(dataset, task)
     if not try_import_task_dataset(task):
