@@ -111,6 +111,8 @@ SUPPORTED_MODELS = {
     'DSSL': 'openhgnn.models.DSSL',
     'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
+    'LTE': 'openhgnn.models.LTE',
+    'LTE_Transe': 'openhgnn.models.LTE_Transe',
 }
 
 from .HGCL import HGCL
@@ -153,6 +155,8 @@ from .HGNN_AC import HGNN_AC
 from .KGAT import KGAT
 from .DSSL import DSSL
 from .lightGCN import lightGCN
+from .LTE import LTE
+from .LTE_Transe import LTE_Transe
 
 __all__ = [
     'BaseModel',
@@ -192,5 +196,7 @@ __all__ = [
     'KGAT',
     'DSSL',
     'lightGCN',
+    'LTE',
+    'LTE_Transe'
 ]
 classes = __all__
