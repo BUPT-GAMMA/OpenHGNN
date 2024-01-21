@@ -62,7 +62,8 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
-        'AdapropT':'AdapropT_trainer',
+        'Adaprop':'AdapropT_trainer',
+        'AdapropI':'AdapropI_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 

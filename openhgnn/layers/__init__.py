@@ -6,6 +6,7 @@ from .HeteroGraphConv import HeteroGraphConv
 from .macro_layer import *
 from .micro_layer import *
 from .AdapropT import *
+from .AdapropI import *
 
 __all__ = [
     'HeteroEmbedLayer',
@@ -21,7 +22,8 @@ __all__ = [
     'CompConv',
     'AttConv',
     'LSTMConv',
-    'AdapropT'
+    'AdapropT',
+    'AdapropI'
 ]
 
 classes = __all__

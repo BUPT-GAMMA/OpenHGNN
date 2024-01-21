@@ -81,6 +81,7 @@ SUPPORTED_FLOWS = {
     'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer',
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
     'AdapropT_trainer': 'openhgnn.trainerflow.AdapropT_trainer',
+    'AdapropI_trainer':'openhgnn.trainerflow.AdapropI_trainer',
 }
 
 from .hgcl_trainer import HGCLtrainer
@@ -110,6 +111,7 @@ from .node_classification_ac import NodeClassificationAC
 from .DSSL_trainer import DSSL_trainer
 from .lightGCN_trainer import lightGCNTrainer
 from .AdapropT_trainer import AdapropTTrainer
+from .AdapropI_trainer import AdapropITrainer
 
 __all__ = [
     'BaseFlow',
@@ -138,5 +140,6 @@ __all__ = [
     'HGCLtrainer',
     'lightGCNTrainer',
     'AdapropTTrainer',
+    'AdapropITrainer',
 ]
 classes = __all__

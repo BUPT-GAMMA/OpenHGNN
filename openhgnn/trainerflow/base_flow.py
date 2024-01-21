@@ -65,7 +65,7 @@ class BaseFlow(ABC):
 
         if self.model_name == "MeiREC":
             return
-        if self.model_name == "AdapropT":
+        if self.model_name == "Adaprop":
             return
 
         if self.args.use_uva:

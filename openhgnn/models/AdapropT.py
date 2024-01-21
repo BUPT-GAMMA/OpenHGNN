@@ -9,7 +9,7 @@ from ..utils.Adaprop_utils import *
 from tqdm import tqdm
 from . import BaseModel, register_model
 
-@register_model('AdapropT')
+@register_model('Adaprop')
 class AdapropT(BaseModel):
     @classmethod
     def build_model_from_args(cls, config,loader):

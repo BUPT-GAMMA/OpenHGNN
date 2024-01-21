@@ -111,7 +111,8 @@ SUPPORTED_MODELS = {
     'DSSL': 'openhgnn.models.DSSL',
     'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
-    'AdapropT': 'openhgnn.models.AdapropT',
+    'Adaprop': 'openhgnn.models.Adaprop',
+    'AdapropI':'openhgnn.models.AdapropI',
 }
 
 from .HGCL import HGCL
@@ -155,6 +156,7 @@ from .KGAT import KGAT
 from .DSSL import DSSL
 from .lightGCN import lightGCN
 from .AdapropT import AdapropT
+from .AdapropI import AdapropI
 
 __all__ = [
     'BaseModel',
@@ -194,6 +196,7 @@ __all__ = [
     'KGAT',
     'DSSL',
     'lightGCN',
-    'AdapropT'
+    'AdapropT',
+    'AdapropI'
 ]
 classes = __all__

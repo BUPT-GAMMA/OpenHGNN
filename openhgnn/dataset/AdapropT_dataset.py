@@ -1,21 +1,41 @@
+import io
 import os
 import torch
 from scipy.sparse import csr_matrix
 import numpy as np
 from collections import defaultdict
+import  requests
+import zipfile
 
-
-class DataLoader:
+class AdapropTDataLoader:
     def __init__(self, args):
         self.args = args
-        self.task_dir = task_dir = args.data_path
-        current_dir = os.getcwd()
-        print(1111)
-        print(current_dir)
-        current_dir = os.path.join(current_dir, 'OpenHGNN')
-        task_dir=os.path.join(current_dir,task_dir)
-        print(task_dir)
-        self.task_dir=task_dir
+        # self.task_dir = task_dir = args.data_path
+        # current_dir = os.getcwd()
+        # print(1111)
+        # print(current_dir)
+        # current_dir = os.path.join(current_dir, 'OpenHGNN')
+        # task_dir=os.path.join(current_dir,task_dir)
+        # print(task_dir)
+        # self.task_dir=task_dir
+        self.dir = './data'
+        path_ckp = os.path.join(self.dir, 'family')
+        self.dir = os.path.join(self.dir, 'family')
+        task_dir=self.dir
+        self.task_dir=self.dir
+        print(path_ckp)
+        folder = os.path.exists(path_ckp)
+        if not folder:  # 判断是否存在文件夹如果不存在则创建为文件夹
+            os.makedirs(path_ckp)  # makedirs 创建文件时如果路径不存在会创建这个路径
+            # 下载数据
+            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/family.zip"
+            response = requests.get(url)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+                myzip.extractall(path_ckp)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
         with open(os.path.join(task_dir, 'entities.txt')) as f:
             self.entity2id = dict()
             n_ent = 0
