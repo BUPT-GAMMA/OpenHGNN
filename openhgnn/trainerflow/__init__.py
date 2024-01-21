@@ -82,6 +82,7 @@ SUPPORTED_FLOWS = {
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
     'NBF_trainer':'openhgnn.trainerflow.NBF_trainer',
     'Ingram_Trainer' : 'openhgnn.trainerflow.Ingram_trainer',
+    'DisenKGAT_trainer':'openhgnn.trainerflow.DisenKGAT_trainer',
 }
 
 from .hgcl_trainer import HGCLtrainer
@@ -112,6 +113,7 @@ from .DSSL_trainer import DSSL_trainer
 from .lightGCN_trainer import lightGCNTrainer
 from .NBF_trainer import * 
 from .Ingram_trainer import Ingram_Trainer
+from .DisenKGAT_trainer import *
 
 __all__ = [
     'BaseFlow',
