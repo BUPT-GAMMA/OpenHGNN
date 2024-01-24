@@ -9,6 +9,114 @@ import dgl
 import torch as th
 
 
+
+class IMDB4MAGNN_Dataset(DGLDataset):
+
+
+    _prefix = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/'
+
+
+    def __init__(self, name, raw_dir=None, force_reload=False, verbose=True):
+        assert name in ['imdb4MAGNN', ]
+        
+        self._urls = {
+        'imdb4MAGNN': 'dataset/openhgnn/{}_std.zip'.format(name),
+}
+
+        raw_dir = './openhgnn/dataset'        
+        self.data_path = './openhgnn/dataset/'+ name +'_std.zip' 
+        self.g_path = './openhgnn/dataset/' + name + '/{}_std.pkl'.format(name)   
+        url = self._prefix + self._urls[name]  # https://s3.cn-north-1.amazonaws.com.cn/dgl-data/ +  dataset/imdb4MAGNN_std.zip
+        super(IMDB4MAGNN_Dataset, self).__init__(name=name,
+                                        url=url,
+                                        raw_dir=raw_dir, 
+                                        force_reload=force_reload,
+                                        verbose=verbose)
+
+    def download(self):
+        # download raw data to local disk
+        # path to store the file
+        if os.path.exists(self.data_path):  
+           pass
+        else:
+            #                       
+            download(self.url, 
+                     path=os.path.join(self.raw_dir))  
+
+        extract_archive(self.data_path, os.path.join(self.raw_dir, self.name)) 
+
+    def process(self):
+
+        import dgl
+        import pickle
+        with open(self.g_path, 'rb') as file:
+            graph = pickle.load(file)
+
+        cano_edges = {}
+        for edge_type in graph['edge_index_dict'].keys(): 
+            src_type = edge_type[0] 
+            dst_type = edge_type[-1]    
+            edge_type_2 = src_type + '-'+dst_type 
+            cano_edge_type = (src_type,edge_type_2,dst_type) 
+            u,v = graph['edge_index_dict'][edge_type][0] ,graph['edge_index_dict'][edge_type][1] 
+            cano_edges[cano_edge_type] = (u,v)
+
+        hg = dgl.heterograph(cano_edges)
+        for node_type in graph['X_dict'].keys() : 
+            hg.nodes[node_type].data['h'] = graph['X_dict'][node_type]  
+            if node_type == 'M':
+                hg.nodes[node_type].data['labels'] = graph['Y_dict'][node_type]  
+        import torch
+        num_nodes = 4278
+        random_indices = torch.randperm(num_nodes)
+        num_train = 400
+        num_val = 400
+        num_test = 3478
+        train_mask = torch.zeros(num_nodes, dtype=torch.int)
+        train_mask[random_indices[:num_train]] = 1
+        val_mask = torch.zeros(num_nodes, dtype=torch.int)
+        val_mask[random_indices[num_train:num_train+num_val]] = 1
+        test_mask = torch.zeros(num_nodes, dtype=torch.int)
+        test_mask[random_indices[num_train+num_val:]] = 1
+
+        assert torch.sum(train_mask * val_mask) == 0
+        assert torch.sum(train_mask * test_mask) == 0
+        assert torch.sum(val_mask * test_mask) == 0
+
+        hg.nodes['M'].data['train_mask'] = train_mask
+        hg.nodes['M'].data['val_mask'] = val_mask
+        hg.nodes['M'].data['test_mask'] = test_mask
+
+        self._g = hg
+
+ 
+
+
+    def __getitem__(self, idx):
+        # get one example by index
+        assert idx == 0, "This dataset has only one graph"  
+        return self._g
+
+    def __len__(self):
+        # number of data examples
+        return 1
+
+
+    def save(self):
+        # save processed data to directory `self.save_path`
+        pass
+
+    def load(self):
+        # load processed data from directory `self.save_path`
+        pass
+
+    def has_cache(self):
+        # check whether there are processed data in `self.save_path`
+        pass
+
+
+
+
 class AcademicDataset(DGLDataset):
 
     _prefix = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/'
