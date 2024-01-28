@@ -32,6 +32,9 @@ class LinkPrediction(BaseTask):
         super(LinkPrediction, self).__init__( )
         self.name_dataset = args.dataset
         self.logger = args.logger
+        if (args.dataset_name == 'LTE'):
+            build_dataset(args, 'LTE')
+            return
         if (args.dataset_name == 'SACN'):
             build_dataset(args, 'SACN')
             return

@@ -5,6 +5,7 @@ from .MetapathConv import MetapathConv
 from .HeteroGraphConv import HeteroGraphConv
 from .macro_layer import *
 from .micro_layer import *
+from .rgcn_layer import *
 
 __all__ = [
     'HeteroEmbedLayer',
