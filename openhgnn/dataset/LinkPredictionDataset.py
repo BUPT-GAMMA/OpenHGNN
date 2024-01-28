@@ -500,7 +500,32 @@ class KG_RedDataset(LinkPredictionDataset):
         super(KG_RedDataset, self).__init__(*args, **kwargs)
         self.trans_dir = os.path.join('openhgnn/dataset/data', dataset_name)
         self.ind_dir = self.trans_dir + '_ind'
-        print(os.getcwd())
+
+        folder = os.path.exists(self.trans_dir)
+        if not folder:
+            os.makedirs(self.trans_dir)
+            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v1.zip"
+            response = requests.get(url)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+                myzip.extractall(self.trans_dir)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
+
+        folder = os.path.exists(self.ind_dir)
+        if not folder:
+            os.makedirs(self.ind_dir)
+            # 下载数据
+            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v1_ind.zip"
+            response = requests.get(url)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+                myzip.extractall(self.ind_dir)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
+
         with open(os.path.join(self.trans_dir, 'entities.txt')) as f:
             self.entity2id = dict()
             for line in f:

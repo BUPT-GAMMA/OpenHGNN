@@ -61,7 +61,7 @@ class RedGNNTrainer(BaseFlow):
             mrr, out_str = self.train_batch()
             if epoch % self.evaluate_interval == 0:
                 self.logger.info("[Evaluation metric] " + out_str)  # out test result
-                early_stop = self.stopper.loss_step(mrr, self.model)  # less is better
+                early_stop = self.stopper.loss_step(-mrr, self.model)  # less is better
                 if early_stop:
                     self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}.')
                     break
@@ -125,7 +125,6 @@ class RedGNNTrainer(BaseFlow):
             ranks = cal_ranks(scores, objs, filters)
             ranking += ranks
         ranking = np.array(ranking)
-        print("ranking", ranking, len(ranking))
         v_mrr, v_h1, v_h10 = cal_performance(ranking)
 
         n_data = self.n_test

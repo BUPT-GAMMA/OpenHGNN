@@ -46,7 +46,7 @@ class LinkPrediction(BaseTask):
             return
         self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger, args=args)
         # self.evaluator = Evaluator()
-        if args.model == 'ExpressGNN':
+        if args.model == 'ExpressGNN' or args.model == 'RedGNN':
             return
         self.train_hg, self.val_hg, self.test_hg, self.neg_val_graph, self.neg_test_graph = self.dataset.get_split( )
         self.pred_hg = getattr(self.dataset, 'pred_graph', None)
