@@ -32,6 +32,9 @@ class LinkPrediction(BaseTask):
         super(LinkPrediction, self).__init__( )
         self.name_dataset = args.dataset
         self.logger = args.logger
+        if (args.dataset_name == 'SACN'):
+            build_dataset(args, 'SACN')
+            return
         self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger, args=args)
         # self.evaluator = Evaluator()
         if args.model == 'ExpressGNN':
