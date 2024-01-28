@@ -160,6 +160,10 @@ def build_dataset(dataset, task, *args, **kwargs):
             _dataset = 'common_' + task
     elif dataset in ['NBF_WN18RR','NBF_FB15k-237']:
         _dataset = 'NBF_' + task  
+    elif dataset in ['DisenKGAT_WN18RR','DisenKGAT_FB15k-237']:
+        _dataset = 'DisenKGAT_' + task  #  == 'DisenKGAT_link_prediction'
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))  
+    
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 

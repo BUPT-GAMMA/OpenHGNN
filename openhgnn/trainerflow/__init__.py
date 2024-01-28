@@ -87,6 +87,7 @@ SUPPORTED_FLOWS = {
     'ExpressGNN_trainer': 'openhgnn.trainerflow.ExpressGNN_trainer',
     'NBF_trainer':'openhgnn.trainerflow.NBF_trainer',
     'Ingram_Trainer' : 'openhgnn.trainerflow.Ingram_trainer',
+    'DisenKGAT_trainer':'openhgnn.trainerflow.DisenKGAT_trainer',
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
 }
 
@@ -123,6 +124,7 @@ from .SACN_trainer import SACNTrainer
 from .ExpressGNN_trainer import ExpressGNNTrainer
 from .NBF_trainer import * 
 from .Ingram_trainer import Ingram_Trainer
+from .DisenKGAT_trainer import *
 
 
 __all__ = [

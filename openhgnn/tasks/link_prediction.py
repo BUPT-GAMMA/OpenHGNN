@@ -302,7 +302,25 @@ class NBF_LinkPrediction(BaseTask):
     def __init__(self, args):
         super(NBF_LinkPrediction, self).__init__()
         self.logger = None
-        self.dataset = build_dataset(args.dataset, 'link_prediction',logger=self.logger) # dataset = 'NBF_WN18RR' or 'NBF_FB15k-237'
+        # dataset = 'NBF_WN18RR' or 'NBF_FB15k-237'
+        self.dataset = build_dataset(args.dataset, 'link_prediction',logger=self.logger,args=args) 
     
     def evaluate(self):
         return None
+    
+
+
+@register_task("DisenKGAT_link_prediction")
+class DisenKGAT_LinkPrediction(BaseTask):
+
+    def __init__(self,   args  )  :
+        super(DisenKGAT_LinkPrediction, self).__init__()
+        self.logger = None
+
+        self.dataset = build_dataset(dataset = args.dataset, task='link_prediction', 
+                                     logger=self.logger, args=args) 
+
+    
+    def evaluate(self):
+        return None
+    

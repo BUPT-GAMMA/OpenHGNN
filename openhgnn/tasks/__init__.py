@@ -63,6 +63,7 @@ SUPPORTED_TASKS = {
     'AdapropI':'openhgnn.tasks.AdapropI',
     'NBF_link_prediction':'openhgnn.tasks.link_prediction',
     'Ingram': 'openhgnn.tasks.Ingram',
+    'DisenKGAT_link_prediction':'openhgnn.tasks.link_prediction', 
 }
 
 from .node_classification import NodeClassification

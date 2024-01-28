@@ -40,6 +40,88 @@ class Config(object):
             self.seed = conf.getint("General", "seed")
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
+        elif self.model_name == "DisenKGAT":
+            self.name = conf.get("DisenKGAT","name")
+            self.score_func = conf.get("DisenKGAT","score_func")
+            self.opn = conf.get("DisenKGAT","opn")
+            self.logdir = conf.get("DisenKGAT","logdir")
+            self.config = conf.get("DisenKGAT","config")
+            self.strategy = conf.get("DisenKGAT","strategy")
+            self.form = conf.get("DisenKGAT","form")
+            self.mi_method = conf.get("DisenKGAT","mi_method")
+            self.att_mode = conf.get("DisenKGAT","att_mode")
+            self.score_method = conf.get("DisenKGAT","score_method")
+            self.score_order = conf.get("DisenKGAT","score_order")
+            self.gamma_method = conf.get("DisenKGAT","gamma_method")
+            self.k_w= conf.getint("DisenKGAT", "k_w") 
+            self.batch = conf.getint("DisenKGAT", "batch")
+            self.test_batch = conf.getint("DisenKGAT", "test_batch")
+            self.epoch = conf.getint("DisenKGAT", "epoch")
+            self.num_workers = conf.getint("DisenKGAT", "num_workers")
+            self.seed = conf.getint("DisenKGAT", "seed")
+            self.init_dim = conf.getint("DisenKGAT", "init_dim")
+            self.gcn_dim = conf.getint("DisenKGAT", "gcn_dim")
+            self.embed_dim = conf.getint("DisenKGAT", "embed_dim")
+            self.gcn_layer = conf.getint("DisenKGAT", "gcn_layer")
+            self.k_h = conf.getint("DisenKGAT", "k_h")
+            self.num_filt = conf.getint("DisenKGAT", "num_filt")
+            self.ker_sz = conf.getint("DisenKGAT", "ker_sz")
+            self.num_bases = conf.getint("DisenKGAT", "num_bases")
+            self.neg_num = conf.getint("DisenKGAT", "neg_num")
+            self.ik_w = conf.getint("DisenKGAT", "ik_w")
+            self.ik_h = conf.getint("DisenKGAT", "ik_h")
+            self.inum_filt = conf.getint("DisenKGAT", "inum_filt")
+            self.iker_sz = conf.getint("DisenKGAT", "iker_sz")
+            self.iperm = conf.getint("DisenKGAT", "iperm")
+            self.head_num = conf.getint("DisenKGAT", "head_num")
+            self.num_factors = conf.getint("DisenKGAT", "num_factors")
+            self.early_stop = conf.getint("DisenKGAT", "early_stop")
+            self.mi_epoch = conf.getint("DisenKGAT", "mi_epoch")
+            self.feat_drop = conf.getfloat("DisenKGAT", "feat_drop")
+            self.hid_drop2 = conf.getfloat("DisenKGAT", "hid_drop2")
+            self.hid_drop = conf.getfloat("DisenKGAT", "hid_drop")
+            self.gcn_drop = conf.getfloat("DisenKGAT", "gcn_drop")
+            self.gamma = conf.getfloat("DisenKGAT", "gamma")
+            self.l2 = conf.getfloat("DisenKGAT", "l2")
+            self.lr = conf.getfloat("DisenKGAT", "lr")
+            self.lbl_smooth = conf.getfloat("DisenKGAT", "lbl_smooth")
+            self.iinp_drop = conf.getfloat("DisenKGAT", "iinp_drop")
+            self.ifeat_drop = conf.getfloat("DisenKGAT", "ifeat_drop")
+            self.ihid_drop = conf.getfloat("DisenKGAT", "ihid_drop")
+            self.alpha = conf.getfloat("DisenKGAT", "alpha")
+            self.max_gamma = conf.getfloat("DisenKGAT", "max_gamma")
+            self.init_gamma = conf.getfloat("DisenKGAT", "init_gamma")
+            self.restore = conf.getboolean("DisenKGAT", "restore")
+            self.bias = conf.getboolean("DisenKGAT", "bias")
+            self.no_act = conf.getboolean("DisenKGAT", "no_act")
+            self.mi_train = conf.getboolean("DisenKGAT", "mi_train")
+            self.no_enc = conf.getboolean("DisenKGAT", "no_enc")
+            self.mi_drop = conf.getboolean("DisenKGAT", "mi_drop")
+            self.fix_gamma = conf.getboolean("DisenKGAT", "fix_gamma")
+
+
+
+            pass
+        elif self.model_name == "NBF" and self.dataset_name =="NBF_WN18RR":
+
+            self.input_dim = conf.getint("NBF", "input_dim")
+            self.hidden_dims = [32, 32, 32, 32, 32, 32]  
+            self.message_func = conf.get("NBF", "message_func")
+            self.aggregate_func = conf.get("NBF", "aggregate_func")
+            self.short_cut = conf.getboolean("NBF","short_cut")
+            self.layer_norm = conf.getboolean("NBF","layer_norm")
+            self.dependent = conf.getboolean("NBF","dependent")
+
+            self.num_negative = conf.getint("NBF","num_negative")
+            self.strict_negative = conf.getboolean("NBF","strict_negative")
+            self.adversarial_temperature = conf.getint("NBF", "adversarial_temperature")
+            self.metric = ['mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@10_50']
+
+            self.lr = conf.getfloat("NBF","lr")
+            self.gpus = [0]       
+            self.batch_size = conf.getint("NBF","batch_size")
+            self.num_epoch = conf.getint("NBF","num_epoch")
+            self.log_interval = conf.getint("NBF","log_interval")
         elif self.model_name == "NSHE":
             self.dim_size = {}
             self.dim_size['emd'] = conf.getint("NSHE", "emd_dim")
@@ -874,7 +956,7 @@ class Config(object):
             self.neg_alpha = conf.getint("DSSL", "neg_alpha")
             self.load_json = conf.getint("DSSL", "load_json")
 
-
+            
         elif model == 'SHGP':
             self.dataset = conf.get("SHGP", 'dataset')
             self.target_type = conf.get("SHGP", 'target_type')
@@ -909,7 +991,7 @@ class Config(object):
             self.ssl_beta = conf.getfloat("HGCL", "ssl_beta")
             self.rank = conf.getint("HGCL", "rank")
             self.Layers = conf.getint("HGCL", "Layers")
-
+            
         elif self.model_name == 'lightGCN':
             self.lr = conf.getfloat("lightGCN", "lr")
             self.weight_decay = conf.getfloat("lightGCN", "weight_decay")

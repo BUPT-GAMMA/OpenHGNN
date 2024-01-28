@@ -1,5 +1,5 @@
 import os
-import torch
+import torch,requests,zipfile,io
 import os.path as osp
 from typing import Any, Callable, List, Optional
 from collections.abc import Sequence
@@ -93,10 +93,16 @@ class NBF_Dataset():
             "train_ind.txt", "test_ind.txt", "train.txt", "valid.txt"
         ]
 
+
     def download(self):
-        for url, path in zip(self.urls[self.name], self.raw_paths):
-            download_path = download_url(url % self.version, self.raw_dir)
-            os.rename(download_path, path)
+
+        url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{}.zip".format(self.name)
+        response = requests.get(url)
+        with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+            myzip.extractall(self.raw_dir)
+        print("---  download data finished---")
+
+        
 
     @property
     def raw_paths(self) :
