@@ -68,6 +68,7 @@ SUPPORTED_MODELS = {
     'Metapath2vec': 'openhgnn.models.SkipGram',
     'HERec': 'openhgnn.models.SkipGram',
     'HAN': 'openhgnn.models.HAN',
+    'RoHe': 'openhgnn.models.RoHe',
     'HeCo': 'openhgnn.models.HeCo',
     'HGT': 'openhgnn.models.HGT',
     'GTN': 'openhgnn.models.GTN_sparse',
@@ -103,11 +104,22 @@ SUPPORTED_MODELS = {
     'DHNE': 'openhgnn.models.DHNE',
     'DiffMG': 'openhgnn.models.DiffMG',
     'MeiREC': 'openhgnn.models.MeiREC',
-    'HGNN_AC': 'openhgnn.models.HGNN_AC'
-    'KACL': 'openhgnn.models.KACL'
+    'HGNN_AC': 'openhgnn.models.HGNN_AC',
+    'KACL': 'openhgnn.models.KACL',
+    'AEHCL': 'openhgnn.models.AEHCL',
+    'KGAT': 'openhgnn.models.KGAT',
+    'SHGP': 'openhgnn.models.ATT_HGCN',
+    'DSSL': 'openhgnn.models.DSSL',
+    'HGCL': 'openhgnn.models.HGCL',
+    'lightGCN': 'openhgnn.models.lightGCN',
+    'ExpressGNN': 'openhgnn.models.ExpressGNN',
+    'NBF': 'openhgnn.models.NBF', 
+    'Ingram': 'openhgnn.models.Ingram',
+    'RedGNN': 'openhgnn.models.RedGNN',
 }
 
 from .KACL import KACL
+from .HGCL import HGCL
 from .CompGCN import CompGCN
 from .HetGNN import HetGNN
 from .RGCN import RGCN
@@ -115,6 +127,7 @@ from .RGAT import RGAT
 from .RSHN import RSHN
 from .SkipGram import SkipGram
 from .HAN import HAN
+from .RoHe import RoHe
 from .HeCo import HeCo
 from .HGT import HGT
 from .GTN_sparse import GTN
@@ -143,6 +156,11 @@ from .DHNE import DHNE
 from .DiffMG import DiffMG
 from .MeiREC import MeiREC
 from .HGNN_AC import HGNN_AC
+from .KGAT import KGAT
+from .DSSL import DSSL
+from .lightGCN import lightGCN
+from .ExpressGNN import ExpressGNN
+from .Ingram import Ingram
 
 __all__ = [
     'BaseModel',
@@ -177,5 +195,12 @@ __all__ = [
     'DHNE',
     'DiffMG',
     'MeiREC',
+    'KGAT',
+    'ATT_HGCN',
+    'KGAT',
+    'DSSL',
+    'lightGCN',
+    'ExpressGNN',
+    'Ingram',
 ]
 classes = __all__

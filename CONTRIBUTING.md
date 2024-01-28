@@ -24,6 +24,7 @@ Contribution is always welcomed. Please feel free to open an issue or email to t
   - Yibo Li
   - Yanhu Mo
   - Donglin Xia
+  - Yuxin Guo
   - Xinlong Zhai
   - Siyuan Zhang
   - Qi Zhang

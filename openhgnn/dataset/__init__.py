@@ -10,7 +10,8 @@ from .alircd_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 from .mg2vec_dataset import Mg2vecDataSet
 from .meirec_dataset import MeiRECDataset, get_data_loader
-
+from .NBF_dataset import NBF_Dataset 
+from .Ingram_dataset import Ingram_KG_TrainData, Ingram_KG_TestData
 DATASET_REGISTRY = {}
 
 
@@ -50,16 +51,33 @@ def try_import_task_dataset(task):
     return True
 
 
+common = ['Cora', 'Citeseer', 'Pubmed', 'Texas', 'Cornell']
 hgbl_datasets = ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']
 hgbn_datasets = ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']
-kg_lp_datasets = ['wn18', 'FB15k', 'FB15k-237']
+
+kg_lp_datasets = ['wn18', 'FB15k', 'FB15k-237', 'FB15k-237_data_ratio_0', 'kinship', 'uw_cse']
+
+kg_sub_datasets = [f'fb237_v{i}' for i in range(1, 5)]
+kg_sub_datasets += [f'nell_v{i}' for i in range(1, 5)]
+kg_sub_datasets += [f'WN18RR_v{i}' for i in range(1,5)]
+
 ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
-hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet']
+hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
+
 
 def build_dataset(dataset, task, *args, **kwargs):
+    args = kwargs.get('args')
+    model = args.model
     if isinstance(dataset, DGLDataset):
         return dataset
+    #-------------------更改部分-------------------
+    if dataset == 'NL-100':
+        train_dataloader = Ingram_KG_TrainData('',dataset)
+        valid_dataloader = Ingram_KG_TestData('', dataset,'valid')
+        test_dataloader = Ingram_KG_TestData('',dataset,'test')
+        return train_dataloader,valid_dataloader,test_dataloader
+    # -------------------更改部分-------------------
 
     if dataset == 'meirec':
         train_dataloader = get_data_loader("train", batch_size=args[0])
@@ -70,13 +88,15 @@ def build_dataset(dataset, task, *args, **kwargs):
         return build_dataset_v2(dataset, task)
     if not try_import_task_dataset(task):
         exit(1)
+    _dataset = None
     if dataset in ['aifb', 'mutag', 'bgs', 'am']:
         _dataset = 'rdf_' + task
     elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp',
                      'dblp4MAGNN', 'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie',
-                     'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB','amazon']:
+                     'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB',
+                     'amazon', 'yelp4HGSL']:
         _dataset = 'hin_' + task
-    elif dataset in ohgbn_datasets + ohgbn_datasets:
+    elif dataset in ohgbn_datasets + ohgbl_datasets:
         _dataset = 'ohgb_' + task
     elif dataset in ['ogbn-mag']:
         _dataset = 'ogbn_' + task
@@ -85,20 +105,47 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset in hgbl_datasets:
         _dataset = 'HGBl_link_prediction'
     elif dataset in kg_lp_datasets:
+        if model == 'ExpressGNN':
+            assert task == 'link_prediction'
+            _dataset = 'express_gnn'
+            return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'], args=kwargs['args'])
+        else:
+            assert task == 'link_prediction'
+            _dataset = 'kg_link_prediction'
+    elif dataset in kg_sub_datasets:
         assert task == 'link_prediction'
-        _dataset = 'kg_link_prediction'
+        _dataset = 'kg_sub_link_prediction'
     elif dataset in ['LastFM4KGCN']:
         _dataset = 'kgcn_recommendation'
+    elif dataset in ['gowalla', 'yelp2018', 'amazon-book']:
+        _dataset = 'lightGCN_recommendation'
     elif dataset in ['yelp4rec']:
         _dataset = 'hin_' + task
+    elif dataset in ['Epinions', 'CiaoDVD', 'Yelp']:
+        _dataset = 'hgcl_recommendation'
     elif dataset in ['dblp4Mg2vec_4', 'dblp4Mg2vec_5']:
         _dataset = 'hin_' + task
     elif dataset in ['last-fm', 'movie-lens']:
         _dataset = 'kacl_recommendation'
     elif dataset == 'demo':
         _dataset = 'demo_' + task
+    elif dataset == 'mag':
+        _dataset = 'mag_dataset'
     elif dataset in hypergraph_datasets:
         _dataset = task
+    elif dataset in ['LastFM_KGAT', 'yelp2018_KGAT', 'amazon-book_KGAT']:
+        change_name = {'LastFM_KGAT': 'last-fm', 'yelp2018_KGAT': 'yelp2018', 'amazon-book_KGAT': 'amazon-book'}
+        dataset = change_name[dataset]
+        _dataset = 'kgat_recommendation'
+    elif dataset in common:
+        if model == 'ExpressGNN' and dataset == 'Cora':
+            assert task == 'link_prediction'
+            _dataset = 'express_gnn'
+            return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'], args=kwargs['args'])
+        else:
+            _dataset = 'common_' + task
+    elif dataset in ['NBF_WN18RR','NBF_FB15k-237']:
+        _dataset = 'NBF_' + task  
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
@@ -107,7 +154,8 @@ SUPPORTED_DATASETS = {
     "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
     "recommendation": "openhgnn.dataset.RecommendationDataset",
     "edge_classification": "openhgnn.dataset.EdgeClassificationDataset",
-    "hypergraph":"openhgnn.dataset.HypergraphDataset"
+    "hypergraph": "openhgnn.dataset.HypergraphDataset",
+    "pretrain": "openhgnn.dataset.mag_dataset"
 }
 
 from .NodeClassificationDataset import NodeClassificationDataset
@@ -116,13 +164,14 @@ from .RecommendationDataset import RecommendationDataset
 from .EdgeClassificationDataset import EdgeClassificationDataset
 from .HypergraphDataset import HGraphDataset
 
+
 def build_dataset_v2(dataset, task):
     if dataset in CLASS_DATASETS:
         path = ".".join(CLASS_DATASETS[dataset].split(".")[:-1])
         module = importlib.import_module(path)
         class_name = CLASS_DATASETS[dataset].split(".")[-1]
         dataset_class = getattr(module, class_name)
-        d = dataset_class()
+        d = dataset_class( )
         if task == 'node_classification':
             target_ntype = getattr(d, 'category')
             if target_ntype is None:
@@ -141,9 +190,11 @@ CLASS_DATASETS = {
     "imdb4GTN": "openhgnn.dataset.IMDB4GTNDataset",
     "alircd_small": "openhgnn.dataset.AliRCDSmallDataset",
     "alircd_session1": "openhgnn.dataset.AliRCDSession1Dataset",
+    "ICDM": "openhgnn.dataset.AliICDMDataset",
     "ohgbn-alircd_session1": "openhgnn.dataset.AliRCDSession1Dataset",
     "alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
     "ohgbn-alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
+    "pretrain": "openhgnn.dataset.mag_dataset"
 }
 
 __all__ = [
@@ -158,7 +209,9 @@ __all__ = [
     'AsLinkPredictionDataset',
     'AsNodeClassificationDataset',
     'EdgeClassificationDataset',
-    'HypergraphDataset'
+    'HypergraphDataset',
+    'AbnormEventDetectionDataset',
+    'mag_dataset',
 ]
 
 classes = __all__

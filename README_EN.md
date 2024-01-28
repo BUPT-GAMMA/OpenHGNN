@@ -14,6 +14,20 @@ of heterogeneous graph.
 
 ## News
 <details>
+<summary>
+2023-07-17 release v0.5
+</summary>
+<br/>
+
+We release the latest version v0.5.0
+
+- New models and datasets.
+- 4 New tasks: pretrain, recommendation, graph attacks and defenses, abnorm_event detection.
+- TensorBoard visualization.
+- Maintenance and test module.
+
+</details>
+<details>
 
 <summary>
 2023-02-24 OpenI Excellent Incubation Award
@@ -193,6 +207,16 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 **Note**: If you are interested in some model, you can refer to the below models list.
 
 Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get more basic and depth usage.
+
+#### Use TensorBoard to visualize your train result
+```bash
+tensorboard --logdir=./openhgnn/output/{model_name}/
+```
+e.g.：
+```bash
+tensorboard --logdir=./openhgnn/output/RGCN/
+```
+**Note**: To visualize results, you need to train the model first.
 
 ## [Models](../openhgnn/models/#Model)
 

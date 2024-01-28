@@ -14,6 +14,21 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 <details>
 
 <summary>
+2023-07-17 开源0.5版本
+</summary>
+<br/>
+
+我们开源了0.5版本。
+
+- 新增模型和数据集
+- 四个新的前沿图学习任务：预训练、推荐、图攻防、异常事件检测
+- TensorBoard可视化功能
+- 维护和测试模块
+
+</details>
+<details>
+
+<summary>
 2023-02-24 优秀孵化奖
 </summary>
 <br/>
@@ -188,6 +203,16 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 **提示**: 如果你对某个模型感兴趣,你可以参考下列的模型列表。
 
 请参考 [文档](https://openhgnn.readthedocs.io/en/latest/index.html) 了解更多的基础和进阶的使用方法。
+
+#### 使用TensorBoard可视化训练结果
+```bash
+tensorboard --logdir=./openhgnn/output/{model_name}/
+```
+示例：
+```bash
+tensorboard --logdir=./openhgnn/output/RGCN/
+```
+**提示**:需要先运行一次你想要可视化的模型，才能用以上命令可视化结果。
 
 ## [模型](./openhgnn/models/#Model)
 

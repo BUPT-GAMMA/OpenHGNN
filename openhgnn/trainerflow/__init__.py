@@ -69,14 +69,25 @@ SUPPORTED_FLOWS = {
     'TransX_trainer': 'openhgnn.trainerflow.TransX_trainer',
     'han_nc_trainer': 'openhgnn.trainerflow.HANNodeClassification',
     'han_lp_trainer': 'openhgnn.trainerflow.HANLinkPrediction',
+    'RoHe_trainer': 'openhgnn.trainerflow.RoHe_trainer',
     'mg2vec_trainer': 'openhgnn.trainerflow.mg2vec_trainer',
     'DHNE_trainer': 'openhgnn.trainerflow.DHNE_trainer',
     'DiffMG_trainer': 'openhgnn.trainerflow.DiffMG_trainer',
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
     'kacltrainer': 'openhgnn.trainerflow.kacl_trainer',
+    'abnorm_event_detection': 'openhgnn.trainerflow.AbnormEventDetection',
+    'SHGP_trainer': 'openhgnn.trainerflow.SHGP_trainer',
+    'KGAT_trainer': 'openhgnn.trainerflow.KGAT_trainer',
+    'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer',
+    'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer',
+    'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
+    'ExpressGNN_trainer': 'openhgnn.trainerflow.ExpressGNN_trainer',
+    'NBF_trainer':'openhgnn.trainerflow.NBF_trainer',
+    'Ingram_Trainer' : 'openhgnn.trainerflow.Ingram_trainer',
+    'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
 }
-
 from .kacl_trainer import KACLtrainer
+from .hgcl_trainer import HGCLtrainer
 from .node_classification import NodeClassification
 from .link_prediction import LinkPrediction
 from .recommendation import Recommendation
@@ -93,11 +104,18 @@ from .hde_trainer import hde_trainer
 from .GATNE_trainer import GATNE
 from .han_trainer import HANNodeClassification
 from .han_trainer import HANLinkPrediction
+from .RoHe_trainer import RoHeTrainer
 from .mg2vec_trainer import Mg2vecTrainer
 from .DHNE_trainer import DHNE_trainer
 from .DiffMG_trainer import DiffMG_trainer
 from .MeiRec_trainer import MeiRECTrainer
+from .kgat_trainer import KGAT_Trainer
 from .node_classification_ac import NodeClassificationAC
+from .DSSL_trainer import DSSL_trainer
+from .lightGCN_trainer import lightGCNTrainer
+from .ExpressGNN_trainer import ExpressGNNTrainer
+from .NBF_trainer import * 
+from .Ingram_trainer import Ingram_Trainer
 
 __all__ = [
     'BaseFlow',
@@ -122,5 +140,11 @@ __all__ = [
     'DiffMG_trainer',
     'MeiRECTrainer',
     'KACLtrainer',
+    'KGAT_Trainer',
+    'DSSL_trainer',
+    'HGCLtrainer',
+    'lightGCNTrainer',
+    'ExpressGNNTrainer',
+    'Ingram_trainer',
 ]
 classes = __all__

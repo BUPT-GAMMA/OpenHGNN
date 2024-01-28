@@ -49,15 +49,24 @@ class Experiment(object):
         'TransH': 'TransX_trainer',
         'TransR': 'TransX_trainer',
         'TransD': 'TransX_trainer',
+        'RedGNN': 'RedGNN_trainer',
         'GIE': 'TransX_trainer',
         'HAN': {
             'node_classification': 'han_nc_trainer',
             'link_prediction': 'han_lp_trainer',
         },
+        'RoHe': 'RoHe_trainer',
         'Mg2vec': 'mg2vec_trainer',
         'DHNE': 'DHNE_trainer',
         'DiffMG': 'DiffMG_trainer',
         'MeiREC': 'MeiREC_trainer',
+        'KGAT': 'KGAT_trainer',
+        'SHGP': 'SHGP_trainer',
+        'HGCL': 'hgcltrainer',
+        'lightGCN': 'lightGCN_trainer',
+        'ExpressGNN': 'ExpressGNN_trainer',
+        'NBF':'NBF_trainer',
+        'Ingram': 'Ingram_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 
