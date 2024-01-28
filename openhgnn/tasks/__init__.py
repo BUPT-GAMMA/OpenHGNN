@@ -61,6 +61,8 @@ SUPPORTED_TASKS = {
     'DSSL_trainer': 'openhgnn.tasks.DSSL_task',
     'Adaprop':'openhgnn.tasks.Adaprop',
     'AdapropI':'openhgnn.tasks.AdapropI',
+    'NBF_link_prediction':'openhgnn.tasks.link_prediction',
+    'Ingram': 'openhgnn.tasks.Ingram',
 }
 
 from .node_classification import NodeClassification
@@ -71,6 +73,7 @@ from .hypergraph import hypergraph
 from .node_classification import DSSL_task
 from .AdapropT_task import AdapropT
 from .AdapropI_task import AdapropI
+from .Ingram_task import Ingram
 
 __all__ = [
     'BaseTask',

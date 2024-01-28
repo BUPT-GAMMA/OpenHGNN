@@ -82,6 +82,12 @@ SUPPORTED_FLOWS = {
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
     'AdapropT_trainer': 'openhgnn.trainerflow.AdapropT_trainer',
     'AdapropI_trainer':'openhgnn.trainerflow.AdapropI_trainer',
+    'LTE_trainer': 'openhgnn.trainerflow.LTE_trainer',
+    'SACN_trainer': 'openhgnn.trainerflow.SACN_trainer',
+    'ExpressGNN_trainer': 'openhgnn.trainerflow.ExpressGNN_trainer',
+    'NBF_trainer':'openhgnn.trainerflow.NBF_trainer',
+    'Ingram_Trainer' : 'openhgnn.trainerflow.Ingram_trainer',
+    'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
 }
 
 from .hgcl_trainer import HGCLtrainer
@@ -112,6 +118,12 @@ from .DSSL_trainer import DSSL_trainer
 from .lightGCN_trainer import lightGCNTrainer
 from .AdapropT_trainer import AdapropTTrainer
 from .AdapropI_trainer import AdapropITrainer
+from .LTE_trainer import LTETrainer
+from .SACN_trainer import SACNTrainer
+from .ExpressGNN_trainer import ExpressGNNTrainer
+from .NBF_trainer import * 
+from .Ingram_trainer import Ingram_Trainer
+
 
 __all__ = [
     'BaseFlow',
@@ -141,5 +153,9 @@ __all__ = [
     'lightGCNTrainer',
     'AdapropTTrainer',
     'AdapropITrainer',
+    'LTETrainer',
+    'SACNTrainer',
+    'ExpressGNNTrainer',
+    'Ingram_trainer',
 ]
 classes = __all__
