@@ -112,6 +112,10 @@ SUPPORTED_MODELS = {
     'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
     'SACN':'openhgnn.models.SACN',
+    'ExpressGNN': 'openhgnn.models.ExpressGNN',
+    'NBF': 'openhgnn.models.NBF', 
+    'Ingram': 'openhgnn.models.Ingram',
+    'RedGNN': 'openhgnn.models.RedGNN',
 }
 
 from .HGCL import HGCL
@@ -155,6 +159,8 @@ from .KGAT import KGAT
 from .DSSL import DSSL
 from .lightGCN import lightGCN
 from .SACN import SACN
+from .ExpressGNN import ExpressGNN
+from .Ingram import Ingram
 
 __all__ = [
     'BaseModel',
@@ -195,5 +201,7 @@ __all__ = [
     'DSSL',
     'lightGCN',
     'SACN',
+    'ExpressGNN',
+    'Ingram',
 ]
 classes = __all__
