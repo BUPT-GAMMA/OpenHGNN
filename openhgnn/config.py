@@ -9,7 +9,7 @@ import warnings
 
 class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
-        conf = configparser.ConfigParser()
+        conf = configparser.ConfigParser( )
         try:
             conf.read(file_path)
         except:
@@ -874,7 +874,7 @@ class Config(object):
             self.neg_alpha = conf.getint("DSSL", "neg_alpha")
             self.load_json = conf.getint("DSSL", "load_json")
 
-            
+
         elif model == 'SHGP':
             self.dataset = conf.get("SHGP", 'dataset')
             self.target_type = conf.get("SHGP", 'target_type')
@@ -909,7 +909,7 @@ class Config(object):
             self.ssl_beta = conf.getfloat("HGCL", "ssl_beta")
             self.rank = conf.getint("HGCL", "rank")
             self.Layers = conf.getint("HGCL", "Layers")
-            
+
         elif self.model_name == 'lightGCN':
             self.lr = conf.getfloat("lightGCN", "lr")
             self.weight_decay = conf.getfloat("lightGCN", "weight_decay")
@@ -959,12 +959,110 @@ class Config(object):
             self.noltr=conf.getboolean("LTE", "noltr")
             self.encoder=conf.get("LTE", "encoder")
             self.max_epochs=conf.getint("LTE", "max_epochs")
+            
+        elif self.model_name == 'SACN':
+            self.seed=conf.getint("SACN","seed")
+            self.init_emb_size=conf.getint("SACN","init_emb_size")
+            self.gc1_emb_size=conf.getint("SACN","gc1_emb_size")
+            self.embedding_dim=conf.getint("SACN","embedding_dim")
+            self.input_dropout=conf.getint("SACN","input_dropout")
+            self.dropout_rate=conf.getfloat("SACN","dropout_rate")
+            self.channels=conf.getint("SACN","channels")
+            self.kernel_size=conf.getint("SACN","kernel_size")
+            self.gpu=conf.getint("SACN","gpu")
+            self.lr=conf.getfloat("SACN","lr")
+            self.n_epochs=conf.getint("SACN","n_epochs")
+            self.num_workers=conf.getint("SACN","num_workers")
+            self.eval_every=conf.getint("SACN","eval_every")
+            self.dataset_data=conf.get("SACN","dataset_data")
+            self.batch_size=conf.getint("SACN","batch_size")
+            self.patience=conf.getint("SACN","patience")
+            self.decoder=conf.get("SACN","decoder")
+            self.gamma=conf.getfloat("SACN","gamma")
+            self.name=conf.get("SACN","name")
+            self.n_layer=conf.getint("SACN","n_layer")
+            self.rat=conf.getboolean("SACN","rat")
+            self.wsi=conf.getboolean("SACN","wsi")
+            self.wni=conf.getboolean("SACN","wni")
+            self.ss=conf.getint("SACN","ss")
+            self.final_act=conf.getboolean("SACN","final_act")
+            self.final_bn=conf.getboolean("SACN","final_bn")
+            self.final_drop=conf.getboolean("SACN","final_drop")
+
+        elif self.model_name == 'Ingram':
+            self.margin = conf.getint("Ingram", "margin")
+            self.lr = conf.getfloat("Ingram", "lr")
+            self.nle = conf.getint("Ingram", "nle")
+            self.nlr = conf.getint("Ingram", "nlr")
+            self.d_e = conf.getint("Ingram", "d_e")
+            self.d_r = conf.getint("Ingram", "d_r")
+            self.hdr_e = conf.getint("Ingram", "hdr_e")
+            self.hdr_r = conf.getint("Ingram", "hdr_r")
+            self.num_bin = conf.getint("Ingram", "num_bin")
+            self.num_epoch = conf.getint("Ingram", "num_epoch")
+            self.validation_epoch = conf.getint("Ingram", "validation_epoch")
+            self.num_head = conf.getint("Ingram", "num_head")
+            self.num_neg = conf.getint("Ingram", "num_neg")
+        elif self.model_name == 'RedGNN':
+            self.seed = conf.getint("RedGNN", "seed")
+            self.patience = conf.getint("RedGNN", "patience")
+            self.batch_size = conf.getint("RedGNN", "batch_size")
+            self.optimizer = conf.get("RedGNN", "optimizer")
+            self.lr = conf.getfloat("RedGNN", "lr")
+            self.weight_decay = conf.getfloat("RedGNN", "weight_decay")
+            self.max_epoch = conf.getint("RedGNN", "max_epoch")
+            self.decay_rate = conf.getfloat("RedGNN", "decay_rate")
+            self.hidden_dim = conf.getint("RedGNN", "hidden_dim")
+            self.attn_dim = conf.getint("RedGNN", "attn_dim")
+            self.dropout = conf.getfloat("RedGNN", "dropout")
+            self.act = conf.get("RedGNN", "act")
+            self.n_layer = conf.getint("RedGNN", "n_layer")
+
+        elif self.model_name == 'ExpressGNN':
+            self.embedding_size = conf.getint('ExpressGNN', 'embedding_size')
+            self.gcn_free_size = conf.getint("ExpressGNN", "gcn_free_size")
+            self.filtered = conf.get("ExpressGNN", "filtered")
+            self.hidden_dim = conf.getint("ExpressGNN", "hidden_dim")
+            self.rule_weights_learning = conf.getint("ExpressGNN", "rule_weights_learning")
+            self.load_method = conf.getint("ExpressGNN", "load_method")
+            self.num_epochs = conf.getint("ExpressGNN", "num_epochs")
+
+            self.slice_dim = conf.getint("ExpressGNN", "slice_dim")
+            self.no_train = conf.getint("ExpressGNN", "no_train")
+            self.hidden_dim = conf.getint("ExpressGNN", "hidden_dim")
+            self.num_epochs = conf.getint("ExpressGNN", "num_epochs")
+            self.batchsize = conf.getint("ExpressGNN", "batchsize")
+            self.trans = conf.getint("ExpressGNN", "trans")
+            self.num_hops = conf.getint("ExpressGNN", "num_hops")
+            self.num_mlp_layers = conf.getint("ExpressGNN", "num_mlp_layers")
+            self.num_epochs = conf.getint("ExpressGNN", "num_epochs")
+
+            self.num_batches = conf.getint("ExpressGNN", "num_batches")
+            self.learning_rate = conf.getfloat("ExpressGNN", "learning_rate")
+            self.lr_decay_factor = conf.getfloat("ExpressGNN", "lr_decay_factor")
+            self.lr_decay_patience = conf.getint("ExpressGNN", "lr_decay_patience")
+            self.lr_decay_min = conf.getfloat("ExpressGNN", "lr_decay_min")
+            self.patience = conf.getint("ExpressGNN", "patience")
+            self.l2_coef = conf.getfloat("ExpressGNN", "l2_coef")
+            self.observed_prob = conf.getfloat("ExpressGNN", "observed_prob")
+            self.entropy_temp = conf.getint("ExpressGNN", "entropy_temp")
+            self.no_entropy = conf.getint("ExpressGNN", "no_entropy")
+            self.learning_rate_rule_weights = conf.getfloat("ExpressGNN", "learning_rate_rule_weights")
+            self.epoch_mode = conf.getint("ExpressGNN", "epoch_mode")
+            self.shuffle_sampling = conf.getint("ExpressGNN", "shuffle_sampling")
+
+            self.load_method = conf.getint("ExpressGNN", "load_method")
+            self.load_s = conf.getint("ExpressGNN", "load_s")
+            self.use_gcn = conf.getint("ExpressGNN", "use_gcn")
+            self.filter_latent = conf.getint("ExpressGNN", "filter_latent")
+            self.closed_world = conf.getint("ExpressGNN", "closed_world")
+
         if hasattr(self, 'device'):
             self.device = th.device(self.device)
         elif gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
-            if not th.cuda.is_available():
+            if not th.cuda.is_available( ):
                 self.device = th.device('cpu')
                 warnings.warn("cuda is unavailable, the program will use cpu instead. please set 'gpu' to -1.")
             else:
