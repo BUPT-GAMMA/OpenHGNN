@@ -32,6 +32,12 @@ class LinkPrediction(BaseTask):
         super(LinkPrediction, self).__init__( )
         self.name_dataset = args.dataset
         self.logger = args.logger
+        if(args.dataset=='Adaprop'):
+            self.dataloader = build_dataset(args, 'Adaprop')
+            return
+        if(args.dataset=='AdapropI'):
+            self.dataloader = build_dataset(args, 'AdapropI')
+            return
         if (args.dataset_name == 'LTE'):
             build_dataset(args, 'LTE')
             return

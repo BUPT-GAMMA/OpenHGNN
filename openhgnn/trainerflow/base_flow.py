@@ -67,6 +67,8 @@ class BaseFlow(ABC):
             return
         if self.model_name == "Ingram":
             return
+        if self.model_name == "Adaprop":
+            return
 
         if self.args.use_uva:
             self.hg = self.task.get_graph()

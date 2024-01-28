@@ -10,6 +10,8 @@ from .alircd_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 from .mg2vec_dataset import Mg2vecDataSet
 from .meirec_dataset import MeiRECDataset, get_data_loader
+from .AdapropT_dataset import AdapropTDataLoader
+from .AdapropI_dataset import AdapropIDataLoader
 from .LTE_dataset import *
 from .SACN_dataset import *
 from .NBF_dataset import NBF_Dataset 
@@ -85,10 +87,19 @@ def build_dataset(dataset, task, *args, **kwargs):
         train_dataloader = get_data_loader("train", batch_size=args[0])
         test_dataloader = get_data_loader("test", batch_size=args[0])
         return train_dataloader, test_dataloader
+    #-------------------更改部分-------------------
+    if dataset.dataset_name == 'Adaprop':
+        dataload=AdapropTDataLoader(dataset)
+        return dataload
+    # -------------------更改部分-------------------
+    #-------------------更改部分-------------------
+    if dataset.dataset == 'AdapropI':
+        dataload=AdapropIDataLoader(dataset)
+        return dataload
       
     if dataset.dataset_name == 'SACN' or dataset.dataset_name == 'LTE':
         return
-      
+
     if dataset in CLASS_DATASETS:
         return build_dataset_v2(dataset, task)
     if not try_import_task_dataset(task):

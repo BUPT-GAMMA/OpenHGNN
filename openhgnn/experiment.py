@@ -63,6 +63,8 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
+        'Adaprop':'AdapropT_trainer',
+        'AdapropI':'AdapropI_trainer',
         'LTE':'LTE_trainer',
         'SACN':'SACN_trainer',
         'ExpressGNN': 'ExpressGNN_trainer',

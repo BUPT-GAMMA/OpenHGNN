@@ -111,6 +111,8 @@ SUPPORTED_MODELS = {
     'DSSL': 'openhgnn.models.DSSL',
     'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
+    'Adaprop': 'openhgnn.models.Adaprop',
+    'AdapropI':'openhgnn.models.AdapropI',
     'LTE': 'openhgnn.models.LTE',
     'LTE_Transe': 'openhgnn.models.LTE_Transe',
     'SACN':'openhgnn.models.SACN',
@@ -160,6 +162,8 @@ from .HGNN_AC import HGNN_AC
 from .KGAT import KGAT
 from .DSSL import DSSL
 from .lightGCN import lightGCN
+from .AdapropT import AdapropT
+from .AdapropI import AdapropI
 from .LTE import LTE
 from .LTE_Transe import LTE_Transe
 from .SACN import SACN
@@ -204,6 +208,8 @@ __all__ = [
     'KGAT',
     'DSSL',
     'lightGCN',
+    'AdapropT',
+    'AdapropI'
     'LTE',
     'LTE_Transe'
     'SACN',

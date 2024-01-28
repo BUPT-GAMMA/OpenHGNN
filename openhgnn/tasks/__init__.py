@@ -59,6 +59,8 @@ SUPPORTED_TASKS = {
     'pretrain': 'openhgnn.tasks.pretrain',
     'abnorm_event_detection': 'openhgnn.tasks.AbnormEventDetection',
     'DSSL_trainer': 'openhgnn.tasks.DSSL_task',
+    'Adaprop':'openhgnn.tasks.Adaprop',
+    'AdapropI':'openhgnn.tasks.AdapropI',
     'NBF_link_prediction':'openhgnn.tasks.link_prediction',
     'Ingram': 'openhgnn.tasks.Ingram',
 }
@@ -69,6 +71,8 @@ from .recommendation import Recommendation
 from .edge_classification import EdgeClassification
 from .hypergraph import hypergraph
 from .node_classification import DSSL_task
+from .AdapropT_task import AdapropT
+from .AdapropI_task import AdapropI
 from .Ingram_task import Ingram
 
 __all__ = [
