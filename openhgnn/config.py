@@ -9,7 +9,7 @@ import warnings
 
 class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
-        conf = configparser.ConfigParser()
+        conf = configparser.ConfigParser( )
         try:
             conf.read(file_path)
         except:
@@ -40,12 +40,16 @@ class Config(object):
             self.seed = conf.getint("General", "seed")
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
+<<<<<<< HEAD
 ######################################    DislenKGAT          ###########################################################################
 
 
         elif self.model_name == "DisenKGAT":
 
             # str
+=======
+        elif self.model_name == "DisenKGAT":
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
             self.name = conf.get("DisenKGAT","name")
             self.score_func = conf.get("DisenKGAT","score_func")
             self.opn = conf.get("DisenKGAT","opn")
@@ -58,8 +62,11 @@ class Config(object):
             self.score_method = conf.get("DisenKGAT","score_method")
             self.score_order = conf.get("DisenKGAT","score_order")
             self.gamma_method = conf.get("DisenKGAT","gamma_method")
+<<<<<<< HEAD
 
 # int 
+=======
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
             self.k_w= conf.getint("DisenKGAT", "k_w") 
             self.batch = conf.getint("DisenKGAT", "batch")
             self.test_batch = conf.getint("DisenKGAT", "test_batch")
@@ -84,8 +91,11 @@ class Config(object):
             self.num_factors = conf.getint("DisenKGAT", "num_factors")
             self.early_stop = conf.getint("DisenKGAT", "early_stop")
             self.mi_epoch = conf.getint("DisenKGAT", "mi_epoch")
+<<<<<<< HEAD
 
 # float     
+=======
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
             self.feat_drop = conf.getfloat("DisenKGAT", "feat_drop")
             self.hid_drop2 = conf.getfloat("DisenKGAT", "hid_drop2")
             self.hid_drop = conf.getfloat("DisenKGAT", "hid_drop")
@@ -100,8 +110,11 @@ class Config(object):
             self.alpha = conf.getfloat("DisenKGAT", "alpha")
             self.max_gamma = conf.getfloat("DisenKGAT", "max_gamma")
             self.init_gamma = conf.getfloat("DisenKGAT", "init_gamma")
+<<<<<<< HEAD
 
 # boolean
+=======
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
             self.restore = conf.getboolean("DisenKGAT", "restore")
             self.bias = conf.getboolean("DisenKGAT", "bias")
             self.no_act = conf.getboolean("DisenKGAT", "no_act")
@@ -113,8 +126,11 @@ class Config(object):
 
 
             pass
+<<<<<<< HEAD
 
 ##################################################################################################################
+=======
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
         elif self.model_name == "NBF" and self.dataset_name =="NBF_WN18RR":
 
             self.input_dim = conf.getint("NBF", "input_dim")
@@ -135,7 +151,10 @@ class Config(object):
             self.batch_size = conf.getint("NBF","batch_size")
             self.num_epoch = conf.getint("NBF","num_epoch")
             self.log_interval = conf.getint("NBF","log_interval")
+<<<<<<< HEAD
 ###############################################################################################################
+=======
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
         elif self.model_name == "NSHE":
             self.dim_size = {}
             self.dim_size['emd'] = conf.getint("NSHE", "emd_dim")
@@ -1016,13 +1035,184 @@ class Config(object):
             self.test_u_batch_size = conf.getint("lightGCN", "test_u_batch_size")
             self.topks = conf.getint("lightGCN", "topks")
             # self.alpha = conf.getfloat("lightGCN", "alpha")
+<<<<<<< HEAD
+=======
+
+        elif self.model_name == "Adaprop":
+            self.lr = conf.getfloat("Adaprop", "lr")
+            self.decay_rate = conf.getfloat("Adaprop", "decay_rate")
+            self.lamb = conf.getfloat("Adaprop", "lamb")
+            self.hidden_dim = conf.getint("Adaprop", "hidden_dim")
+            self.attn_dim = conf.getint("Adaprop", "attn_dim")
+            self.dropout = conf.getfloat("Adaprop", "dropout")
+            self.n_edge_topk = conf.getint("Adaprop", "n_edge_topk")
+            self.n_layer = conf.getint("Adaprop", "n_layer")
+            self.n_batch = conf.getint("Adaprop", "n_batch")
+            self.n_node_topk = conf.getint("Adaprop","n_node_topk")
+            self.seed = conf.getint("Adaprop","seed")
+            self.topk = conf.getint("Adaprop","topk")
+            self.data_path=conf.get("Adaprop","data_path")
+            self.layers=conf.getint("Adaprop","layers")
+            self.sampling=conf.get("Adaprop","sampling")
+            self.train=conf.getboolean("Adaprop","train")
+            self.scheduler=conf.get("Adaprop","scheduler")
+            self.fact_ratio=conf.getfloat("Adaprop","fact_ratio")
+            self.epoch=conf.getint("Adaprop","epoch")
+            self.eval_interval=conf.getint("Adaprop","eval_interval")
+            self.remove_1hop_edges=conf.getboolean("Adaprop","remove_1hop_edges")
+            self.act=conf.get("Adaprop","act")
+            self.tau=conf.getfloat("Adaprop","tau")
+            self.weight=conf.get("Adaprop","weight")
+            self.n_tbatch=conf.getint("Adaprop","n_tbatch")
+            self.eval=conf.getboolean("Adaprop",'eval')
+        elif self.model_name == "AdapropI":
+            self.data_path=conf.get("AdapropI","data_path")
+            self.seed=conf.getint("AdapropI","seed")
+
+        elif self.model_name == 'LTE':
+            self.model_name_GCN=conf.get("LTE", "model_name_GCN")
+            self.name=conf.get("LTE", "name")
+            self.data=conf.get("LTE", "data")
+            self.score_func=conf.get("LTE", "score_func")
+            self.opn=conf.get("LTE", "opn")
+            self.hid_drop=conf.getfloat("LTE", "hid_drop")
+            self.gpu=conf.getint("LTE", "gpu")
+            self.x_ops=conf.get("LTE", "x_ops")
+            self.n_layer=conf.getint("LTE", "n_layer")
+            self.init_dim=conf.getint("LTE", "init_dim")
+            self.batch_size=conf.getint("LTE", "batch_size")
+            self.epoch=conf.getint("LTE", "epoch")
+            self.l2=conf.getfloat("LTE", "l2")
+            self.lr=conf.getfloat("LTE", "lr")
+            self.lbl_smooth=conf.getfloat("LTE", "lbl_smooth")
+            self.num_workers=conf.getint("LTE", "num_workers")
+            self.seed=conf.getint("LTE", "seed")
+            self.restore=conf.getboolean("LTE", "restore")
+            self.bias=conf.getboolean("LTE", "bias")
+            self.num_bases=conf.getint("LTE", "num_bases")
+            self.gcn_dim=conf.getint("LTE", "gcn_dim")
+            self.gcn_drop=conf.getfloat("LTE", "gcn_drop")
+            self.conve_hid_drop=conf.getfloat("LTE", "conve_hid_drop")
+            self.feat_drop=conf.getfloat("LTE", "feat_drop")
+            self.input_drop=conf.getfloat("LTE", "input_drop")
+            self.k_w=conf.getint("LTE", "k_w")
+            self.k_h=conf.getint("LTE", "k_h")
+            self.num_filt=conf.getint("LTE", "num_filt")
+            self.ker_sz=conf.getint("LTE", "ker_sz")
+            self.gamma=conf.getfloat("LTE", "gamma")
+            self.rat=conf.getboolean("LTE", "rat")
+            self.wni=conf.getboolean("LTE", "wni")
+            self.wsi=conf.getboolean("LTE", "wsi")
+            self.ss=conf.getboolean("LTE", "ss")
+            self.nobn=conf.getboolean("LTE", "nobn")
+            self.noltr=conf.getboolean("LTE", "noltr")
+            self.encoder=conf.get("LTE", "encoder")
+            self.max_epochs=conf.getint("LTE", "max_epochs")
+            
+        elif self.model_name == 'SACN':
+            self.seed=conf.getint("SACN","seed")
+            self.init_emb_size=conf.getint("SACN","init_emb_size")
+            self.gc1_emb_size=conf.getint("SACN","gc1_emb_size")
+            self.embedding_dim=conf.getint("SACN","embedding_dim")
+            self.input_dropout=conf.getint("SACN","input_dropout")
+            self.dropout_rate=conf.getfloat("SACN","dropout_rate")
+            self.channels=conf.getint("SACN","channels")
+            self.kernel_size=conf.getint("SACN","kernel_size")
+            self.gpu=conf.getint("SACN","gpu")
+            self.lr=conf.getfloat("SACN","lr")
+            self.n_epochs=conf.getint("SACN","n_epochs")
+            self.num_workers=conf.getint("SACN","num_workers")
+            self.eval_every=conf.getint("SACN","eval_every")
+            self.dataset_data=conf.get("SACN","dataset_data")
+            self.batch_size=conf.getint("SACN","batch_size")
+            self.patience=conf.getint("SACN","patience")
+            self.decoder=conf.get("SACN","decoder")
+            self.gamma=conf.getfloat("SACN","gamma")
+            self.name=conf.get("SACN","name")
+            self.n_layer=conf.getint("SACN","n_layer")
+            self.rat=conf.getboolean("SACN","rat")
+            self.wsi=conf.getboolean("SACN","wsi")
+            self.wni=conf.getboolean("SACN","wni")
+            self.ss=conf.getint("SACN","ss")
+            self.final_act=conf.getboolean("SACN","final_act")
+            self.final_bn=conf.getboolean("SACN","final_bn")
+            self.final_drop=conf.getboolean("SACN","final_drop")
+
+        elif self.model_name == 'Ingram':
+            self.margin = conf.getint("Ingram", "margin")
+            self.lr = conf.getfloat("Ingram", "lr")
+            self.nle = conf.getint("Ingram", "nle")
+            self.nlr = conf.getint("Ingram", "nlr")
+            self.d_e = conf.getint("Ingram", "d_e")
+            self.d_r = conf.getint("Ingram", "d_r")
+            self.hdr_e = conf.getint("Ingram", "hdr_e")
+            self.hdr_r = conf.getint("Ingram", "hdr_r")
+            self.num_bin = conf.getint("Ingram", "num_bin")
+            self.num_epoch = conf.getint("Ingram", "num_epoch")
+            self.validation_epoch = conf.getint("Ingram", "validation_epoch")
+            self.num_head = conf.getint("Ingram", "num_head")
+            self.num_neg = conf.getint("Ingram", "num_neg")
+        elif self.model_name == 'RedGNN':
+            self.seed = conf.getint("RedGNN", "seed")
+            self.patience = conf.getint("RedGNN", "patience")
+            self.batch_size = conf.getint("RedGNN", "batch_size")
+            self.optimizer = conf.get("RedGNN", "optimizer")
+            self.lr = conf.getfloat("RedGNN", "lr")
+            self.weight_decay = conf.getfloat("RedGNN", "weight_decay")
+            self.max_epoch = conf.getint("RedGNN", "max_epoch")
+            self.decay_rate = conf.getfloat("RedGNN", "decay_rate")
+            self.hidden_dim = conf.getint("RedGNN", "hidden_dim")
+            self.attn_dim = conf.getint("RedGNN", "attn_dim")
+            self.dropout = conf.getfloat("RedGNN", "dropout")
+            self.act = conf.get("RedGNN", "act")
+            self.n_layer = conf.getint("RedGNN", "n_layer")
+
+        elif self.model_name == 'ExpressGNN':
+            self.embedding_size = conf.getint('ExpressGNN', 'embedding_size')
+            self.gcn_free_size = conf.getint("ExpressGNN", "gcn_free_size")
+            self.filtered = conf.get("ExpressGNN", "filtered")
+            self.hidden_dim = conf.getint("ExpressGNN", "hidden_dim")
+            self.rule_weights_learning = conf.getint("ExpressGNN", "rule_weights_learning")
+            self.load_method = conf.getint("ExpressGNN", "load_method")
+            self.num_epochs = conf.getint("ExpressGNN", "num_epochs")
+
+            self.slice_dim = conf.getint("ExpressGNN", "slice_dim")
+            self.no_train = conf.getint("ExpressGNN", "no_train")
+            self.hidden_dim = conf.getint("ExpressGNN", "hidden_dim")
+            self.num_epochs = conf.getint("ExpressGNN", "num_epochs")
+            self.batchsize = conf.getint("ExpressGNN", "batchsize")
+            self.trans = conf.getint("ExpressGNN", "trans")
+            self.num_hops = conf.getint("ExpressGNN", "num_hops")
+            self.num_mlp_layers = conf.getint("ExpressGNN", "num_mlp_layers")
+            self.num_epochs = conf.getint("ExpressGNN", "num_epochs")
+
+            self.num_batches = conf.getint("ExpressGNN", "num_batches")
+            self.learning_rate = conf.getfloat("ExpressGNN", "learning_rate")
+            self.lr_decay_factor = conf.getfloat("ExpressGNN", "lr_decay_factor")
+            self.lr_decay_patience = conf.getint("ExpressGNN", "lr_decay_patience")
+            self.lr_decay_min = conf.getfloat("ExpressGNN", "lr_decay_min")
+            self.patience = conf.getint("ExpressGNN", "patience")
+            self.l2_coef = conf.getfloat("ExpressGNN", "l2_coef")
+            self.observed_prob = conf.getfloat("ExpressGNN", "observed_prob")
+            self.entropy_temp = conf.getint("ExpressGNN", "entropy_temp")
+            self.no_entropy = conf.getint("ExpressGNN", "no_entropy")
+            self.learning_rate_rule_weights = conf.getfloat("ExpressGNN", "learning_rate_rule_weights")
+            self.epoch_mode = conf.getint("ExpressGNN", "epoch_mode")
+            self.shuffle_sampling = conf.getint("ExpressGNN", "shuffle_sampling")
+
+            self.load_method = conf.getint("ExpressGNN", "load_method")
+            self.load_s = conf.getint("ExpressGNN", "load_s")
+            self.use_gcn = conf.getint("ExpressGNN", "use_gcn")
+            self.filter_latent = conf.getint("ExpressGNN", "filter_latent")
+            self.closed_world = conf.getint("ExpressGNN", "closed_world")
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
 
         if hasattr(self, 'device'):
             self.device = th.device(self.device)
         elif gpu == -1:
             self.device = th.device('cpu')
         elif gpu >= 0:
-            if not th.cuda.is_available():
+            if not th.cuda.is_available( ):
                 self.device = th.device('cpu')
                 warnings.warn("cuda is unavailable, the program will use cpu instead. please set 'gpu' to -1.")
             else:

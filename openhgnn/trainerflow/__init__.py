@@ -80,9 +80,18 @@ SUPPORTED_FLOWS = {
     'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer',
     'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer',
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
+    'AdapropT_trainer': 'openhgnn.trainerflow.AdapropT_trainer',
+    'AdapropI_trainer':'openhgnn.trainerflow.AdapropI_trainer',
+    'LTE_trainer': 'openhgnn.trainerflow.LTE_trainer',
+    'SACN_trainer': 'openhgnn.trainerflow.SACN_trainer',
+    'ExpressGNN_trainer': 'openhgnn.trainerflow.ExpressGNN_trainer',
     'NBF_trainer':'openhgnn.trainerflow.NBF_trainer',
     'Ingram_Trainer' : 'openhgnn.trainerflow.Ingram_trainer',
     'DisenKGAT_trainer':'openhgnn.trainerflow.DisenKGAT_trainer',
+<<<<<<< HEAD
+=======
+    'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
 }
 
 from .hgcl_trainer import HGCLtrainer
@@ -111,9 +120,18 @@ from .kgat_trainer import KGAT_Trainer
 from .node_classification_ac import NodeClassificationAC
 from .DSSL_trainer import DSSL_trainer
 from .lightGCN_trainer import lightGCNTrainer
+from .AdapropT_trainer import AdapropTTrainer
+from .AdapropI_trainer import AdapropITrainer
+from .LTE_trainer import LTETrainer
+from .SACN_trainer import SACNTrainer
+from .ExpressGNN_trainer import ExpressGNNTrainer
 from .NBF_trainer import * 
 from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
 
 __all__ = [
     'BaseFlow',
@@ -141,6 +159,11 @@ __all__ = [
     'DSSL_trainer',
     'HGCLtrainer',
     'lightGCNTrainer',
+    'AdapropTTrainer',
+    'AdapropITrainer',
+    'LTETrainer',
+    'SACNTrainer',
+    'ExpressGNNTrainer',
     'Ingram_trainer',
 ]
 classes = __all__
