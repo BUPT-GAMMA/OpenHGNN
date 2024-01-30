@@ -11,7 +11,7 @@ from textwrap import indent
 from typing import Any, Dict, List, Optional, Tuple, Union,Any
 import numpy as np
 import scipy.sparse
-from torch_sparse.storage import SparseStorage, get_layout
+
 
 
 
@@ -162,6 +162,7 @@ def is_torch_sparse_tensor(src: Any) -> bool:
 
 
 
+from torch_sparse.storage import SparseStorage, get_layout
 @torch.jit.script
 class SparseTensor(object):
     storage: SparseStorage
