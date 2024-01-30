@@ -148,7 +148,7 @@ class GrailTrainer(BaseFlow):
 
 
             #test_ranking
-
+            '''
             if epoch%1 == 0:
                 file_paths = {
                     'graph': os.path.join(f'./openhgnn/dataset/data/{self.args.dataset}/train.txt'),
@@ -182,7 +182,7 @@ class GrailTrainer(BaseFlow):
                     all_head_scores += head_scores.tolist()
                     all_tail_scores += tail_scores.tolist()
                 
-                '''''
+                #删掉
                 with mp.Pool(processes=None, initializer=intialize_worker, initargs=(
                 self.model, adj_list, dgl_adj_list, id2entity, params, self.trainset.node_features, self.trainset.kge_entity2id)) as p:
                     #mp.set_start_method('spawn')
@@ -194,7 +194,7 @@ class GrailTrainer(BaseFlow):
 
                         all_head_scores += head_scores.tolist()
                         all_tail_scores += tail_scores.tolist()
-                '''
+                
 
                 self.logger.info("**************************************************************************")
 
@@ -208,7 +208,7 @@ class GrailTrainer(BaseFlow):
                 mrr = np.mean(1 / np.array(ranks))
                 self.logger.info("**************************************************************************")
                 self.logger.info(f'MRR | Hits@1 | Hits@5 | Hits@10 : {mrr} | {hits_1} | {hits_5} | {hits_10}')
-
+            '''
 
             if epoch % self.args.save_every == 0:
                 #save_path = os.path.dirname(os.path.abspath('__file__')) + '/openhgnn/output/' + self.model_name
