@@ -65,6 +65,10 @@ class BaseFlow(ABC):
 
         if self.model_name == "MeiREC":
             return
+        if self.model_name == "Grail":
+            return
+        if self.model_name == "ComPILE":
+            return
 
         if self.args.use_uva:
             self.hg = self.task.get_graph()

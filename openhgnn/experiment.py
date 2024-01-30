@@ -62,6 +62,8 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
+        'Grail': 'Grail_trainer',
+        'ComPILE': 'ComPILE_trainer',
     }
     immutable_params = ['model', 'dataset', 'task']
 

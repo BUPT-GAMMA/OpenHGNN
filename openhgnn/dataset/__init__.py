@@ -59,6 +59,8 @@ ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
 hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
 
 def build_dataset(dataset, task, *args, **kwargs):
+    args =kwargs.get('args')
+    model = args.model
     if isinstance(dataset, DGLDataset):
         return dataset
 
@@ -110,6 +112,9 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset='kgat_recommendation'
     elif dataset in common:
         _dataset = 'common_' + task
+    if kwargs['args'].model=='Grail' or kwargs['args'].model=='ComPILE':
+        _dataset = 'grail_'+ task
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args=kwargs['args'])
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 

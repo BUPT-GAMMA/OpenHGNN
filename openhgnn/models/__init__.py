@@ -111,6 +111,8 @@ SUPPORTED_MODELS = {
     'DSSL': 'openhgnn.models.DSSL',
     'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
+    'Grail': 'openhgnn.models.Grail',
+    'ComPILE': 'openhgnn.models.ComPILE',
 }
 
 from .HGCL import HGCL
@@ -153,6 +155,8 @@ from .HGNN_AC import HGNN_AC
 from .KGAT import KGAT
 from .DSSL import DSSL
 from .lightGCN import lightGCN
+from .Grail import Grail
+from .ComPILE import ComPILE
 
 __all__ = [
     'BaseModel',
@@ -192,5 +196,7 @@ __all__ = [
     'KGAT',
     'DSSL',
     'lightGCN',
+    'Grail',
+    'ComPILE',
 ]
 classes = __all__

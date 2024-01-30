@@ -32,7 +32,12 @@ class LinkPrediction(BaseTask):
         super(LinkPrediction, self).__init__()
         self.name_dataset = args.dataset
         self.logger = args.logger
-        self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger)
+        if args.model=="Grail" or args.model =="ComPILE":
+            self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger,args = args)
+            return
+        else:
+            self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger,args = args)
+
         # self.evaluator = Evaluator()
         self.train_hg, self.val_hg, self.test_hg, self.neg_val_graph, self.neg_test_graph = self.dataset.get_split()
         self.pred_hg = getattr(self.dataset, 'pred_graph', None)
