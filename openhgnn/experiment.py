@@ -38,6 +38,7 @@ class Experiment(object):
         'HeCo': 'HeCo_trainer',
         'DMGI': 'DMGI_trainer',
         'KGCN': 'kgcntrainer',
+        'KACL': 'kacltrainer',
         'Metapath2vec': 'mp2vec_trainer',
         'HERec': 'herec_trainer',
         'SLiCE': 'slicetrainer',

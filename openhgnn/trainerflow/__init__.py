@@ -74,6 +74,7 @@ SUPPORTED_FLOWS = {
     'DHNE_trainer': 'openhgnn.trainerflow.DHNE_trainer',
     'DiffMG_trainer': 'openhgnn.trainerflow.DiffMG_trainer',
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
+    'kacltrainer': 'openhgnn.trainerflow.kacl_trainer',
     'abnorm_event_detection': 'openhgnn.trainerflow.AbnormEventDetection',
     'SHGP_trainer': 'openhgnn.trainerflow.SHGP_trainer',
     'KGAT_trainer': 'openhgnn.trainerflow.KGAT_trainer',
@@ -90,7 +91,7 @@ SUPPORTED_FLOWS = {
     'DisenKGAT_trainer':'openhgnn.trainerflow.DisenKGAT_trainer',
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
 }
-
+from .kacl_trainer import KACLtrainer
 from .hgcl_trainer import HGCLtrainer
 from .node_classification import NodeClassification
 from .link_prediction import LinkPrediction
@@ -149,6 +150,7 @@ __all__ = [
     'DHNE_trainer',
     'DiffMG_trainer',
     'MeiRECTrainer',
+    'KACLtrainer',
     'KGAT_Trainer',
     'DSSL_trainer',
     'HGCLtrainer',
