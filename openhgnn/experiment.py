@@ -63,6 +63,8 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
+        'Grail': 'Grail_trainer',
+        'ComPILE': 'ComPILE_trainer',
         'Adaprop':'AdapropT_trainer',
         'AdapropI':'AdapropI_trainer',
         'LTE':'LTE_trainer',
