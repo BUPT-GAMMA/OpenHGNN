@@ -88,7 +88,10 @@ SUPPORTED_FLOWS = {
     'NBF_trainer':'openhgnn.trainerflow.NBF_trainer',
     'Ingram_Trainer' : 'openhgnn.trainerflow.Ingram_trainer',
     'DisenKGAT_trainer':'openhgnn.trainerflow.DisenKGAT_trainer',
+<<<<<<< HEAD
+=======
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
 }
 
 from .hgcl_trainer import HGCLtrainer
@@ -125,7 +128,10 @@ from .ExpressGNN_trainer import ExpressGNNTrainer
 from .NBF_trainer import * 
 from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
+<<<<<<< HEAD
+=======
 
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
 
 __all__ = [
     'BaseFlow',

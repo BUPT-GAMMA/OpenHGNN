@@ -6,19 +6,39 @@ import sys
 import torch
 from .demo import * 
 from ..models import DisenKGAT  
-sys.path.append(os.path.dirname(os.path.dirname(__file__))) #
-import logging
+sys.path.append(os.path.dirname(os.path.dirname(__file__))) 
 import numpy as np, sys, os,  json, time
 from pprint import pprint
 import logging, logging.config
 from collections import defaultdict as ddict
 from ordered_set import OrderedSet
 import traceback
-# PyTorch related imports
 from torch.utils.data import DataLoader
 np.set_printoptions(precision=4)
 from torch.utils.data import Dataset
-import numpy as np
+
+
+
+
+
+
+def get_combined_results(left_results, right_results):
+    results = {}
+    count = float(left_results['count'])
+
+    results['left_mr'] = round(left_results['mr'] / count, 5)
+    results['left_mrr'] = round(left_results['mrr'] / count, 5)
+    results['right_mr'] = round(right_results['mr'] / count, 5)
+    results['right_mrr'] = round(right_results['mrr'] / count, 5)
+    results['mr'] = round((left_results['mr'] + right_results['mr']) / (2 * count), 5)
+    results['mrr'] = round((left_results['mrr'] + right_results['mrr']) / (2 * count), 5)
+
+    for k in range(10):
+        results['left_hits@{}'.format(k + 1)] = round(left_results['hits@{}'.format(k + 1)] / count, 5)
+        results['right_hits@{}'.format(k + 1)] = round(right_results['hits@{}'.format(k + 1)] / count, 5)
+        results['hits@{}'.format(k + 1)] = round(
+            (left_results['hits@{}'.format(k + 1)] + right_results['hits@{}'.format(k + 1)]) / (2 * count), 5)
+    return results
 
 
 
@@ -471,6 +491,9 @@ class Runner(BaseFlow):
         try:
             self.best_val_mrr, self.best_val, self.best_epoch, val_mrr = 0., {}, 0, 0.
             save_path = os.path.join('./save_models', self.p.name)
+
+            if not os.path.exists('./save_models'):   # 如果 节点目录不存在，则创建目录
+                os.makedirs('./save_models')
 
             # if self.p.restore:
             #     self.load_model(save_path)

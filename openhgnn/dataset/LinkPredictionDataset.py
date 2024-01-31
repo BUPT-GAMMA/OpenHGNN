@@ -2153,6 +2153,34 @@ class DisenKGAT_LinkPrediction(LinkPredictionDataset):
 
         
 
+<<<<<<< HEAD
+
+
+
+import os
+import requests
+import zipfile
+import io
+@register_dataset('DisenKGAT_link_prediction')
+class DisenKGAT_LinkPrediction(LinkPredictionDataset):
+    def __init__(self, dataset ,*args, **kwargs): # dataset "DisenKGAT"
+        self.logger = kwargs.get("Logger")
+        self.args = kwargs.get("args")
+        self.current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.dataset_name = dataset                       
+        self.raw_dir = os.path.join(self.current_dir, self.dataset_name ,"raw_dir" ) 
+        self.processed_dir = os.path.join(self.current_dir, self.dataset_name ,"processed_dir" ) 
+
+        if not os.path.exists(self.raw_dir):
+            os.makedirs(self.raw_dir) 
+            self.download()
+        else:
+            print("raw_dir already exists")
+
+        
+
+=======
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
     def download(self): 
 
         url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{}.zip".format(self.dataset_name)          
@@ -2163,3 +2191,9 @@ class DisenKGAT_LinkPrediction(LinkPredictionDataset):
 
       
 
+<<<<<<< HEAD
+
+
+
+=======
+>>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
