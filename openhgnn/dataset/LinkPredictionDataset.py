@@ -1,14 +1,27 @@
+import os.path
+
 import dgl
 import math
-import random
+import re
+from copy import deepcopy
 import numpy as np
 import torch as th
+import itertools
+import random
+from random import shuffle, choice
+from collections import Counter
+from os.path import join as joinpath
+from os.path import isfile
 from dgl.data.knowledge_graph import load_data
 from . import BaseDataset, register_dataset
-from . import AcademicDataset, HGBDataset, OHGBDataset
+from . import AcademicDataset, HGBDataset, OHGBDataset, NBF_Dataset
 from ..utils import add_reverse_edges
+from collections import defaultdict
+import os
+from scipy.sparse import csr_matrix
 
 __all__ = ['LinkPredictionDataset', 'HGB_LinkPrediction']
+
 
 @register_dataset('link_prediction')
 class LinkPredictionDataset(BaseDataset):
@@ -76,24 +89,24 @@ class LinkPredictionDataset(BaseDataset):
             else:
                 if 'valid_mask' not in self.g.edges[etype].data:
                     train_idx = self.g.edges[etype].data['train_mask']
-                    random_int = th.randperm(int(train_idx.sum()))
-                    val_index = random_int[:int(train_idx.sum() * val_ratio)]
+                    random_int = th.randperm(int(train_idx.sum( )))
+                    val_index = random_int[:int(train_idx.sum( ) * val_ratio)]
                     val_edge = self.g.find_edges(val_index, etype)
 
                 else:
-                    val_mask = self.g.edges[etype].data['valid_mask'].squeeze()
-                    val_index = th.nonzero(val_mask).squeeze()
+                    val_mask = self.g.edges[etype].data['valid_mask'].squeeze( )
+                    val_index = th.nonzero(val_mask).squeeze( )
                     val_edge = self.g.find_edges(val_index, etype)
 
-                test_mask = self.g.edges[etype].data['test_mask'].squeeze()
-                test_index = th.nonzero(test_mask).squeeze()
+                test_mask = self.g.edges[etype].data['test_mask'].squeeze( )
+                test_index = th.nonzero(test_mask).squeeze( )
                 test_edge = self.g.find_edges(test_index, etype)
 
                 val_edge_dict[etype] = val_edge
                 test_edge_dict[etype] = test_edge
                 out_ntypes.append(etype[0])
                 out_ntypes.append(etype[2])
-                #self.val_label = train_graph.edges[etype[1]].data['label'][val_index]
+                # self.val_label = train_graph.edges[etype[1]].data['label'][val_index]
                 self.test_label = train_graph.edges[etype[1]].data['label'][test_index]
                 train_graph = dgl.remove_edges(train_graph, th.cat((val_index, test_index)), etype)
 
@@ -112,17 +125,17 @@ class LinkPredictionDataset(BaseDataset):
 @register_dataset('demo_link_prediction')
 class Test_LinkPrediction(LinkPredictionDataset):
     def __init__(self, dataset_name):
-        super(Test_LinkPrediction, self).__init__()
+        super(Test_LinkPrediction, self).__init__( )
         self.g = self.load_HIN('./openhgnn/debug/data.bin')
         self.target_link = 'user-item'
         self.has_feature = False
         self.meta_paths_dict = None
-        self.preprocess()
+        self.preprocess( )
         # self.generate_negative()
 
     def preprocess(self):
         test_mask = self.g.edges[self.target_link].data['test_mask']
-        index = th.nonzero(test_mask).squeeze()
+        index = th.nonzero(test_mask).squeeze( )
         self.test_edge = self.g.find_edges(index, self.target_link)
         self.pos_test_graph = dgl.heterograph({('user', 'user-item', 'item'): self.test_edge},
                                               {ntype: self.g.number_of_nodes(ntype) for ntype in ['user', 'item']})
@@ -134,10 +147,10 @@ class Test_LinkPrediction(LinkPredictionDataset):
 
     def generate_negative(self):
         k = 99
-        e = self.pos_test_graph.edges()
+        e = self.pos_test_graph.edges( )
         neg_src = []
         neg_dst = []
-        for i in range(self.pos_test_graph.number_of_edges()):
+        for i in range(self.pos_test_graph.number_of_edges( )):
             src = e[0][i]
             exp = self.pos_test_graph.successors(src)
             dst = th.randint(high=self.g.number_of_nodes('item'), size=(k,))
@@ -164,8 +177,8 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         v_list = []
         label_list = []
         with open(path) as f:
-            for i in f.readlines():
-                u, v, label = i.strip().split(', ')
+            for i in f.readlines( ):
+                u, v, label = i.strip( ).split(', ')
                 u_list.append(int(u))
                 v_list.append(int(v))
                 label_list.append(int(label))
@@ -176,7 +189,7 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         if dataset_name == 'academic4HetGNN':
             # which is used in HetGNN
             dataset = AcademicDataset(name='academic4HetGNN', raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
 
             self.train_batch = self.load_link_pred('./openhgnn/dataset/' + dataset_name + '/a_a_list_train.txt')
             self.test_batch = self.load_link_pred('./openhgnn/dataset/' + dataset_name + '/a_a_list_test.txt')
@@ -188,29 +201,29 @@ class HIN_LinkPrediction(LinkPredictionDataset):
             self.node_type = ['user', 'item']
         elif dataset_name == 'amazon4SLICE':
             dataset = AcademicDataset(name='amazon4SLICE', raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
         elif dataset_name == 'MTWM':
             dataset = AcademicDataset(name='MTWM', raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
             g = add_reverse_edges(g)
             self.target_link = [('user', 'user-buy-spu', 'spu')]
             self.target_link_r = [('spu', 'user-buy-spu-rev', 'user')]
             self.meta_paths_dict = {
-                'UPU1':[('user','user-buy-poi','poi'),('poi','user-buy-poi-rev','user')],
-                'UPU2':[('user','user-click-poi','poi'),('poi','user-click-poi-rev','user')],
-                'USU':[('user','user-buy-spu','spu'),('spu','user-buy-spu-rev','user')],
-                'UPSPU1': [('user','user-buy-poi','poi'),('poi','poi-contain-spu','spu'),
-                           ('spu','poi-contain-spu-rev','poi'),('poi','user-buy-poi-rev','user')
+                'UPU1': [('user', 'user-buy-poi', 'poi'), ('poi', 'user-buy-poi-rev', 'user')],
+                'UPU2': [('user', 'user-click-poi', 'poi'), ('poi', 'user-click-poi-rev', 'user')],
+                'USU': [('user', 'user-buy-spu', 'spu'), ('spu', 'user-buy-spu-rev', 'user')],
+                'UPSPU1': [('user', 'user-buy-poi', 'poi'), ('poi', 'poi-contain-spu', 'spu'),
+                           ('spu', 'poi-contain-spu-rev', 'poi'), ('poi', 'user-buy-poi-rev', 'user')
                            ],
-                'UPSPU2':[
-                        ('user','user-click-poi','poi'), ('poi','poi-contain-spu','spu'),
-                        ('spu','poi-contain-spu-rev','poi'),('poi','user-click-poi-rev','user')
-                    ]
+                'UPSPU2': [
+                    ('user', 'user-click-poi', 'poi'), ('poi', 'poi-contain-spu', 'spu'),
+                    ('spu', 'poi-contain-spu-rev', 'poi'), ('poi', 'user-click-poi-rev', 'user')
+                ]
             }
             self.node_type = ['user', 'spu']
         elif dataset_name == 'HGBl-ACM':
             dataset = HGBDataset(name='HGBn-ACM', raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
             self.has_feature = True
             self.target_link = [('paper', 'paper-ref-paper', 'paper')]
             self.node_type = ['author', 'paper', 'subject', 'term']
@@ -233,7 +246,7 @@ class HIN_LinkPrediction(LinkPredictionDataset):
                                     }
         elif dataset_name == 'HGBl-DBLP':
             dataset = HGBDataset(name='HGBn-DBLP', raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
             self.has_feature = True
             self.target_link = [('author', 'author-paper', 'paper')]
             self.node_type = ['author', 'paper', 'venue', 'term']
@@ -250,7 +263,7 @@ class HIN_LinkPrediction(LinkPredictionDataset):
 
         elif dataset_name == 'HGBl-IMDB':
             dataset = HGBDataset(name='HGBn-IMDB', raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
             self.has_feature = True
             # self.target_link = [('author', 'author-paper', 'paper')]
             # self.node_type = ['author', 'paper', 'subject', 'term']
@@ -268,9 +281,9 @@ class HIN_LinkPrediction(LinkPredictionDataset):
                 'AMA': [('actor', 'actor->movie', 'movie'), ('movie', 'movie->actor', 'actor')],
                 'AMDMA': [('actor', 'actor->movie', 'movie'), ('movie', 'movie->director', 'director'),
                           ('director', 'director->movie', 'movie'), ('movie', 'movie->actor', 'actor')]
-                                    }
+            }
         return g
-    
+
     def get_split(self, val_ratio=0.1, test_ratio=0.2):
         if self.dataset_name == 'academic4HetGNN':
             return None, None, None, None, None
@@ -304,7 +317,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
         self.target_link_r = None
         if dataset_name == 'HGBl-amazon':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
             self.has_feature = False
             self.target_link = [('product', 'product-product-0', 'product'),
                                 ('product', 'product-product-1', 'product')]
@@ -319,7 +332,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
 
         elif dataset_name == 'HGBl-LastFM':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
             self.has_feature = False
             self.target_link = [('user', 'user-artist', 'artist')]
             self.node_type = ['user', 'artist', 'tag']
@@ -337,7 +350,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
 
         elif dataset_name == 'HGBl-PubMed':
             dataset = HGBDataset(name=dataset_name, raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
             self.has_feature = True
             self.target_link = [('1', '1_to_1', '1')]
             self.node_type = ['0', '1', '2', '3']
@@ -351,7 +364,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
                                     }
 
         self.g = g
-        self.shift_dict = self.calculate_node_shift()
+        self.shift_dict = self.calculate_node_shift( )
 
     def load_link_pred(self, path):
         return
@@ -376,14 +389,14 @@ class HGB_LinkPrediction(LinkPredictionDataset):
         train_graph = self.g
         val_ratio = 0.1
         for i, etype in enumerate(self.target_link):
-            train_mask = self.g.edges[etype].data['train_mask'].squeeze()
-            train_index = th.nonzero(train_mask).squeeze()
+            train_mask = self.g.edges[etype].data['train_mask'].squeeze( )
+            train_index = th.nonzero(train_mask).squeeze( )
             random_int = th.randperm(len(train_index))[:int(len(train_index) * val_ratio)]
             val_index = train_index[random_int]
             val_edge = self.g.find_edges(val_index, etype)
 
-            test_mask = self.g.edges[etype].data['test_mask'].squeeze()
-            test_index = th.nonzero(test_mask).squeeze()
+            test_mask = self.g.edges[etype].data['test_mask'].squeeze( )
+            test_index = th.nonzero(test_mask).squeeze( )
             test_edge = self.g.find_edges(test_index, etype)
 
             val_edge_dict[etype] = val_edge
@@ -405,7 +418,7 @@ class HGB_LinkPrediction(LinkPredictionDataset):
         return train_graph, val_graph, test_graph, None, None
 
     def save_results(self, hg, score, file_path):
-        with hg.local_scope():
+        with hg.local_scope( ):
             src_list = []
             dst_list = []
             edge_type_list = []
@@ -433,30 +446,27 @@ class OHGB_LinkPrediction(LinkPredictionDataset):
         self.has_feature = True
         if dataset_name == 'ohgbl-MTWM':
             dataset = OHGBDataset(name=dataset_name, raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
             self.target_link = [('user', 'user-buy-spu', 'spu')]
             self.target_link_r = [('spu', 'user-buy-spu-rev', 'user')]
             self.node_type = ['user', 'spu']
         elif dataset_name == 'ohgbl-yelp1':
             dataset = OHGBDataset(name=dataset_name, raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
             self.target_link = [('user', 'user-buy-business', 'business')]
             self.target_link_r = [('business', 'user-buy-business-rev', 'user')]
         elif dataset_name == 'ohgbl-yelp2':
             dataset = OHGBDataset(name=dataset_name, raw_dir='')
-            g = dataset[0].long()
+            g = dataset[0].long( )
             self.target_link = [('business', 'described-with', 'phrase')]
             self.target_link_r = [('business', 'described-with-rev', 'phrase')]
         elif dataset_name == 'ohgbl-Freebase':
             dataset = OHGBDataset(name=dataset_name, raw_dir='')
-            g = dataset[0].long()
-            self.target_link = [('BOOK','BOOK-and-BOOK','BOOK')]
-            self.target_link_r = [('BOOK','BOOK-and-BOOK-rev','BOOK')]
+            g = dataset[0].long( )
+            self.target_link = [('BOOK', 'BOOK-and-BOOK', 'BOOK')]
+            self.target_link_r = [('BOOK', 'BOOK-and-BOOK-rev', 'BOOK')]
         self.g = g
 
-
-    
-    
 def build_graph_from_triplets(num_nodes, num_rels, triplets):
     """ Create a DGL graph. The graph is bidirectional because RGCN authors
         use reversed relations.
@@ -469,7 +479,7 @@ def build_graph_from_triplets(num_nodes, num_rels, triplets):
     src, dst = np.concatenate((src, dst)), np.concatenate((dst, src))
     rel = np.concatenate((rel, rel + num_rels))
     edges = sorted(zip(dst, src, rel))
-    dst, src, rel = np.array(edges).transpose()
+    dst, src, rel = np.array(edges).transpose( )
     g.add_edges(src, dst)
     norm = comp_deg_norm(g)
     print("# nodes: {}, # edges: {}".format(num_nodes, len(src)))
@@ -477,18 +487,231 @@ def build_graph_from_triplets(num_nodes, num_rels, triplets):
 
 
 def comp_deg_norm(g):
-    g = g.local_var()
-    in_deg = g.in_degrees(range(g.number_of_nodes())).float().numpy()
+    g = g.local_var( )
+    in_deg = g.in_degrees(range(g.number_of_nodes( ))).float( ).numpy( )
     norm = 1.0 / in_deg
     norm[np.isinf(norm)] = 0
     return norm
 
+@register_dataset('kg_sub_link_prediction')
+class KG_RedDataset(LinkPredictionDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(KG_RedDataset, self).__init__(*args, **kwargs)
+        self.trans_dir = os.path.join('openhgnn/dataset/data', dataset_name)
+        self.ind_dir = self.trans_dir + '_ind'
+
+        folder = os.path.exists(self.trans_dir)
+        if not folder:
+            os.makedirs(self.trans_dir)
+            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v1.zip"
+            response = requests.get(url)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+                myzip.extractall(self.trans_dir)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
+
+        folder = os.path.exists(self.ind_dir)
+        if not folder:
+            os.makedirs(self.ind_dir)
+            # 下载数据
+            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v1_ind.zip"
+            response = requests.get(url)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+                myzip.extractall(self.ind_dir)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
+
+        with open(os.path.join(self.trans_dir, 'entities.txt')) as f:
+            self.entity2id = dict()
+            for line in f:
+                entity, eid = line.strip().split()
+                self.entity2id[entity] = int(eid)
+
+        with open(os.path.join(self.trans_dir, 'relations.txt')) as f:
+            self.relation2id = dict()
+            id2relation = []
+            for line in f:
+                relation, rid = line.strip().split()
+                self.relation2id[relation] = int(rid)
+                id2relation.append(relation)
+
+        with open(os.path.join(self.ind_dir, 'entities.txt')) as f:
+            self.entity2id_ind = dict()
+            for line in f:
+                entity, eid = line.strip().split()
+                self.entity2id_ind[entity] = int(eid)
+
+        for i in range(len(self.relation2id)):
+            id2relation.append(id2relation[i] + '_inv')
+        id2relation.append('idd')
+        self.id2relation = id2relation
+
+        self.n_ent = len(self.entity2id)
+        self.n_rel = len(self.relation2id)
+        self.n_ent_ind = len(self.entity2id_ind)
+
+        self.tra_train = self.read_triples(self.trans_dir, 'train.txt')
+        self.tra_valid = self.read_triples(self.trans_dir, 'valid.txt')
+        self.tra_test = self.read_triples(self.trans_dir, 'test.txt')
+        self.ind_train = self.read_triples(self.ind_dir, 'train.txt', 'inductive')
+        self.ind_valid = self.read_triples(self.ind_dir, 'valid.txt', 'inductive')
+        self.ind_test = self.read_triples(self.ind_dir, 'test.txt', 'inductive')
+
+        self.val_filters = self.get_filter('valid')
+        self.tst_filters = self.get_filter('test')
+
+        for filt in self.val_filters:
+            self.val_filters[filt] = list(self.val_filters[filt])
+        for filt in self.tst_filters:
+            self.tst_filters[filt] = list(self.tst_filters[filt])
+
+        self.tra_KG, self.tra_sub = self.load_graph(self.tra_train)
+        self.ind_KG, self.ind_sub = self.load_graph(self.ind_train, 'inductive')
+
+        self.tra_train = np.array(self.tra_valid)
+        self.tra_val_qry, self.tra_val_ans = self.load_query(self.tra_test)
+        self.ind_val_qry, self.ind_val_ans = self.load_query(self.ind_valid)
+        self.ind_tst_qry, self.ind_tst_ans = self.load_query(self.ind_test)
+        self.valid_q, self.valid_a = self.tra_val_qry, self.tra_val_ans
+        self.test_q, self.test_a = self.ind_val_qry + self.ind_tst_qry, self.ind_val_ans + self.ind_tst_ans
+
+        self.n_train = len(self.tra_train)
+        self.n_valid = len(self.valid_q)
+        self.n_test = len(self.test_q)
+
+
+    def read_triples(self, directory, filename, mode='transductive'):
+        triples = []
+        with open(os.path.join(directory, filename)) as f:
+            for line in f:
+                h, r, t = line.strip().split()
+                if mode == 'transductive':
+                    h, r, t = self.entity2id[h], self.relation2id[r], self.entity2id[t]
+                else:
+                    h, r, t = self.entity2id_ind[h], self.relation2id[r], self.entity2id_ind[t]
+
+                triples.append([h, r, t])
+                triples.append([t, r + self.n_rel, h])
+        return triples
+
+    def load_graph(self, triples, mode='transductive'):
+        n_ent = self.n_ent if mode == 'transductive' else self.n_ent_ind
+
+        KG = np.array(triples)
+        idd = np.concatenate([np.expand_dims(np.arange(n_ent), 1), 2 * self.n_rel * np.ones((n_ent, 1)),
+                              np.expand_dims(np.arange(n_ent), 1)], 1)
+        KG = np.concatenate([KG, idd], 0)
+
+        n_fact = KG.shape[0]
+
+        M_sub = csr_matrix((np.ones((n_fact,)), (np.arange(n_fact), KG[:, 0])), shape=(n_fact, n_ent))
+        return KG, M_sub
+
+    def load_query(self, triples):
+        triples.sort(key=lambda x: (x[0], x[1]))
+        trip_hr = defaultdict(lambda: list())
+
+        for trip in triples:
+            h, r, t = trip
+            trip_hr[(h, r)].append(t)
+
+        queries = []
+        answers = []
+        for key in trip_hr:
+            queries.append(key)
+            answers.append(np.array(trip_hr[key]))
+        return queries, answers
+
+    def get_neighbors(self, nodes, mode='transductive'):
+        # nodes: n_node x 2 with (batch_idx, node_idx)
+
+        if mode == 'transductive':
+            KG = self.tra_KG
+            M_sub = self.tra_sub
+            n_ent = self.n_ent
+        else:
+            KG = self.ind_KG
+            M_sub = self.ind_sub
+            n_ent = self.n_ent_ind
+
+        node_1hot = csr_matrix((np.ones(len(nodes)), (nodes[:, 1], nodes[:, 0])), shape=(n_ent, nodes.shape[0]))
+        edge_1hot = M_sub.dot(node_1hot)
+        edges = np.nonzero(edge_1hot)
+        sampled_edges = np.concatenate([np.expand_dims(edges[1], 1), KG[edges[0]]],
+                                       axis=1)  # (batch_idx, head, rela, tail)
+        sampled_edges = th.LongTensor(sampled_edges)
+        # index to nodes
+        head_nodes, head_index = th.unique(sampled_edges[:, [0, 1]], dim=0, sorted=True, return_inverse=True)
+        tail_nodes, tail_index = th.unique(sampled_edges[:, [0, 3]], dim=0, sorted=True, return_inverse=True)
+
+        mask = sampled_edges[:, 2] == (self.n_rel * 2)
+        _, old_idx = head_index[mask].sort()
+        old_nodes_new_idx = tail_index[mask][old_idx]
+
+        sampled_edges = th.cat([sampled_edges, head_index.unsqueeze(1), tail_index.unsqueeze(1)], 1)
+
+        return tail_nodes, sampled_edges, old_nodes_new_idx
+
+    def get_batch(self, batch_idx, steps=2, data='train'):
+        if data == 'train':
+            return self.tra_train[batch_idx]
+        if data == 'valid':
+            # print(self.)
+            query, answer = np.array(self.valid_q), self.valid_a  # np.array(self.valid_a)
+            n_ent = self.n_ent
+        if data == 'test':
+            query, answer = np.array(self.test_q), self.test_a  # np.array(self.test_a)
+            n_ent = self.n_ent_ind
+
+        subs = []
+        rels = []
+        objs = []
+
+        subs = query[batch_idx, 0]
+        rels = query[batch_idx, 1]
+        objs = np.zeros((len(batch_idx), n_ent))
+        for i in range(len(batch_idx)):
+            objs[i][answer[batch_idx[i]]] = 1
+        return subs, rels, objs
+
+    def shuffle_train(self, ):
+        rand_idx = np.random.permutation(self.n_train)
+        self.tra_train = self.tra_train[rand_idx]
+
+    def get_filter(self, data='valid'):
+        filters = defaultdict(lambda: set())
+        if data == 'valid':
+            for triple in self.tra_train:
+                h, r, t = triple
+                filters[(h, r)].add(t)
+            for triple in self.tra_valid:
+                h, r, t = triple
+                filters[(h, r)].add(t)
+            for triple in self.tra_test:
+                h, r, t = triple
+                filters[(h, r)].add(t)
+        else:
+            for triple in self.ind_train:
+                h, r, t = triple
+                filters[(h, r)].add(t)
+            for triple in self.ind_valid:
+                h, r, t = triple
+                filters[(h, r)].add(t)
+            for triple in self.ind_test:
+                h, r, t = triple
+                filters[(h, r)].add(t)
+        return filters
 
 @register_dataset('kg_link_prediction')
 class KG_LinkPrediction(LinkPredictionDataset):
     """
     From `RGCN <https://arxiv.org/abs/1703.06103>`_, WN18 & FB15k face a data leakage.
     """
+
     def __init__(self, dataset_name, *args, **kwargs):
         super(KG_LinkPrediction, self).__init__(*args, **kwargs)
         if dataset_name in ['wn18', 'FB15k', 'FB15k-237']:
@@ -506,8 +729,8 @@ class KG_LinkPrediction(LinkPredictionDataset):
             self.target_link = self.test_hg.canonical_etypes
 
     def _build_hg(self, g, mode):
-        sub_g = dgl.edge_subgraph(g, g.edata[mode+'_edge_mask'], relabel_nodes=False)
-        src, dst = sub_g.edges()
+        sub_g = dgl.edge_subgraph(g, g.edata[mode + '_edge_mask'], relabel_nodes=False)
+        src, dst = sub_g.edges( )
         etype = sub_g.edata['etype']
 
         edge_dict = {}
@@ -521,9 +744,11 @@ class KG_LinkPrediction(LinkPredictionDataset):
 
     def modify_size(self, eval_percent, dataset_type):
         if dataset_type == 'valid':
-            self.valid_triplets = th.tensor(random.sample(self.valid_triplets.tolist(), math.ceil(self.valid_triplets.shape[0]*eval_percent)))
+            self.valid_triplets = th.tensor(
+                random.sample(self.valid_triplets.tolist( ), math.ceil(self.valid_triplets.shape[0] * eval_percent)))
         elif dataset_type == 'test':
-            self.test_triplets = th.tensor(random.sample(self.test_triplets.tolist(), math.ceil(self.test_triplets.shape[0]*eval_percent)))
+            self.test_triplets = th.tensor(
+                random.sample(self.test_triplets.tolist( ), math.ceil(self.test_triplets.shape[0] * eval_percent)))
 
     def get_graph_directed_from_triples(self, triples, format='graph'):
         s = th.LongTensor(triples[:, 0])
@@ -543,7 +768,7 @@ class KG_LinkPrediction(LinkPredictionDataset):
         :param mask_mode: should be one of 'train_mask', 'val_mask', 'test_mask
         :return:
         '''
-        edges = g.edges()
+        edges = g.edges( )
         etype = g.edata['etype']
         mask = g.edata.pop(mask_mode)
         return th.stack((edges[0][mask], etype[mask], edges[1][mask]))
@@ -571,7 +796,7 @@ class KG_LinkPrediction(LinkPredictionDataset):
         -------
         hg: DGLHeterograph
         """
-        edges = g.edges()
+        edges = g.edges( )
         etype = g.edata['etype']
         if mode == 'train':
             mask = g.edata['train_mask']
@@ -848,7 +1073,7 @@ class Grail_LinkPrediction(LinkPredictionDataset):
             with open(save_path, 'wb') as file:
                 file.write(response.content)
 
-class kg_sampler():
+class kg_sampler( ):
     def __init__(self, ):
         self.sampler = 'uniform'
         return
@@ -870,10 +1095,10 @@ class kg_sampler():
 
         # relabel nodes to have consecutive node ids
         edges = triplets[edges]
-        src, rel, dst = edges.transpose()
+        src, rel, dst = edges.transpose( )
         uniq_v, edges = np.unique((src, dst), return_inverse=True)
         src, dst = np.reshape(edges, (2, -1))
-        relabeled_edges = np.stack((src, rel, dst)).transpose()
+        relabeled_edges = np.stack((src, rel, dst)).transpose( )
 
         # negative sampling
         samples, labels = negative_sampling(relabeled_edges, len(uniq_v),
@@ -944,3 +1169,1238 @@ def sample_edge_uniform(adj_list, degrees, n_triplets, sample_size):
     """Sample edges uniformly from all the edges."""
     all_edges = np.arange(n_triplets)
     return np.random.choice(all_edges, sample_size, replace=False)
+
+
+# --- ExpressGNN ---
+
+
+# grounded rule stats code
+BAD = 0  # sample not valid
+FULL_OBSERVERED = 1  # sample valid, but rule contains only observed vars and does not have negation for all atoms
+GOOD = 2  # sample valid
+
+
+@register_dataset('express_gnn')
+class ExpressGNNDataset(BaseDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super( ).__init__(*args, **kwargs)
+        self.args = kwargs['args']
+        self.PRED_DICT = {}
+        self.dataset_name = dataset_name
+        self.const_dict = ConstantDict()
+        self.batchsize = self.args.batchsize
+        self.shuffle_sampling = self.args.shuffle_sampling
+        data_root = 'openhgnn'
+        data_root = os.path.join(data_root, 'dataset')
+        data_root = os.path.join(data_root, 'data')
+        data_root = os.path.join(data_root, self.dataset_name)
+        ext_rule_path = None
+
+        # Decide the way dataset will be load, set 1 to load FBWN dataset
+        load_method = 0
+        if dataset_name[0:9] == 'FB15k-237':
+            load_method = 1
+        else:
+            load_method = 0
+        guss_fb = 'FB15k' in data_root
+        if guss_fb != (load_method == 1):
+            print("WARNING: set load_method to 1 if you load Freebase dataset, otherwise 0")
+
+        # FBWN dataset
+        if load_method == 1:
+            fact_path_ls = [joinpath(data_root, 'facts.txt'),
+                            joinpath(data_root, 'train.txt')]
+            query_path = joinpath(data_root, 'test.txt')
+            pred_path = joinpath(data_root, 'relations.txt')
+            const_path = joinpath(data_root, 'entities.txt')
+            valid_path = joinpath(data_root, 'valid.txt')
+
+            rule_path = joinpath(data_root, 'cleaned_rules_weight_larger_than_0.9.txt')
+
+            assert all(map(isfile, fact_path_ls + [query_path, pred_path, const_path, valid_path, rule_path]))
+
+            # assuming only one type
+            TYPE_SET.update(['type'])
+
+            # add all const
+            for line in iterline(const_path):
+                self.const_dict.add_const('type', line)
+
+            # add all pred
+            for line in iterline(pred_path):
+                self.PRED_DICT[line] = Predicate(line, ['type', 'type'])
+
+            # add all facts
+            fact_ls = []
+            for fact_path in fact_path_ls:
+                for line in iterline(fact_path):
+                    parts = line.split('\t')
+
+                    assert len(parts) == 3, print(parts)
+
+                    e1, pred_name, e2 = parts
+
+                    assert self.const_dict.has_const('type', e1) and self.const_dict.has_const('type', e2)
+                    assert pred_name in self.PRED_DICT
+
+                    fact_ls.append(Fact(pred_name, [e1, e2], 1))
+
+            # add all validations
+            valid_ls = []
+            for line in iterline(valid_path):
+                parts = line.split('\t')
+
+                assert len(parts) == 3, print(parts)
+
+                e1, pred_name, e2 = parts
+
+                assert self.const_dict.has_const('type', e1) and self.const_dict.has_const('type', e2)
+                assert pred_name in self.PRED_DICT
+
+                valid_ls.append(Fact(pred_name, [e1, e2], 1))
+
+            # add all queries
+            query_ls = []
+            for line in iterline(query_path):
+                parts = line.split('\t')
+
+                assert len(parts) == 3, print(parts)
+
+                e1, pred_name, e2 = parts
+
+                assert self.const_dict.has_const('type', e1) and self.const_dict.has_const('type', e2)
+                assert pred_name in self.PRED_DICT
+
+                query_ls.append(Fact(pred_name, [e1, e2], 1))
+
+            # add all rules
+            rule_ls = []
+            strip_items = lambda ls: list(map(lambda x: x.strip( ), ls))
+            first_atom_reg = re.compile(r'([\d.]+) (!?)([^(]+)\((.*)\)')
+            atom_reg = re.compile(r'(!?)([^(]+)\((.*)\)')
+            for line in iterline(rule_path):
+
+                atom_str_ls = strip_items(line.split(' v '))
+                assert len(atom_str_ls) > 1, 'rule length must be greater than 1, but get %s' % line
+
+                atom_ls = []
+                rule_weight = 0.0
+                for i, atom_str in enumerate(atom_str_ls):
+                    if i == 0:
+                        m = first_atom_reg.match(atom_str)
+                        assert m is not None, 'matching atom failed for %s' % atom_str
+                        rule_weight = float(m.group(1))
+                        neg = m.group(2) == '!'
+                        pred_name = m.group(3).strip( )
+                        var_name_ls = strip_items(m.group(4).split(','))
+                    else:
+                        m = atom_reg.match(atom_str)
+                        assert m is not None, 'matching atom failed for %s' % atom_str
+                        neg = m.group(1) == '!'
+                        pred_name = m.group(2).strip( )
+                        var_name_ls = strip_items(m.group(3).split(','))
+
+                    atom = Atom(neg, pred_name, var_name_ls, self.PRED_DICT[pred_name].var_types)
+                    atom_ls.append(atom)
+
+                rule = Formula(atom_ls, rule_weight)
+                rule_ls.append(rule)
+        else:
+            if dataset_name == 'Cora' or dataset_name == 'kinship':
+                data_root = joinpath(data_root, 'S' + str(self.args.load_s))
+            elif dataset_name == 'uw_cse':
+                if self.args.load_s == 1:
+                    data_root = joinpath(data_root, 'ai')
+                elif self.args.load_s == 2:
+                    data_root = joinpath(data_root, 'graphics')
+                elif self.args.load_s == 3:
+                    data_root = joinpath(data_root, 'language')
+                elif self.args.load_s == 4:
+                    data_root = joinpath(data_root, 'systems')
+                elif self.args.load_s == 5:
+                    data_root = joinpath(data_root, 'theory')
+                else:
+                    print('Warning: Invalid load_s')
+            else:
+                print('Warning: Invalid dataset for load_method = 0')
+            rpath = joinpath(data_root, 'rules') if ext_rule_path is None else ext_rule_path
+            fact_ls, rule_ls, query_ls = self.preprocess_kinship(joinpath(data_root, 'predicates'),
+                                                                 joinpath(data_root, 'facts'),
+                                                                 rpath,
+                                                                 joinpath(data_root, 'queries'))
+            valid_ls = []
+
+        self.const_sort_dict = dict(
+            [(type_name, sorted(list(self.const_dict[type_name]))) for type_name in self.const_dict.constants.keys( )])
+
+        if load_method == 1:
+            self.const2ind = dict([(const, i) for i, const in enumerate(self.const_sort_dict['type'])])
+
+        # linear in size of facts
+        self.fact_dict = dict((pred_name, set( )) for pred_name in self.PRED_DICT)
+        self.test_fact_dict = dict((pred_name, set( )) for pred_name in self.PRED_DICT)
+        self.valid_dict = dict((pred_name, set( )) for pred_name in self.PRED_DICT)
+
+        self.ht_dict = dict((pred_name, [dict( ), dict( )]) for pred_name in self.PRED_DICT)
+        self.ht_dict_train = dict((pred_name, [dict( ), dict( )]) for pred_name in self.PRED_DICT)
+
+        def add_ht(pn, c_ls, ht_dict):
+            if load_method == 0:
+                if c_ls[0] in ht_dict[pn][0]:
+                    ht_dict[pn][0][c_ls[0]].add(c_ls[0])
+                else:
+                    ht_dict[pn][0][c_ls[0]] = {c_ls[0]}
+            elif load_method == 1:
+                if c_ls[0] in ht_dict[pn][0]:
+                    ht_dict[pn][0][c_ls[0]].add(c_ls[1])
+                else:
+                    ht_dict[pn][0][c_ls[0]] = {c_ls[1]}
+
+                if c_ls[1] in ht_dict[pn][1]:
+                    ht_dict[pn][1][c_ls[1]].add(c_ls[0])
+                else:
+                    ht_dict[pn][1][c_ls[1]] = {c_ls[0]}
+
+        const_cnter = Counter()
+        for fact in fact_ls:
+            self.fact_dict[fact.pred_name].add((fact.val, tuple(fact.const_ls)))
+            add_ht(fact.pred_name, fact.const_ls, self.ht_dict)
+            add_ht(fact.pred_name, fact.const_ls, self.ht_dict_train)
+            const_cnter.update(fact.const_ls)
+
+        for fact in valid_ls:
+            self.valid_dict[fact.pred_name].add((fact.val, tuple(fact.const_ls)))
+            add_ht(fact.pred_name, fact.const_ls, self.ht_dict)
+
+        # the sorted list version
+        self.fact_dict_2 = dict((pred_name, sorted(list(self.fact_dict[pred_name])))
+                                for pred_name in self.fact_dict.keys( ))
+        self.valid_dict_2 = dict((pred_name, sorted(list(self.valid_dict[pred_name])))
+                                 for pred_name in self.valid_dict.keys( ))
+
+        self.rule_ls = rule_ls
+
+        # pred_atom-key dict
+        self.atom_key_dict_ls = []
+        for rule in self.rule_ls:
+            atom_key_dict = dict( )
+
+            for atom in rule.atom_ls:
+                atom_dict = dict((var_name, dict( )) for var_name in atom.var_name_ls)
+
+                for i, var_name in enumerate(atom.var_name_ls):
+
+                    if atom.pred_name not in self.fact_dict:
+                        continue
+
+                    for v in self.fact_dict[atom.pred_name]:
+                        if v[1][i] not in atom_dict[var_name]:
+                            atom_dict[var_name][v[1][i]] = [v]
+                        else:
+                            atom_dict[var_name][v[1][i]] += [v]
+
+                # happens if predicate occurs more than once in one rule then we merge the set
+                if atom.pred_name in atom_key_dict:
+                    for k, v in atom_dict.items( ):
+                        if k not in atom_key_dict[atom.pred_name]:
+                            atom_key_dict[atom.pred_name][k] = v
+                else:
+                    atom_key_dict[atom.pred_name] = atom_dict
+
+            self.atom_key_dict_ls.append(atom_key_dict)
+
+        self.test_fact_ls = []
+        self.valid_fact_ls = []
+
+        for fact in query_ls:
+            self.test_fact_ls.append((fact.val, fact.pred_name, tuple(fact.const_ls)))
+            self.test_fact_dict[fact.pred_name].add((fact.val, tuple(fact.const_ls)))
+            add_ht(fact.pred_name, fact.const_ls, self.ht_dict)
+
+        for fact in valid_ls:
+            self.valid_fact_ls.append((fact.val, fact.pred_name, tuple(fact.const_ls)))
+        self.num_rules = len(rule_ls)
+
+        self.rule_gens = None
+        self.reset( )
+
+    def generate_gnd_pred(self, pred_name):
+        """
+            return a list of all instantiations of a predicate function, this can be extremely large
+        :param pred_name:
+            string
+        :return:
+        """
+
+        assert pred_name in self.PRED_DICT
+
+        pred = self.PRED_DICT[pred_name]
+        subs = itertools.product(*[self.const_sort_dict[var_type] for var_type in pred.var_types])
+
+        return [(pred_name, sub) for sub in subs]
+
+    def generate_gnd_rule(self, rule):
+
+        subs = itertools.product(*[self.const_sort_dict[rule.rule_vars[k]] for k in rule.rule_vars.keys( )])
+        sub = next(subs, None)
+
+        while sub is not None:
+
+            latent_vars = []
+            latent_neg_mask = []
+            observed_neg_mask = []
+
+            for atom in rule.atom_ls:
+                grounding = tuple(sub[rule.key2ind[var_name]] for var_name in atom.var_name_ls)
+                pos_gnding, neg_gnding = (1, grounding), (0, grounding)
+
+                if pos_gnding in self.fact_dict[atom.pred_name]:
+                    observed_neg_mask.append(0 if atom.neg else 1)
+                elif neg_gnding in self.fact_dict[atom.pred_name]:
+                    observed_neg_mask.append(1 if atom.neg else 0)
+                else:
+                    latent_vars.append((atom.pred_name, grounding))
+                    latent_neg_mask.append(1 if atom.neg else 0)
+
+            isfullneg = (sum(latent_neg_mask) == len(latent_neg_mask)) and \
+                        (sum(observed_neg_mask) > 0)
+
+            yield latent_vars, [latent_neg_mask, observed_neg_mask], isfullneg
+
+            sub = next(subs, None)
+
+    def get_batch(self, epoch_mode=False, filter_latent=True):
+        """
+            return the ind-th batch of ground formula and latent variable indicators
+        :return:
+
+        Parameters
+        ----------
+        filter_latent
+        epoch_mode
+        """
+
+        batch_neg_mask = [[] for _ in range(len(self.rule_ls))]
+        batch_latent_var_inds = [[] for _ in range(len(self.rule_ls))]
+        observed_rule_cnts = [0.0 for _ in range(len(self.rule_ls))]
+        flat_latent_vars = dict( )
+
+        cnt = 0
+
+        inds = list(range(len(self.rule_ls)))
+
+        while cnt < self.batchsize:
+
+            if self.shuffle_sampling:
+                shuffle(inds)
+
+            hasdata = False
+            for ind in inds:
+                latent_vars, neg_mask, isfullneg = next(self.rule_gens[ind], (None, None, None))
+
+                if latent_vars is None:
+                    if epoch_mode:
+                        continue
+                    else:
+                        self.rule_gens[ind] = self.generate_gnd_rule(self.rule_ls[ind])
+                        latent_vars, neg_mask, isfullneg = next(self.rule_gens[ind])
+
+                if epoch_mode:
+                    hasdata = True
+
+                # if rule is fully latent
+                if (len(neg_mask[1]) == 0) and filter_latent:
+                    continue
+
+                # if rule fully observed
+                if len(latent_vars) == 0:
+                    observed_rule_cnts[ind] += 0 if isfullneg else 1
+                    cnt += 1
+                    if cnt >= self.batchsize:
+                        break
+                    else:
+                        continue
+
+                batch_neg_mask[ind].append(neg_mask)
+
+                for latent_var in latent_vars:
+                    if latent_var not in flat_latent_vars:
+                        flat_latent_vars[latent_var] = len(flat_latent_vars)
+
+                batch_latent_var_inds[ind].append([flat_latent_vars[e] for e in latent_vars])
+
+                cnt += 1
+
+                if cnt >= self.batchsize:
+                    break
+
+            if epoch_mode and (hasdata is False):
+                break
+
+        flat_list = sorted([(k, v) for k, v in flat_latent_vars.items( )], key=lambda x: x[1])
+        flat_list = [e[0] for e in flat_list]
+
+        return batch_neg_mask, flat_list, batch_latent_var_inds, observed_rule_cnts
+
+    def _instantiate_pred(self, atom, atom_dict, sub, rule, observed_prob):
+
+        key2ind = rule.key2ind
+        rule_vars = rule.rule_vars
+
+        # substitute with observed fact
+        if np.random.rand( ) < observed_prob:
+
+            fact_choice_set = None
+            for var_name in atom.var_name_ls:
+                const = sub[key2ind[var_name]]
+                if const is None:
+                    choice_set = itertools.chain.from_iterable([v for k, v in atom_dict[var_name].items( )])
+                else:
+                    if const in atom_dict[var_name]:
+                        choice_set = atom_dict[var_name][const]
+                    else:
+                        choice_set = []
+
+                if fact_choice_set is None:
+                    fact_choice_set = set(choice_set)
+                else:
+                    fact_choice_set = fact_choice_set.intersection(set(choice_set))
+
+                if len(fact_choice_set) == 0:
+                    break
+
+            if len(fact_choice_set) == 0:
+                for var_name in atom.var_name_ls:
+                    if sub[key2ind[var_name]] is None:
+                        sub[key2ind[var_name]] = choice(self.const_sort_dict[rule_vars[var_name]])
+            else:
+                val, const_ls = choice(sorted(list(fact_choice_set)))
+                for var_name, const in zip(atom.var_name_ls, const_ls):
+                    sub[key2ind[var_name]] = const
+
+        # substitute with random facts
+        else:
+            for var_name in atom.var_name_ls:
+                if sub[key2ind[var_name]] is None:
+                    sub[key2ind[var_name]] = choice(self.const_sort_dict[rule_vars[var_name]])
+
+    def _gen_mask(self, rule, sub, closed_world):
+
+        latent_vars = []
+        observed_vars = []
+        latent_neg_mask = []
+        observed_neg_mask = []
+
+        for atom in rule.atom_ls:
+            grounding = tuple(sub[rule.key2ind[var_name]] for var_name in atom.var_name_ls)
+            pos_gnding, neg_gnding = (1, grounding), (0, grounding)
+
+            if pos_gnding in self.fact_dict[atom.pred_name]:
+                observed_vars.append((1, atom.pred_name))
+                observed_neg_mask.append(0 if atom.neg else 1)
+            elif neg_gnding in self.fact_dict[atom.pred_name]:
+                observed_vars.append((0, atom.pred_name))
+                observed_neg_mask.append(1 if atom.neg else 0)
+            else:
+                if closed_world and (len(self.test_fact_dict[atom.pred_name]) == 0):
+                    observed_vars.append((0, atom.pred_name))
+                    observed_neg_mask.append(1 if atom.neg else 0)
+                else:
+                    latent_vars.append((atom.pred_name, grounding))
+                    latent_neg_mask.append(1 if atom.neg else 0)
+
+        return latent_vars, observed_vars, latent_neg_mask, observed_neg_mask
+
+    def _get_rule_stat(self, observed_vars, latent_vars, observed_neg_mask, filter_latent, filter_observed):
+
+        is_full_latent = len(observed_vars) == 0
+        is_full_observed = len(latent_vars) == 0
+
+        if is_full_latent and filter_latent:
+            return BAD
+
+        if is_full_observed:
+
+            if filter_observed:
+                return BAD
+
+            is_full_neg = sum(observed_neg_mask) == 0
+
+            if is_full_neg:
+                return BAD
+
+            else:
+                return FULL_OBSERVERED
+
+        # if observed var already yields 1
+        if sum(observed_neg_mask) > 0:
+            return BAD
+
+        return GOOD
+
+    def _inst_var(self, sub, var2ind, var2type, at, ht_dict, gen_latent):
+
+        if len(at.var_name_ls) != 2:
+            raise KeyError
+
+        must_latent = gen_latent
+
+        if must_latent:
+
+            tmp = [sub[var2ind[vn]] for vn in at.var_name_ls]
+
+            for i, subi in enumerate(tmp):
+                if subi is None:
+                    tmp[i] = random.choice(self.const_sort_dict[var2type[at.var_name_ls[i]]])
+
+            islatent = (tmp[0] not in ht_dict[0]) or (tmp[1] not in ht_dict[0][tmp[0]])
+            for i, vn in enumerate(at.var_name_ls):
+                sub[var2ind[vn]] = tmp[i]
+            return [self.const2ind[subi] for subi in tmp], islatent, islatent or at.neg
+
+        vn0 = at.var_name_ls[0]
+        sub0 = sub[var2ind[vn0]]
+        vn1 = at.var_name_ls[1]
+        sub1 = sub[var2ind[vn1]]
+
+        if sub0 is None:
+
+            if sub1 is None:
+                if len(ht_dict[0]) > 0:
+                    sub0 = random.choice(tuple(ht_dict[0].keys( )))
+                    sub1 = random.choice(tuple(ht_dict[0][sub0]))
+                    sub[var2ind[vn0]] = sub0
+                    sub[var2ind[vn1]] = sub1
+                    return [self.const2ind[sub0], self.const2ind[sub1]], False, at.neg
+
+            else:
+                if sub1 in ht_dict[1]:
+                    sub0 = random.choice(tuple(ht_dict[1][sub1]))
+                    sub[var2ind[vn0]] = sub0
+                    return [self.const2ind[sub0], self.const2ind[sub1]], False, at.neg
+                else:
+                    sub0 = random.choice(self.const_sort_dict[var2type[vn0]])
+                    sub[var2ind[vn0]] = sub0
+                    return [self.const2ind[sub0], self.const2ind[sub1]], True, True
+
+        else:
+
+            if sub1 is None:
+                if sub0 in ht_dict[0]:
+                    sub1 = random.choice(tuple(ht_dict[0][sub0]))
+                    sub[var2ind[vn1]] = sub1
+                    return [self.const2ind[sub0], self.const2ind[sub1]], False, at.neg
+                else:
+                    sub1 = random.choice(self.const_sort_dict[var2type[vn1]])
+                    sub[var2ind[vn1]] = sub1
+                    return [self.const2ind[sub0], self.const2ind[sub1]], True, True
+
+            else:
+                islatent = (sub0 not in ht_dict[0]) or (sub1 not in ht_dict[0][sub0])
+                return [self.const2ind[sub0], self.const2ind[sub1]], islatent, islatent or at.neg
+
+    def get_batch_fast(self, batchsize, observed_prob=0.9):
+
+        prob_decay = 0.5
+
+        for rule in self.rule_ls:
+
+            var2ind = rule.key2ind
+            var2type = rule.rule_vars
+            samples = [[atom.pred_name, []] for atom in rule.atom_ls]
+            neg_mask = [[atom.pred_name, []] for atom in rule.atom_ls]
+            latent_mask = [[atom.pred_name, []] for atom in rule.atom_ls]
+            obs_var = [[atom.pred_name, []] for atom in rule.atom_ls]
+
+            cnt = 0
+            while cnt <= batchsize:
+
+                sub = [None] * len(rule.rule_vars)  # substitutions
+
+                sample_buff = [[] for _ in rule.atom_ls]
+                neg_mask_buff = [[] for _ in rule.atom_ls]
+                latent_mask_buff = [[] for _ in rule.atom_ls]
+
+                atom_inds = list(range(len(rule.atom_ls)))
+                shuffle(atom_inds)
+                succ = True
+                cur_threshold = observed_prob
+                obs_list = []
+
+                for atom_ind in atom_inds:
+                    atom = rule.atom_ls[atom_ind]
+                    pred_ht_dict = self.ht_dict_train[atom.pred_name]
+
+                    gen_latent = np.random.rand( ) > cur_threshold
+                    c_ls, islatent, atom_succ = self._inst_var(sub, var2ind, var2type,
+                                                               atom, pred_ht_dict, gen_latent)
+
+                    if not islatent:
+                        obs_var[atom_ind][1].append(c_ls)
+
+                    cur_threshold *= prob_decay
+                    succ = succ and atom_succ
+                    obs_list.append(not islatent)
+
+                    if succ:
+                        sample_buff[atom_ind].append(c_ls)
+                        latent_mask_buff[atom_ind].append(1 if islatent else 0)
+                        neg_mask_buff[atom_ind].append(0 if atom.neg else 1)
+
+                if succ and any(obs_list):
+                    for i in range(len(rule.atom_ls)):
+                        samples[i][1].extend(sample_buff[i])
+                        latent_mask[i][1].extend(latent_mask_buff[i])
+                        neg_mask[i][1].extend(neg_mask_buff[i])
+
+                cnt += 1
+
+            yield samples, neg_mask, latent_mask, obs_var
+
+    def get_batch_by_q(self, batchsize, observed_prob=1.0, validation=False):
+
+        samples_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+        neg_mask_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+        latent_mask_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+        obs_var_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+        neg_var_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+        cnt = 0
+
+        num_ents = len(self.const2ind)
+        ind2const = self.const_sort_dict['type']
+
+        def gen_fake(c1, c2, pn):
+            for _ in range(10):
+                c1_fake = random.randint(0, num_ents - 1)
+                c2_fake = random.randint(0, num_ents - 1)
+                if np.random.rand( ) > 0.5:
+                    if ind2const[c1_fake] not in self.ht_dict_train[pn][1][ind2const[c2]]:
+                        return c1_fake, c2
+                else:
+                    if ind2const[c2_fake] not in self.ht_dict_train[pn][0][ind2const[c1]]:
+                        return c1, c2_fake
+            return None, None
+
+        if validation:
+            fact_ls = self.valid_fact_ls
+        else:
+            fact_ls = self.test_fact_ls
+
+        for val, pred_name, consts in fact_ls:
+
+            for rule_i, rule in enumerate(self.rule_ls):
+
+                # find rule with pred_name as head
+                if rule.atom_ls[-1].pred_name != pred_name:
+                    continue
+
+                samples = samples_by_r[rule_i]
+                neg_mask = neg_mask_by_r[rule_i]
+                latent_mask = latent_mask_by_r[rule_i]
+                obs_var = obs_var_by_r[rule_i]
+                neg_var = neg_var_by_r[rule_i]
+
+                var2ind = rule.key2ind
+                var2type = rule.rule_vars
+
+                sub = [None] * len(rule.rule_vars)  # substitutions
+                vn0, vn1 = rule.atom_ls[-1].var_name_ls
+                sub[var2ind[vn0]] = consts[0]
+                sub[var2ind[vn1]] = consts[1]
+
+                sample_buff = [[] for _ in rule.atom_ls]
+                neg_mask_buff = [[] for _ in rule.atom_ls]
+                latent_mask_buff = [[] for _ in rule.atom_ls]
+
+                atom_inds = list(range(len(rule.atom_ls) - 1))
+                shuffle(atom_inds)
+                succ = True
+                obs_list = []
+
+                for atom_ind in atom_inds:
+                    atom = rule.atom_ls[atom_ind]
+                    pred_ht_dict = self.ht_dict_train[atom.pred_name]
+
+                    gen_latent = np.random.rand( ) > observed_prob
+                    c_ls, islatent, atom_succ = self._inst_var(sub, var2ind, var2type,
+                                                               atom, pred_ht_dict, gen_latent)
+
+                    assert atom_succ
+
+                    if not islatent:
+                        obs_var[atom_ind][1].append(c_ls)
+                        c1, c2 = gen_fake(c_ls[0], c_ls[1], atom.pred_name)
+                        if c1 is not None:
+                            neg_var[atom_ind][1].append([c1, c2])
+
+                    succ = succ and atom_succ
+                    obs_list.append(not islatent)
+
+                    sample_buff[atom_ind].append(c_ls)
+                    latent_mask_buff[atom_ind].append(1 if islatent else 0)
+                    neg_mask_buff[atom_ind].append(0 if atom.neg else 1)
+
+                if succ and any(obs_list):
+                    for i in range(len(rule.atom_ls)):
+                        samples[i][1].extend(sample_buff[i])
+                        latent_mask[i][1].extend(latent_mask_buff[i])
+                        neg_mask[i][1].extend(neg_mask_buff[i])
+
+                    samples[-1][1].append([self.const2ind[consts[0]], self.const2ind[consts[1]]])
+                    latent_mask[-1][1].append(1)
+                    neg_mask[-1][1].append(1)
+
+                    cnt += 1
+
+            if cnt >= batchsize:
+                yield samples_by_r, latent_mask_by_r, neg_mask_by_r, obs_var_by_r, neg_var_by_r
+
+                samples_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+                neg_mask_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+                latent_mask_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+                obs_var_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+                neg_var_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+                cnt = 0
+
+        yield samples_by_r, latent_mask_by_r, neg_mask_by_r, obs_var_by_r, neg_var_by_r
+
+    def get_batch_by_q_v2(self, batchsize, observed_prob=1.0):
+
+        samples_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+        neg_mask_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+        latent_mask_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+        obs_var_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+        neg_var_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+        cnt = 0
+
+        num_ents = len(self.const2ind)
+        ind2const = self.const_sort_dict['type']
+
+        def gen_fake(c1, c2, pn):
+            for _ in range(10):
+                c1_fake = random.randint(0, num_ents - 1)
+                c2_fake = random.randint(0, num_ents - 1)
+                if np.random.rand( ) > 0.5:
+                    if ind2const[c1_fake] not in self.ht_dict_train[pn][1][ind2const[c2]]:
+                        return c1_fake, c2
+                else:
+                    if ind2const[c2_fake] not in self.ht_dict_train[pn][0][ind2const[c1]]:
+                        return c1, c2_fake
+            return None, None
+
+        for val, pred_name, consts in self.test_fact_ls:
+
+            for rule_i, rule in enumerate(self.rule_ls):
+
+                # find rule with pred_name as head
+                if rule.atom_ls[-1].pred_name != pred_name:
+                    continue
+
+                samples = samples_by_r[rule_i]
+                neg_mask = neg_mask_by_r[rule_i]
+                latent_mask = latent_mask_by_r[rule_i]
+
+                var2ind = rule.key2ind
+                var2type = rule.rule_vars
+
+                sub_ls = [[None for _ in range(len(rule.rule_vars))] for _ in range(2)]  # substitutions
+
+                vn0, vn1 = rule.atom_ls[-1].var_name_ls
+                sub_ls[0][var2ind[vn0]] = consts[0]
+                sub_ls[0][var2ind[vn1]] = consts[1]
+
+                c1, c2 = gen_fake(self.const2ind[consts[0]], self.const2ind[consts[1]], pred_name)
+                if c1 is not None:
+                    sub_ls[1][var2ind[vn0]] = ind2const[c1]
+                    sub_ls[1][var2ind[vn1]] = ind2const[c2]
+                else:
+                    sub_ls.pop(1)
+
+                pos_query_succ = False
+
+                for sub_ind, sub in enumerate(sub_ls):
+
+                    sample_buff = [[] for _ in rule.atom_ls]
+                    neg_mask_buff = [[] for _ in rule.atom_ls]
+                    latent_mask_buff = [[] for _ in rule.atom_ls]
+
+                    atom_inds = list(range(len(rule.atom_ls) - 1))
+                    shuffle(atom_inds)
+                    succ = True
+                    obs_list = []
+
+                    for atom_ind in atom_inds:
+                        atom = rule.atom_ls[atom_ind]
+                        pred_ht_dict = self.ht_dict_train[atom.pred_name]
+
+                        gen_latent = np.random.rand( ) > observed_prob
+                        if sub_ind == 1:
+                            gen_latent = np.random.rand( ) > 0.5
+                        c_ls, islatent, atom_succ = self._inst_var(sub, var2ind, var2type,
+                                                                   atom, pred_ht_dict, gen_latent)
+
+                        assert atom_succ
+
+                        succ = succ and atom_succ
+                        obs_list.append(not islatent)
+
+                        sample_buff[atom_ind].append(c_ls)
+                        latent_mask_buff[atom_ind].append(1 if islatent else 0)
+                        neg_mask_buff[atom_ind].append(0 if atom.neg else 1)
+
+                    if succ:
+                        if any(obs_list) or ((sub_ind == 1) and pos_query_succ):
+
+                            for i in range(len(rule.atom_ls)):
+                                samples[i][1].extend(sample_buff[i])
+                                latent_mask[i][1].extend(latent_mask_buff[i])
+                                neg_mask[i][1].extend(neg_mask_buff[i])
+
+                            if sub_ind == 0:
+                                samples[-1][1].append([self.const2ind[consts[0]], self.const2ind[consts[1]]])
+                                latent_mask[-1][1].append(1)
+                                neg_mask[-1][1].append(1)
+                                pos_query_succ = True
+                                cnt += 1
+                            else:
+                                samples[-1][1].append([c1, c2])
+                                latent_mask[-1][1].append(0)  # sample a negative fact at head
+                                neg_mask[-1][1].append(1)
+
+            if cnt >= batchsize:
+                yield samples_by_r, latent_mask_by_r, neg_mask_by_r, obs_var_by_r, neg_var_by_r
+
+                samples_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+                neg_mask_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+                latent_mask_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+                obs_var_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+                neg_var_by_r = [[[atom.pred_name, []] for atom in rule.atom_ls] for rule in self.rule_ls]
+                cnt = 0
+
+        yield samples_by_r, latent_mask_by_r, neg_mask_by_r, obs_var_by_r, neg_var_by_r
+
+    def get_batch_rnd(self, observed_prob=0.7, filter_latent=True, closed_world=False, filter_observed=False):
+        """
+            return a batch of gnd formulae by random sampling with controllable bias towards those containing
+            observed variables. The overall sampling logic is that:
+                1) rnd sample a rule from rule_ls
+                2) shuffle the predicates contained in the rule
+                3) for each of these predicates, with (observed_prob) it will be instantiated as observed variable, and
+                   for (1-observed_prob) if will be simply uniformly instantiated.
+                3.1) if observed var, then sample from the knowledge base, which is self.fact_dict, if failed for any
+                     reason, go to 3.2)
+                3.2) if uniformly sample, then for each logic variable in the predicate, instantiate it with a uniform
+                     sample from the corresponding constant dict
+
+        :param observed_prob:
+            probability of instantiating a predicate as observed variable
+        :param filter_latent:
+            filter out ground formula containing only latent vars
+        :param closed_world:
+            if set True, reduce the sampling space of all predicates not in the test_dict to the set specified in
+            fact_dict
+        :param filter_observed:
+            filter out ground formula containing only observed vars
+        :return:
+
+        """
+
+        batch_neg_mask = [[] for _ in range(len(self.rule_ls))]
+        batch_latent_var_inds = [[] for _ in range(len(self.rule_ls))]
+        batch_observed_vars = [[] for _ in range(len(self.rule_ls))]
+        observed_rule_cnts = [0.0 for _ in range(len(self.rule_ls))]
+        flat_latent_vars = dict( )
+
+        cnt = 0
+
+        inds = list(range(len(self.rule_ls)))
+
+        while cnt < self.batchsize:
+
+            # randomly sample a formula
+            if self.shuffle_sampling:
+                shuffle(inds)
+
+            for ind in inds:
+
+                rule = self.rule_ls[ind]
+                atom_key_dict = self.atom_key_dict_ls[ind]
+                sub = [None] * len(rule.rule_vars)  # substitutions
+
+                # randomly sample an atom from the formula
+                atom_inds = list(range(len(rule.atom_ls)))
+                shuffle(atom_inds)
+                for atom_ind in atom_inds:
+                    atom = rule.atom_ls[atom_ind]
+                    atom_dict = atom_key_dict[atom.pred_name]
+
+                    # instantiate the predicate
+                    self._instantiate_pred(atom, atom_dict, sub, rule, observed_prob)
+
+                    # if variable substitution is complete already then exit
+                    if not (None in sub):
+                        break
+
+                # generate latent and observed var labels and their negation masks
+                latent_vars, observed_vars, \
+                    latent_neg_mask, observed_neg_mask = self._gen_mask(rule, sub, closed_world)
+
+                # check sampled ground rule status
+                stat_code = self._get_rule_stat(observed_vars, latent_vars, observed_neg_mask,
+                                                filter_latent, filter_observed)
+
+                # is a valid sample with only observed vars and does not have negation on all of them
+                if stat_code == FULL_OBSERVERED:
+                    observed_rule_cnts[ind] += 1
+
+                    cnt += 1
+
+                # is a valid sample
+                elif stat_code == GOOD:
+                    batch_neg_mask[ind].append([latent_neg_mask, observed_neg_mask])
+
+                    for latent_var in latent_vars:
+                        if latent_var not in flat_latent_vars:
+                            flat_latent_vars[latent_var] = len(flat_latent_vars)
+
+                    batch_latent_var_inds[ind].append([flat_latent_vars[e] for e in latent_vars])
+                    batch_observed_vars[ind].append(observed_vars)
+
+                    cnt += 1
+
+                # not a valid sample
+                else:
+                    continue
+
+                if cnt >= self.batchsize:
+                    break
+
+        flat_list = sorted([(k, v) for k, v in flat_latent_vars.items( )], key=lambda x: x[1])
+        flat_list = [e[0] for e in flat_list]
+
+        return batch_neg_mask, flat_list, batch_latent_var_inds, observed_rule_cnts, batch_observed_vars
+
+    def reset(self):
+        self.rule_gens = [self.generate_gnd_rule(rule) for rule in self.rule_ls]
+
+    def get_stats(self):
+
+        num_ents = sum([len(v) for k, v in self.const_sort_dict.items( )])
+        num_rels = len(self.PRED_DICT)
+        num_facts = sum([len(v) for k, v in self.fact_dict.items( )])
+        num_queries = len(self.test_fact_ls)
+
+        num_gnd_atom = 0
+        for pred_name, pred in self.PRED_DICT.items( ):
+            cnt = 1
+            for var_type in pred.var_types:
+                cnt *= len(self.const_sort_dict[var_type])
+            num_gnd_atom += cnt
+
+        num_gnd_rule = 0
+        for rule in self.rule_ls:
+            cnt = 1
+            for var_type in rule.rule_vars.values( ):
+                cnt *= len(self.const_sort_dict[var_type])
+            num_gnd_rule += cnt
+
+        return num_ents, num_rels, num_facts, num_queries, num_gnd_atom, num_gnd_rule
+
+    def preprocess_kinship(self, ppath, fpath, rpath, qpath):
+        """
+
+        :param ppath:
+            predicate file path
+        :param fpath:
+            facts file path
+        :param rpath:
+            rule file path
+        :param qpath:
+            query file path
+
+        :return:
+
+        """
+        assert all(map(isfile, [ppath, fpath, rpath, qpath]))
+
+        strip_items = lambda ls: list(map(lambda x: x.strip( ), ls))
+
+        pred_reg = re.compile(r'(.*)\((.*)\)')
+
+        with open(ppath) as f:
+            for line in f:
+
+                # skip empty lines
+                if line.strip( ) == '':
+                    continue
+
+                m = pred_reg.match(line.strip( ))
+                assert m is not None, 'matching predicate failed for %s' % line
+
+                name, var_types = m.group(1), m.group(2)
+                var_types = list(map(lambda x: x.strip( ), var_types.split(',')))
+
+                self.PRED_DICT[name] = Predicate(name, var_types)
+                TYPE_SET.update(var_types)
+
+        fact_ls = []
+        fact_reg = re.compile(r'(!?)(.*)\((.*)\)')
+        with open(fpath) as f:
+            for line in f:
+
+                # skip empty lines
+                if line.strip( ) == '':
+                    continue
+
+                m = fact_reg.match(line.strip( ))
+                assert m is not None, 'matching fact failed for %s' % line
+
+                val = 0 if m.group(1) == '!' else 1
+                name, consts = m.group(2), m.group(3)
+                consts = strip_items(consts.split(','))
+
+                fact_ls.append(Fact(name, consts, val))
+
+                for var_type in self.PRED_DICT[name].var_types:
+                    self.const_dict.add_const(var_type, consts.pop(0))
+
+        rule_ls = []
+        first_atom_reg = re.compile(r'([\d.]+) (!?)([\w\d]+)\((.*)\)')
+        atom_reg = re.compile(r'(!?)([\w\d]+)\((.*)\)')
+        with open(rpath) as f:
+            for line in f:
+
+                # skip empty lines
+                if line.strip( ) == '':
+                    continue
+
+                atom_str_ls = strip_items(line.strip( ).split(' v '))
+                assert len(atom_str_ls) > 1, 'rule length must be greater than 1, but get %s' % line
+
+                atom_ls = []
+                rule_weight = 0.0
+                for i, atom_str in enumerate(atom_str_ls):
+                    if i == 0:
+                        m = first_atom_reg.match(atom_str)
+                        assert m is not None, 'matching atom failed for %s' % atom_str
+                        rule_weight = float(m.group(1))
+                        neg = m.group(2) == '!'
+                        pred_name = m.group(3).strip( )
+                        var_name_ls = strip_items(m.group(4).split(','))
+                    else:
+                        m = atom_reg.match(atom_str)
+                        assert m is not None, 'matching atom failed for %s' % atom_str
+                        neg = m.group(1) == '!'
+                        pred_name = m.group(2).strip( )
+                        var_name_ls = strip_items(m.group(3).split(','))
+
+                    atom = Atom(neg, pred_name, var_name_ls, self.PRED_DICT[pred_name].var_types)
+                    atom_ls.append(atom)
+
+                rule = Formula(atom_ls, rule_weight)
+                rule_ls.append(rule)
+
+        query_ls = []
+        with open(qpath) as f:
+            for line in f:
+
+                # skip empty lines
+                if line.strip( ) == '':
+                    continue
+
+                m = fact_reg.match(line.strip( ))
+                assert m is not None, 'matching fact failed for %s' % line
+
+                val = 0 if m.group(1) == '!' else 1
+                name, consts = m.group(2), m.group(3)
+                consts = strip_items(consts.split(','))
+
+                query_ls.append(Fact(name, consts, val))
+
+                for var_type in self.PRED_DICT[name].var_types:
+                    self.const_dict.add_const(var_type, consts.pop(0))
+
+        return fact_ls, rule_ls, query_ls
+
+
+TYPE_SET = set( )
+
+
+def iterline(fpath):
+    with open(fpath) as f:
+
+        for line in f:
+
+            line = line.strip( )
+            if line == '':
+                continue
+
+            yield line
+
+
+class ConstantDict:
+
+    def __init__(self):
+        self.constants = {}
+
+    def add_const(self, const_type, const):
+        """
+
+        :param const_type:
+            string
+        :param const:
+            string
+        """
+
+        # if const_type not in TYPE_DICT:
+        #     TYPE_DICT[const_type] = len(TYPE_DICT)
+
+        if const_type in self.constants:
+            self.constants[const_type].add(const)
+        else:
+            self.constants[const_type] = {const}
+
+    def __getitem__(self, key):
+        return self.constants[key]
+
+    def has_const(self, key, const):
+        if key in self.constants:
+            return const in self[key]
+        else:
+            return False
+
+
+class Predicate:
+
+    def __init__(self, name, var_types):
+        """
+
+        :param name:
+            string
+        :param var_types:
+            list of strings
+        """
+        self.name = name
+        self.var_types = var_types
+        self.num_args = len(var_types)
+
+    def __repr__(self):
+        return '%s(%s)' % (self.name, ','.join(self.var_types))
+
+
+class Fact:
+    def __init__(self, pred_name, const_ls, val):
+        self.pred_name = pred_name
+        self.const_ls = deepcopy(const_ls)
+        self.val = val
+
+    def __repr__(self):
+        return self.pred_name + '(%s)' % ','.join(self.const_ls)
+
+
+class Atom:
+    def __init__(self, neg, pred_name, var_name_ls, var_type_ls):
+        self.neg = neg
+        self.pred_name = pred_name
+        self.var_name_ls = var_name_ls
+        self.var_type_ls = var_type_ls
+
+    def __repr__(self):
+        return ('!' if self.neg else '') + self.pred_name + '(%s)' % ','.join(self.var_name_ls)
+
+
+class Formula:
+    """
+        only support clause form with disjunction, e.g. !
+    """
+
+    def __init__(self, atom_ls, weight):
+        self.weight = weight
+        self.atom_ls = atom_ls
+        self.rule_vars = dict( )
+
+        for atom in self.atom_ls:
+            self.rule_vars.update(zip(atom.var_name_ls, atom.var_type_ls))
+        self.key2ind = dict(zip(self.rule_vars.keys( ), range(len(self.rule_vars.keys( )))))
+
+    def evaluate(self):
+        pass
+
+    def __repr__(self):
+        return ' v '.join(list(map(repr, self.atom_ls)))
+
+
+class ConstantDict:
+
+    def __init__(self):
+        self.constants = {}
+
+    def add_const(self, const_type, const):
+        """
+
+        :param const_type:
+            string
+        :param const:
+            string
+        """
+
+        # if const_type not in TYPE_DICT:
+        #     TYPE_DICT[const_type] = len(TYPE_DICT)
+
+        if const_type in self.constants:
+            self.constants[const_type].add(const)
+        else:
+            self.constants[const_type] = {const}
+
+    def __getitem__(self, key):
+        return self.constants[key]
+
+    def has_const(self, key, const):
+        if key in self.constants:
+            return const in self[key]
+        else:
+            return False
+
+@register_dataset('NBF_link_prediction') 
+class NBF_LinkPrediction(LinkPredictionDataset):
+    r"""
+    The NBF dataset will be used in task *link prediction*.
+
+    """
+
+    def __init__(self, dataset_name ,*args, **kwargs): # dataset_name in ['NBF_WN18RR','NBF_FB15k-237']
+
+        self.dataset = NBF_Dataset(root='./openhgnn/dataset/', name=dataset_name[4:], version="v1")
+
+
+
+import os
+import requests
+import zipfile
+import io
+@register_dataset('DisenKGAT_link_prediction')
+class DisenKGAT_LinkPrediction(LinkPredictionDataset):
+    def __init__(self, dataset ,*args, **kwargs): # dataset "DisenKGAT"
+        self.logger = kwargs.get("Logger")
+        self.args = kwargs.get("args")
+        self.current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.dataset_name = dataset                       
+        self.raw_dir = os.path.join(self.current_dir, self.dataset_name ,"raw_dir" ) 
+        self.processed_dir = os.path.join(self.current_dir, self.dataset_name ,"processed_dir" ) 
+
+        if not os.path.exists(self.raw_dir):
+            os.makedirs(self.raw_dir) 
+            self.download()
+        else:
+            print("raw_dir already exists")
+
+    def download(self): 
+
+        url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{}.zip".format(self.dataset_name)          
+        response = requests.get(url)
+        with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+            myzip.extractall(self.raw_dir)       
+        print("---  download   finished---")
+
+      
+

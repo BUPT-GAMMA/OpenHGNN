@@ -113,6 +113,15 @@ SUPPORTED_MODELS = {
     'lightGCN': 'openhgnn.models.lightGCN',
     'Grail': 'openhgnn.models.Grail',
     'ComPILE': 'openhgnn.models.ComPILE',
+    'Adaprop': 'openhgnn.models.Adaprop',
+    'AdapropI':'openhgnn.models.AdapropI',
+    'LTE': 'openhgnn.models.LTE',
+    'LTE_Transe': 'openhgnn.models.LTE_Transe',
+    'SACN':'openhgnn.models.SACN',
+    'ExpressGNN': 'openhgnn.models.ExpressGNN',
+    'NBF': 'openhgnn.models.NBF', 
+    'Ingram': 'openhgnn.models.Ingram',
+    'RedGNN': 'openhgnn.models.RedGNN',
 }
 
 from .HGCL import HGCL
@@ -157,6 +166,13 @@ from .DSSL import DSSL
 from .lightGCN import lightGCN
 from .Grail import Grail
 from .ComPILE import ComPILE
+from .AdapropT import AdapropT
+from .AdapropI import AdapropI
+from .LTE import LTE
+from .LTE_Transe import LTE_Transe
+from .SACN import SACN
+from .ExpressGNN import ExpressGNN
+from .Ingram import Ingram
 
 __all__ = [
     'BaseModel',
@@ -198,5 +214,12 @@ __all__ = [
     'lightGCN',
     'Grail',
     'ComPILE',
+    'AdapropT',
+    'AdapropI'
+    'LTE',
+    'LTE_Transe'
+    'SACN',
+    'ExpressGNN',
+    'Ingram',
 ]
 classes = __all__

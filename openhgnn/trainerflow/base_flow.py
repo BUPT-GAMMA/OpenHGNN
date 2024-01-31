@@ -63,7 +63,7 @@ class BaseFlow(ABC):
         self.max_epoch = args.max_epoch
         self.optimizer = None
 
-        if self.model_name == "MeiREC":
+        if self.model_name in ["MeiREC", "ExpressGNN", "Ingram", "RedGNN", "Adaprop"]:
             return
         if self.model_name == "Grail":
             return
