@@ -183,10 +183,10 @@ class AdapropIDataLoader:
         if data == 'train':
             return self.tra_train[batch_idx]
         if data == 'valid':
-            query, answer = np.array(self.valid_q), np.array(self.valid_a)
+            query, answer = np.array(self.valid_q), self.valid_a
             n_ent = self.n_ent
         if data == 'test':
-            query, answer = np.array(self.test_q), np.array(self.test_a)
+            query, answer = np.array(self.test_q), self.test_a
             n_ent = self.n_ent_ind
 
         subs = []

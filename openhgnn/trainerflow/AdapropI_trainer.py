@@ -33,7 +33,7 @@ class AdapropITrainer(BaseFlow):
         self.args.decay_rate = 0.999
         self.args.perf_file = './results.txt'
         self.args.task_dir=args.data_path
-        gpu = select_gpu()
+        gpu = args.device
         torch.cuda.set_device(gpu)
         print('==> selected GPU id: ', gpu)
         args.n_batch=self.args.n_batch
