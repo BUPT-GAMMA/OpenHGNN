@@ -40,16 +40,9 @@ class Config(object):
             self.seed = conf.getint("General", "seed")
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
-<<<<<<< HEAD
-######################################    DislenKGAT          ###########################################################################
-
 
         elif self.model_name == "DisenKGAT":
 
-            # str
-=======
-        elif self.model_name == "DisenKGAT":
->>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
             self.name = conf.get("DisenKGAT","name")
             self.score_func = conf.get("DisenKGAT","score_func")
             self.opn = conf.get("DisenKGAT","opn")
@@ -62,11 +55,7 @@ class Config(object):
             self.score_method = conf.get("DisenKGAT","score_method")
             self.score_order = conf.get("DisenKGAT","score_order")
             self.gamma_method = conf.get("DisenKGAT","gamma_method")
-<<<<<<< HEAD
 
-# int 
-=======
->>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
             self.k_w= conf.getint("DisenKGAT", "k_w") 
             self.batch = conf.getint("DisenKGAT", "batch")
             self.test_batch = conf.getint("DisenKGAT", "test_batch")
@@ -91,11 +80,6 @@ class Config(object):
             self.num_factors = conf.getint("DisenKGAT", "num_factors")
             self.early_stop = conf.getint("DisenKGAT", "early_stop")
             self.mi_epoch = conf.getint("DisenKGAT", "mi_epoch")
-<<<<<<< HEAD
-
-# float     
-=======
->>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
             self.feat_drop = conf.getfloat("DisenKGAT", "feat_drop")
             self.hid_drop2 = conf.getfloat("DisenKGAT", "hid_drop2")
             self.hid_drop = conf.getfloat("DisenKGAT", "hid_drop")
@@ -110,11 +94,6 @@ class Config(object):
             self.alpha = conf.getfloat("DisenKGAT", "alpha")
             self.max_gamma = conf.getfloat("DisenKGAT", "max_gamma")
             self.init_gamma = conf.getfloat("DisenKGAT", "init_gamma")
-<<<<<<< HEAD
-
-# boolean
-=======
->>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
             self.restore = conf.getboolean("DisenKGAT", "restore")
             self.bias = conf.getboolean("DisenKGAT", "bias")
             self.no_act = conf.getboolean("DisenKGAT", "no_act")
@@ -124,13 +103,6 @@ class Config(object):
             self.fix_gamma = conf.getboolean("DisenKGAT", "fix_gamma")
 
 
-
-            pass
-<<<<<<< HEAD
-
-##################################################################################################################
-=======
->>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
         elif self.model_name == "NBF" and self.dataset_name =="NBF_WN18RR":
 
             self.input_dim = conf.getint("NBF", "input_dim")
@@ -151,10 +123,9 @@ class Config(object):
             self.batch_size = conf.getint("NBF","batch_size")
             self.num_epoch = conf.getint("NBF","num_epoch")
             self.log_interval = conf.getint("NBF","log_interval")
-<<<<<<< HEAD
+
 ###############################################################################################################
-=======
->>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
+
         elif self.model_name == "NSHE":
             self.dim_size = {}
             self.dim_size['emd'] = conf.getint("NSHE", "emd_dim")
@@ -1035,8 +1006,6 @@ class Config(object):
             self.test_u_batch_size = conf.getint("lightGCN", "test_u_batch_size")
             self.topks = conf.getint("lightGCN", "topks")
             # self.alpha = conf.getfloat("lightGCN", "alpha")
-<<<<<<< HEAD
-=======
 
         elif self.model_name == "Adaprop":
             self.lr = conf.getfloat("Adaprop", "lr")
@@ -1167,6 +1136,22 @@ class Config(object):
             self.act = conf.get("RedGNN", "act")
             self.n_layer = conf.getint("RedGNN", "n_layer")
 
+        elif self.model_name == 'RedGNNT':
+            self.seed = conf.getint("RedGNNT", "seed")
+            self.patience = conf.getint("RedGNNT", "patience")
+            self.batch_size = conf.getint("RedGNNT", "batch_size")
+            self.n_tbatch = conf.getint("RedGNNT", "n_tbatch")
+            self.optimizer = conf.get("RedGNNT", "optimizer")
+            self.lr = conf.getfloat("RedGNNT", "lr")
+            self.weight_decay = conf.getfloat("RedGNNT", "weight_decay")
+            self.max_epoch = conf.getint("RedGNNT", "max_epoch")
+            self.decay_rate = conf.getfloat("RedGNNT", "decay_rate")
+            self.hidden_dim = conf.getint("RedGNNT", "hidden_dim")
+            self.attn_dim = conf.getint("RedGNNT", "attn_dim")
+            self.dropout = conf.getfloat("RedGNNT", "dropout")
+            self.act = conf.get("RedGNNT", "act")
+            self.n_layer = conf.getint("RedGNNT", "n_layer")
+
         elif self.model_name == 'ExpressGNN':
             self.embedding_size = conf.getint('ExpressGNN', 'embedding_size')
             self.gcn_free_size = conf.getint("ExpressGNN", "gcn_free_size")
@@ -1205,7 +1190,6 @@ class Config(object):
             self.use_gcn = conf.getint("ExpressGNN", "use_gcn")
             self.filter_latent = conf.getint("ExpressGNN", "filter_latent")
             self.closed_world = conf.getint("ExpressGNN", "closed_world")
->>>>>>> 8a05389e9c2b21fab7944be716227794a468d09f
 
         elif self.model_name =='Grail':
             self.num_epochs = conf.getint("Grail", "num_epochs")

@@ -2,7 +2,6 @@ import os
 import pdb
 import numpy as np
 from scipy.sparse import csc_matrix
-import matplotlib.pyplot as plt
 import struct
 import logging
 import random
@@ -22,15 +21,6 @@ import pickle
 import networkx as nx
 import dgl
 
-
-def plot_rel_dist(adj_list, filename):
-    rel_count = []
-    for adj in adj_list:
-        rel_count.append(adj.count_nonzero())
-
-    fig = plt.figure(figsize=(12, 8))
-    plt.plot(rel_count)
-    fig.savefig(filename, dpi=fig.dpi)
 
 
 def process_files(files, saved_relation2id=None):

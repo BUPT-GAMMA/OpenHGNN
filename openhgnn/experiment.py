@@ -49,6 +49,7 @@ class Experiment(object):
         'TransR': 'TransX_trainer',
         'TransD': 'TransX_trainer',
         'RedGNN': 'RedGNN_trainer',
+        'RedGNNT': 'RedGNNT_trainer',
         'GIE': 'TransX_trainer',
         'HAN': {
             'node_classification': 'han_nc_trainer',

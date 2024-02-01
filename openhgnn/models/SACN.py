@@ -1,7 +1,6 @@
 from . import BaseModel, register_model
 import torch.nn as nn
 import torch.nn.functional as F
-from dgl.contrib.data import load_data
 from torch.nn.init import xavier_normal_
 from dgl import function as fn
 from numpy.random.mtrand import set_state

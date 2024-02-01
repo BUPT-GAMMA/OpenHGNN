@@ -11,7 +11,6 @@ import pandas
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from dgl.contrib.data import load_data
 from torch.nn.init import xavier_normal_
 from dgl import function as fn
 from torch.utils.data import DataLoader
@@ -245,62 +244,7 @@ def main(args):
                      'test_evaluation', entity_id, device, logger)
 
 
-if __name__ == '__main__':
-    print("2")
-    # parser = argparse.ArgumentParser(description='WGCN')
-    # parser.add_argument("--seed", type=int, default=12345, help="random seed")
-    # parser.add_argument("--init_emb_size", type=int, default=100,
-    #                     help="initial embedding size")
-    # parser.add_argument("--gc1_emb_size", type=int, default=150,
-    #                     help="embedding size after gc1")
-    # parser.add_argument("--embedding_dim", type=int, default=200,
-    #                     help="embedding dim")
-    # parser.add_argument("--input_dropout", type=float, default=0,
-    #                     help="input feature dropout")
-    # parser.add_argument("--dropout_rate", type=float, default=0.2,
-    #                     help="dropout rate")
-    # parser.add_argument("--channels", type=int, default=200,
-    #                     help="number of channels")
-    # parser.add_argument("--kernel_size", type=int, default=5,
-    #                     help="kernel size")
-    # parser.add_argument("--gpu", type=int, default=0,
-    #                     help="gpu")
-    # parser.add_argument("--lr", type=float, default=0.002,
-    #                     help="learning rate")
-    # parser.add_argument("--n-epochs", type=int, default=5000,
-    #                     help="number of training epochs")
-    # parser.add_argument('--num_workers', type=int, default=2)
-    # parser.add_argument("--eval-every", type=int, default=1)
-    # parser.add_argument("-d", "--dataset", type=str, default="FB15k-237",
-    #                     help="dataset to use")
-    # parser.add_argument("--batch-size", type=int, default=128,
-    #                     help="batch size")
-    # parser.add_argument("--patience", type=int, default=100,
-    #                     help="early stop patience")
-    # parser.add_argument("--decoder", type=str, default='distmult',
-    #                     help="decoders")
-    # parser.add_argument("--gamma", type=float, default=9.0,
-    #                     help="gamma for transe training")
-    # parser.add_argument("--name", type=str, default="debug",
-    #                     help="model name")
-    # parser.add_argument("--n-layer", type=int, default=2,
-    #                     help="number of gcn layers")
-    # parser.add_argument("--rat", action="store_true",
-    #                     default=False, help='random adjacency matrices')
-    # parser.add_argument("--wsi", action="store_true",
-    #                     default=False, help='without self loop')
-    # parser.add_argument("--wni", action="store_true",
-    #                     default=False, help='without neighbor information')
-    # parser.add_argument("--ss", type=int, default=-1, help="sample size")
-    #
-    # parser.add_argument("--final_bn", '-fb',
-    #                     action="store_true", default=False)
-    # parser.add_argument("--final_act", '-fa',
-    #                     action="store_true", default=False)
-    # parser.add_argument("--final_drop", '-fd',
-    #                     action="store_true", default=False)
-    #
-    # args = parser.parse_args()
+
 
 
 

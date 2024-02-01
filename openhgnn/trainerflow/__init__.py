@@ -91,6 +91,7 @@ SUPPORTED_FLOWS = {
     'Ingram_Trainer' : 'openhgnn.trainerflow.Ingram_trainer',
     'DisenKGAT_trainer':'openhgnn.trainerflow.DisenKGAT_trainer',
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
+    'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
 }
 
 from .hgcl_trainer import HGCLtrainer
@@ -129,7 +130,7 @@ from .ExpressGNN_trainer import ExpressGNNTrainer
 from .NBF_trainer import * 
 from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
-
+from .RedGNNT_trainer import RedGNNTTrainer
 
 __all__ = [
     'BaseFlow',

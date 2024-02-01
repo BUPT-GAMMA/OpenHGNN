@@ -64,10 +64,11 @@ kg_lp_datasets = ['wn18', 'FB15k', 'FB15k-237', 'FB15k-237_data_ratio_0', 'kinsh
 kg_sub_datasets = [f'fb237_v{i}' for i in range(1, 5)]
 kg_sub_datasets += [f'nell_v{i}' for i in range(1, 5)]
 kg_sub_datasets += [f'WN18RR_v{i}' for i in range(1,5)]
-
+kg_subT_datasets = ['family']
 ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
 hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
+
 
 
 def build_dataset(dataset, task, *args, **kwargs):
@@ -88,16 +89,16 @@ def build_dataset(dataset, task, *args, **kwargs):
         test_dataloader = get_data_loader("test", batch_size=args[0])
         return train_dataloader, test_dataloader
     #-------------------更改部分-------------------
-    if dataset.dataset_name == 'Adaprop':
-        dataload=AdapropTDataLoader(dataset)
+    if dataset == 'Adaprop':
+        dataload=AdapropTDataLoader(args)
         return dataload
     # -------------------更改部分-------------------
     #-------------------更改部分-------------------
-    if dataset.dataset == 'AdapropI':
-        dataload=AdapropIDataLoader(dataset)
+    if dataset == 'AdapropI':
+        dataload=AdapropIDataLoader(args)
         return dataload
       
-    if dataset.dataset_name == 'SACN' or dataset.dataset_name == 'LTE':
+    if dataset == 'SACN' or dataset == 'LTE':
         return
 
     if dataset in CLASS_DATASETS:
@@ -131,6 +132,9 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset in kg_sub_datasets:
         assert task == 'link_prediction'
         _dataset = 'kg_sub_link_prediction'
+    elif dataset in kg_subT_datasets:
+        assert task == 'link_prediction'
+        _dataset = 'kg_subT_link_prediction'
     elif dataset in ['LastFM4KGCN']:
         _dataset = 'kgcn_recommendation'
     elif dataset in ['gowalla', 'yelp2018', 'amazon-book']:

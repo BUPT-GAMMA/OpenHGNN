@@ -122,6 +122,7 @@ SUPPORTED_MODELS = {
     'NBF': 'openhgnn.models.NBF', 
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
+    'RedGNNT': 'openhgnn.models.RedGNNT',
 }
 
 from .HGCL import HGCL
@@ -173,6 +174,8 @@ from .LTE_Transe import LTE_Transe
 from .SACN import SACN
 from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
+from .RedGNN import RedGNN
+from .RedGNNT import RedGNNT
 
 __all__ = [
     'BaseModel',
@@ -215,9 +218,9 @@ __all__ = [
     'Grail',
     'ComPILE',
     'AdapropT',
-    'AdapropI'
+    'AdapropI',
     'LTE',
-    'LTE_Transe'
+    'LTE_Transe',
     'SACN',
     'ExpressGNN',
     'Ingram',
