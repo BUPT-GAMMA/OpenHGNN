@@ -11,16 +11,25 @@ class AdapropIDataLoader:
     def __init__(self, args):
         self.args = args
         self.dir = './data'
-        path_ckp1 = os.path.join(self.dir, 'fb237_v1')
-        path_ckp2 = os.path.join(self.dir, 'fb237_v1_ind')
-        self.dir = os.path.join(self.dir, 'fb237_v1')
+        name1=self.args.dataset_name
+        name2=name1+'_ind'
+        path_ckp1 = os.path.join(self.dir, name1)
+        path_ckp2 = os.path.join(self.dir, name2)
+        self.dir = os.path.join(self.dir, name1)
         task_dir=self.dir
         print(path_ckp1)
         folder = os.path.exists(path_ckp1)
         if not folder:  # 判断是否存在文件夹如果不存在则创建为文件夹
             os.makedirs(path_ckp1)  # makedirs 创建文件时如果路径不存在会创建这个路径
             # 下载数据
-            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v1.zip"
+            if name1=='fb237_v1':
+                url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v1.zip"
+            elif name1=='fb237_v2':
+                url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v2.zip"
+            elif name1=='fb237_v3':
+                url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v3.zip"
+            elif name1=='fb237_v4':
+                url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v4.zip"
             response = requests.get(url)
             with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
                 myzip.extractall(path_ckp1)
@@ -34,7 +43,14 @@ class AdapropIDataLoader:
         if not folder:  # 判断是否存在文件夹如果不存在则创建为文件夹
             os.makedirs(path_ckp2)  # makedirs 创建文件时如果路径不存在会创建这个路径
             # 下载数据
-            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v1_ind.zip"
+            if name1=='fb237_v1':
+                url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v1_ind.zip"
+            elif name1=='fb237_v2':
+                url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v2_ind.zip"
+            elif name1=='fb237_v3':
+                url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v3_ind.zip"
+            elif name1=='fb237_v4':
+                url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v4_ind.zip"
             response = requests.get(url)
             with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
                 myzip.extractall(path_ckp2)

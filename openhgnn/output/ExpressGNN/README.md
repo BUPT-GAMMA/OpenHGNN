@@ -9,7 +9,7 @@
 - Clone the Openhgnn-DGL
 
   ```bash
-  python main.py -m ExpressGNN -d fb15k-237 -t link_prediction -g 0 --use_best_config
+  python main.py -m ExpressGNN -d EXP_FB15k-237 -t link_prediction -g 0 --use_best_config
   ```
 
   If you do not have gpu, set -gpu -1.
@@ -17,7 +17,10 @@
 
 ## Performance: link_prediction
 
----
+|           |               fb15k237             
+|:---------:| :-----------------------------: 
+|    MRR    | paper: 0.49    OpenHGNN: 0.4399
+|   H@10    | paper: 0.608   OpenHGNN: 0.5668
 
 ## Dataset
 
@@ -59,8 +62,8 @@ ExpressGNN extends GNNs by incorporating temporal information, capturing evolvin
 
 #### Contributor
 
-Ziyao Lin
+Ziyao Lin, Fengqi Liang[GAMMA LAB]
 
 #### If you have any questions,
 
-Submit an issue or email to  ziyao_lin@hust.edu.cn
+Submit an issue or email to  ziyao_lin@hust.edu.cn, lfq@bupt.edu.cn

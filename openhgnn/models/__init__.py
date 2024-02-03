@@ -113,7 +113,7 @@ SUPPORTED_MODELS = {
     'lightGCN': 'openhgnn.models.lightGCN',
     'Grail': 'openhgnn.models.Grail',
     'ComPILE': 'openhgnn.models.ComPILE',
-    'Adaprop': 'openhgnn.models.Adaprop',
+    'AdapropT': 'openhgnn.models.AdapropT',
     'AdapropI':'openhgnn.models.AdapropI',
     'LTE': 'openhgnn.models.LTE',
     'LTE_Transe': 'openhgnn.models.LTE_Transe',

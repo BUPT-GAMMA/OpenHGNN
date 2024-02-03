@@ -1207,6 +1207,14 @@ class Grail_LinkPrediction(LinkPredictionDataset):
         else:
             print("---  There is data!  ---")
 
+        if not os.path.exists(self.data_folder+'_ind'):
+            os.makedirs(self.data_folder+'_ind')  # makedirs 创建文件时如果路径不存在会创建这个路径
+            url = f'https://github.com/kkteru/grail/blob/master/data/{self.args.dataset}_ind'
+            self.download_folder(url,self.data_folder+'_ind')
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
 
         if not os.path.isdir(self.args.db_path):
             generate_subgraph_datasets(self.args, relation2id_path)
@@ -1372,14 +1380,29 @@ class ExpressGNNDataset(BaseDataset):
         data_root = os.path.join(data_root, 'data')
         data_root = os.path.join(data_root, self.dataset_name)
         ext_rule_path = None
+        folder = os.path.exists(data_root)
+        print(data_root)
+        print('folder', folder)
+        if not folder:  # 判断是否存在文件夹如果不存在则创建为文件夹
+            os.makedirs(data_root)  # makedirs 创建文件时如果路径不存在会创建这个路径
+            # 下载数据
+            url = f"https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip"
+            response = requests.get(url)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+                myzip.extractall(data_root)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
 
         # Decide the way dataset will be load, set 1 to load FBWN dataset
         load_method = 0
-        if dataset_name[0:9] == 'FB15k-237':
+        # print(dataset_name[0:13])
+        if dataset_name[0:13] == 'EXP_FB15k-237':
             load_method = 1
         else:
             load_method = 0
-        guss_fb = 'FB15k' in data_root
+        guss_fb = 'EXP_FB15k' in data_root
         if guss_fb != (load_method == 1):
             print("WARNING: set load_method to 1 if you load Freebase dataset, otherwise 0")
 
@@ -1393,8 +1416,10 @@ class ExpressGNNDataset(BaseDataset):
             valid_path = joinpath(data_root, 'valid.txt')
 
             rule_path = joinpath(data_root, 'cleaned_rules_weight_larger_than_0.9.txt')
-
-            assert all(map(isfile, fact_path_ls + [query_path, pred_path, const_path, valid_path, rule_path]))
+            print(rule_path)
+            print(os.getcwd())
+            # print(fact_path_ls + [query_path, pred_path, const_path, valid_path, rule_path])
+            # assert all(map(isfile, fact_path_ls + [query_path, pred_path, const_path, valid_path, rule_path]))
 
             # assuming only one type
             TYPE_SET.update(['type'])

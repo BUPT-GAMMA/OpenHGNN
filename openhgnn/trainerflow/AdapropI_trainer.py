@@ -51,6 +51,21 @@ class AdapropITrainer(BaseFlow):
             params['lr'], params['decay_rate'], params["lamb"], params['hidden_dim'], params['init_dim'], params[
                 'attn_dim'], params['n_layer'], params['n_batch'], params['dropout'], params['act'], params['topk'], \
             params['increase'] = 0.0005, 0.9968, 0.000081, 32, 32, 5, 3, 100, 0.4137, 'relu', 100, True
+        if 'fb237_v2' in args.data_path:
+            params['lr'], params['decay_rate'], params["lamb"], params['hidden_dim'], params['init_dim'], params[
+                'attn_dim'], params['n_layer'], params['n_batch'], params['dropout'], params['act'], params['topk'], \
+            params['increase'] = 0.0087, 0.9937, 0.000025, 16, 16, 5, 5, 20, 0.3265, 'relu', 200, True
+
+        if 'fb237_v3' in args.data_path:
+            params['lr'], params['decay_rate'], params["lamb"], params['hidden_dim'], params['init_dim'], params[
+                'attn_dim'], params['n_layer'], params['n_batch'], params['dropout'], params['act'], params['topk'], \
+            params['increase'] = 0.0079, 0.9934, 0.000187, 48, 48, 5, 7, 20, 0.4632, 'relu', 200, True
+
+        if 'fb237_v4' in args.data_path:
+            params['lr'], params['decay_rate'], params["lamb"], params['hidden_dim'], params['init_dim'], params[
+                'attn_dim'], params['n_layer'], params['n_batch'], params['dropout'], params['act'], params['topk'], \
+            params['increase'] = 0.0010, 0.9997, 0.000186, 16, 16, 5, 7, 50, 0.4793, 'relu', 500, True
+
         print(params)
 
         np.random.seed(args.seed)
@@ -82,7 +97,9 @@ class AdapropITrainer(BaseFlow):
             best_tmrr = 0
             early_stop = 0
             for epoch in range(30):
+                print("epoch:"+str(epoch))
                 mrr, t_mrr, out_str = model.train_batch()
+                print(mrr, t_mrr, out_str)
                 if mrr > best_mrr:
                     best_mrr = mrr
                     best_tmrr = t_mrr

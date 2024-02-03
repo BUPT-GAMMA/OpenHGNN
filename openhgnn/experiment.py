@@ -66,13 +66,14 @@ class Experiment(object):
         'lightGCN': 'lightGCN_trainer',
         'Grail': 'Grail_trainer',
         'ComPILE': 'ComPILE_trainer',
-        'Adaprop':'AdapropT_trainer',
+        'AdapropT':'AdapropT_trainer',
         'AdapropI':'AdapropI_trainer',
         'LTE':'LTE_trainer',
         'SACN':'SACN_trainer',
         'ExpressGNN': 'ExpressGNN_trainer',
         'NBF':'NBF_trainer',
         'Ingram': 'Ingram_trainer',
+        'DisenKGAT': 'DisenKGAT_trainer'
     }
     immutable_params = ['model', 'dataset', 'task']
 

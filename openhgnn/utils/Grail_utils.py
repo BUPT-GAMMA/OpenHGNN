@@ -129,7 +129,7 @@ def links2subgraphs(A, graphs, params, max_label_value=None):
     for split_name, split in graphs.items():
         links_length += (len(split['pos']) + len(split['neg'])) * 2
     map_size = links_length * BYTES_PER_DATUM
-
+    map_size = int(map_size)+1
     env = lmdb.open(params.db_path, map_size=map_size, max_dbs=6)
 
     def extraction_helper(A, links, g_labels, split_env):

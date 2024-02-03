@@ -16,7 +16,7 @@ class AdapropTTrainer(BaseFlow):
         np.random.seed(args.seed)
         torch.manual_seed(args.seed)
         torch.set_num_threads(8)
-        args.dataset="Adaprop"
+        args.dataset="AdapropT"
         dataset = opts.data_path
         dataset = dataset.split('/')
         if len(dataset[-1]) > 0:
@@ -28,7 +28,7 @@ class AdapropTTrainer(BaseFlow):
         print('==> gpu:', args.gpu)
         self.task=build_task(args)
         self.loader=self.task.dataloader
-        self.model_name='Adaprop'
+        self.model_name='AdapropT'
         args.n_ent = self.loader.n_ent
         args.n_rel = self.loader.n_rel
         self.args=args

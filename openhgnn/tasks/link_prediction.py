@@ -36,7 +36,7 @@ class LinkPrediction(BaseTask):
         if args.model=="Grail" or args.model =="ComPILE":
             self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger,args = args)
             return
-        if(args.dataset=='Adaprop'):
+        if(args.dataset=='AdapropT'):
             self.dataloader = build_dataset(args.dataset, 'Adaprop', logger=self.logger,args = args)
             return
         if(args.dataset=='AdapropI'):
@@ -50,7 +50,7 @@ class LinkPrediction(BaseTask):
             return
         self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger, args=args)
         # self.evaluator = Evaluator()
-        if args.model == 'ExpressGNN' or args.model == 'RedGNN' or args.model == 'RedGNNT':
+        if args.model == 'ExpressGNN' or args.model == 'RedGNN' or args.model == 'RedGNNT' or args.model == 'DisenKGAT':
             return
         self.train_hg, self.val_hg, self.test_hg, self.neg_val_graph, self.neg_test_graph = self.dataset.get_split( )
         self.pred_hg = getattr(self.dataset, 'pred_graph', None)

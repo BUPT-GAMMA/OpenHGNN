@@ -59,7 +59,9 @@ common = ['Cora', 'Citeseer', 'Pubmed', 'Texas', 'Cornell']
 hgbl_datasets = ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']
 hgbn_datasets = ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']
 
-kg_lp_datasets = ['wn18', 'FB15k', 'FB15k-237', 'FB15k-237_data_ratio_0', 'kinship', 'uw_cse']
+kg_lp_datasets = ['wn18', 'FB15k', 'EXP_FB15k-237', 'EXP_FB15k-237_data_ratio_0', 'EXP_FB15k-237_data_ratio_0',
+                  'EXP_FB15k-237_data_ratio_0.1', 'EXP_FB15k-237_data_ratio_0.2', 'EXP_FB15k-237_data_ratio_zero_shot',
+                  'kinship', 'uw_cse']
 
 kg_sub_datasets = [f'fb237_v{i}' for i in range(1, 5)]
 kg_sub_datasets += [f'nell_v{i}' for i in range(1, 5)]
@@ -89,7 +91,7 @@ def build_dataset(dataset, task, *args, **kwargs):
         test_dataloader = get_data_loader("test", batch_size=args[0])
         return train_dataloader, test_dataloader
     #-------------------更改部分-------------------
-    if dataset == 'Adaprop':
+    if dataset == 'AdapropT':
         dataload=AdapropTDataLoader(args)
         return dataload
     # -------------------更改部分-------------------

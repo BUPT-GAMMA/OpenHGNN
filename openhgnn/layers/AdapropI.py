@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from torch_scatter import scatter
+from ..utils.utils import scatter
 
 
 class GNNLayer(torch.nn.Module):
