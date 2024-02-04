@@ -2,7 +2,7 @@ import importlib
 from dgl.data import DGLDataset
 from .base_dataset import BaseDataset
 from .utils import load_acm, load_acm_raw, generate_random_hg
-from .academic_graph import AcademicDataset
+from .academic_graph import AcademicDataset,IMDB4MAGNN_Dataset
 from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
 from .gtn_dataset import *
