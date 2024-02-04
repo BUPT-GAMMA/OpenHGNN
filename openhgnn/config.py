@@ -241,6 +241,11 @@ class Config(object):
             self.ff_layer = conf.getint('NARS', 'ff_layer')
 
         elif self.model_name == 'MAGNN':
+            
+            self.graph_address = ''
+            self.user_name = ''
+            self.password = ''
+
             self.lr = conf.getfloat("MAGNN", "learning_rate")
             self.weight_decay = conf.getfloat("MAGNN", "weight_decay")
             self.seed = conf.getint("MAGNN", "seed")
