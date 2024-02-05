@@ -169,6 +169,14 @@ cd OpenHGNN
 pip install .
 ```
 
+
+
+**5. 安装 gdbi:** 
+
+```bash
+pip install git+https://github.com/xy-Ji/gdbi.git
+```
+
 #### 在已有的评测上运行已有的基线模型 [数据集](./openhgnn/dataset/#Dataset)
 
 ```bash
