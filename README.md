@@ -178,6 +178,11 @@ pip install git+https://github.com/xy-Ji/gdbi.git
 ```
 
 - 使用者需要安装neo4j,nebula,atlas,gstore的第三方包，并且在config.py文件中修改graph_address,user_name和password，以便能访问数据库，并调用gdbi.get_graph方法获得对应的图数据集。
+- 示例: 
+
+```bash
+python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_config --use_database
+```
 
 
 #### 在已有的评测上运行已有的基线模型 [数据集](./openhgnn/dataset/#Dataset)
