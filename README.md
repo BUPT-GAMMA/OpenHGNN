@@ -177,16 +177,17 @@ pip install .
 pip install git+https://github.com/xy-Ji/gdbi.git
 ```
 
-- 使用者需要安装neo4j,nebula等第三方库，并且在config.py文件中修改graph_address,user_name和password，以便能访问数据库，并调用gdbi.get_graph方法获得对应的图数据集
+- 使用者需要安装neo4j,nebula,atlas,gstore的第三方包，并且在config.py文件中修改graph_address,user_name和password，以便能访问数据库，并调用gdbi.get_graph方法获得对应的图数据集。
+
 
 #### 在已有的评测上运行已有的基线模型 [数据集](./openhgnn/dataset/#Dataset)
 
 ```bash
-python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --load_from_pretrained
+python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --load_from_pretrained --use_database
 ```
 
 使用方法: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
-               [--gpu GPU] [--use_best_config]
+               [--gpu GPU] [--use_best_config][--use_database]
 
 *可选参数*:
 
@@ -203,6 +204,8 @@ python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 ``--use_best_config``    use_best_config 意味着你使用该模型在该数据集下最优的配置，如果你想要设定不同的超参数,请手动修改 [配置文件](./openhgnn/config.ini)。使用最佳配置会覆盖配置文件中的参数。
 
 ``--load_from_pretrained`` 从默认检查点加载模型。
+
+``--use_database`` 从数据库加载数据集
 
 示例: 
 
