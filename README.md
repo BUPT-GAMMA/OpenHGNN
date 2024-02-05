@@ -177,6 +177,8 @@ pip install .
 pip install git+https://github.com/xy-Ji/gdbi.git
 ```
 
+- 使用者需要安装neo4j,nebula等第三方库，并且在config.py文件中修改graph_address,user_name和password，以便能访问数据库，并调用gdbi.get_graph方法获得对应的图数据集
+
 #### 在已有的评测上运行已有的基线模型 [数据集](./openhgnn/dataset/#Dataset)
 
 ```bash
