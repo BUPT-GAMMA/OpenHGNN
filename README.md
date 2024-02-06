@@ -171,24 +171,24 @@ pip install .
 
 
 
-**5. 安装 gdbi:** 
+**5. 安装 gdbi(可选):** 
 
+- 安装gdbi
 ```bash
 pip install git+https://github.com/xy-Ji/gdbi.git
 ```
 
-- 使用者需要安装neo4j,nebula,atlas,gstore的第三方包，并且在config.py文件中修改graph_address,user_name和password，以便能访问数据库，并调用gdbi.get_graph方法获得对应的图数据集。
-- 示例: 
-
+- 安装图数据库
 ```bash
-python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_config --use_database
+pip install neo4j==5.16.0
+pip install nebula3-python==3.4.0
 ```
 
 
 #### 在已有的评测上运行已有的基线模型 [数据集](./openhgnn/dataset/#Dataset)
 
 ```bash
-python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --load_from_pretrained --use_database
+python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --load_from_pretrained 
 ```
 
 使用方法: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
@@ -222,6 +222,7 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 请参考 [文档](https://openhgnn.readthedocs.io/en/latest/index.html) 了解更多的基础和进阶的使用方法。
 
+
 #### 使用TensorBoard可视化训练结果
 ```bash
 tensorboard --logdir=./openhgnn/output/{model_name}/
@@ -230,7 +231,31 @@ tensorboard --logdir=./openhgnn/output/{model_name}/
 ```bash
 tensorboard --logdir=./openhgnn/output/RGCN/
 ```
+
 **提示**:需要先运行一次你想要可视化的模型，才能用以上命令可视化结果。
+
+#### 使用gdbi访问数据库中的标准图数据
+以neo4j数据库和imdb数据集为例
+- 构造图数据集的csv文件(节点级:A.csv，连接级:A_P.csv)
+- 导入csv文件到图数据库中
+```bash
+LOAD CSV WITH HEADERS FROM "file:///data.csv" AS row
+CREATE (:graphname_labelname {ID: row.ID, ... });
+```
+- 在config.py文件中添加访问图数据库所需的用户信息
+```python
+self.graph_address = [graph_address]
+self.user_name = [user_name]
+self.password = [password]
+```
+
+- 示例: 
+
+```bash
+python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_config --use_database
+```
+
+
 
 ## [模型](./openhgnn/models/#Model)
 
