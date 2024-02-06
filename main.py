@@ -16,6 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', '-g', default='-1', type=int, help='-1 means cpu')
     parser.add_argument('--use_best_config', action='store_true', help='will load utils.best_config')
     parser.add_argument('--load_from_pretrained', action='store_true', help='load model from the checkpoint')
+    parser.add_argument('--use_database',action='store_true',help = 'use database')
     args = parser.parse_args()
 
     experiment = Experiment(model=args.model, dataset=args.dataset, task=args.task, gpu=args.gpu,
