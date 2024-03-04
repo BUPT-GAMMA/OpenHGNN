@@ -218,9 +218,9 @@ class HIN_NodeClassification(NodeClassificationDataset):
             self.in_dim = g.ndata['h'][category].shape[1]
 
         elif name_dataset == 'imdb4MAGNN':
-
-            if self.args.use_database == True:
-                dataset = IMDB4MAGNN_Dataset(name='imdb4MAGNN',args = self.args)
+            if self.args:
+                if self.args.use_database == True:
+                    dataset = IMDB4MAGNN_Dataset(name='imdb4MAGNN',args = self.args)
             else:
                 dataset = AcademicDataset(name='imdb4MAGNN', raw_dir='')
 
