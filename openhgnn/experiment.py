@@ -96,9 +96,7 @@ class Experiment(object):
         self.config.use_distributed = kwargs['use_distributed']
         kwargs.pop('use_distributed')
         if self.config.use_distributed:
-            gpu_list = kwargs['gpu_list'].split(',')
-            self.config.gpu = [int(gpu) for gpu in gpu_list]
-            kwargs.pop('gpu_list')
+            self.config.gpu = [i for i in range(torch.cuda.device_count())]
         else:
             self.config.gpu = gpu
         self.config.use_best_config = use_best_config
@@ -126,13 +124,13 @@ class Experiment(object):
         num_gpus=len(self.config.gpu)
         torch.distributed.init_process_group(
             backend="gloo",
-            init_method=f"tcp://127.0.0.1:{self.config.port}",
+            init_method=f"tcp://127.0.0.1:12391",
             world_size=num_gpus,
             rank=proc_id,
         )
         self.config.gpu = self.config.gpu[proc_id]
 
-        if self.config.gpu == -1:
+        if self.config.gpu < 0:
             self.config.device = torch.device('cpu')
         elif self.config.gpu >= 0:
             if not torch.cuda.is_available( ):
