@@ -5,7 +5,7 @@ colorama
 igraph
 torch>=2.1.0
 -f https://data.dgl.ai/wheels/repo.html
-dgl>=2.0.0
+dgl>=1.1.0
 TensorBoard>=2.0.0
 lmdb
 rdflib
