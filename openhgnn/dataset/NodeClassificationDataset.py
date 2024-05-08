@@ -10,7 +10,7 @@ import scipy.sparse as sp
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
 from . import BaseDataset, register_dataset
-from . import AcademicDataset, HGBDataset, OHGBDataset
+from . import AcademicDataset, HGBDataset, OHGBDataset,IMDB4MAGNN_Dataset
 from .utils import sparse_mx_to_torch_sparse_tensor
 from ..utils import add_reverse_edges
 
@@ -181,7 +181,14 @@ class HIN_NodeClassification(NodeClassificationDataset):
 
     def __init__(self, dataset_name, *args, **kwargs):
         super(HIN_NodeClassification, self).__init__(*args, **kwargs)
+
+        if 'args' in kwargs:  
+            self.args = kwargs['args']
+        else:
+            self.args = None
+
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
+
 
     def load_HIN(self, name_dataset):
         if name_dataset == 'demo_graph':
@@ -211,7 +218,12 @@ class HIN_NodeClassification(NodeClassificationDataset):
             self.in_dim = g.ndata['h'][category].shape[1]
 
         elif name_dataset == 'imdb4MAGNN':
-            dataset = AcademicDataset(name='imdb4MAGNN', raw_dir='')
+            if self.args:
+                if self.args.use_database == True:
+                    dataset = IMDB4MAGNN_Dataset(name='imdb4MAGNN',args = self.args)
+            else:
+                dataset = AcademicDataset(name='imdb4MAGNN', raw_dir='')
+
             category = 'M'
             g = dataset[0].long()
             num_classes = 3

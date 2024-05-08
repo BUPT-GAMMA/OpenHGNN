@@ -2,7 +2,7 @@ import importlib
 from dgl.data import DGLDataset
 from .base_dataset import BaseDataset
 from .utils import load_acm, load_acm_raw, generate_random_hg
-from .academic_graph import AcademicDataset
+from .academic_graph import AcademicDataset,IMDB4MAGNN_Dataset
 from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
 from .gtn_dataset import *
@@ -115,6 +115,10 @@ def build_dataset(dataset, task, *args, **kwargs):
                      'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB',
                      'amazon', 'yelp4HGSL']:
         _dataset = 'hin_' + task
+    elif dataset in ['imdb4MAGNN']:
+        _dataset = 'hin_' + task
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],
+                                          args = kwargs['args'] )
     elif dataset in ohgbn_datasets + ohgbl_datasets:
         _dataset = 'ohgb_' + task
     elif dataset in ['ogbn-mag']:

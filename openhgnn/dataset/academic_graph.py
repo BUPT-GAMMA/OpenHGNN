@@ -9,6 +9,130 @@ import dgl
 import torch as th
 
 
+
+# get dataset from database
+class IMDB4MAGNN_Dataset(DGLDataset):
+
+    def __init__(self, name, args, raw_dir=None, force_reload=False, verbose=True):
+        assert name in ['imdb4MAGNN', ]
+
+        self.args = args 
+        super(IMDB4MAGNN_Dataset, self).__init__(name=name,
+                                        url=None,
+                                        raw_dir=None, 
+                                        force_reload=force_reload,
+                                        verbose=verbose)
+
+
+    def download(self):
+
+        from gdbi import NodeExportConfig, EdgeExportConfig, Neo4jInterface, NebulaInterface
+        node_export_config = [
+            NodeExportConfig('A', ['attribute'] ),
+            NodeExportConfig('M', ['attribute'], ['label']), 
+            NodeExportConfig('D', ['attribute'])  
+        ]
+
+        edge_export_config = [
+            EdgeExportConfig('A_M', ('A','M')),
+            EdgeExportConfig('M_A', ('M','A')),
+            EdgeExportConfig('M_D', ('M','D')),
+            EdgeExportConfig('D_M', ('D','M'))    
+        ]
+
+        # neo4j 
+        graph_database = Neo4jInterface()
+
+        # # nebula 
+        # graph_database = NebulaInterface()
+
+        graph_address = self.args.graph_address
+        user_name = self.args.user_name
+        password = self.args.password
+
+        conn = graph_database.GraphDBConnection(graph_address, user_name, password)
+        self.graph = graph_database.get_graph(conn, 'imdb4MAGNN', node_export_config, edge_export_config)
+
+
+        
+
+    def process(self):
+
+        graph = self.graph
+        cano_edges = {}
+        for edge_type in graph['edge_index_dict'].keys():  # 'A_M'
+            src_type = edge_type[0] # A
+            dst_type = edge_type[-1]    # M
+            edge_type_2 = src_type + '-' + dst_type # A-M
+            
+            cano_edge_type = (src_type,edge_type_2,dst_type)  # ('A','A-M','M')
+            u,v = graph['edge_index_dict'][edge_type][0] ,graph['edge_index_dict'][edge_type][1] 
+
+            cano_edges[cano_edge_type] = (u,v)
+
+
+
+        hg = dgl.heterograph(cano_edges)
+
+        for node_type in graph['X_dict'].keys() :   
+            hg.nodes[node_type].data['h'] = graph['X_dict'][node_type]  
+            if node_type == 'M':
+                hg.nodes[node_type].data['labels'] = graph['Y_dict'][node_type]  
+
+        import torch
+
+
+
+        num_nodes = 4278
+        random_indices = torch.randperm(num_nodes)
+
+        num_train = 400
+        num_val = 400
+        num_test = 3478
+
+        train_mask = torch.zeros(num_nodes, dtype=torch.int)
+        train_mask[random_indices[:num_train]] = 1
+        val_mask = torch.zeros(num_nodes, dtype=torch.int)
+        val_mask[random_indices[num_train:num_train+num_val]] = 1
+        test_mask = torch.zeros(num_nodes, dtype=torch.int)
+        test_mask[random_indices[num_train+num_val:]] = 1
+
+        assert torch.sum(train_mask * val_mask) == 0
+        assert torch.sum(train_mask * test_mask) == 0
+        assert torch.sum(val_mask * test_mask) == 0
+
+        hg.nodes['M'].data['train_mask'] = train_mask
+        hg.nodes['M'].data['val_mask'] = val_mask
+        hg.nodes['M'].data['test_mask'] = test_mask
+
+        self._g = hg
+
+ 
+
+
+    def __getitem__(self, idx):
+        # get one example by index
+        assert idx == 0, "This dataset has only one graph" 
+        return self._g
+
+    def __len__(self):
+        return 1
+
+
+    def save(self):
+        pass
+
+    def load(self):
+        pass
+
+    def has_cache(self):
+        pass
+
+
+
+
+
+
 class AcademicDataset(DGLDataset):
 
     _prefix = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/'

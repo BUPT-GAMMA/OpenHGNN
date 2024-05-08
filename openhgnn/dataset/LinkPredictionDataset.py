@@ -202,6 +202,9 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         elif dataset_name == 'amazon4SLICE':
             dataset = AcademicDataset(name='amazon4SLICE', raw_dir='')
             g = dataset[0].long( )
+            # self.target_link = [('product', 'product-1-product', 'product'),
+            #                     ('product', 'product-2-product', 'product')]
+            self.target_link = [('product', 'product-1-product', 'product')]
         elif dataset_name == 'MTWM':
             dataset = AcademicDataset(name='MTWM', raw_dir='')
             g = dataset[0].long( )
