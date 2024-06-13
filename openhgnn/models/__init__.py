@@ -105,6 +105,7 @@ SUPPORTED_MODELS = {
     'DiffMG': 'openhgnn.models.DiffMG',
     'MeiREC': 'openhgnn.models.MeiREC',
     'HGNN_AC': 'openhgnn.models.HGNN_AC',
+    'KACL': 'openhgnn.models.KACL',
     'AEHCL': 'openhgnn.models.AEHCL',
     'KGAT': 'openhgnn.models.KGAT',
     'SHGP': 'openhgnn.models.ATT_HGCN',
@@ -125,6 +126,7 @@ SUPPORTED_MODELS = {
     'RedGNNT': 'openhgnn.models.RedGNNT',
 }
 
+from .KACL import KACL
 from .HGCL import HGCL
 from .CompGCN import CompGCN
 from .HetGNN import HetGNN
