@@ -125,7 +125,6 @@ class ExpressGNNTrainer(BaseFlow):
 
         
         self.model_name = args.model
-        args.device = "cuda"
         self.device = args.device
         self.dataset = self.task.dataset
         self.args.rule_list = self.dataset.rule_ls
@@ -362,6 +361,7 @@ class ExpressGNNTrainer(BaseFlow):
                         break
 
             # ======================= generate rank list =======================
+            print("rank_list", current_epoch)
             node_embeds = self.model.gcn_forward(self.dataset)
 
             pbar = tqdm(total=len(self.dataset.test_fact_ls))
@@ -402,9 +402,6 @@ class ExpressGNNTrainer(BaseFlow):
 
                 pbar.update()
             pbar.close()
-            rrank = 1
-            cnt = 1
-            hits = 1
             self.logger.info('\ncomplete:\n mmr %.4f\n' % (rrank / cnt) + 'hits %.4f\n' % (hits / cnt))
             for pred_name in self.kg.PRED_DICT:
                 if cnt_pred[pred_name] == 0:

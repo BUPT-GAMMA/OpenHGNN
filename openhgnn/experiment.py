@@ -50,6 +50,7 @@ class Experiment(object):
         'TransR': 'TransX_trainer',
         'TransD': 'TransX_trainer',
         'RedGNN': 'RedGNN_trainer',
+        'RedGNNT': 'RedGNNT_trainer',
         'GIE': 'TransX_trainer',
         'HAN': {
             'node_classification': 'han_nc_trainer',
@@ -64,9 +65,16 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
+        'Grail': 'Grail_trainer',
+        'ComPILE': 'ComPILE_trainer',
+        'AdapropT':'AdapropT_trainer',
+        'AdapropI':'AdapropI_trainer',
+        'LTE':'LTE_trainer',
+        'SACN':'SACN_trainer',
         'ExpressGNN': 'ExpressGNN_trainer',
         'NBF':'NBF_trainer',
         'Ingram': 'Ingram_trainer',
+        'DisenKGAT': 'DisenKGAT_trainer'
     }
     immutable_params = ['model', 'dataset', 'task']
 
@@ -78,6 +86,7 @@ class Experiment(object):
                  hpo_trials: int = 100,
                  output_dir: str = "./openhgnn/output",
                  conf_path: str = default_conf_path,
+                 use_database:bool = False,
                  **kwargs):
         self.config = Config(file_path=conf_path, model=model, dataset=dataset, task=task, gpu=gpu)
         self.config.model = model
@@ -85,6 +94,7 @@ class Experiment(object):
         self.config.task = task
         self.config.gpu = gpu
         self.config.use_best_config = use_best_config
+        self.config.use_database = use_database
         # self.config.use_hpo = use_hpo
         self.config.load_from_pretrained = load_from_pretrained
         self.config.output_dir = os.path.join(output_dir, self.config.model_name)

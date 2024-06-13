@@ -202,6 +202,9 @@ class HIN_LinkPrediction(LinkPredictionDataset):
         elif dataset_name == 'amazon4SLICE':
             dataset = AcademicDataset(name='amazon4SLICE', raw_dir='')
             g = dataset[0].long( )
+            # self.target_link = [('product', 'product-1-product', 'product'),
+            #                     ('product', 'product-2-product', 'product')]
+            self.target_link = [('product', 'product-1-product', 'product')]
         elif dataset_name == 'MTWM':
             dataset = AcademicDataset(name='MTWM', raw_dir='')
             g = dataset[0].long( )
@@ -467,7 +470,6 @@ class OHGB_LinkPrediction(LinkPredictionDataset):
             self.target_link_r = [('BOOK', 'BOOK-and-BOOK-rev', 'BOOK')]
         self.g = g
 
-
 def build_graph_from_triplets(num_nodes, num_rels, triplets):
     """ Create a DGL graph. The graph is bidirectional because RGCN authors
         use reversed relations.
@@ -500,7 +502,32 @@ class KG_RedDataset(LinkPredictionDataset):
         super(KG_RedDataset, self).__init__(*args, **kwargs)
         self.trans_dir = os.path.join('openhgnn/dataset/data', dataset_name)
         self.ind_dir = self.trans_dir + '_ind'
-        print(os.getcwd())
+
+        folder = os.path.exists(self.trans_dir)
+        if not folder:
+            os.makedirs(self.trans_dir)
+            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v1.zip"
+            response = requests.get(url)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+                myzip.extractall(self.trans_dir)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
+
+        folder = os.path.exists(self.ind_dir)
+        if not folder:
+            os.makedirs(self.ind_dir)
+            # 下载数据
+            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/fb237_v1_ind.zip"
+            response = requests.get(url)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+                myzip.extractall(self.ind_dir)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
+
         with open(os.path.join(self.trans_dir, 'entities.txt')) as f:
             self.entity2id = dict()
             for line in f:
@@ -682,6 +709,183 @@ class KG_RedDataset(LinkPredictionDataset):
                 filters[(h, r)].add(t)
         return filters
 
+
+@register_dataset('kg_subT_link_prediction')
+class KG_RedTDataset(LinkPredictionDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(KG_RedTDataset, self).__init__(*args, **kwargs)
+        self.task_dir = os.path.join('openhgnn/dataset/data', dataset_name)
+        task_dir = self.task_dir
+        folder = os.path.exists(self.task_dir)
+        if not folder:
+            os.makedirs(self.task_dir)
+            url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/family.zip"
+            response = requests.get(url)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+                myzip.extractall(self.task_dir)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
+
+        with open(os.path.join(task_dir, 'entities.txt')) as f:
+            self.entity2id = dict()
+            n_ent = 0
+            for line in f:
+                entity = line.strip()
+                self.entity2id[entity] = n_ent
+                n_ent += 1
+
+        with open(os.path.join(task_dir, 'relations.txt')) as f:
+            self.relation2id = dict()
+            n_rel = 0
+            for line in f:
+                relation = line.strip()
+                self.relation2id[relation] = n_rel
+                n_rel += 1
+
+        self.n_ent = n_ent
+        self.n_rel = n_rel
+
+        self.filters = defaultdict(lambda: set())
+
+        self.fact_triple = self.read_triples('facts.txt')
+        self.train_triple = self.read_triples('train.txt')
+        self.valid_triple = self.read_triples('valid.txt')
+        self.test_triple = self.read_triples('test.txt')
+
+        self.fact_data = self.double_triple(self.fact_triple)
+        self.train_data = np.array(self.double_triple(self.train_triple))
+        self.valid_data = self.double_triple(self.valid_triple)
+        self.test_data = self.double_triple(self.test_triple)
+
+        self.load_graph(self.fact_data)
+        self.load_test_graph(self.double_triple(self.fact_triple) + self.double_triple(self.train_triple))
+
+        self.valid_q, self.valid_a = self.load_query(self.valid_data)
+        self.test_q, self.test_a = self.load_query(self.test_data)
+
+        self.n_train = len(self.train_data)
+        self.n_valid = len(self.valid_q)
+        self.n_test = len(self.test_q)
+
+        for filt in self.filters:
+            self.filters[filt] = list(self.filters[filt])
+
+        print('n_train:', self.n_train, 'n_valid:', self.n_valid, 'n_test:', self.n_test)
+
+    def read_triples(self, filename):
+        triples = []
+        with open(os.path.join(self.task_dir, filename)) as f:
+            for line in f:
+                h, r, t = line.strip().split()
+                h, r, t = self.entity2id[h], self.relation2id[r], self.entity2id[t]
+                triples.append([h, r, t])
+                self.filters[(h, r)].add(t)
+                self.filters[(t, r + self.n_rel)].add(h)
+        return triples
+
+    def double_triple(self, triples):
+        new_triples = []
+        for triple in triples:
+            h, r, t = triple
+            new_triples.append([t, r + self.n_rel, h])
+        return triples + new_triples
+
+    def load_graph(self, triples):
+        idd = np.concatenate([np.expand_dims(np.arange(self.n_ent), 1), 2 * self.n_rel * np.ones((self.n_ent, 1)),
+                              np.expand_dims(np.arange(self.n_ent), 1)], 1)
+
+        self.KG = np.concatenate([np.array(triples), idd], 0)
+        self.n_fact = len(self.KG)
+        self.M_sub = csr_matrix((np.ones((self.n_fact,)), (np.arange(self.n_fact), self.KG[:, 0])),
+                                shape=(self.n_fact, self.n_ent))
+
+    def load_test_graph(self, triples):
+        idd = np.concatenate([np.expand_dims(np.arange(self.n_ent), 1), 2 * self.n_rel * np.ones((self.n_ent, 1)),
+                              np.expand_dims(np.arange(self.n_ent), 1)], 1)
+
+        self.tKG = np.concatenate([np.array(triples), idd], 0)
+        self.tn_fact = len(self.tKG)
+        self.tM_sub = csr_matrix((np.ones((self.tn_fact,)), (np.arange(self.tn_fact), self.tKG[:, 0])),
+                                 shape=(self.tn_fact, self.n_ent))
+
+    def load_query(self, triples):
+        triples.sort(key=lambda x: (x[0], x[1]))
+        trip_hr = defaultdict(lambda: list())
+
+        for trip in triples:
+            h, r, t = trip
+            trip_hr[(h, r)].append(t)
+
+        queries = []
+        answers = []
+        for key in trip_hr:
+            queries.append(key)
+            answers.append(np.array(trip_hr[key]))
+        return queries, answers
+
+    def get_neighbors(self, nodes, mode='train'):
+        if mode == 'train':
+            KG = self.KG
+            M_sub = self.M_sub
+        else:
+            KG = self.tKG
+            M_sub = self.tM_sub
+
+        # nodes: n_node x 2 with (batch_idx, node_idx)
+        node_1hot = csr_matrix((np.ones(len(nodes)), (nodes[:, 1], nodes[:, 0])), shape=(self.n_ent, nodes.shape[0]))
+        edge_1hot = M_sub.dot(node_1hot)
+        edges = np.nonzero(edge_1hot)
+        sampled_edges = np.concatenate([np.expand_dims(edges[1], 1), KG[edges[0]]],
+                                       axis=1)  # (batch_idx, head, rela, tail)
+        sampled_edges = torch.LongTensor(sampled_edges).cuda()
+
+        # index to nodes
+        head_nodes, head_index = torch.unique(sampled_edges[:, [0, 1]], dim=0, sorted=True, return_inverse=True)
+        tail_nodes, tail_index = torch.unique(sampled_edges[:, [0, 3]], dim=0, sorted=True, return_inverse=True)
+
+        sampled_edges = torch.cat([sampled_edges, head_index.unsqueeze(1), tail_index.unsqueeze(1)], 1)
+
+        mask = sampled_edges[:, 2] == (self.n_rel * 2)
+        _, old_idx = head_index[mask].sort()
+        old_nodes_new_idx = tail_index[mask][old_idx]
+
+        return tail_nodes, sampled_edges, old_nodes_new_idx
+
+    def get_batch(self, batch_idx, steps=2, data='train'):
+        if data == 'train':
+            return np.array(self.train_data)[batch_idx]
+        if data == 'valid':
+            query, answer = np.array(self.valid_q), self.valid_a
+        if data == 'test':
+            query, answer = np.array(self.test_q), self.test_a
+
+        subs = []
+        rels = []
+        objs = []
+
+        subs = query[batch_idx, 0]
+        rels = query[batch_idx, 1]
+        objs = np.zeros((len(batch_idx), self.n_ent))
+        for i in range(len(batch_idx)):
+            objs[i][answer[batch_idx[i]]] = 1
+        return subs, rels, objs
+
+    def shuffle_train(self, ):
+        fact_triple = np.array(self.fact_triple)
+        train_triple = np.array(self.train_triple)
+        all_triple = np.concatenate([fact_triple, train_triple], axis=0)
+        n_all = len(all_triple)
+        rand_idx = np.random.permutation(n_all)
+        all_triple = all_triple[rand_idx]
+
+        # increase the ratio of fact_data, e.g., 3/4->4/5, can increase the performance
+        self.fact_data = self.double_triple(all_triple[:n_all * 3 // 4].tolist())
+        self.train_data = np.array(self.double_triple(all_triple[n_all * 3 // 4:].tolist()))
+        self.n_train = len(self.train_data)
+        self.load_graph(self.fact_data)
+
 @register_dataset('kg_link_prediction')
 class KG_LinkPrediction(LinkPredictionDataset):
     """
@@ -804,6 +1008,258 @@ class KG_LinkPrediction(LinkPredictionDataset):
         hg = dgl.heterograph(edge_dict, {self.category: self.num_nodes})
         return hg
 
+import torch
+import struct
+import os
+import json
+import logging
+from scipy.sparse import csc_matrix
+from scipy.special import softmax
+from tqdm import tqdm
+import pickle
+import scipy.sparse as ssp
+import lmdb
+import requests
+import zipfile
+import io
+from torch.utils.data import Dataset
+import networkx as nx
+from ..utils.Grail_utils import *
+class SubGraphDataset(Dataset):
+    def __init__(self, db_path, db_name_pos, db_name_neg, raw_data_paths, included_relations=None,
+                 add_traspose_rels=False, num_neg_samples_per_link=1, use_kge_embeddings=False, dataset='',
+                 kge_model='', file_name=''):
+
+        self.main_env = lmdb.open(db_path, readonly= True, max_dbs=3, lock=False)
+        self.db_pos = self.main_env.open_db(db_name_pos.encode())
+        self.db_neg = self.main_env.open_db(db_name_neg.encode())
+        self.node_features, self.kge_entity2id = get_kge_embeddings(dataset, kge_model) if use_kge_embeddings else (None, None)
+        self.num_neg_samples_per_link = num_neg_samples_per_link
+        self.file_name = file_name
+        self.add_traspose_rels = add_traspose_rels
+
+        ssp_graph, __, __, __, id2entity, id2relation = process_files(raw_data_paths, included_relations)
+        self.num_rels = len(ssp_graph)
+
+        # Add transpose matrices to handle both directions of relations.
+        if add_traspose_rels:
+            ssp_graph_t = [adj.T for adj in ssp_graph]
+            ssp_graph += ssp_graph_t
+
+        # the effective number of relations after adding symmetric adjacency matrices and/or self connections
+        self.aug_num_rels = len(ssp_graph)
+        self.graph = ssp_multigraph_to_dgl(ssp_graph)
+        self.ssp_graph = ssp_graph
+        self.id2entity = id2entity
+        self.id2relation = id2relation
+
+        self.max_n_label = np.array([0, 0])
+        with self.main_env.begin() as txn:
+            #a = txn.get('max_n_label_sub'.encode())
+            #print(a)
+            self.max_n_label[0] = int.from_bytes(txn.get('max_n_label_sub'.encode()), byteorder='little')
+            self.max_n_label[1] = int.from_bytes(txn.get('max_n_label_obj'.encode()), byteorder='little')
+
+            self.avg_subgraph_size = struct.unpack('f', txn.get('avg_subgraph_size'.encode()))
+            self.min_subgraph_size = struct.unpack('f', txn.get('min_subgraph_size'.encode()))
+            self.max_subgraph_size = struct.unpack('f', txn.get('max_subgraph_size'.encode()))
+            self.std_subgraph_size = struct.unpack('f', txn.get('std_subgraph_size'.encode()))
+
+            self.avg_enc_ratio = struct.unpack('f', txn.get('avg_enc_ratio'.encode()))
+            self.min_enc_ratio = struct.unpack('f', txn.get('min_enc_ratio'.encode()))
+            self.max_enc_ratio = struct.unpack('f', txn.get('max_enc_ratio'.encode()))
+            self.std_enc_ratio = struct.unpack('f', txn.get('std_enc_ratio'.encode()))
+
+            self.avg_num_pruned_nodes = struct.unpack('f', txn.get('avg_num_pruned_nodes'.encode()))
+            self.min_num_pruned_nodes = struct.unpack('f', txn.get('min_num_pruned_nodes'.encode()))
+            self.max_num_pruned_nodes = struct.unpack('f', txn.get('max_num_pruned_nodes'.encode()))
+            self.std_num_pruned_nodes = struct.unpack('f', txn.get('std_num_pruned_nodes'.encode()))
+
+        logging.info(f"Max distance from sub : {self.max_n_label[0]}, Max distance from obj : {self.max_n_label[1]}")
+
+        # logging.info('=====================')
+        # logging.info(f"Subgraph size stats: \n Avg size {self.avg_subgraph_size}, \n Min size {self.min_subgraph_size}, \n Max size {self.max_subgraph_size}, \n Std {self.std_subgraph_size}")
+
+        # logging.info('=====================')
+        # logging.info(f"Enclosed nodes ratio stats: \n Avg size {self.avg_enc_ratio}, \n Min size {self.min_enc_ratio}, \n Max size {self.max_enc_ratio}, \n Std {self.std_enc_ratio}")
+
+        # logging.info('=====================')
+        # logging.info(f"# of pruned nodes stats: \n Avg size {self.avg_num_pruned_nodes}, \n Min size {self.min_num_pruned_nodes}, \n Max size {self.max_num_pruned_nodes}, \n Std {self.std_num_pruned_nodes}")
+
+        with self.main_env.begin(db=self.db_pos) as txn:
+            self.num_graphs_pos = int.from_bytes(txn.get('num_graphs'.encode()), byteorder='little')
+        with self.main_env.begin(db=self.db_neg) as txn:
+            self.num_graphs_neg = int.from_bytes(txn.get('num_graphs'.encode()), byteorder='little')
+
+        self.__getitem__(0)
+
+    def __getitem__(self, index):
+        with self.main_env.begin(db=self.db_pos) as txn:
+            str_id = '{:08}'.format(index).encode('ascii')
+            nodes_pos, r_label_pos, g_label_pos, n_labels_pos = deserialize(txn.get(str_id)).values()
+            subgraph_pos = self._prepare_subgraphs(nodes_pos, r_label_pos, n_labels_pos)
+        subgraphs_neg = []
+        r_labels_neg = []
+        g_labels_neg = []
+        with self.main_env.begin(db=self.db_neg) as txn:
+            for i in range(self.num_neg_samples_per_link):
+                str_id = '{:08}'.format(index + i * (self.num_graphs_pos)).encode('ascii')
+                nodes_neg, r_label_neg, g_label_neg, n_labels_neg = deserialize(txn.get(str_id)).values()
+                subgraphs_neg.append(self._prepare_subgraphs(nodes_neg, r_label_neg, n_labels_neg))
+                r_labels_neg.append(r_label_neg)
+                g_labels_neg.append(g_label_neg)
+
+        return subgraph_pos, g_label_pos, r_label_pos, subgraphs_neg, g_labels_neg, r_labels_neg
+
+    def __len__(self):
+        return self.num_graphs_pos
+
+    def _prepare_subgraphs(self, nodes, r_label, n_labels):
+        if not isinstance(self.graph, dgl.DGLGraph):
+            subgraph = dgl.graph(self.graph.subgraph(nodes))
+        else:
+            subgraph = self.graph.subgraph(nodes)
+        #subgraph.edata['type'] = self.graph.edata['type'][self.graph.subgraph(nodes).parent_eid]
+        subgraph.edata['type'] = self.graph.edata['type'][subgraph.edata[dgl.EID]]
+        subgraph.edata['label'] = torch.tensor(r_label * np.ones(subgraph.edata['type'].shape), dtype=torch.long)
+        #print("请输出： ")
+        #print(subgraph)
+        #edges_btw_roots = subgraph.edge_id(0, 1, return_array=True)
+        #edges_btw_roots = subgraph.edge_ids(0, 1)
+        edges_btw_roots = torch.tensor([])
+        try:
+            edges_btw_roots = subgraph.edge_ids(torch.tensor([0]),torch.tensor([1]))
+            # edges_btw_roots = np.array([edges_btw_roots])
+        except:
+            #print("Error")
+            edges_btw_roots = torch.tensor([])
+        edges_btw_roots = edges_btw_roots.numpy()
+        rel_link = np.nonzero(subgraph.edata['type'][edges_btw_roots] == r_label)
+        if rel_link.squeeze().nelement() == 0:
+            subgraph = dgl.add_edges(subgraph, 0, 1)
+            subgraph.edata['type'][-1] = torch.tensor(r_label).type(torch.LongTensor)
+            subgraph.edata['label'][-1] = torch.tensor(r_label).type(torch.LongTensor)
+
+
+
+        # map the id read by GraIL to the entity IDs as registered by the KGE embeddings
+        kge_nodes = [self.kge_entity2id[self.id2entity[n]] for n in nodes] if self.kge_entity2id else None
+        n_feats = self.node_features[kge_nodes] if self.node_features is not None else None
+        subgraph = self._prepare_features_new(subgraph, n_labels, n_feats)
+
+        return subgraph
+
+    def _prepare_features(self, subgraph, n_labels, n_feats=None):
+        # One hot encode the node label feature and concat to n_featsure
+        n_nodes = subgraph.number_of_nodes()
+        label_feats = np.zeros((n_nodes, self.max_n_label[0] + 1))
+        label_feats[np.arange(n_nodes), n_labels] = 1
+        label_feats[np.arange(n_nodes), self.max_n_label[0] + 1 + n_labels[:, 1]] = 1
+        n_feats = np.concatenate((label_feats, n_feats), axis=1) if n_feats else label_feats
+        subgraph.ndata['feat'] = torch.FloatTensor(n_feats)
+        self.n_feat_dim = n_feats.shape[1]  # Find cleaner way to do this -- i.e. set the n_feat_dim
+        return subgraph
+
+    def _prepare_features_new(self, subgraph, n_labels, n_feats=None):
+        # One hot encode the node label feature and concat to n_featsure
+        n_nodes = subgraph.number_of_nodes()
+        label_feats = np.zeros((n_nodes, self.max_n_label[0] + 1 + self.max_n_label[1] + 1))
+        label_feats[np.arange(n_nodes), n_labels[:, 0]] = 1
+        label_feats[np.arange(n_nodes), self.max_n_label[0] + 1 + n_labels[:, 1]] = 1
+        # label_feats = np.zeros((n_nodes, self.max_n_label[0] + 1 + self.max_n_label[1] + 1))
+        # label_feats[np.arange(n_nodes), 0] = 1
+        # label_feats[np.arange(n_nodes), self.max_n_label[0] + 1] = 1
+        n_feats = np.concatenate((label_feats, n_feats), axis=1) if n_feats is not None else label_feats
+        subgraph.ndata['feat'] = torch.FloatTensor(n_feats)
+
+        head_id = np.argwhere([label[0] == 0 and label[1] == 1 for label in n_labels])
+        tail_id = np.argwhere([label[0] == 1 and label[1] == 0 for label in n_labels])
+        n_ids = np.zeros(n_nodes)
+        n_ids[head_id] = 1  # head
+        n_ids[tail_id] = 2  # tail
+        subgraph.ndata['id'] = torch.FloatTensor(n_ids)
+
+        self.n_feat_dim = n_feats.shape[1]  # Find cleaner way to do this -- i.e. set the n_feat_dim
+        return subgraph
+
+
+@register_dataset('grail_link_prediction')
+class Grail_LinkPrediction(LinkPredictionDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(Grail_LinkPrediction, self).__init__(*args, **kwargs)
+
+        self.args = kwargs['args']
+        self.args.db_path = f'./openhgnn/dataset/data/{self.args.dataset}/subgraphs_en_{self.args.enclosing_sub_graph}_neg_{self.args.num_neg_samples_per_link}_hop_{self.args.hop}'
+
+        self.args.train_file = "train"
+        self.args.valid_file = "valid"
+        self.args.file_paths = {
+            'train': './openhgnn/dataset/data/{}/{}.txt'.format(self.args.dataset, self.args.train_file),
+            'valid': './openhgnn/dataset/data/{}/{}.txt'.format(self.args.dataset, self.args.valid_file)
+        }
+
+        relation2id_path = f'./openhgnn/dataset/data/{self.args.dataset}/relation2id.json'
+
+        self.data_folder = f'./openhgnn/dataset/data/{self.args.dataset}'
+        if not os.path.exists(self.data_folder):
+            os.makedirs(self.data_folder)  # makedirs 创建文件时如果路径不存在会创建这个路径
+            url = f'https://github.com/kkteru/grail/blob/master/data/{self.args.dataset}'
+            self.download_folder(url,self.data_folder)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
+
+        if not os.path.exists(self.data_folder+'_ind'):
+            os.makedirs(self.data_folder+'_ind')  # makedirs 创建文件时如果路径不存在会创建这个路径
+            url = f'https://github.com/kkteru/grail/blob/master/data/{self.args.dataset}_ind'
+            self.download_folder(url,self.data_folder+'_ind')
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
+
+        if not os.path.isdir(self.args.db_path):
+            generate_subgraph_datasets(self.args, relation2id_path)
+
+
+        with open(relation2id_path) as f:
+            self.relation2id = json.load(f)
+        self.train = SubGraphDataset(self.args.db_path, 'train_pos', 'train_neg', self.args.file_paths,add_traspose_rels=self.args.add_traspose_rels,num_neg_samples_per_link=self.args.num_neg_samples_per_link,use_kge_embeddings=self.args.use_kge_embeddings, dataset=self.args.dataset,kge_model=self.args.kge_model, file_name=self.args.train_file)
+        self.valid = SubGraphDataset(self.args.db_path, 'valid_pos', 'valid_neg', self.args.file_paths,
+                                    add_traspose_rels=self.args.add_traspose_rels,
+                                    num_neg_samples_per_link=self.args.num_neg_samples_per_link,
+                                    use_kge_embeddings=self.args.use_kge_embeddings, dataset=self.args.dataset,
+                                    kge_model=self.args.kge_model, file_name= self.args.valid_file)
+
+    def download_folder(self,url, save_path):
+        response = requests.get(url)
+        if response.status_code == 200:
+            # 确保保存路径存在
+            os.makedirs(save_path, exist_ok=True)
+
+            # 解析响应内容
+            content = response.content.decode('utf-8')
+            lines = content.splitlines()
+
+            for line in lines:
+                # 提取文件名
+                file_name = line.split('/')[-1]
+
+                # 构建文件的完整URL
+                file_url = url + '/' + file_name
+
+                # 构建文件的保存路径
+                file_save_path = os.path.join(save_path, file_name)
+
+                # 下载文件
+                self.download_file(file_url, file_save_path)
+
+    def download_file(self,url, save_path):
+        response = requests.get(url)
+        if response.status_code == 200:
+            with open(save_path, 'wb') as file:
+                file.write(response.content)
 
 class kg_sampler( ):
     def __init__(self, ):
@@ -927,14 +1383,29 @@ class ExpressGNNDataset(BaseDataset):
         data_root = os.path.join(data_root, 'data')
         data_root = os.path.join(data_root, self.dataset_name)
         ext_rule_path = None
+        folder = os.path.exists(data_root)
+        print(data_root)
+        print('folder', folder)
+        if not folder:  # 判断是否存在文件夹如果不存在则创建为文件夹
+            os.makedirs(data_root)  # makedirs 创建文件时如果路径不存在会创建这个路径
+            # 下载数据
+            url = f"https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip"
+            response = requests.get(url)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+                myzip.extractall(data_root)
+            print("---  download data  ---")
+
+        else:
+            print("---  There is data!  ---")
 
         # Decide the way dataset will be load, set 1 to load FBWN dataset
         load_method = 0
-        if dataset_name[0:9] == 'FB15k-237':
+        # print(dataset_name[0:13])
+        if dataset_name[0:13] == 'EXP_FB15k-237':
             load_method = 1
         else:
             load_method = 0
-        guss_fb = 'FB15k' in data_root
+        guss_fb = 'EXP_FB15k' in data_root
         if guss_fb != (load_method == 1):
             print("WARNING: set load_method to 1 if you load Freebase dataset, otherwise 0")
 
@@ -948,8 +1419,10 @@ class ExpressGNNDataset(BaseDataset):
             valid_path = joinpath(data_root, 'valid.txt')
 
             rule_path = joinpath(data_root, 'cleaned_rules_weight_larger_than_0.9.txt')
-
-            assert all(map(isfile, fact_path_ls + [query_path, pred_path, const_path, valid_path, rule_path]))
+            print(rule_path)
+            print(os.getcwd())
+            # print(fact_path_ls + [query_path, pred_path, const_path, valid_path, rule_path])
+            # assert all(map(isfile, fact_path_ls + [query_path, pred_path, const_path, valid_path, rule_path]))
 
             # assuming only one type
             TYPE_SET.update(['type'])
@@ -2103,4 +2576,36 @@ class NBF_LinkPrediction(LinkPredictionDataset):
     def __init__(self, dataset_name ,*args, **kwargs): # dataset_name in ['NBF_WN18RR','NBF_FB15k-237']
 
         self.dataset = NBF_Dataset(root='./openhgnn/dataset/', name=dataset_name[4:], version="v1")
-        
+
+
+
+import os
+import requests
+import zipfile
+import io
+@register_dataset('DisenKGAT_link_prediction')
+class DisenKGAT_LinkPrediction(LinkPredictionDataset):
+    def __init__(self, dataset ,*args, **kwargs): # dataset "DisenKGAT"
+        self.logger = kwargs.get("Logger")
+        self.args = kwargs.get("args")
+        self.current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.dataset_name = dataset                       
+        self.raw_dir = os.path.join(self.current_dir, self.dataset_name ,"raw_dir" ) 
+        self.processed_dir = os.path.join(self.current_dir, self.dataset_name ,"processed_dir" ) 
+
+        if not os.path.exists(self.raw_dir):
+            os.makedirs(self.raw_dir) 
+            self.download()
+        else:
+            print("raw_dir already exists")
+
+    def download(self): 
+
+        url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{}.zip".format(self.dataset_name)          
+        response = requests.get(url)
+        with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
+            myzip.extractall(self.raw_dir)       
+        print("---  download   finished---")
+
+      
+

@@ -2,7 +2,7 @@ import importlib
 from dgl.data import DGLDataset
 from .base_dataset import BaseDataset
 from .utils import load_acm, load_acm_raw, generate_random_hg
-from .academic_graph import AcademicDataset
+from .academic_graph import AcademicDataset,IMDB4MAGNN_Dataset
 from .hgb_dataset import HGBDataset
 from .ohgb_dataset import OHGBDataset
 from .gtn_dataset import *
@@ -10,6 +10,10 @@ from .alircd_dataset import *
 from .adapter import AsLinkPredictionDataset, AsNodeClassificationDataset
 from .mg2vec_dataset import Mg2vecDataSet
 from .meirec_dataset import MeiRECDataset, get_data_loader
+from .AdapropT_dataset import AdapropTDataLoader
+from .AdapropI_dataset import AdapropIDataLoader
+from .LTE_dataset import *
+from .SACN_dataset import *
 from .NBF_dataset import NBF_Dataset 
 from .Ingram_dataset import Ingram_KG_TrainData, Ingram_KG_TestData
 DATASET_REGISTRY = {}
@@ -55,19 +59,22 @@ common = ['Cora', 'Citeseer', 'Pubmed', 'Texas', 'Cornell']
 hgbl_datasets = ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']
 hgbn_datasets = ['HGBn-ACM', 'HGBn-DBLP', 'HGBn-Freebase', 'HGBn-IMDB']
 
-kg_lp_datasets = ['wn18', 'FB15k', 'FB15k-237', 'FB15k-237_data_ratio_0', 'kinship', 'uw_cse']
+kg_lp_datasets = ['wn18', 'FB15k', 'EXP_FB15k-237', 'EXP_FB15k-237_data_ratio_0', 'EXP_FB15k-237_data_ratio_0',
+                  'EXP_FB15k-237_data_ratio_0.1', 'EXP_FB15k-237_data_ratio_0.2', 'EXP_FB15k-237_data_ratio_zero_shot',
+                  'kinship', 'uw_cse']
 
 kg_sub_datasets = [f'fb237_v{i}' for i in range(1, 5)]
 kg_sub_datasets += [f'nell_v{i}' for i in range(1, 5)]
 kg_sub_datasets += [f'WN18RR_v{i}' for i in range(1,5)]
-
+kg_subT_datasets = ['family']
 ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
 hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
 
 
+
 def build_dataset(dataset, task, *args, **kwargs):
-    args = kwargs.get('args')
+    args =kwargs.get('args')
     model = args.model
     if isinstance(dataset, DGLDataset):
         return dataset
@@ -83,6 +90,18 @@ def build_dataset(dataset, task, *args, **kwargs):
         train_dataloader = get_data_loader("train", batch_size=args[0])
         test_dataloader = get_data_loader("test", batch_size=args[0])
         return train_dataloader, test_dataloader
+    #-------------------更改部分-------------------
+    if dataset == 'AdapropT':
+        dataload=AdapropTDataLoader(args)
+        return dataload
+    # -------------------更改部分-------------------
+    #-------------------更改部分-------------------
+    if dataset == 'AdapropI':
+        dataload=AdapropIDataLoader(args)
+        return dataload
+      
+    if dataset == 'SACN' or dataset == 'LTE':
+        return
 
     if dataset in CLASS_DATASETS:
         return build_dataset_v2(dataset, task)
@@ -96,6 +115,10 @@ def build_dataset(dataset, task, *args, **kwargs):
                      'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB',
                      'amazon', 'yelp4HGSL']:
         _dataset = 'hin_' + task
+    elif dataset in ['imdb4MAGNN']:
+        _dataset = 'hin_' + task
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],
+                                          args = kwargs['args'] )
     elif dataset in ohgbn_datasets + ohgbl_datasets:
         _dataset = 'ohgb_' + task
     elif dataset in ['ogbn-mag']:
@@ -115,6 +138,9 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset in kg_sub_datasets:
         assert task == 'link_prediction'
         _dataset = 'kg_sub_link_prediction'
+    elif dataset in kg_subT_datasets:
+        assert task == 'link_prediction'
+        _dataset = 'kg_subT_link_prediction'
     elif dataset in ['LastFM4KGCN']:
         _dataset = 'kgcn_recommendation'
     elif dataset in ['gowalla', 'yelp2018', 'amazon-book']:
@@ -146,6 +172,13 @@ def build_dataset(dataset, task, *args, **kwargs):
             _dataset = 'common_' + task
     elif dataset in ['NBF_WN18RR','NBF_FB15k-237']:
         _dataset = 'NBF_' + task  
+    elif dataset in ['DisenKGAT_WN18RR','DisenKGAT_FB15k-237']:
+        _dataset = 'DisenKGAT_' + task  #  == 'DisenKGAT_link_prediction'
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))  
+
+    if kwargs['args'].model=='Grail' or kwargs['args'].model=='ComPILE':
+        _dataset = 'grail_'+ task
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args=kwargs['args'])
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 

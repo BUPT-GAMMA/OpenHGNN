@@ -130,7 +130,7 @@ We release the latest version v0.2.
 
 - [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
 
-- [DGL](https://github.com/dmlc/dgl) >= 0.8.0
+- [DGL](https://github.com/dmlc/dgl) >= 2.1.0
 
 - CPU or NVIDIA GPU, Linux, Python3
 
@@ -171,6 +171,24 @@ cd OpenHGNN
 pip install .
 ```
 
+
+**5. Install gdbi(Optional):** 
+
+- install gdbi from git
+```bash
+pip install git+https://github.com/xy-Ji/gdbi.git
+```
+
+- install graph database from pypi
+```bash
+pip install neo4j==5.16.0
+pip install nebula3-python==3.4.0
+```
+
+
+
+
+
 #### Running an existing baseline model on an existing benchmark [dataset](../openhgnn/dataset/#Dataset)
 
 ```bash
@@ -178,7 +196,7 @@ python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 ```
 
 usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
-[--gpu GPU] [--use_best_config]
+[--gpu GPU] [--use_best_config][--use_database]
 
 *optional arguments*:
 
@@ -197,6 +215,8 @@ set the different hyper-parameter, modify the [openhgnn.config.ini](../openhgnn/
 will override the parameter in config.ini.
 
 ``--load_from_pretrained`` will load the model from a default checkpoint.
+
+``--use_database`` get dataset from database
 
 e.g.:
 
@@ -217,6 +237,31 @@ e.g.：
 tensorboard --logdir=./openhgnn/output/RGCN/
 ```
 **Note**: To visualize results, you need to train the model first.
+
+
+#### Use gdbi to get grpah dataset
+take neo4j and imdb dataset for example
+- construct csv file for dataset(node-level:A.csv,edge-level:A_P.csv)
+- import csv file to database
+```bash
+LOAD CSV WITH HEADERS FROM "file:///data.csv" AS row
+CREATE (:graphname_labelname {ID: row.ID, ... });
+```
+- add user information to access database in config.py file
+```python
+self.graph_address = [graph_address]
+self.user_name = [user_name]
+self.password = [password]
+```
+
+- e.g.:
+
+```bash
+python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_config --use_database
+```
+
+
+
 
 ## [Models](../openhgnn/models/#Model)
 

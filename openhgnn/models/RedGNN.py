@@ -1,11 +1,12 @@
 import torch
 import torch.nn as nn
-from torch_scatter import scatter
+from ..utils.utils import scatter
 from . import BaseModel, register_model
 import dgl
 # from dgl import
 from scipy.sparse import csr_matrix
 import numpy as np
+
 
 @register_model('RedGNN')
 class RedGNN(BaseModel):

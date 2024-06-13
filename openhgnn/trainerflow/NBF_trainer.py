@@ -3,7 +3,6 @@ from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..utils import extract_embed, EarlyStopping
 import os
-os.chdir('/home/lfq/nbfnet')
 import sys
 import math
 import torch
@@ -11,7 +10,6 @@ from torch import nn
 from torch.nn import functional as F
 from torch import distributed as dist
 from torch.utils import data as torch_data
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import logging
 from ..models import NBF
 separator = ">" * 30
@@ -213,7 +211,7 @@ class NBF_trainer(BaseFlow):
     """
 
     def __init__(self, args):  # args == self.config
-
+        args.task = args.model +"_" +args.task # task: NBF_link_prediction
         self.args = args  
         self.model_name = args.model
         self.device = args.device
