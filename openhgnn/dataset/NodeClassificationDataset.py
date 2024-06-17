@@ -14,6 +14,32 @@ from . import AcademicDataset, HGBDataset, OHGBDataset,IMDB4MAGNN_Dataset
 from .utils import sparse_mx_to_torch_sparse_tensor
 from ..utils import add_reverse_edges
 
+@register_dataset('GraphBolt_Dataset')
+class GraphBolt_Dataset(BaseDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+
+        super(GraphBolt_Dataset, self).__init__(*args, **kwargs)
+        assert dataset_name in ['imdb4GTN']
+        self.zip_path = f'./openhgnn/dataset/GraphBolt_Dataset/{dataset_name}_base_dir.zip'
+        self.base_dir = './openhgnn/dataset/GraphBolt_Dataset/' + dataset_name + '_base_dir' 
+        self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}_base_dir.zip'
+        import os
+        from dgl.data.utils import download, extract_archive
+        if os.path.exists(self.zip_path):  
+           pass
+        else:
+            os.makedirs(    os.path.join('./openhgnn/dataset/GraphBolt_Dataset/')  ,exist_ok= True)
+
+            download(self.url, 
+                     path=os.path.join('./openhgnn/dataset/GraphBolt_Dataset/')     
+                     )   
+        if os.path.exists( self.base_dir ):
+            pass
+        else:
+            extract_archive(self.zip_path, os.path.join('./openhgnn/dataset/GraphBolt_Dataset/'))  
+
+
+
 
 @register_dataset('node_classification')
 class NodeClassificationDataset(BaseDataset):

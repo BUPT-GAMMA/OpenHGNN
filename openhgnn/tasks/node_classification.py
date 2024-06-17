@@ -1,7 +1,7 @@
 import torch.nn.functional as F
 import torch.nn as nn
 from . import BaseTask, register_task
-from ..dataset import build_dataset
+from ..dataset import build_dataset,build_dataset_GB
 from ..utils import Evaluator
 import torch
 import numpy as np
@@ -33,6 +33,11 @@ class NodeClassification(BaseTask):
         self.logger = args.logger
         self.dataset = build_dataset(args.dataset, 'node_classification', 
                                      logger=self.logger,args = args)
+        if args.graphbolt:
+            #   这个就是task.dataset_GB
+            self.dataset_GB = build_dataset_GB(args.dataset, 'GraphBolt',  # 其他都是 额外 关键字参数
+                                        logger=self.logger, 
+                                        args = args)  
         # self.evaluator = Evaluator()
         self.logger = args.logger
         if hasattr(args, 'validation'):

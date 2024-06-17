@@ -117,6 +117,31 @@ class NodeClassification(BaseFlow):
                                                                   batch_size=self.args.batch_size, device=self.device,
                                                                   shuffle=True, use_uva=use_uva)
 
+        def create_loader(Item_set,graph):
+            
+            datapipe = gb.ItemSampler(Item_set, batch_size=self.args.batch_size, shuffle=True)
+            datapipe = datapipe.copy_to(self.device)
+            datapipe = datapipe.sample_neighbor(graph, self.fanouts)
+            return gb.DataLoader(datapipe)
+        
+
+        if self.args.mini_batch_flag and self.args.graphbolt:
+            
+            import dgl.graphbolt as gb
+            dataset = gb.OnDiskDataset(self.task.dataset_GB.base_dir).load()
+            graph = dataset.graph.to(self.device)
+            # feature = dataset.feature.to(self.device)
+            tasks = dataset.tasks
+            nc_task = tasks[0]
+            self.train_GB_loader = create_loader(nc_task.train_set, graph)
+            self.val_GB_loader = create_loader(nc_task.validation_set, graph)
+            self.test_GB_loader = create_loader(nc_task.test_set, graph)
+
+
+
+
+
+
     def preprocess(self):
         r"""
         Preprocess for different models, e.g.: different optimizer for GTN.
@@ -234,29 +259,49 @@ class NodeClassification(BaseFlow):
         return loss.item()
 
     def _mini_train_step(self, ):
-        self.model.train()
-        loss_all = 0.0
-        loader_tqdm = tqdm(self.train_loader, ncols=120)
-        for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
-            if self.to_homo_flag:
-                # input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
-                seeds = to_hetero_idx(self.g, self.hg, seeds)
-            elif isinstance(input_nodes, dict):
+        if self.args.graphbolt:
+            self.model.train()
+            loss_all = 0.0
+            for i, data in enumerate(self.train_GB_loader):
+
+                input_nodes = data.input_nodes
+                seeds = data.seeds
                 for key in input_nodes:
                     input_nodes[key] = input_nodes[key].to(self.device)
-            # elif not isinstance(input_nodes, dict):
-            #     input_nodes = {self.category: input_nodes}
-            emb = self.model.input_feature.forward_nodes(input_nodes)
-            # if self.to_homo_flag:
-            #     emb = to_homo_feature(self.hg.ntypes, emb)
-            lbl = self.labels[seeds[self.category]].to(self.device)
-            logits = self.model(blocks, emb)[self.category]
-            loss = self.loss_fn(logits, lbl)
-            loss_all += loss.item()
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-        return loss_all / (i + 1)
+                emb = self.model.input_feature.forward_nodes(input_nodes)
+                label = data.labels[self.category].to(self.device)
+                logits = self.model(data.blocks, emb)[self.category]
+                loss = self.loss_fn(logits, label)
+                loss_all += loss.item()
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+            return loss_all / (i + 1)
+
+        else:
+            self.model.train()
+            loss_all = 0.0
+            loader_tqdm = tqdm(self.train_loader, ncols=120)
+            for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
+                if self.to_homo_flag:
+                    # input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
+                    seeds = to_hetero_idx(self.g, self.hg, seeds)
+                elif isinstance(input_nodes, dict):
+                    for key in input_nodes:
+                        input_nodes[key] = input_nodes[key].to(self.device)
+                # elif not isinstance(input_nodes, dict):
+                #     input_nodes = {self.category: input_nodes}
+                emb = self.model.input_feature.forward_nodes(input_nodes)
+                # if self.to_homo_flag:
+                #     emb = to_homo_feature(self.hg.ntypes, emb)
+                lbl = self.labels[seeds[self.category]].to(self.device)
+                logits = self.model(blocks, emb)[self.category]
+                loss = self.loss_fn(logits, lbl)
+                loss_all += loss.item()
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+            return loss_all / (i + 1)
 
     def _full_test_step(self, modes, logits=None):
         """
@@ -295,42 +340,82 @@ class NodeClassification(BaseFlow):
             return metric_dict, loss_dict
 
     def _mini_test_step(self, modes):
-        self.model.eval()
-        with torch.no_grad():
-            metric_dict = {}
-            loss_dict = {}
-            loss_all = 0.0
-            for mode in modes:
-                if mode == 'train':
-                    loader_tqdm = tqdm(self.train_loader, ncols=120)
-                elif mode == 'valid':
-                    loader_tqdm = tqdm(self.val_loader, ncols=120)
-                elif mode == 'test':
-                    loader_tqdm = tqdm(self.test_loader, ncols=120)
-                y_trues = []
-                y_predicts = []
-                for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
-                    if self.to_homo_flag:
-                        # input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
-                        seeds = to_hetero_idx(self.g, self.hg, seeds)
-                    elif not isinstance(input_nodes, dict):
-                        input_nodes = {self.category: input_nodes}
-                    emb = self.model.input_feature.forward_nodes(input_nodes)
-                    # if self.to_homo_flag:
-                    #     emb = to_homo_feature(self.hg.ntypes, emb)
-                    lbl = self.labels[seeds[self.category]].to(self.device)
-                    logits = self.model(blocks, emb)[self.category]
-                    loss = self.loss_fn(logits, lbl)
-                    loss_all += loss.item()
-                    y_trues.append(lbl.detach().cpu())
-                    y_predicts.append(logits.detach().cpu())
-                loss_all /= (i + 1)
-                y_trues = torch.cat(y_trues, dim=0)
-                y_predicts = torch.cat(y_predicts, dim=0)
-                evaluator = self.task.get_evaluator(name='f1')
-                metric_dict[mode] = evaluator(y_trues, y_predicts.argmax(dim=1).to('cpu'))
-                loss_dict[mode] = loss
-        return metric_dict, loss_dict
+        if self.args.graphbolt:
+            self.model.eval()
+            with torch.no_grad():
+                metric_dict = {}
+                loss_dict = {}
+                loss_all = 0.0
+               
+                for mode in modes:  
+                    if mode == 'train':
+                        loader = self.train_GB_loader
+                    elif mode == 'valid':
+                        loader = self.val_GB_loader
+                    elif mode == 'test':
+                        loader = self.test_GB_loader
+                    y_trues = []
+                    y_predicts = []
+                    for i, data in enumerate(loader):                        
+                        input_nodes = data.input_nodes
+                        seeds = data.seeds   
+                        if not isinstance(input_nodes, dict):
+                            input_nodes = {self.category: input_nodes}
+                        emb = self.model.input_feature.forward_nodes(input_nodes)
+                        label = data.labels[self.category].to(self.device)
+                        logits = self.model(data.blocks, emb)[self.category]   
+                        loss = self.loss_fn(logits, label)
+                        loss_all += loss.item() 
+                        
+                        y_trues.append(label.detach().cpu())
+                        y_predicts.append(logits.detach().cpu())
+                    loss_all /= (i + 1)
+                    y_trues = torch.cat(y_trues, dim=0)
+                    y_predicts = torch.cat(y_predicts, dim=0)
+                    evaluator = self.task.get_evaluator(name='f1')
+                    
+                    metric_dict[mode] = evaluator(y_trues, y_predicts.argmax(dim=1).to('cpu'))
+                    loss_dict[mode] = loss_all
+            return metric_dict, loss_dict
+
+       
+        else:
+            self.model.eval()
+            with torch.no_grad():
+                metric_dict = {}
+                loss_dict = {}
+                loss_all = 0.0
+                for mode in modes:
+                    if mode == 'train':
+                        loader_tqdm = tqdm(self.train_loader, ncols=120)
+                    elif mode == 'valid':
+                        loader_tqdm = tqdm(self.val_loader, ncols=120)
+                    elif mode == 'test':
+                        loader_tqdm = tqdm(self.test_loader, ncols=120)
+                    y_trues = []
+                    y_predicts = []
+                    for i, (input_nodes, seeds, blocks) in enumerate(loader_tqdm):
+                        if self.to_homo_flag:
+                            # input_nodes = to_hetero_idx(self.g, self.hg, input_nodes)
+                            seeds = to_hetero_idx(self.g, self.hg, seeds)
+                        elif not isinstance(input_nodes, dict):
+                            input_nodes = {self.category: input_nodes}
+                        emb = self.model.input_feature.forward_nodes(input_nodes)
+                        # if self.to_homo_flag:
+                        #     emb = to_homo_feature(self.hg.ntypes, emb)
+                        lbl = self.labels[seeds[self.category]].to(self.device)
+                        logits = self.model(blocks, emb)[self.category]
+                        loss = self.loss_fn(logits, lbl)
+                        loss_all += loss.item()
+                        y_trues.append(lbl.detach().cpu())
+                        y_predicts.append(logits.detach().cpu())
+                    loss_all /= (i + 1)
+                    y_trues = torch.cat(y_trues, dim=0)
+                    y_predicts = torch.cat(y_predicts, dim=0)
+                    evaluator = self.task.get_evaluator(name='f1')
+                    metric_dict[mode] = evaluator(y_trues, y_predicts.argmax(dim=1).to('cpu'))
+                    loss_dict[mode] = loss
+            return metric_dict, loss_dict
 
     def _full_prediction_step(self):
         """
