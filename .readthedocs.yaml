@@ -10,11 +10,13 @@ build:
   tools:
     python: "3.9"
 
+
 python:
-  version: 3.6
   install:
     - requirements: docs/requirements.txt
     - requirements: requirements.txt
     - method: setuptools
       path: .
+
   system_packages: true
+
