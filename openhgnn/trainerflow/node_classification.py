@@ -41,6 +41,11 @@ class NodeClassification(BaseFlow):
         self.args.out_node_type = [self.category]
 
         self.model = build_model(self.model).build_model_from_args(self.args, self.hg).to(self.device)
+        self.use_distributed = args.use_distributed
+        if self.use_distributed:
+            self.model = torch.nn.parallel.DistributedDataParallel(
+                self.model, device_ids=[self.device], output_device=self.device, find_unused_parameters=True
+            )
 
         self.optimizer = self.candidate_optimizer[args.optimizer](self.model.parameters(),
                                                                   lr=args.lr, weight_decay=args.weight_decay)
@@ -81,7 +86,7 @@ class NodeClassification(BaseFlow):
 
                 self.train_loader = dgl.dataloading.DataLoader(loader_g, loader_train_idx, sampler,
                                                                batch_size=self.args.batch_size, device=self.device,
-                                                               shuffle=True, use_uva=use_uva)
+                                                               shuffle=True, use_uva=use_uva, use_ddp=self.use_distributed)
             if self.train_idx is not None:
                 if self.to_homo_flag:
                     loader_val_idx = to_homo_idx(self.hg.ntypes, self.num_nodes_dict, {self.category: self.val_idx}).to(
@@ -152,7 +157,8 @@ class NodeClassification(BaseFlow):
                 train_idx=self.train_idx.to(self.device),
                 valid_idx=self.val_idx.to(self.device),
                 test_idx=self.test_idx.to(self.device),
-                device=self.device)
+                device=self.device,
+                use_distributed=self.use_distributed)
 
         super(NodeClassification, self).preprocess()
 

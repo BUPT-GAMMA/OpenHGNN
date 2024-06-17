@@ -45,6 +45,9 @@ class BaseFlow(ABC):
                                                  "{}_{}_{}.txt".format(args.model_name, args.dataset_name[5:],
                                                                        args.seed))
 
+        # Distributed models will check this parameter during the training process to determine whether to use distributed.
+        self.use_distributed = args.use_distributed
+
         # stage flags: whether to run the corresponding stages
         # todo: only take effects in node classification trainer flow
 
