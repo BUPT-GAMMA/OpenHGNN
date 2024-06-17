@@ -40,7 +40,22 @@ class Config(object):
             self.seed = conf.getint("General", "seed")
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
+        elif self.model_name == 'HGA':
+            self.lr = conf.getfloat("HGA", "learning_rate")
+            self.weight_decay = conf.getfloat("HGA", "weight_decay")
+            self.seed = conf.getint("HGA", "seed")
+            self.dropout = conf.getfloat("HGA", "dropout")
 
+            self.hidden_dim = conf.getint('HGA', 'hidden_dim')
+            self.out_dim = conf.getint('HGA', 'out_dim')
+            num_heads = conf.get('HGA', 'num_heads').split('-')
+            self.num_heads = [int(i) for i in num_heads]
+            self.patience = conf.getint('HGA', 'patience')
+            self.max_epoch = conf.getint('HGA', 'max_epoch')
+            self.mini_batch_flag = conf.getboolean("HGA", "mini_batch_flag")
+            self.gamma=conf.getfloat("HGA", "gamma")
+            self.batch_size=conf.getint("HGA", "batch_size")
+            
         elif self.model_name == "DisenKGAT":
 
             self.name = conf.get("DisenKGAT","name")
@@ -196,7 +211,7 @@ class Config(object):
             self.validation = conf.getboolean("RSHN", "validation")
             self.mini_batch_flag = conf.getboolean("RSHN", "mini_batch_flag")
 
-        elif self.model_name == 'RGCN':
+        elif self.model_name == 'RGCN'or self.model_name == 'RGCN_m':
             self.lr = conf.getfloat("RGCN", "learning_rate")
             self.dropout = conf.getfloat("RGCN", "dropout")
 
@@ -278,7 +293,7 @@ class Config(object):
             self.rw_walks = conf.getint("HERec", "rw_walks")
             self.meta_path_key = conf.get("HERec", "meta_path_key")
 
-        elif self.model_name == 'HAN':
+        elif self.model_name == 'HAN'or self.model_name == 'HAN_m':
             self.lr = conf.getfloat("HAN", "learning_rate")
             self.weight_decay = conf.getfloat("HAN", "weight_decay")
             self.seed = conf.getint("HAN", "seed")
@@ -291,6 +306,7 @@ class Config(object):
             self.patience = conf.getint('HAN', 'patience')
             self.max_epoch = conf.getint('HAN', 'max_epoch')
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")
+            self.batch_size = conf.getint("HAN", "batch_size")
 
         elif self.model_name == 'RoHe':
             self.lr = conf.getfloat("RoHe", "learning_rate")
@@ -690,7 +706,7 @@ class Config(object):
             self.seed = conf.getint("HGAT", "seed")
             self.attn_dim = conf.getint("HGAT", "attn_dim")
             self.num_layers = conf.getint("HGAT", "num_layers")
-            self.mini_batch_flag = False
+            self.mini_batch_flag = True
             self.hidden_dim = conf.getint("HGAT", "hidden_dim")
             self.num_classes = conf.getint("HGAT", "num_classes")
             self.patience = conf.getint("HGAT", "patience")

@@ -69,6 +69,7 @@ SUPPORTED_FLOWS = {
     'TransX_trainer': 'openhgnn.trainerflow.TransX_trainer',
     'han_nc_trainer': 'openhgnn.trainerflow.HANNodeClassification',
     'han_lp_trainer': 'openhgnn.trainerflow.HANLinkPrediction',
+    'hga_trainer': 'openhgnn.trainerflow.HGATrainer',
     'RoHe_trainer': 'openhgnn.trainerflow.RoHe_trainer',
     'mg2vec_trainer': 'openhgnn.trainerflow.mg2vec_trainer',
     'DHNE_trainer': 'openhgnn.trainerflow.DHNE_trainer',
@@ -131,6 +132,7 @@ from .NBF_trainer import *
 from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
 from .RedGNNT_trainer import RedGNNTTrainer
+from .hga_trainer import HGATrainer
 
 __all__ = [
     'BaseFlow',
@@ -147,6 +149,7 @@ __all__ = [
     'DMGI_trainer',
     'SLiCETrainer',
     'hde_trainer',
+    'HGATrainer',
     'GATNE',
     'HANNodeClassification',
     'HANLinkPrediction',

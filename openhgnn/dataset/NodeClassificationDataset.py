@@ -1,3 +1,4 @@
+import os
 import dgl
 import dgl.function as fn
 import torch as th
@@ -83,6 +84,7 @@ class NodeClassificationDataset(BaseDataset):
         -------
         train_idx, val_idx, test_idx : torch.Tensor, torch.Tensor, torch.Tensor
         """
+ 
         if 'train_mask' not in self.g.nodes[self.category].data:
             self.logger.dataset_info("The dataset has no train mask. "
                   "So split the category nodes randomly. And the ratio of train/test is 8:2.")
@@ -130,6 +132,40 @@ class NodeClassificationDataset(BaseDataset):
         # Here set test_idx as attribute of dataset to save results of HGB
         return self.train_idx, self.valid_idx, self.test_idx
 
+@register_dataset('hga_node_classification')
+class HGA_NodeClassification(NodeClassificationDataset):
+    def __init__(self, dataset_name,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.g, self.category, self.num_classes = self.load_graph(dataset_name)
+    
+    def load_graph(self, dataset_name ,file_path=None):
+        if dataset_name == 'ACM':
+            if file_path==None:
+                file_pathS = 'D:\GNN\OpenHGNN\dataset\ACM\graph_data.bin'
+            category = '1'
+            num_classes=4
+            g, _ = load_graphs(file_pathS)
+            g = g[0].long()
+            self.in_dim=g.ndata['h'][category].shape[1]
+            self.meta_paths_dict = {
+                '131': [('1', '2', '3'), ('3', '2', '1')],
+                '121': [('1', '1', '2'), ('2', '1', '1')],
+            }
+        elif dataset_name == 'DBLP':
+            if file_path==None:
+                file_pathT = 'D:\GNN\OpenHGNN\dataset\DBLP\graph_data.bin'
+            category = '1'
+            num_classes=4
+            g, _ = load_graphs(file_pathT)
+            g = g[0].long()
+            self.in_dim=g.ndata['h'][category].shape[1]
+            self.meta_paths_dict = {
+                '131': [('1', '2', '3'), ('3', '2', '1')],
+                '121': [('1', '1', '2'), ('2', '1', '1')],
+            }
+        else:
+            g=category=num_classes=None
+        return g,category,num_classes
 
 @register_dataset('rdf_node_classification')
 class RDF_NodeClassification(NodeClassificationDataset):

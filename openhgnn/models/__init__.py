@@ -92,6 +92,7 @@ SUPPORTED_MODELS = {
     'GATNE-T': 'openhgnn.models.GATNE',
     'HetSANN': 'openhgnn.models.HetSANN',
     'HGAT': 'openhgnn.models.HGAT',
+    'HGA':'openhgnn.models.HGA',
     'ieHGCN': 'openhgnn.models.ieHGCN',
     'TransE': 'openhgnn.models.TransE',
     'TransH': 'openhgnn.models.TransH',
