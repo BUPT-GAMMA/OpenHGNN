@@ -81,13 +81,11 @@ class SIAN_Trainer(BaseFlow):
         test_loss = 0.0
         max_batches = 50
         criterion = nn.BCELoss()
-        # 将 train_loader 数据转换为列表
+
         data_list = list(self.train_loader)
 
-        # 随机抽取 max_batches 数量的批次
         selected_batches = random.sample(data_list, min(max_batches, len(data_list)))
 
-        # 训练循环
         for data in tqdm(selected_batches):
             batch_user, batch_item, batch_label, batch_act = data['user'].long().to(self.device), \
                 data['item'].long().to(self.device), \
@@ -131,7 +129,7 @@ class SIAN_Trainer(BaseFlow):
         self.model.eval()
         y_true, y_pred, y_score = [], [], []
 
-        with torch.no_grad():  # 禁用梯度计算
+        with torch.no_grad(): 
             for i, data in enumerate(self.test_loader, 0):
                 batch_user, batch_item, batch_label, batch_act = data['user'].long().to(self.device), \
                     data['item'].long().to(self.device), \
@@ -143,7 +141,6 @@ class SIAN_Trainer(BaseFlow):
                 y_true.extend(batch_label.cpu().tolist())
                 y_score.extend(output.cpu().tolist())
 
-                # 使用向量化处理代替循环
                 tmp_pred = (output > 0.5).int()
                 y_pred.extend(tmp_pred.cpu().tolist())
 
