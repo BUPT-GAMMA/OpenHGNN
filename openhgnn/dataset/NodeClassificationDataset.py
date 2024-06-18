@@ -19,7 +19,7 @@ class GraphBolt_Dataset(BaseDataset):
     def __init__(self, dataset_name, *args, **kwargs):
 
         super(GraphBolt_Dataset, self).__init__(*args, **kwargs)
-        assert dataset_name in ['imdb4GTN']
+        assert dataset_name in ['imdb4GTN','HGBl-amazon']
         self.zip_path = f'./openhgnn/dataset/GraphBolt_Dataset/{dataset_name}_base_dir.zip'
         self.base_dir = './openhgnn/dataset/GraphBolt_Dataset/' + dataset_name + '_base_dir' 
         self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}_base_dir.zip'

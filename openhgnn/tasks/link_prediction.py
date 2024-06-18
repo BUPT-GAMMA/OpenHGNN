@@ -3,7 +3,7 @@ import torch as th
 import torch.nn.functional as F
 from dgl.dataloading.negative_sampler import Uniform
 from . import BaseTask, register_task
-from ..dataset import build_dataset
+from ..dataset import build_dataset,build_dataset_GB
 from ..utils import Evaluator
 
 
@@ -49,6 +49,10 @@ class LinkPrediction(BaseTask):
             build_dataset(args, 'SACN')
             return
         self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger, args=args)
+        if args.graphbolt:
+            self.dataset_GB = build_dataset_GB(args.dataset,   
+                                            logger=self.logger, 
+                                            args = args)        
         # self.evaluator = Evaluator()
         if args.model == 'ExpressGNN' or args.model == 'RedGNN' or args.model == 'RedGNNT' or args.model == 'DisenKGAT':
             return

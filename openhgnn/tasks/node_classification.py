@@ -35,7 +35,7 @@ class NodeClassification(BaseTask):
                                      logger=self.logger,args = args)
         if args.graphbolt:
             #   这个就是task.dataset_GB
-            self.dataset_GB = build_dataset_GB(args.dataset, 'GraphBolt',  # 其他都是 额外 关键字参数
+            self.dataset_GB = build_dataset_GB(args.dataset, 
                                         logger=self.logger, 
                                         args = args)  
         # self.evaluator = Evaluator()
