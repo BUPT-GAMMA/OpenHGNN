@@ -128,9 +128,9 @@ We release the latest version v0.2.
 
 - Python  >= 3.6
 
-- [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
+- [PyTorch](https://pytorch.org/get-started/)  >= 2.3.0
 
-- [DGL](https://github.com/dmlc/dgl) >= 2.1.0
+- [DGL](https://github.com/dmlc/dgl) >= 2.2.1
 
 - CPU or NVIDIA GPU, Linux, Python3
 
