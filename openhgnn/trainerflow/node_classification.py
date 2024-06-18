@@ -7,7 +7,7 @@ from . import BaseFlow, register_flow
 from ..utils import EarlyStopping, to_hetero_idx, to_homo_feature, to_homo_idx
 import warnings
 from torch.utils.tensorboard import SummaryWriter
-
+import dgl.graphbolt as gb
 
 @register_flow("node_classification")
 class NodeClassification(BaseFlow):
@@ -127,7 +127,7 @@ class NodeClassification(BaseFlow):
 
         if self.args.mini_batch_flag and self.args.graphbolt:
             
-            import dgl.graphbolt as gb
+            
             dataset = gb.OnDiskDataset(self.task.dataset_GB.base_dir).load()
             graph = dataset.graph.to(self.device)
             # feature = dataset.feature.to(self.device)
