@@ -9,6 +9,7 @@ from ..models import build_model
 from ..utils import EarlyStopping, add_reverse_edges, get_ntypes_from_canonical_etypes
 import warnings
 from torch.utils.tensorboard import SummaryWriter
+import dgl.graphbolt as gb
 
 
 @register_flow("link_prediction")
