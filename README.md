@@ -128,9 +128,9 @@ OpenHGNN荣获启智社区优秀孵化项⽬奖！详细链接：https://mp.weix
 
 - Python  >= 3.6
 
-- [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
+- [PyTorch](https://pytorch.org/get-started/)  >= 2.3.0
 
-- [DGL](https://github.com/dmlc/dgl) >= 0.8.0
+- [DGL](https://github.com/dmlc/dgl) >= 2.2.1
 
 - CPU 或者 NVIDIA GPU, Linux, Python3
 
