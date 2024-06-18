@@ -71,7 +71,11 @@ ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
 hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
 
-
+def build_dataset_GB(dataset,*args,**kwargs):
+    #   dataset："imdb4GTN","HGBl-amazon"
+    if dataset in ['imdb4GTN','HGBl-amazon']:
+        return DATASET_REGISTRY['GraphBolt_Dataset'](dataset, logger=kwargs['logger'],args = kwargs['args'])
+    
 
 def build_dataset(dataset, task, *args, **kwargs):
     args =kwargs.get('args')

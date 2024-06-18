@@ -105,6 +105,38 @@ class LinkPrediction(BaseFlow):
             self.category = self.hg.ntypes[0]
         self.writer = SummaryWriter(f'./openhgnn/output/{self.model_name}/')
 
+        if self.args.mini_batch_flag and self.args.graphbolt:
+            self.fanouts = [-1] * self.args.num_layers  
+            dataset = gb.OnDiskDataset(self.task.dataset_GB.base_dir).load()
+
+            # base_dir = "/data/zzh/TEST_DIR/TEST_base_dir"
+            # dataset = gb.OnDiskDataset(base_dir).load()
+
+            graph = dataset.graph.to(self.device)
+            tasks = dataset.tasks
+            link_pred_task = tasks[0]
+            def create_dataloader(itemset,full_graph,split='train'):
+                datapipe = gb.ItemSampler(itemset, batch_size=2048, shuffle=True)
+                datapipe = datapipe.copy_to(self.device)
+                if split != 'test':
+                    datapipe = datapipe.sample_uniform_negative(full_graph, 1) 
+                datapipe = datapipe.sample_neighbor(full_graph,  self.fanouts) 
+                return gb.DataLoader(datapipe)
+                
+            self.train_GB_loader = create_dataloader(itemset=link_pred_task.train_set, 
+                                                  full_graph=graph,
+                                                  split='train')
+            self.val_GB_loader = create_dataloader(itemset=link_pred_task.validation_set, 
+                                                  full_graph=graph,
+                                                  split='valid')
+            self.test_GB_loader = create_dataloader(itemset=link_pred_task.test_set, 
+                                                  full_graph=graph,
+                                                  split='test')
+                
+
+
+
+
     def preprocess(self):
         """
         In link prediction, you will have a positive graph consisting of all the positive examples as edges,
@@ -116,49 +148,52 @@ class LinkPrediction(BaseFlow):
         self.train_hg = self.train_hg.to(self.device)
 
     def train(self):
-        self.preprocess()
-        stopper = EarlyStopping(self.patience, self._checkpoint)
-        for epoch in tqdm(range(self.max_epoch)):
-            if self.args.mini_batch_flag:
-                loss = self._mini_train_step()
-            else:
-                loss = self._full_train_setp()
-            if epoch % self.evaluate_interval == 0:
-                val_metric = self._test_step('valid')
-                self.logger.train_info(
-                    f"Epoch: {epoch:03d}, train loss: {loss:.4f}. " + self.logger.metric2str(val_metric))
-                self.writer.add_scalar('train_loss', loss, global_step=epoch)
-                self.writer.add_scalars('val_metric', val_metric['valid'], global_step=epoch)
-                early_stop = stopper.loss_step(val_metric['valid']['loss'], self.model)
-                if early_stop:
-                    self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}.')
-                    break
-        stopper.load_model(self.model)
-        self.writer.close()
-        # Test
-        if self.args.test_flag:
-            if self.args.dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
-                # Test in HGB datasets.
-                self.model.eval()
-                with torch.no_grad():
+        if self.args.graphbolt and self.args.mini_batch_flag:
+            self.train_GB()
+        else:
+            self.preprocess()
+            stopper = EarlyStopping(self.patience, self._checkpoint)
+            for epoch in tqdm(range(self.max_epoch)):
+                if self.args.mini_batch_flag:
+                    loss = self._mini_train_step()
+                else:
+                    loss = self._full_train_setp()
+                if epoch % self.evaluate_interval == 0:
                     val_metric = self._test_step('valid')
-                    self.logger.train_info(self.logger.metric2str(val_metric))
-                    h_dict = self.model.input_feature()
-                    embedding = self.model(self.train_hg, h_dict)
-                    score = th.sigmoid(self.task.ScorePredictor(self.task.test_hg, embedding, self.r_embedding))
-                    self.task.dataset.save_results(hg=self.task.test_hg, score=score,
-                                                   file_path=self.args.HGB_results_path)
-                return dict(metric=val_metric, epoch=epoch)
-            else:
-                test_score = self._test_step(split="test")
-                self.logger.train_info(self.logger.metric2str(test_score))
-                return dict(metric=test_score, epoch=epoch)
-        elif self.args.prediction_flag:
-            if self.args.mini_batch_flag:
-                prediction_res = self._mini_prediction_step()
-            else:
-                prediction_res = self._full_prediction_step()
-            return prediction_res
+                    self.logger.train_info(
+                        f"Epoch: {epoch:03d}, train loss: {loss:.4f}. " + self.logger.metric2str(val_metric))
+                    self.writer.add_scalar('train_loss', loss, global_step=epoch)
+                    self.writer.add_scalars('val_metric', val_metric['valid'], global_step=epoch)
+                    early_stop = stopper.loss_step(val_metric['valid']['loss'], self.model)
+                    if early_stop:
+                        self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}.')
+                        break
+            stopper.load_model(self.model)
+            self.writer.close()
+            # Test
+            if self.args.test_flag:
+                if self.args.dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
+                    # Test in HGB datasets.
+                    self.model.eval()
+                    with torch.no_grad():
+                        val_metric = self._test_step('valid')
+                        self.logger.train_info(self.logger.metric2str(val_metric))
+                        h_dict = self.model.input_feature()
+                        embedding = self.model(self.train_hg, h_dict)
+                        score = th.sigmoid(self.task.ScorePredictor(self.task.test_hg, embedding, self.r_embedding))
+                        self.task.dataset.save_results(hg=self.task.test_hg, score=score,
+                                                    file_path=self.args.HGB_results_path)
+                    return dict(metric=val_metric, epoch=epoch)
+                else:
+                    test_score = self._test_step(split="test")
+                    self.logger.train_info(self.logger.metric2str(test_score))
+                    return dict(metric=test_score, epoch=epoch)
+            elif self.args.prediction_flag:
+                if self.args.mini_batch_flag:
+                    prediction_res = self._mini_prediction_step()
+                else:
+                    prediction_res = self._full_prediction_step()
+                return prediction_res
 
     def construct_negative_graph(self, hg):
         e_dict = {
@@ -273,3 +308,195 @@ class LinkPrediction(BaseFlow):
                 for ntype, idx in seeds.items():
                     embedding[ntype][idx] = output_emb[ntype]
             return embedding
+
+
+
+    def train_GB(self):
+        self.preprocess()
+        stopper = EarlyStopping(self.patience, self._checkpoint)
+        for epoch in tqdm(range(self.max_epoch)):
+            if self.args.mini_batch_flag:
+                train_all_loss = self._mini_train_step_GB()  #   训练.把全部训练集中的边都跑一边
+            if epoch % self.evaluate_interval == 0:
+                val_metric = self._mini_test_step_GB(split='valid')   #   验证
+                self.logger.train_info(
+                    f"Epoch: {epoch:03d}, 整个训练集的总LOSS: {train_all_loss:.4f}. " + "       整个验证集的总AUC:" + str(val_metric) )                
+                early_stop = stopper.loss_step(val_metric, self.model)
+                if early_stop:
+                    self.logger.train_info(f'提前停止!\tEpoch:{epoch:03d}.')
+                    break
+        stopper.load_model(self.model)
+        # 测试
+        if self.args.test_flag:
+            all_test_metric = self._mini_test_step_GB(split = 'test') # 【测试集】上计算metric，即包括正边，也包括随机生成的负边
+            self.logger.train_info(  "整个测试集的总AUC： "+  str(all_test_metric) )
+            return dict(metric=all_test_metric, epoch=epoch)
+            
+    def _mini_train_step_GB(self, ):
+        if self.args.graphbolt:
+            self.model.train()
+            all_loss = 0    #   整个train_set的Loss
+            for step, data in enumerate(self.train_GB_loader):
+                # 从Batch中取出输入节点及其特征，目标边及其标签
+                #   目标边
+                compacted_seeds = data.compacted_seeds
+                #   目标边的标签
+                labels = data.labels
+                # node_features = {
+                #     ntype: data.node_features[(ntype, "feat")]
+                #     for ntype in data.blocks[0].srctypes
+                # }   #   字典：{节点类型->节点特征}
+
+                # input_nodes是   {节点类型：本次用到的  节点ID（整图）   }   
+                #input_nodes、node_features 、input_features一一对应        ，都是第0层源节点的 整图ID以及对应特征
+                input_nodes = data.input_nodes 
+                blocks = data.blocks
+
+                #   input_features是字典{节点类型：节点特征}.       
+                #   input_features是第0层源节点  初始化之后的节点特征，node_features是原始数据集节点特征，而input_features是经过变换之后的初始特征
+                input_features = self.model.input_feature.forward_nodes(input_nodes)
+
+                #   字典 {节点类型：节点特征}   ，这里是最后一层目标节点的  更新之后的特征。
+                #   这个节点特征  是用到连接预测的边上的源点和目点特征
+                node_fts_final = self.model(blocks, input_features)
+
+                edge_score_all_type = []
+                label_all_type = []
+                for cano_edge_type in list(compacted_seeds.keys()):
+                    #   cano_edge_type 可以是 P-0-P
+                    edge_src_id = compacted_seeds[cano_edge_type][:,0]  #   边上源点id
+                    edge_dst_id = compacted_seeds[cano_edge_type][:,1]  #   边上目点Id
+
+                    src_etype_dst = cano_edge_type.split(':')
+                    src_ft = node_fts_final[    src_etype_dst[0]    ]   #   源点类型的全部特征
+                    dst_ft = node_fts_final[    src_etype_dst[-1]    ]  #   目点类型的全部特征
+                    #   train阶段，计算score只需要得到一个数就可以，不用sigmoid换成概率
+                    edge_score_all_type.append( 
+                                        th.sum(src_ft[edge_src_id] * dst_ft[edge_dst_id]  * self.r_embedding[ src_etype_dst[1] ] ,
+                                        dim=1)     
+                                        )
+                    label_all_type.append(labels[cano_edge_type]   )
+
+                edge_score_all_type = th.cat(edge_score_all_type)
+                label_all_type = th.cat(label_all_type)
+                #   单个batch的 LOSS，包括所有规范边类型，正边和负边都包括
+                loss =  F.binary_cross_entropy_with_logits(edge_score_all_type,  label_all_type )
+                all_loss += loss.item()
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+            return all_loss/(step + 1)
+
+    def _mini_test_step_GB(self, split):
+        if self.args.graphbolt:
+            self.model.eval()
+            with torch.no_grad():
+                #   一个epoch
+                # 训练集，测试集，验证集。得到训练集的总LOSS和总ACC。验证集的...，测试集的...
+                if split == 'train':
+                    loader = self.train_GB_loader
+                elif split == 'valid':
+                    loader = self.val_GB_loader
+                elif split == 'test':
+                    loader = self.test_GB_loader
+                all_true_labels = []
+                all_preds = []
+                if split != 'test':
+                    all_true_labels = []
+                    all_preds = []
+                    for step, data in enumerate(loader):
+                        # 从Batch中取出输入节点及其特征，目标边及其标签
+                        #   目标边
+                        compacted_seeds = data.compacted_seeds
+                        #   目标边的标签
+                        labels = data.labels
+                        input_nodes = data.input_nodes  #   {节点类型：节点ID（整图）   }   ,input_nodes和node_fts一一对应
+                        blocks = data.blocks
+                        #   字典{节点类型：节点特征}.       input_features是第0层源节点  初始化之后的节点特征，node_fts是原始的节点特征，两者一一对应
+                        input_features = self.model.input_feature.forward_nodes(input_nodes)
+                        #   字典 {节点类型：节点特征}   ，这里是最后一层目标节点的  更新之后的特征。
+                        #   这个节点特征  是用到连接预测的边上的源点和目点特征
+                        node_fts_final = self.model(blocks, input_features)
+                        edge_score_all_type = []
+                        label_all_type = []
+                        for cano_edge_type in list(compacted_seeds.keys()):
+                            #   cano_edge_type 可以是 P-0-P
+                            edge_src_id = compacted_seeds[cano_edge_type][:,0]  #   边上源点id
+                            edge_dst_id = compacted_seeds[cano_edge_type][:,1]  #   边上目点Id
+                            src_etype_dst = cano_edge_type.split(':')
+                            src_ft = node_fts_final[src_etype_dst[0]]   #   源点类型的全部特征
+                            dst_ft = node_fts_final[src_etype_dst[-1]]  #   目点类型的全部特征
+                            #   求metric阶段， 边上score 用sigmoid换成概率
+                            edge_score_all_type.append( 
+                                                th.sigmoid(
+                                                    th.sum(src_ft[edge_src_id] * dst_ft[edge_dst_id]  * self.r_embedding[ src_etype_dst[1] ] ,
+                                                dim=1) 
+                                                )    
+                                                )
+                            label_all_type.append(labels[cano_edge_type]   )
+
+                        #   单个Batch的预测值   和 真实标签
+                        edge_score_all_type = th.cat(edge_score_all_type)
+                        label_all_type = th.cat(label_all_type)
+                        #   把每个batch的预测值 和真实值  都拼接起来，构造一个训练集所有batch总的 metric
+                        all_true_labels.append(label_all_type.detach().cpu())
+                        all_preds.append(edge_score_all_type.detach().cpu())
+
+                    all_true_labels = torch.cat(all_true_labels, dim=0)
+                    all_preds = torch.cat(all_preds, dim=0)
+                    import sklearn
+                    #   split所有batch总的 auc
+                    metric = sklearn.metrics.roc_auc_score(all_true_labels,all_preds)
+
+                else:   #   测试集
+
+                    all_preds = []
+                    for step, data in enumerate(loader):
+                        # 从Batch中取出输入节点及其特征，目标边及其标签
+                        #   目标边
+                        compacted_seeds = data.compacted_seeds
+                        input_nodes = data.input_nodes  #   {节点类型：节点ID（整图）   }   ,input_nodes和node_fts一一对应
+                        blocks = data.blocks
+                        #   字典{节点类型：节点特征}.       input_features是第0层源节点  初始化之后的节点特征，node_fts是原始的节点特征，两者一一对应
+                        input_features = self.model.input_feature.forward_nodes(input_nodes)
+                        #   字典 {节点类型：节点特征}   ，这里是最后一层目标节点的  更新之后的特征。
+                        #   这个节点特征  是用到连接预测的边上的源点和目点特征
+                        node_fts_final = self.model(blocks, input_features)
+                        edge_score_all_type = []
+                        for cano_edge_type in list(compacted_seeds.keys()):
+                            #   cano_edge_type 可以是 P-0-P
+                            edge_src_id = compacted_seeds[cano_edge_type][:,0]  #   边上源点id
+                            edge_dst_id = compacted_seeds[cano_edge_type][:,1]  #   边上目点Id
+                            src_etype_dst = cano_edge_type.split(':')
+                            src_ft = node_fts_final[src_etype_dst[0]]   #   源点类型的全部特征
+                            dst_ft = node_fts_final[src_etype_dst[-1]]  #   目点类型的全部特征
+                            #   求metric阶段， 边上score 用sigmoid  换成概率：预测为1类的概率
+                            edge_score_all_type.append( 
+                                                th.sigmoid(
+                                                    th.sum(src_ft[edge_src_id] * dst_ft[edge_dst_id]  * self.r_embedding[ src_etype_dst[1] ] ,
+                                                dim=1) 
+                                                )    
+                                                )
+
+                        #   单个Batch的预测值   和 真实标签
+                        edge_score_all_type = th.cat(edge_score_all_type)
+                        #   把每个batch的预测值 和真实值  都拼接起来，构造一个训练集所有batch总的 metric
+                        all_preds.append(edge_score_all_type.detach().cpu())
+
+                    #   整个测试集的  预测值，此处已经是  概率
+                    all_preds = torch.cat(all_preds, dim=0)
+                    all_true_labels = torch.ones_like(all_preds, dtype=torch.int) 
+                    all_true_labels[-1] = 0
+                    import sklearn
+                    #   测试集 所有batch总的 metric
+                    metric = sklearn.metrics.roc_auc_score(all_true_labels,all_preds)
+                    pred_prob = all_preds.cpu().detach().numpy()   #   sigmoid输出值为  预测为1类的概率
+                    pred_label = (pred_prob >= 0.5).astype(int)
+                    correct_predictions = (pred_label == all_true_labels.cpu().numpy())
+                    accuracy = correct_predictions.mean()
+                    print(' 整个测试集上的 ACC是:',accuracy)
+
+            return metric
+
+
+
