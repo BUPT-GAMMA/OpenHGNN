@@ -59,9 +59,11 @@ SUPPORTED_TASKS = {
     'pretrain': 'openhgnn.tasks.pretrain',
     'abnorm_event_detection': 'openhgnn.tasks.AbnormEventDetection',
     'DSSL_trainer': 'openhgnn.tasks.DSSL_task',
+
     'NBF_link_prediction':'openhgnn.tasks.link_prediction',
     'Ingram': 'openhgnn.tasks.Ingram',
     'DisenKGAT_link_prediction':'openhgnn.tasks.link_prediction',
+
 }
 
 from .node_classification import NodeClassification

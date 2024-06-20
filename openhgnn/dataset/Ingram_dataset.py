@@ -14,6 +14,7 @@ def remove_duplicate(x):
     return list(dict.fromkeys(x))
 
 
+
 class UnionFind:
     def __init__(self, n):
         self.n = n
@@ -23,6 +24,7 @@ class UnionFind:
         if self.parent[x] != x:
             self.parent[x] = self.find(self.parent[x])
         return self.parent[x]
+
 
     def union(self, x, y):
         self.parent[self.find(x)] = self.find(y)
@@ -58,6 +60,7 @@ class Ingram_KG_TrainData():
         self.path = 'openhgnn/data/' + dataset_name + '/'
         self.rel_info = {}  # (h,t):[r1,r2,...]
         self.pair_info = {}  # r:[(h,t),(h,t),...]
+
         self.spanning = []  # [(h,t),(h,t),...]，
         self.remaining = []  # [(h,t),(h,t),...]，
         self.ent2id = None  # ent2id
@@ -73,6 +76,7 @@ class Ingram_KG_TrainData():
         path_ckp = self.path
         print(path_ckp)
         folder = os.path.exists(path_ckp)
+
         if not folder:
             os.makedirs(path_ckp)
             url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/NL-100.zip"
@@ -128,6 +132,7 @@ class Ingram_KG_TrainData():
         return id2ent, id2rel, triplets
 
     def split_transductive(self, p):
+
         msg, sup = [], []
         rels_encountered = np.zeros(self.num_rel)
 
