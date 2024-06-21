@@ -1268,6 +1268,21 @@ class Config(object):
             self.has_attn = conf.getboolean("ComPILE", "has_attn")
             self.mode = conf.get("ComPILE","mode")
 
+        elif self.model_name == 'SIAN':
+            self.user_num = conf.getint("SIAN", "user_num")
+            self.item_num = conf.getint("SIAN","item_num")
+            self.profile_size = conf.getint("SIAN","profile_size")
+            self.batch_size = conf.getint("SIAN", "batch_size")
+            self.emb_size = conf.getint("SIAN", "emb_size")
+            self.lr = conf.getfloat("SIAN", "lr")
+            self.weight_decay = conf.getfloat("SIAN", "weight_decay")
+            self.test_batch_size = conf.getint("SIAN", "test_batch_size")
+            self.epochs = conf.getint("SIAN", "epochs")
+            self.eval_num = conf.getint("SIAN", "eval_num")
+            self.top_k = conf.getint("SIAN", "top_k")
+            self.worker_num = conf.getint("SIAN", "worker_num")
+            self.seed = conf.getint("SIAN", "seed")
+
         if hasattr(self, 'device'):
             self.device = th.device(self.device)
         elif gpu == -1:

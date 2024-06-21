@@ -60,6 +60,7 @@ def build_model(model):
 
 
 SUPPORTED_MODELS = {
+    "SIAN": "openhgnn.models.SIAN",
     "CompGCN": "openhgnn.models.CompGCN",
     "HetGNN": "openhgnn.models.HetGNN",
     'RGCN': 'openhgnn.models.RGCN',
@@ -125,6 +126,7 @@ SUPPORTED_MODELS = {
     'RedGNNT': 'openhgnn.models.RedGNNT',
 }
 
+from .SIAN import SIAN
 from .HGCL import HGCL
 from .CompGCN import CompGCN
 from .HetGNN import HetGNN

@@ -47,6 +47,7 @@ def build_flow(args, flow_name):
 
 
 SUPPORTED_FLOWS = {
+    'SIAN_trainer': 'openhgnn.trainerflow.SIAN_trainer',
     'entity_classification': 'openhgnn.trainerflow.entity_classification',
     'node_classification': 'openhgnn.trainerflow.node_classification',
     'node_classification_ac': 'openhgnn.trainerflow.node_classfication_ac',
@@ -94,6 +95,7 @@ SUPPORTED_FLOWS = {
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
 }
 
+from .sian_trainer import SIAN_Trainer
 from .hgcl_trainer import HGCLtrainer
 from .node_classification import NodeClassification
 from .link_prediction import LinkPrediction
@@ -147,6 +149,7 @@ __all__ = [
     'DMGI_trainer',
     'SLiCETrainer',
     'hde_trainer',
+    'SIAN_Trainer',
     'GATNE',
     'HANNodeClassification',
     'HANLinkPrediction',

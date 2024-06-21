@@ -147,6 +147,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'kg_subT_link_prediction'
     elif dataset in ['LastFM4KGCN']:
         _dataset = 'kgcn_recommendation'
+    elif dataset in ['yelp']:
+        _dataset = 'sian_recommendation'
     elif dataset in ['gowalla', 'yelp2018', 'amazon-book']:
         _dataset = 'lightGCN_recommendation'
     elif dataset in ['yelp4rec']:
