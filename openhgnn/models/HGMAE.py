@@ -591,7 +591,7 @@ class HAN(nn.Module):
             for l in range(1, num_layers - 1):
                 # due to multi-head, the in_dim = num_hidden * num_heads
                 self.han_layers.append(HANLayer(num_metapaths,
-                                                hidden_dim * hidden_dim, hidden_dim, num_heads,
+                                                hidden_dim * num_heads, hidden_dim, num_heads,
                                                 feat_drop, attn_drop, negative_slope, residual, self.activation,
                                                 norm=norm))
             # output projection
