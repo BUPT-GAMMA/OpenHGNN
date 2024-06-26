@@ -233,6 +233,23 @@ BEST_CONFIGS = {
                          'sample_rate': {'author': 7, "subject": 3}, 'lam': 0.5
                          }
         },
+        'HGMAE': {
+            'general':{
+                'patience': 10, 'mae_epochs': 10000, 'mae_lr': 0.0008,
+                'l2_coef': 0, 'eva_lr': 0.01, 'eva_wd': 0.0005, 'scheduler_gamma': 0.999
+            },
+            'acm4HGMAE':{
+                'in_dim': 1902, 'hidden_dim': 1024, 'category': 'paper', 'feat_drop': 0.2,
+                'attn_drop': 0.5, 'residual': False, 'negative_slope': 0.2, 'num_classes': 3,
+                'num_heads': 4, 'num_layers': 2, 'num_out_heads': 1, 'mp_edge_recon_loss_weight': 1,
+                'mp_edge_mask_rate': 0.7, 'mp_edge_gamma': 3, 'node_mask_rate': '0.5,0.005,0.8',
+                'attr_restore_loss_weight': 1, 'attr_restore_gamma': 1, 'attr_replace_rate': 0.2,
+                'attr_unchanged_rate': 0.3, 'mp2vec_negative_size': 3, 'mp2vec_window_size': 3,
+                'mp2vec_batch_size': 256, 'mp2vec_rw_length': 10, 'mp2vec_walks_per_node': 3,
+                'mp2vec_train_epoch': 20, 'mp2vec_train_lr': 0.001, 'mp2vec_feat_dim': 64,
+                'mp2vec_feat_pred_loss_weight': 0.1, 'mp2vec_feat_gamma': 2, 'mp2vec_feat_drop': 0.2,
+            }
+        },
         'DMGI': {
             'general': {
                 'seed': 0, 'sc': 3, 'learning_rate': 0.0005
