@@ -143,6 +143,9 @@ class Config(object):
             self.num_ns_neg = conf.getint("NSHE", "num_ns_neg")
             self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
             self.mini_batch_flag = conf.getboolean("NSHE", "mini_batch_flag")
+            self.hidden_dim = conf.getint("NSHE", "hidden_dim")
+            self.num_heads = conf.getint('NSHE', 'num_heads')
+            self.dropout = conf.getfloat('NSHE', 'dropout')
 
         elif self.model_name in ["GTN", "fastGTN"]:
             self.lr = conf.getfloat("GTN", "learning_rate")
