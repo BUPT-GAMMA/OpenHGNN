@@ -131,18 +131,24 @@ class Config(object):
             self.dim_size['emd'] = conf.getint("NSHE", "emd_dim")
             self.dim_size['context'] = conf.getint("NSHE", "context_dim")
             self.dim_size['project'] = conf.getint("NSHE", "project_dim")
+	    self.hidden_dim = conf.getint("NSHE", "hidden_dim")
 
             self.lr = conf.getfloat("NSHE", "learning_rate")
             self.weight_decay = conf.getfloat("NSHE", "weight_decay")
             self.beta = conf.getfloat("NSHE", "beta")
             self.seed = conf.getint("NSHE", "seed")
+	    self.dropout = conf.getfloat('NSHE', 'dropout')
             np.random.seed(self.seed)
             self.max_epoch = conf.getint("NSHE", "max_epoch")
             self.patience = conf.getint("NSHE", "patience")
             self.num_e_neg = conf.getint("NSHE", "num_e_neg")
             self.num_ns_neg = conf.getint("NSHE", "num_ns_neg")
+	    self.num_heads = conf.getint('NSHE', 'num_heads')
             self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
             self.mini_batch_flag = conf.getboolean("NSHE", "mini_batch_flag")
+            
+            
+            
 
         elif self.model_name in ["GTN", "fastGTN"]:
             self.lr = conf.getfloat("GTN", "learning_rate")
