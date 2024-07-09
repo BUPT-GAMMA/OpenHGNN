@@ -76,8 +76,12 @@ class Experiment(object):
         'ExpressGNN': 'ExpressGNN_trainer',
         'NBF':'NBF_trainer',
         'Ingram': 'Ingram_trainer',
-        'DisenKGAT': 'DisenKGAT_trainer'
+        'DisenKGAT': 'DisenKGAT_trainer',
+######################          add trainer_flow  here
+        'HGPrompt':'HGPrompt_trainer',
+##########################
     }
+    
     immutable_params = ['model', 'dataset', 'task']
 
     def __init__(self, model, dataset, task,

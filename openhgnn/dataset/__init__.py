@@ -82,38 +82,41 @@ def build_dataset(dataset, task, *args, **kwargs):
     model = args.model
     if isinstance(dataset, DGLDataset):
         return dataset
-    #-------------------更改部分-------------------
+    if dataset in CLASS_DATASETS:
+        return build_dataset_v2(dataset, task)
+    if not try_import_task_dataset(task):
+        exit(1)
+
+    #------------------- modify here -------------------
     if dataset == 'NL-100':
         train_dataloader = Ingram_KG_TrainData('',dataset)
         valid_dataloader = Ingram_KG_TestData('', dataset,'valid')
         test_dataloader = Ingram_KG_TestData('',dataset,'test')
         return train_dataloader,valid_dataloader,test_dataloader
-    # -------------------更改部分-------------------
-
-    if dataset == 'meirec':
+    elif dataset == 'meirec':
         train_dataloader = get_data_loader("train", batch_size=args[0])
         test_dataloader = get_data_loader("test", batch_size=args[0])
         return train_dataloader, test_dataloader
-    #-------------------更改部分-------------------
-    if dataset == 'AdapropT':
+    elif dataset == 'AdapropT':
         dataload=AdapropTDataLoader(args)
         return dataload
-    # -------------------更改部分-------------------
-    #-------------------更改部分-------------------
-    if dataset == 'AdapropI':
+    elif dataset == 'AdapropI':
         dataload=AdapropIDataLoader(args)
         return dataload
-      
-    if dataset == 'SACN' or dataset == 'LTE':
+    elif dataset == 'SACN' or dataset == 'LTE':
         return
 
-    if dataset in CLASS_DATASETS:
-        return build_dataset_v2(dataset, task)
-    if not try_import_task_dataset(task):
-        exit(1)
+
     _dataset = None
     if dataset in ['aifb', 'mutag', 'bgs', 'am']:
         _dataset = 'rdf_' + task
+
+#####################     add dataset here
+    elif dataset in ['acm4HGMAE','acm4HGA','dblp4HGA','hgprompt_acm_dblp']:      
+        return DATASET_REGISTRY['common_dataset'](dataset, logger=kwargs['logger'],args = kwargs['args'])
+    
+######################
+
     elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp',
                      'dblp4MAGNN', 'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie',
                      'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB',
