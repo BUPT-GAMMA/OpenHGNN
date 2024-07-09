@@ -40,6 +40,55 @@ class Config(object):
             self.seed = conf.getint("General", "seed")
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
+##############      add config.py    #################
+        elif self.model_name == "HGMAE":
+
+            self.dataset = conf.get("HGMAE", "dataset")
+
+            self.in_dim = conf.getint("HGMAE", "in_dim")
+            self.hidden_dim = conf.getint("HGMAE", "hidden_dim")
+            self.category = conf.get("HGMAE", "category")
+            self.feat_drop = conf.getfloat("HGMAE", "feat_drop")
+            self.attn_drop = conf.getfloat("HGMAE", "attn_drop")
+            self.residual = conf.getboolean("HGMAE", "residual")
+            self.negative_slope = conf.getfloat("HGMAE", "negative_slope")
+            self.num_classes = conf.getint("HGMAE", "num_classes")
+            self.num_heads = conf.getint("HGMAE", "num_heads")
+            self.num_layers = conf.getint("HGMAE", "num_layers")
+            self.num_out_heads = conf.getint("HGMAE", "num_out_heads")
+
+            self.mp_edge_recon_loss_weight = conf.getfloat("HGMAE", "mp_edge_recon_loss_weight")
+            self.mp_edge_mask_rate = conf.getfloat("HGMAE", "mp_edge_mask_rate")
+            self.mp_edge_gamma = conf.getfloat("HGMAE", "mp_edge_gamma")
+            self.node_mask_rate = conf.get("HGMAE", "node_mask_rate")
+
+            self.attr_restore_loss_weight = conf.getfloat("HGMAE", "attr_restore_loss_weight")
+            self.attr_restore_gamma = conf.getfloat("HGMAE", "attr_restore_gamma")
+            self.attr_replace_rate = conf.getfloat("HGMAE", "attr_replace_rate")
+            self.attr_unchanged_rate = conf.getfloat("HGMAE", "attr_unchanged_rate")
+
+            self.mp2vec_negative_size = conf.getint("HGMAE", "mp2vec_negative_size")
+            self.mp2vec_window_size = conf.getint("HGMAE", "mp2vec_window_size")
+            self.mp2vec_batch_size = conf.getint("HGMAE", "mp2vec_batch_size")
+            self.mp2vec_rw_length = conf.getint("HGMAE", "mp2vec_rw_length")
+            self.mp2vec_walks_per_node = conf.getint("HGMAE", "mp2vec_walks_per_node")
+            self.mp2vec_train_epoch = conf.getint("HGMAE", "mp2vec_train_epoch")
+            self.mp2vec_train_lr = conf.getfloat("HGMAE", "mp2vec_train_lr")
+            self.mp2vec_feat_dim = conf.getint("HGMAE", "mp2vec_feat_dim")
+            self.mp2vec_feat_pred_loss_weight = conf.getfloat("HGMAE", "mp2vec_feat_pred_loss_weight")
+            self.mp2vec_feat_gamma = conf.getfloat("HGMAE", "mp2vec_feat_gamma")
+            self.mp2vec_feat_drop = conf.getfloat("HGMAE", "mp2vec_feat_drop")
+
+            self.patience = conf.getint("HGMAE", "patience")
+            self.gpu = conf.getint("HGMAE", "gpu")
+            self.mae_epochs = conf.getint("HGMAE", "mae_epochs")
+            self.mae_lr = conf.getfloat("HGMAE", "mae_lr")
+            self.l2_coef = conf.getint("HGMAE", "l2_coef")
+            self.eva_lr = conf.getfloat("HGMAE", "eva_lr")
+            self.eva_wd = conf.getfloat("HGMAE", "eva_wd")
+            self.scheduler_gamma = conf.getfloat("HGMAE", "scheduler_gamma")
+
+
 
         elif self.model_name == "HGPrompt":
             self.feats_type = conf.getint("HGPrompt", "feats-type")
@@ -115,6 +164,8 @@ class Config(object):
             self.semantic_prompt_weight_down = conf.getfloat("HGPrompt", "semantic_prompt_weight_down")
             self.shgn_hidden_dim_down = conf.getint("HGPrompt", "shgn_hidden_dim_down")
 
+
+##########################################
 
         elif self.model_name == "DisenKGAT":
 

@@ -94,7 +94,10 @@ SUPPORTED_FLOWS = {
     'DisenKGAT_trainer':'openhgnn.trainerflow.DisenKGAT_trainer',
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
-    'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer'
+    'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
+###########     add trainer_flow here
+    'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
+
 }
 
 from .sian_trainer import SIAN_Trainer
@@ -136,6 +139,8 @@ from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
 from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
+######      add trainer_flow here
+from .HGMAE_trainer import HGMAE_trainer
 
 __all__ = [
     'BaseFlow',
