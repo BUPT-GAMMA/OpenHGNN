@@ -1,5 +1,6 @@
 import importlib
 from .base_flow import BaseFlow
+from abc import ABC     
 
 FLOW_REGISTRY = {}
 
@@ -22,8 +23,8 @@ def register_flow(name):
     def register_flow_cls(cls):
         if name in FLOW_REGISTRY:
             raise ValueError("Cannot register duplicate flow ({})".format(name))
-        if not issubclass(cls, BaseFlow):
-            raise ValueError("Flow ({}: {}) must extend BaseFlow".format(name, cls.__name__))
+        if not issubclass(cls, (BaseFlow,ABC)):
+            raise ValueError("Flow ({}: {}) must extend BaseFlow or ABC".format(name, cls.__name__))
         FLOW_REGISTRY[name] = cls
         return cls
 
@@ -93,6 +94,7 @@ SUPPORTED_FLOWS = {
     'DisenKGAT_trainer':'openhgnn.trainerflow.DisenKGAT_trainer',
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
+    'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer'
 }
 
 from .sian_trainer import SIAN_Trainer
@@ -133,6 +135,7 @@ from .NBF_trainer import *
 from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
 from .RedGNNT_trainer import RedGNNTTrainer
+from .HGPrompt import HGPrompt_trainer
 
 __all__ = [
     'BaseFlow',
