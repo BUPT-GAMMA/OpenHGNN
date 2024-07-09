@@ -79,6 +79,7 @@ class Experiment(object):
         'DisenKGAT': 'DisenKGAT_trainer',
 ######################          add trainer_flow  here
         'HGPrompt':'HGPrompt_trainer',
+        'HGMAE':'HGMAE_trainer',
 ##########################
     }
     
