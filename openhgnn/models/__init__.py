@@ -60,6 +60,9 @@ def build_model(model):
 
 
 SUPPORTED_MODELS = {
+#####       add models here
+    'HGA':'openhgnn.models.HGA',
+####################################
     "SIAN": "openhgnn.models.SIAN",
     "CompGCN": "openhgnn.models.CompGCN",
     "HetGNN": "openhgnn.models.HetGNN",

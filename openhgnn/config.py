@@ -41,10 +41,23 @@ class Config(object):
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
 ##############      add config.py    #################
+        elif self.model_name == 'HGA':
+            self.lr = conf.getfloat("HGA", "lr")
+            self.weight_decay = conf.getfloat("HGA", "weight_decay")
+            self.seed = conf.getint("HGA", "seed")
+            self.dropout = conf.getfloat("HGA", "dropout")
+            self.hidden_dim = conf.getint('HGA', 'hidden_dim')
+            self.out_dim = conf.getint('HGA', 'out_dim')
+            self.num_heads = conf.getint('HGA', 'num_heads')
+            self.patience = conf.getint('HGA', 'patience')
+            self.max_epoch = conf.getint('HGA', 'max_epoch')
+            self.mini_batch_flag = conf.getboolean("HGA", "mini_batch_flag")
+            self.gamma=conf.getfloat("HGA", "gamma")
+            self.batch_size=conf.getint("HGA", "batch_size")
+            self.num_layers = conf.getint('HGA','num_layers')
+
         elif self.model_name == "HGMAE":
-
             self.dataset = conf.get("HGMAE", "dataset")
-
             self.in_dim = conf.getint("HGMAE", "in_dim")
             self.hidden_dim = conf.getint("HGMAE", "hidden_dim")
             self.category = conf.get("HGMAE", "category")
