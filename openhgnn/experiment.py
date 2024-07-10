@@ -80,6 +80,7 @@ class Experiment(object):
 ######################          add trainer_flow  here
         'HGPrompt':'HGPrompt_trainer',
         'HGMAE':'HGMAE_trainer',
+        'HGA':'hga_trainer',
 ##########################
     }
     

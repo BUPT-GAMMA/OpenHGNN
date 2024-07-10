@@ -97,6 +97,8 @@ SUPPORTED_FLOWS = {
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
 ###########     add trainer_flow here
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
+    'hga_trainer':'openhgnn.trainerflow.HGATrainer',
+#####################################################
 
 }
 
@@ -141,6 +143,8 @@ from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
 ######      add trainer_flow here
 from .HGMAE_trainer import HGMAE_trainer
+from .hga_trainer import HGATrainer
+#####################################
 
 __all__ = [
     'BaseFlow',
