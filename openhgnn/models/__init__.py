@@ -115,6 +115,7 @@ SUPPORTED_MODELS = {
     'DSSL': 'openhgnn.models.DSSL',
     'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
+
     'Grail': 'openhgnn.models.Grail',
     'ComPILE': 'openhgnn.models.ComPILE',
     'AdapropT': 'openhgnn.models.AdapropT',
@@ -127,6 +128,7 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
+
 }
 
 from .SIAN import SIAN
@@ -181,6 +183,7 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
+
 
 __all__ = [
     'BaseModel',

@@ -68,6 +68,8 @@ class BaseFlow(ABC):
 
         if self.model_name in ["SIAN", "MeiREC", "ExpressGNN", "Ingram", "RedGNN","RedGNNT",  "AdapropI", "AdapropT","RedGNNT", "Grail", "ComPILE","DisenKGAT"]:
             return
+        if self.model_name == "Ingram":
+            return
 
         if self.args.use_uva:
             self.hg = self.task.get_graph()

@@ -100,6 +100,7 @@ SUPPORTED_FLOWS = {
     'hga_trainer':'openhgnn.trainerflow.HGATrainer',
 #####################################################
 
+
 }
 
 from .sian_trainer import SIAN_Trainer
@@ -129,6 +130,7 @@ from .kgat_trainer import KGAT_Trainer
 from .node_classification_ac import NodeClassificationAC
 from .DSSL_trainer import DSSL_trainer
 from .lightGCN_trainer import lightGCNTrainer
+
 from .Grail_trainer import GrailTrainer
 from .ComPILE_trainer import ComPILETrainer
 from .AdapropT_trainer import AdapropTTrainer
@@ -145,6 +147,7 @@ from .HGPrompt import HGPrompt_trainer
 from .HGMAE_trainer import HGMAE_trainer
 from .hga_trainer import HGATrainer
 #####################################
+
 
 __all__ = [
     'BaseFlow',
