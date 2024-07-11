@@ -9,6 +9,7 @@ from ..models import build_model
 from ..utils import EarlyStopping, add_reverse_edges, get_ntypes_from_canonical_etypes
 import warnings
 from torch.utils.tensorboard import SummaryWriter
+import dgl.graphbolt as gb
 
 
 @register_flow("link_prediction")
@@ -105,6 +106,38 @@ class LinkPrediction(BaseFlow):
             self.category = self.hg.ntypes[0]
         self.writer = SummaryWriter(f'./openhgnn/output/{self.model_name}/')
 
+        if self.args.mini_batch_flag and self.args.graphbolt:
+            self.fanouts = [-1] * self.args.num_layers  
+            dataset = gb.OnDiskDataset(self.task.dataset_GB.base_dir).load()
+
+            # base_dir = "/data/zzh/TEST_DIR/TEST_base_dir"
+            # dataset = gb.OnDiskDataset(base_dir).load()
+
+            graph = dataset.graph.to(self.device)
+            tasks = dataset.tasks
+            link_pred_task = tasks[0]
+            def create_dataloader(itemset,full_graph,split='train'):
+                datapipe = gb.ItemSampler(itemset, batch_size=2048, shuffle=True)
+                datapipe = datapipe.copy_to(self.device)
+                if split != 'test':
+                    datapipe = datapipe.sample_uniform_negative(full_graph, 1) 
+                datapipe = datapipe.sample_neighbor(full_graph,  self.fanouts) 
+                return gb.DataLoader(datapipe)
+                
+            self.train_GB_loader = create_dataloader(itemset=link_pred_task.train_set, 
+                                                  full_graph=graph,
+                                                  split='train')
+            self.val_GB_loader = create_dataloader(itemset=link_pred_task.validation_set, 
+                                                  full_graph=graph,
+                                                  split='valid')
+            self.test_GB_loader = create_dataloader(itemset=link_pred_task.test_set, 
+                                                  full_graph=graph,
+                                                  split='test')
+                
+
+
+
+
     def preprocess(self):
         """
         In link prediction, you will have a positive graph consisting of all the positive examples as edges,
@@ -116,49 +149,52 @@ class LinkPrediction(BaseFlow):
         self.train_hg = self.train_hg.to(self.device)
 
     def train(self):
-        self.preprocess()
-        stopper = EarlyStopping(self.patience, self._checkpoint)
-        for epoch in tqdm(range(self.max_epoch)):
-            if self.args.mini_batch_flag:
-                loss = self._mini_train_step()
-            else:
-                loss = self._full_train_setp()
-            if epoch % self.evaluate_interval == 0:
-                val_metric = self._test_step('valid')
-                self.logger.train_info(
-                    f"Epoch: {epoch:03d}, train loss: {loss:.4f}. " + self.logger.metric2str(val_metric))
-                self.writer.add_scalar('train_loss', loss, global_step=epoch)
-                self.writer.add_scalars('val_metric', val_metric['valid'], global_step=epoch)
-                early_stop = stopper.loss_step(val_metric['valid']['loss'], self.model)
-                if early_stop:
-                    self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}.')
-                    break
-        stopper.load_model(self.model)
-        self.writer.close()
-        # Test
-        if self.args.test_flag:
-            if self.args.dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
-                # Test in HGB datasets.
-                self.model.eval()
-                with torch.no_grad():
+        if self.args.graphbolt and self.args.mini_batch_flag:
+            self.train_GB()
+        else:
+            self.preprocess()
+            stopper = EarlyStopping(self.patience, self._checkpoint)
+            for epoch in tqdm(range(self.max_epoch)):
+                if self.args.mini_batch_flag:
+                    loss = self._mini_train_step()
+                else:
+                    loss = self._full_train_setp()
+                if epoch % self.evaluate_interval == 0:
                     val_metric = self._test_step('valid')
-                    self.logger.train_info(self.logger.metric2str(val_metric))
-                    h_dict = self.model.input_feature()
-                    embedding = self.model(self.train_hg, h_dict)
-                    score = th.sigmoid(self.task.ScorePredictor(self.task.test_hg, embedding, self.r_embedding))
-                    self.task.dataset.save_results(hg=self.task.test_hg, score=score,
-                                                   file_path=self.args.HGB_results_path)
-                return dict(metric=val_metric, epoch=epoch)
-            else:
-                test_score = self._test_step(split="test")
-                self.logger.train_info(self.logger.metric2str(test_score))
-                return dict(metric=test_score, epoch=epoch)
-        elif self.args.prediction_flag:
-            if self.args.mini_batch_flag:
-                prediction_res = self._mini_prediction_step()
-            else:
-                prediction_res = self._full_prediction_step()
-            return prediction_res
+                    self.logger.train_info(
+                        f"Epoch: {epoch:03d}, train loss: {loss:.4f}. " + self.logger.metric2str(val_metric))
+                    self.writer.add_scalar('train_loss', loss, global_step=epoch)
+                    self.writer.add_scalars('val_metric', val_metric['valid'], global_step=epoch)
+                    early_stop = stopper.loss_step(val_metric['valid']['loss'], self.model)
+                    if early_stop:
+                        self.logger.train_info(f'Early Stop!\tEpoch:{epoch:03d}.')
+                        break
+            stopper.load_model(self.model)
+            self.writer.close()
+            # Test
+            if self.args.test_flag:
+                if self.args.dataset in ['HGBl-amazon', 'HGBl-LastFM', 'HGBl-PubMed']:
+                    # Test in HGB datasets.
+                    self.model.eval()
+                    with torch.no_grad():
+                        val_metric = self._test_step('valid')
+                        self.logger.train_info(self.logger.metric2str(val_metric))
+                        h_dict = self.model.input_feature()
+                        embedding = self.model(self.train_hg, h_dict)
+                        score = th.sigmoid(self.task.ScorePredictor(self.task.test_hg, embedding, self.r_embedding))
+                        self.task.dataset.save_results(hg=self.task.test_hg, score=score,
+                                                    file_path=self.args.HGB_results_path)
+                    return dict(metric=val_metric, epoch=epoch)
+                else:
+                    test_score = self._test_step(split="test")
+                    self.logger.train_info(self.logger.metric2str(test_score))
+                    return dict(metric=test_score, epoch=epoch)
+            elif self.args.prediction_flag:
+                if self.args.mini_batch_flag:
+                    prediction_res = self._mini_prediction_step()
+                else:
+                    prediction_res = self._full_prediction_step()
+                return prediction_res
 
     def construct_negative_graph(self, hg):
         e_dict = {
@@ -273,3 +309,152 @@ class LinkPrediction(BaseFlow):
                 for ntype, idx in seeds.items():
                     embedding[ntype][idx] = output_emb[ntype]
             return embedding
+
+
+
+    def train_GB(self):
+        self.preprocess()
+        stopper = EarlyStopping(self.patience, self._checkpoint)
+        for epoch in tqdm(range(self.max_epoch)):
+            if self.args.mini_batch_flag:
+                train_all_loss = self._mini_train_step_GB()  #   train
+            if epoch % self.evaluate_interval == 0:
+                val_metric = self._mini_test_step_GB(split='valid')   #   valid
+                self.logger.train_info(
+                    f"Epoch: {epoch:03d}, Total_Train_LOSS: {train_all_loss:.4f}. " + " Total_Valid_AUC:" + str(val_metric) )                
+                early_stop = stopper.loss_step(val_metric, self.model)
+                if early_stop:
+                    self.logger.train_info(f'Stop Early!\tEpoch:{epoch:03d}.')
+                    break
+        stopper.load_model(self.model)
+        # Test
+        if self.args.test_flag:
+            all_test_metric = self._mini_test_step_GB(split = 'test') # test
+            self.logger.train_info(  "Total_Test_AUC： "+  str(all_test_metric) )
+            return dict(metric=all_test_metric, epoch=epoch)
+            
+    def _mini_train_step_GB(self, ):
+        if self.args.graphbolt:
+            self.model.train()
+            all_loss = 0    #   
+            for step, data in enumerate(self.train_GB_loader):
+                compacted_seeds = data.compacted_seeds
+                labels = data.labels
+                input_nodes = data.input_nodes 
+                blocks = data.blocks
+                input_features = self.model.input_feature.forward_nodes(input_nodes)
+                node_fts_final = self.model(blocks, input_features)
+                edge_score_all_type = []
+                label_all_type = []
+                for cano_edge_type in list(compacted_seeds.keys()):                
+                    edge_src_id = compacted_seeds[cano_edge_type][:,0]     
+                    edge_dst_id = compacted_seeds[cano_edge_type][:,1]    
+                    src_etype_dst = cano_edge_type.split(':')
+                    src_ft = node_fts_final[    src_etype_dst[0]    ]     
+                    dst_ft = node_fts_final[    src_etype_dst[-1]    ]    
+                    edge_score_all_type.append( 
+                                        th.sum(src_ft[edge_src_id] * dst_ft[edge_dst_id]  * self.r_embedding[ src_etype_dst[1] ] ,
+                                        dim=1)     
+                                        )
+                    label_all_type.append(labels[cano_edge_type]   )
+                edge_score_all_type = th.cat(edge_score_all_type)
+                label_all_type = th.cat(label_all_type)
+                loss =  F.binary_cross_entropy_with_logits(edge_score_all_type,  label_all_type )
+                all_loss += loss.item()
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+            return all_loss/(step + 1)
+
+    def _mini_test_step_GB(self, split):
+        if self.args.graphbolt:
+            self.model.eval()
+            with torch.no_grad():
+                if split == 'train':
+                    loader = self.train_GB_loader
+                elif split == 'valid':
+                    loader = self.val_GB_loader
+                elif split == 'test':
+                    loader = self.test_GB_loader
+                all_true_labels = []
+                all_preds = []
+                if split != 'test':
+                    all_true_labels = []
+                    all_preds = []
+                    for step, data in enumerate(loader):
+                        compacted_seeds = data.compacted_seeds
+                        labels = data.labels
+                        input_nodes = data.input_nodes  
+                        blocks = data.blocks
+                        input_features = self.model.input_feature.forward_nodes(input_nodes)
+                        node_fts_final = self.model(blocks, input_features)
+                        edge_score_all_type = []
+                        label_all_type = []
+                        for cano_edge_type in list(compacted_seeds.keys()):
+                           
+                            edge_src_id = compacted_seeds[cano_edge_type][:,0]  
+                            edge_dst_id = compacted_seeds[cano_edge_type][:,1] 
+                            src_etype_dst = cano_edge_type.split(':')
+                            src_ft = node_fts_final[src_etype_dst[0]]   
+                            dst_ft = node_fts_final[src_etype_dst[-1]]  
+                            
+                            edge_score_all_type.append( 
+                                                th.sigmoid(
+                                                    th.sum(src_ft[edge_src_id] * dst_ft[edge_dst_id]  * self.r_embedding[ src_etype_dst[1] ] ,
+                                                dim=1) 
+                                                )    
+                                                )
+                            label_all_type.append(labels[cano_edge_type]   )
+
+                        edge_score_all_type = th.cat(edge_score_all_type)
+                        label_all_type = th.cat(label_all_type)
+                        
+                        all_true_labels.append(label_all_type.detach().cpu())
+                        all_preds.append(edge_score_all_type.detach().cpu())
+
+                    all_true_labels = torch.cat(all_true_labels, dim=0)
+                    all_preds = torch.cat(all_preds, dim=0)
+                    import sklearn
+                    metric = sklearn.metrics.roc_auc_score(all_true_labels,all_preds)
+
+                else:   
+
+                    all_preds = []
+                    for step, data in enumerate(loader):
+                        compacted_seeds = data.compacted_seeds
+                        input_nodes = data.input_nodes  
+                        blocks = data.blocks
+                        input_features = self.model.input_feature.forward_nodes(input_nodes)
+                        node_fts_final = self.model(blocks, input_features)
+                        edge_score_all_type = []
+                        for cano_edge_type in list(compacted_seeds.keys()):
+                            edge_src_id = compacted_seeds[cano_edge_type][:,0]  
+                            edge_dst_id = compacted_seeds[cano_edge_type][:,1]  
+                            src_etype_dst = cano_edge_type.split(':')
+                            src_ft = node_fts_final[src_etype_dst[0]]   
+                            dst_ft = node_fts_final[src_etype_dst[-1]]  
+                            edge_score_all_type.append( 
+                                                th.sigmoid(
+                                                    th.sum(src_ft[edge_src_id] * dst_ft[edge_dst_id]  * self.r_embedding[ src_etype_dst[1] ] ,
+                                                dim=1) 
+                                                )    
+                                                )
+                        edge_score_all_type = th.cat(edge_score_all_type)      
+                        all_preds.append(edge_score_all_type.detach().cpu())
+
+               
+                    all_preds = torch.cat(all_preds, dim=0)
+                    all_true_labels = torch.ones_like(all_preds, dtype=torch.int) 
+                    all_true_labels[-1] = 0
+                    import sklearn
+                    metric = sklearn.metrics.roc_auc_score(all_true_labels,all_preds)
+                    pred_prob = all_preds.cpu().detach().numpy()  
+                    pred_label = (pred_prob >= 0.5).astype(int)
+                    correct_predictions = (pred_label == all_true_labels.cpu().numpy())
+                    accuracy = correct_predictions.mean()
+                    print(' Total_Test_ACC:',accuracy)
+
+            return metric
+
+
+

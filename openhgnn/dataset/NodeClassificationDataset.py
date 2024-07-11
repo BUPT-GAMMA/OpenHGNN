@@ -1,3 +1,4 @@
+import os
 import dgl
 import dgl.function as fn
 import torch as th
@@ -5,14 +6,106 @@ import numpy as np
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
 from dgl.data import CoraGraphDataset,CiteseerGraphDataset,PubmedGraphDataset
+from dgl import sparse as dglsp
 # from dgl.data import TexasDataset,CornellDataset
 import scipy.sparse as sp
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
 from . import BaseDataset, register_dataset
-from . import AcademicDataset, HGBDataset, OHGBDataset
-from .utils import sparse_mx_to_torch_sparse_tensor
+
+from . import AcademicDataset, HGBDataset, OHGBDataset,IMDB4MAGNN_Dataset
+from .utils import sparse_mx_to_torch_sparse_tensor, to_symmetric, row_norm
 from ..utils import add_reverse_edges
+import os
+from dgl.data.utils import download, extract_archive
+from abc import ABC
+
+
+########################        add dataset here
+
+
+@register_dataset('common_dataset')
+class Common_Dataset(BaseDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+    #   父类初始化函数中，定义了一堆None，没啥具体内容
+        
+        super(Common_Dataset, self).__init__(*args, **kwargs)
+        assert dataset_name in ['acm4HGMAE','hgprompt_acm_dblp']
+
+        if dataset_name == 'acm4HGMAE':
+            # 这是从云盘上下载下来的   本地zip文件
+            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
+            #本地base_dir文件夹.
+            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            #   云端的zip文件
+            self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
+            if os.path.exists(self.zip_file):  
+                pass
+            else:
+                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                download(self.url, 
+                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        )     
+            if os.path.exists( self.base_dir ):
+                pass
+            else:
+                os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
+                extract_archive(self.zip_file, self.base_dir)  # 把graph.bin 解压到 base_dir文件夹中
+
+
+            self.g = dgl.load_graphs(   os.path.join(self.base_dir,f'{dataset_name}.bin')    )[0][0]
+            self.category = 'paper'
+            self.num_classes = 3
+            
+            self.meta_paths_dict = {}   #   元路径
+            self.has_feature = True    #   是否有初始特征
+
+        elif dataset_name == 'hgprompt_acm_dblp':
+            # 这是从云盘上下载下来的   本地zip文件
+            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
+            #本地base_dir文件夹.
+            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            #   云端的zip文件
+            self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
+            if os.path.exists(self.zip_file):  
+                pass
+            else:
+                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                download(self.url, 
+                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        )     
+            if os.path.exists( self.base_dir ):
+                pass
+            else:
+                os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
+                extract_archive(self.zip_file, self.base_dir)  # 把  本地zip文件  解压到  base_dir文件夹中
+
+
+@register_dataset('GraphBolt_Dataset')
+class GraphBolt_Dataset(BaseDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+
+        super(GraphBolt_Dataset, self).__init__(*args, **kwargs)
+        assert dataset_name in ['imdb4GTN','HGBl-amazon']
+        self.zip_path = f'./openhgnn/dataset/GraphBolt_Dataset/{dataset_name}_base_dir.zip'
+        self.base_dir = './openhgnn/dataset/GraphBolt_Dataset/' + dataset_name + '_base_dir' 
+        self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}_base_dir.zip'
+        import os
+        from dgl.data.utils import download, extract_archive
+        if os.path.exists(self.zip_path):  
+           pass
+        else:
+            os.makedirs(    os.path.join('./openhgnn/dataset/GraphBolt_Dataset/')  ,exist_ok= True)
+
+            download(self.url, 
+                     path=os.path.join('./openhgnn/dataset/GraphBolt_Dataset/')     
+                     )   
+        if os.path.exists( self.base_dir ):
+            pass
+        else:
+            extract_archive(self.zip_path, os.path.join('./openhgnn/dataset/GraphBolt_Dataset/'))  
+
+
 
 
 @register_dataset('node_classification')
@@ -131,6 +224,71 @@ class NodeClassificationDataset(BaseDataset):
         return self.train_idx, self.valid_idx, self.test_idx
 
 
+
+@register_dataset('hga_node_classification')
+class HGA_NodeClassification(NodeClassificationDataset):
+    def __init__(self, dataset_name, *args, **kwargs):   
+        super(HGA_NodeClassification, self).__init__(*args, **kwargs)
+        assert dataset_name in ['acm4HGA','dblp4HGA']
+        if dataset_name == 'acm4HGA':
+            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
+            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
+            if os.path.exists(self.zip_file):  
+                pass
+            else:
+                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                download(self.url, 
+                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        )     
+            if os.path.exists( self.base_dir ):
+                pass
+            else:
+                os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
+                extract_archive(self.zip_file, self.base_dir) 
+            self.g = dgl.load_graphs(   os.path.join(self.base_dir,f'{dataset_name}.bin')    )[0][0].long()
+            self.category = '1'
+            self.num_classes = 4
+            self.in_dim = self.g.ndata['h'][self.category].shape[1]
+
+            self.meta_paths_dict = {
+                '131': [('1', '2', '3'), ('3', '2', '1')],
+                '121': [('1', '1', '2'), ('2', '1', '1')],
+            }
+            self.has_feature = True    
+
+        elif dataset_name == 'dblp4HGA':
+            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
+            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
+            if os.path.exists(self.zip_file):  
+                pass
+            else:
+                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                download(self.url, 
+                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        )     
+            if os.path.exists( self.base_dir ):
+                pass
+            else:
+                os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
+                extract_archive(self.zip_file, self.base_dir)  
+
+            self.g = dgl.load_graphs(   os.path.join(self.base_dir,f'{dataset_name}.bin')    )[0][0].long()
+            self.category = '1'
+            self.num_classes = 4
+            self.in_dim = self.g.ndata['h'][self.category].shape[1]
+            self.meta_paths_dict = {
+                '131': [('1', '2', '3'), ('3', '2', '1')],
+                '121': [('1', '1', '2'), ('2', '1', '1')],
+            }
+            self.has_feature = True    
+
+
+
+####################################
+
+
 @register_dataset('rdf_node_classification')
 class RDF_NodeClassification(NodeClassificationDataset):
     r"""
@@ -181,7 +339,14 @@ class HIN_NodeClassification(NodeClassificationDataset):
 
     def __init__(self, dataset_name, *args, **kwargs):
         super(HIN_NodeClassification, self).__init__(*args, **kwargs)
+
+        if 'args' in kwargs:  
+            self.args = kwargs['args']
+        else:
+            self.args = None
+
         self.g, self.category, self.num_classes = self.load_HIN(dataset_name)
+
 
     def load_HIN(self, name_dataset):
         if name_dataset == 'demo_graph':
@@ -211,7 +376,12 @@ class HIN_NodeClassification(NodeClassificationDataset):
             self.in_dim = g.ndata['h'][category].shape[1]
 
         elif name_dataset == 'imdb4MAGNN':
-            dataset = AcademicDataset(name='imdb4MAGNN', raw_dir='')
+            if self.args:
+                if self.args.use_database == True:
+                    dataset = IMDB4MAGNN_Dataset(name='imdb4MAGNN',args = self.args)
+            else:
+                dataset = AcademicDataset(name='imdb4MAGNN', raw_dir='')
+
             category = 'M'
             g = dataset[0].long()
             num_classes = 3
@@ -515,6 +685,7 @@ class OGB_NodeClassification(NodeClassificationDataset):
         self.train_idx, self.valid_idx, self.test_idx = split_idx["train"][self.category], split_idx["valid"][
             self.category], split_idx["test"][self.category]
         self.g, self.label_dict = dataset[0]
+        self.SeHGNN_g = self.mag4sehgnn(dataset)
         self.g = self.mag4HGT(self.g)
         self.label = self.label_dict[self.category].squeeze(dim=-1)
         # 2-dim label
@@ -528,6 +699,87 @@ class OGB_NodeClassification(NodeClassificationDataset):
     def get_labels(self):
         return self.label
 
+    def mag4sehgnn(self, dataset):
+        g, _ = dataset[0]
+        embed_size = g.nodes['paper'].data['feat'].size(0)
+
+        author_emb = th.Tensor(g.num_nodes('author'), 256).uniform_(-0.5, 0.5)
+        topic_emb = th.Tensor(g.num_nodes('field_of_study'), 256).uniform_(-0.5, 0.5)
+        institution_emb = th.Tensor(g.num_nodes('institution'), 256).uniform_(-0.5, 0.5)
+
+        g.nodes['author'].data['feat'] = author_emb
+        g.nodes['institution'].data['feat'] = institution_emb
+        g.nodes['field_of_study'].data['feat'] = topic_emb
+
+        adjs = []
+        i = 0
+        for src_type, edge_type, dst_type in g.canonical_etypes:
+            src, dst, eid = g._graph.edges(i)
+            adj = dglsp.spmatrix(indices = th.stack((src, dst)), shape = (g.number_of_nodes(src_type), g.number_of_nodes(dst_type)))
+            adjs.append(adj)
+            i += 1
+        # F --- *P --- A --- I
+        # paper : [736389, 128]
+        # author: [1134649, 256]
+        # institution [8740, 256]
+        # field_of_study [59965, 256]
+
+        new_edges = {}
+        ntypes = set()
+
+        etypes = [  # src->tgt
+            ('A', 'A-I', 'I'),
+            ('A', 'A-P', 'P'),
+            ('P', 'P-P', 'P'),
+            ('P', 'P-F', 'F'),
+        ]
+
+        adjs[2] = to_symmetric(adjs[2])
+        for etype, adj in zip(etypes, adjs):
+            stype, rtype, dtype = etype
+            src, dst = adj.coo()
+            if stype == dtype:
+                new_edges[(stype, rtype, dtype)] = (np.concatenate((src, dst)), np.concatenate((dst, src)))
+            else:
+                new_edges[(stype, rtype, dtype)] = (src, dst)
+                new_edges[(dtype, rtype[::-1], stype)] = (dst, src)
+            ntypes.add(stype)
+            ntypes.add(dtype)
+
+        new_g = dgl.heterograph(new_edges)
+        new_g.nodes['P'].data['P'] = g.nodes['paper'].data['feat']
+        new_g.nodes['A'].data['A'] = g.nodes['author'].data['feat']
+        new_g.nodes['I'].data['I'] = g.nodes['institution'].data['feat']
+        new_g.nodes['F'].data['F'] = g.nodes['field_of_study'].data['feat']
+
+        IA, PA, PP, FP = adjs
+
+        diag_name = f'ogbn-mag_PP_diag.pt'
+        if not os.path.exists(diag_name):
+            PP_rm_diag = row_norm(PP)
+            th.save(PP_rm_diag, diag_name)
+
+        diag_name = f'ogbn-mag_PPP_diag.pt'
+        if not os.path.exists(diag_name):
+            PP_rm_diag = row_norm(PP)
+            PPP_rm_diag = dglsp.spspmm(PP_rm_diag, PP_rm_diag)
+            th.save(PPP_rm_diag, diag_name)
+
+        diag_name = f'ogbn-mag_PAP_diag.pt'
+        if not os.path.exists(diag_name):
+            PA_rm_diag = row_norm(PA)
+            AP_rm_diag = row_norm(PA.T)
+            PAP_rm_diag = dglsp.spspmm(PA_rm_diag, AP_rm_diag)
+            th.save(PAP_rm_diag, diag_name)
+
+        diag_name = f'ogbn-mag_PFP_diag.pt'
+        if not os.path.exists(diag_name):
+            PF_rm_diag = row_norm(FP.T)
+            FP_rm_diag = row_norm(FP)
+            PFP_rm_diag = dglsp.spspmm(PF_rm_diag, FP_rm_diag)
+            th.save(PFP_rm_diag, diag_name)
+
+        return new_g
     def mag4HGT(self, hg):
         # Add reverse edge types
 

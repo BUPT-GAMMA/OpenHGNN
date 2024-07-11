@@ -2,7 +2,12 @@ ogb>=1.3.1
 optuna
 rdflib
 colorama
-torch>=1.9.0
+igraph
+torch>=2.3.0
 -f https://data.dgl.ai/wheels/repo.html
-dgl>=0.8.0
+dgl>=2.2.1
 TensorBoard>=2.0.0
+lmdb
+rdflib
+ordered_set
+igraph

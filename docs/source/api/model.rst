@@ -43,3 +43,5 @@ Models
     openhgnn.models.DiffMG
     openhgnn.models.MeiREC
     openhgnn.models.HMPNN
+    openhgnn.models.SeHGNN
+

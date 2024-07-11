@@ -418,6 +418,59 @@ BEST_CONFIGS = {
             'wn18':{
                 'lr': 0.5, 'weight_decay': 0.0001, 'ent_dim': 400, 'rel_dim': 400, 'neg_size': 98, 'margin': 200, 'batch_size': 100, 'patience':5, 'valid_percent':1, 'test_percent': 1
             }
+        },
+        'RedGNN': {
+            'general': {
+
+            },
+            'WN18RR_v1':{
+                 'batch_size':100, 'hidden_dim' : 64, 'lr': 0.005, 'weight_decay': 0.0002, 'decay_rate': 0.991, 'attn_dim':5,
+                  'act': 'idd', 'n_layer': 5
+            },
+            'fb237_v1': {
+                'batch_size':20, 'hidden_dim' : 32, 'lr': 0.0092, 'weight_decay': 0.0003, 'decay_rate': 0.994, 'attn_dim':5,
+                     'act': 'relu', 'n_layer': 3
+            },
+            'nell_v1': {
+                'batch_size':10, 'hidden_dim' : 48, 'lr': 0.0021, 'weight_decay': 0.000189, 'decay_rate': 0.9937, 'attn_dim':5,
+                     'act': 'relu', 'n_layer': 5
+            },
+            'WN18RR_v2':{
+                'batch_size':20, 'hidden_dim' : 48, 'lr': 0.0016, 'weight_decay': 0.0004, 'decay_rate': 0.994, 'attn_dim':3,
+                  'act': 'relu', 'n_layer': 5
+            },
+            'fb237_v2': {
+                'batch_size':10, 'hidden_dim' : 48, 'lr': 0.0077, 'weight_decay': 0.0002, 'decay_rate': 0.993, 'attn_dim':5,
+                     'act': 'relu', 'n_layer': 3
+            },
+            'nell_v2': {
+                'batch_size':100, 'hidden_dim' : 48, 'lr': 0.0075, 'weight_decay': 0.000189, 'decay_rate': 0.9996, 'attn_dim':5,
+                     'act': 'relu', 'n_layer': 3
+            },
+            'WN18RR_v3':{
+                'batch_size':20, 'hidden_dim' : 64, 'lr': 0.0014, 'weight_decay': 0.0004, 'decay_rate': 0.994, 'attn_dim':5,
+                  'act': 'tanh', 'n_layer': 5
+            },
+            'fb237_v3': {
+                'batch_size':30, 'hidden_dim' : 48, 'lr': 0.0006, 'weight_decay': 0.00023, 'decay_rate': 0.993, 'attn_dim':5,
+                     'act': 'relu', 'n_layer': 3
+            },
+            'nell_v3': {
+                'batch_size':10, 'hidden_dim' : 16, 'lr': 0.0008, 'weight_decay': 0.0004, 'decay_rate': 0.995, 'attn_dim':3,
+                     'act': 'relu', 'n_layer': 3
+            },
+            'WN18RR_v4':{
+                'batch_size':10, 'hidden_dim' : 32, 'lr': 0.006, 'weight_decay': 0.000132, 'decay_rate': 0.991, 'attn_dim':5,
+                  'act': 'relu', 'n_layer': 5
+            },
+            'fb237_v4': {
+                'batch_size':20, 'hidden_dim' : 48, 'lr': 0.0052, 'weight_decay': 0.000018, 'decay_rate': 0.999, 'attn_dim':5,
+                     'act': 'idd', 'n_layer': 5
+            },
+            'nell_v4': {
+                'batch_size':20, 'hidden_dim' : 16, 'lr': 0.0005, 'weight_decay': 0.000398, 'decay_rate': 1, 'attn_dim':3,
+                     'act': 'tanh', 'n_layer': 5
+            },
         }
 
     },

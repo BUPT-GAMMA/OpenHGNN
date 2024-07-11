@@ -32,3 +32,5 @@ Trainerflow
     openhgnn.trainerflow.DiffMG_trainer
     openhgnn.trainerflow.MeiRECTrainer
     openhgnn.trainerflow.KTNTrainer
+    openhgnn.trainerflow.SeHGNNtrainer
+
