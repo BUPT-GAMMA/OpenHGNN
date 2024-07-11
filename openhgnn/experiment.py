@@ -67,6 +67,7 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
+        'HMPNN':'KTN_trainer'
         'SeHGNN': 'SeHGNN_trainer',
         'Grail': 'Grail_trainer',
         'ComPILE': 'ComPILE_trainer',
@@ -83,6 +84,7 @@ class Experiment(object):
         'HGMAE':'HGMAE_trainer',
         'HGA':'hga_trainer',
 ##########################
+
 
     }
     

@@ -16,3 +16,4 @@ Task
     openhgnn.tasks.Recommendation
     openhgnn.tasks.EdgeClassification
     openhgnn.tasks.hypergraph
+    openhgnn.tasks.KTN

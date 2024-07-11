@@ -28,7 +28,9 @@ def register_model(name):
         if name in MODEL_REGISTRY:
             raise ValueError("Cannot register duplicate models ({})".format(name))
         if not issubclass(cls, BaseModel):
-            raise ValueError("Model ({}: {}) must extend BaseModel".format(name, cls.__name__))
+            raise ValueError(
+                "Model ({}: {}) must extend BaseModel".format(name, cls.__name__)
+            )
         MODEL_REGISTRY[name] = cls
         cls.model_name = name
         return cls
@@ -48,7 +50,8 @@ def try_import_model(model):
 
 def build_model(model):
     if isinstance(model, nn.Module):
-        if not hasattr(model, 'build_model_from_args'):
+        if not hasattr(model, "build_model_from_args"):
+
             def build_model_from_args(args, hg):
                 return model
 
@@ -66,6 +69,7 @@ SUPPORTED_MODELS = {
     "SIAN": "openhgnn.models.SIAN",
     "CompGCN": "openhgnn.models.CompGCN",
     "HetGNN": "openhgnn.models.HetGNN",
+    "HMPNN": "openhgnn.models.HMPNN",
     'RGCN': 'openhgnn.models.RGCN',
     "RGAT": 'openhgnn.models.RGAT',
     'RSHN': 'openhgnn.models.RSHN',
@@ -128,8 +132,6 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
-
-
 }
 
 from .SIAN import SIAN
@@ -173,6 +175,7 @@ from .HGNN_AC import HGNN_AC
 from .KGAT import KGAT
 from .DSSL import DSSL
 from .lightGCN import lightGCN
+from .HMPNN import HMPNN
 
 from .SeHGNN import SeHGNN
 from .Grail import Grail
@@ -190,6 +193,8 @@ from .RedGNNT import RedGNNT
 
 
 __all__ = [
+
+    "HMPNN",
     'BaseModel',
     'CompGCN',
     'HetGNN',
