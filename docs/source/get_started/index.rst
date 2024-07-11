@@ -11,7 +11,7 @@ Python environment requirments
 
 - `Python <https://www.python.org/>`_ >= 3.6
 - `PyTorch <https://pytorch.org/>`_  >= 1.9.0
-- `DGL <https://github.com/dmlc/dgl>`_ >= 0.8.0
+- `DGL <https://github.com/dmlc/dgl>`_ >= 2.1.0
 
 
 **1. Python environment (Optional):** We recommend using Conda package manager

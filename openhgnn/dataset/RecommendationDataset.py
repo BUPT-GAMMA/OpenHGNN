@@ -10,6 +10,7 @@ from .multigraph import MultiGraphDataset
 from ..sampler.negative_sampler import Uniform_exclusive
 from . import AcademicDataset
 from .HGCLDataset import HGCLDataset
+from collections import defaultdict
 
 #add more lib for KGAT
 import time
@@ -623,3 +624,86 @@ class KGAT_recommendation(RecommendationDataset):
         self.pretrain_embedding_dir = f"{self.data_path}/pretrain/mf.npz"
 
         print(time.strftime("%Y-%m-%d %H:%M:%S ", time.localtime()), '--- Start Training! ---')
+
+@register_dataset("sian_recommendation")
+class SIAN_recommendation(RecommendationDataset):
+    def __init__(self, *args, **kwargs):
+        super(SIAN_recommendation, self).__init__(*args, **kwargs)
+        self.data_path = f'openhgnn/dataset/SIAN_recommendation_dataset/'
+        self.u_items = defaultdict(set)
+        self.i_users = defaultdict(set)
+        self.data = list() # train, test, val
+
+        if not os.path.exists(self.data_path):
+            self.download()
+
+        self.load_data()
+        self.load_profile()
+        self.load_social_data()
+
+    def get_split(self):
+        '''
+        Make it compatible to recommendation task
+        '''
+        return None,None,None
+
+    def load_data(self):
+        need = ['yelp.train.rating.712', 'yelp.test.rating.712', 'yelp.val.rating.712']
+        for file in need:
+            with open(self.data_path + file) as f:
+                data_size = 0
+                data = defaultdict(int)
+                for line in f:
+                    token = line.split('\t')  # user_id \t item_id \t label \t act_list
+                    user = int(token[0])
+                    item = int(token[1])
+                    label = int(token[2])
+                    act = token[3].strip()
+                    data[(user, item, label, act)] = 1
+                    if label == 1:  # positive
+                        self.u_items[user].add(item)
+                        self.i_users[item].add(user)
+                    data_size += 1
+
+            idx2user = np.zeros((data_size,), dtype=np.int32)
+            idx2item = np.zeros((data_size,), dtype=np.int32)
+            idx2label = np.zeros((data_size,), dtype=np.int32)
+            idx2act = np.zeros((data_size,), dtype=object)
+
+            for idx, (u, i, l, a) in enumerate(data):
+                idx2user[idx] = u
+                idx2item[idx] = i
+                idx2label[idx] = l
+                idx2act[idx] = list(map(lambda x: int(x), a.split(' ')))
+
+            self.data.append(np.array([idx2user, idx2item, idx2label, idx2act]))
+
+    def load_profile(self):
+        self.user_profile = th.from_numpy(np.load(self.data_path + 'user_profile.npy')).float()
+        self.item_profile = th.from_numpy(np.load(self.data_path + 'item_profile.npy')).float()
+
+    def load_social_data(self):
+        social_graph_filename = self.data_path + 'yelp.social.graph'
+        self.social_relation = defaultdict(list)
+        with open(social_graph_filename) as f:
+            for line in f:
+                token = line.split('\t')  # user_id \t user_id
+                self.social_relation[int(token[0])].append(int(token[1]))
+                self.social_relation[int(token[1])].append(int(token[0]))
+
+
+    def download(self):
+        prefix = 'https://raw.githubusercontent.com/rootlu/SIAN/master/data/yelp'
+        required_file = ['item_profile.npy', 'user_profile.npy', 'yelp.test.rating.712', 'yelp.train.rating.712', 'yelp.val.rating.712', 'yelp.social.graph']
+
+        for filename in required_file:
+            url = f"{prefix}/{filename}"
+            file_path = self.data_path + filename
+            if not os.path.exists(file_path):
+                try:
+                    download(url,file_path)
+                except BaseException as e:
+                    print("\n",e)
+                    print("\nNote!   --- If you want to download the file, vpn is required ---")
+                    print("If you don't have a vpn, please download the dataset from here: https://github.com/rootlu/SIAN/tree/master/data/yelp")
+                    exit()

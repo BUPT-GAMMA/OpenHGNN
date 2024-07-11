@@ -14,61 +14,42 @@ def remove_duplicate(x):
     return list(dict.fromkeys(x))
 
 
-# 定义一个并查集类
+
 class UnionFind:
-    # 初始化
     def __init__(self, n):
-        # n表示节点的个数
         self.n = n
-        # parent表示每个节点的父节点
         self.parent = list(range(n))
 
-    # 查找x所属的集合，即根节点
     def find(self, x):
-        # 如果x不是根节点，就递归查找，并进行路径压缩
         if self.parent[x] != x:
             self.parent[x] = self.find(self.parent[x])
         return self.parent[x]
 
-    # 合并x和y所属的集合
+
     def union(self, x, y):
-        # 把x所属的集合的根节点作为y所属的集合的根节点的子节点
         self.parent[self.find(x)] = self.find(y)
 
-    # 判断x和y是否属于同一个集合
     def connected(self, x, y):
         return self.find(x) == self.find(y)
 
 
 def kruskal(g):
-    # 初始化一个并查集，节点个数为图的节点个数
+
     uf = UnionFind(g.num_nodes())
-    # 初始化一个空列表，用于保存最小生成树的边
     mst_edges = []
-    # 初始化一个空列表，用于保存最小生成树的边的权重
     mst_weights = []
-    # 初始化一个空列表，用于保存边的id
     edge_index = []
-    # 获取图的所有边和对应的权重
     edges, weights = g.edges(), g.edata['w']
-    # 按照权重从小到大对边进行排序，返回排序后的索引
     indices = torch.argsort(weights)
-    # 遍历排序后的索引
     for i in indices:
-        # 获取当前索引对应的边和权重
         u, v = edges[0][i], edges[1][i]
-        # 判断当前边的两个端点是否已经连通
         if not uf.connected(u, v):
-            # 如果没有连通，就把当前边加入到最小生成树中
             mst_edges.append((u, v))
             edge_index.append(int(i))
-            # 同时更新并查集
             uf.union(u, v)
-            # 如果最小生成树的边的数量等于节点数量减一，就提前结束循环
             if len(mst_edges) == g.num_nodes() - 1:
                 break
     mst_g = dgl.graph(mst_edges)
-    # 将edge_index转换成tensor
     edge_index = torch.tensor(edge_index)
     return mst_g, edge_index
 
@@ -80,8 +61,9 @@ class Ingram_KG_TrainData():
         self.path = 'openhgnn/data/' + dataset_name + '/'
         self.rel_info = {}  # (h,t):[r1,r2,...]
         self.pair_info = {}  # r:[(h,t),(h,t),...]
-        self.spanning = []  # [(h,t),(h,t),...]，代表着spanning tree的边
-        self.remaining = []  # [(h,t),(h,t),...]，代表着剩余的边
+
+        self.spanning = []  # [(h,t),(h,t),...]，
+        self.remaining = []  # [(h,t),(h,t),...]，
         self.ent2id = None  # ent2id
         self.rel2id = None  # rel2id
         self.id2ent, self.id2rel, self.triplets = self.read_triplet(self.path + 'train.txt')
@@ -95,9 +77,9 @@ class Ingram_KG_TrainData():
         path_ckp = self.path
         print(path_ckp)
         folder = os.path.exists(path_ckp)
-        if not folder:  # 判断是否存在文件夹如果不存在则创建为文件夹
-            os.makedirs(path_ckp)  # makedirs 创建文件时如果路径不存在会创建这个路径
-            # 下载数据
+
+        if not folder:
+            os.makedirs(path_ckp)
             url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/NL-100.zip"
             response = requests.get(url)
             with zipfile.ZipFile(io.BytesIO(response.content)) as myzip:
@@ -151,7 +133,8 @@ class Ingram_KG_TrainData():
         return id2ent, id2rel, triplets
 
     def split_transductive(self, p):
-        msg, sup = [], []  # 训练姐和测试集
+
+        msg, sup = [], []
         rels_encountered = np.zeros(self.num_rel)
 
         remaining_triplet_indexes = np.ones(self.num_triplets)

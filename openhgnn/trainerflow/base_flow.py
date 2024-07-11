@@ -45,6 +45,9 @@ class BaseFlow(ABC):
                                                  "{}_{}_{}.txt".format(args.model_name, args.dataset_name[5:],
                                                                        args.seed))
 
+        # Distributed models will check this parameter during the training process to determine whether to use distributed.
+        self.use_distributed = args.use_distributed
+
         # stage flags: whether to run the corresponding stages
         # todo: only take effects in node classification trainer flow
 
@@ -63,7 +66,7 @@ class BaseFlow(ABC):
         self.max_epoch = args.max_epoch
         self.optimizer = None
 
-        if self.model_name == "MeiREC":
+        if self.model_name in ["SIAN", "MeiREC", "ExpressGNN", "Ingram", "RedGNN","RedGNNT",  "AdapropI", "AdapropT","RedGNNT", "Grail", "ComPILE","DisenKGAT"]:
             return
         if self.model_name == "Ingram":
             return

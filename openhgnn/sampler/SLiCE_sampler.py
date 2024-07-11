@@ -125,15 +125,19 @@ class SLiCESampler(object):
         """
         #get all neighbors
         all_nbrs=[]
+        # all_nbrs.extend(dgl.sampling.sample_neighbors(self.g,torch.tensor([nodeid]),-1,
+        #                                         edge_dir='out',prob='label').edges(order='eid')[1].tolist())  
         all_nbrs.extend(dgl.sampling.sample_neighbors(self.g,torch.tensor([nodeid]),-1,
-                                                edge_dir='out',prob='label').edges(order='eid')[1].tolist())  
+                                                edge_dir='out').edges(order='eid')[1].tolist())
         if exclude_list is None or len(exclude_list) == 0:
             all_nbrs = list(set(all_nbrs))
         else:
             all_nbrs = list(set(x for x in all_nbrs if x not in exclude_list))
         if len(all_nbrs)<k:
+            # all_nbrs.extend(dgl.sampling.sample_neighbors(self.g,torch.tensor([nodeid]),-1,
+            #                                     edge_dir='in',prob='label').edges(order='eid')[0].tolist())
             all_nbrs.extend(dgl.sampling.sample_neighbors(self.g,torch.tensor([nodeid]),-1,
-                                                edge_dir='in',prob='label').edges(order='eid')[0].tolist())                   
+                                                edge_dir='in').edges(order='eid')[0].tolist())                   
         if exclude_list is None or len(exclude_list) == 0:
             all_nbrs = list(set(all_nbrs))
         else:
