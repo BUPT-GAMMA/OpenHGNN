@@ -115,7 +115,7 @@ SUPPORTED_MODELS = {
     'DSSL': 'openhgnn.models.DSSL',
     'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
-
+    'SeHGNN' : 'openhgnn.models.SeHGNN',
     'Grail': 'openhgnn.models.Grail',
     'ComPILE': 'openhgnn.models.ComPILE',
     'AdapropT': 'openhgnn.models.AdapropT',
@@ -128,6 +128,7 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
+
 
 }
 
@@ -172,6 +173,8 @@ from .HGNN_AC import HGNN_AC
 from .KGAT import KGAT
 from .DSSL import DSSL
 from .lightGCN import lightGCN
+
+from .SeHGNN import SeHGNN
 from .Grail import Grail
 from .ComPILE import ComPILE
 from .AdapropT import AdapropT
@@ -183,6 +186,7 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
+
 
 
 __all__ = [
@@ -223,6 +227,7 @@ __all__ = [
     'KGAT',
     'DSSL',
     'lightGCN',
+    'SeHGNN',
     'Grail',
     'ComPILE',
     'AdapropT',
@@ -232,5 +237,6 @@ __all__ = [
     'SACN',
     'ExpressGNN',
     'Ingram',
+
 ]
 classes = __all__

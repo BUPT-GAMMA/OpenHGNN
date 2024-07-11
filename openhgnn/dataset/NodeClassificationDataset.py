@@ -1,3 +1,4 @@
+import os
 import dgl
 import dgl.function as fn
 import torch as th
@@ -5,13 +6,15 @@ import numpy as np
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
 from dgl.data.utils import load_graphs, save_graphs
 from dgl.data import CoraGraphDataset,CiteseerGraphDataset,PubmedGraphDataset
+from dgl import sparse as dglsp
 # from dgl.data import TexasDataset,CornellDataset
 import scipy.sparse as sp
 from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
 from . import BaseDataset, register_dataset
+
 from . import AcademicDataset, HGBDataset, OHGBDataset,IMDB4MAGNN_Dataset
-from .utils import sparse_mx_to_torch_sparse_tensor
+from .utils import sparse_mx_to_torch_sparse_tensor, to_symmetric, row_norm
 from ..utils import add_reverse_edges
 import os
 from dgl.data.utils import download, extract_archive
@@ -101,6 +104,7 @@ class GraphBolt_Dataset(BaseDataset):
             pass
         else:
             extract_archive(self.zip_path, os.path.join('./openhgnn/dataset/GraphBolt_Dataset/'))  
+
 
 
 
@@ -681,6 +685,7 @@ class OGB_NodeClassification(NodeClassificationDataset):
         self.train_idx, self.valid_idx, self.test_idx = split_idx["train"][self.category], split_idx["valid"][
             self.category], split_idx["test"][self.category]
         self.g, self.label_dict = dataset[0]
+        self.SeHGNN_g = self.mag4sehgnn(dataset)
         self.g = self.mag4HGT(self.g)
         self.label = self.label_dict[self.category].squeeze(dim=-1)
         # 2-dim label
@@ -694,6 +699,87 @@ class OGB_NodeClassification(NodeClassificationDataset):
     def get_labels(self):
         return self.label
 
+    def mag4sehgnn(self, dataset):
+        g, _ = dataset[0]
+        embed_size = g.nodes['paper'].data['feat'].size(0)
+
+        author_emb = th.Tensor(g.num_nodes('author'), 256).uniform_(-0.5, 0.5)
+        topic_emb = th.Tensor(g.num_nodes('field_of_study'), 256).uniform_(-0.5, 0.5)
+        institution_emb = th.Tensor(g.num_nodes('institution'), 256).uniform_(-0.5, 0.5)
+
+        g.nodes['author'].data['feat'] = author_emb
+        g.nodes['institution'].data['feat'] = institution_emb
+        g.nodes['field_of_study'].data['feat'] = topic_emb
+
+        adjs = []
+        i = 0
+        for src_type, edge_type, dst_type in g.canonical_etypes:
+            src, dst, eid = g._graph.edges(i)
+            adj = dglsp.spmatrix(indices = th.stack((src, dst)), shape = (g.number_of_nodes(src_type), g.number_of_nodes(dst_type)))
+            adjs.append(adj)
+            i += 1
+        # F --- *P --- A --- I
+        # paper : [736389, 128]
+        # author: [1134649, 256]
+        # institution [8740, 256]
+        # field_of_study [59965, 256]
+
+        new_edges = {}
+        ntypes = set()
+
+        etypes = [  # src->tgt
+            ('A', 'A-I', 'I'),
+            ('A', 'A-P', 'P'),
+            ('P', 'P-P', 'P'),
+            ('P', 'P-F', 'F'),
+        ]
+
+        adjs[2] = to_symmetric(adjs[2])
+        for etype, adj in zip(etypes, adjs):
+            stype, rtype, dtype = etype
+            src, dst = adj.coo()
+            if stype == dtype:
+                new_edges[(stype, rtype, dtype)] = (np.concatenate((src, dst)), np.concatenate((dst, src)))
+            else:
+                new_edges[(stype, rtype, dtype)] = (src, dst)
+                new_edges[(dtype, rtype[::-1], stype)] = (dst, src)
+            ntypes.add(stype)
+            ntypes.add(dtype)
+
+        new_g = dgl.heterograph(new_edges)
+        new_g.nodes['P'].data['P'] = g.nodes['paper'].data['feat']
+        new_g.nodes['A'].data['A'] = g.nodes['author'].data['feat']
+        new_g.nodes['I'].data['I'] = g.nodes['institution'].data['feat']
+        new_g.nodes['F'].data['F'] = g.nodes['field_of_study'].data['feat']
+
+        IA, PA, PP, FP = adjs
+
+        diag_name = f'ogbn-mag_PP_diag.pt'
+        if not os.path.exists(diag_name):
+            PP_rm_diag = row_norm(PP)
+            th.save(PP_rm_diag, diag_name)
+
+        diag_name = f'ogbn-mag_PPP_diag.pt'
+        if not os.path.exists(diag_name):
+            PP_rm_diag = row_norm(PP)
+            PPP_rm_diag = dglsp.spspmm(PP_rm_diag, PP_rm_diag)
+            th.save(PPP_rm_diag, diag_name)
+
+        diag_name = f'ogbn-mag_PAP_diag.pt'
+        if not os.path.exists(diag_name):
+            PA_rm_diag = row_norm(PA)
+            AP_rm_diag = row_norm(PA.T)
+            PAP_rm_diag = dglsp.spspmm(PA_rm_diag, AP_rm_diag)
+            th.save(PAP_rm_diag, diag_name)
+
+        diag_name = f'ogbn-mag_PFP_diag.pt'
+        if not os.path.exists(diag_name):
+            PF_rm_diag = row_norm(FP.T)
+            FP_rm_diag = row_norm(FP)
+            PFP_rm_diag = dglsp.spspmm(PF_rm_diag, FP_rm_diag)
+            th.save(PFP_rm_diag, diag_name)
+
+        return new_g
     def mag4HGT(self, hg):
         # Add reverse edge types
 

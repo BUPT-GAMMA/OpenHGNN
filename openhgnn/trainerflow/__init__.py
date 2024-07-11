@@ -82,6 +82,7 @@ SUPPORTED_FLOWS = {
     'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer',
     'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer',
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
+    'SeHGNN_trainer': 'openhgnn.trainerflow.SeHGNN_trainer'
     'Grail_trainer': 'openhgnn.trainerflow.Grail_trainer',
     'ComPILE_trainer': 'openhgnn.trainerflow.ComPILE_trainer',
     'AdapropT_trainer': 'openhgnn.trainerflow.AdapropT_trainer',
@@ -99,6 +100,7 @@ SUPPORTED_FLOWS = {
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
     'hga_trainer':'openhgnn.trainerflow.HGATrainer',
 #####################################################
+
 
 
 }
@@ -130,6 +132,7 @@ from .kgat_trainer import KGAT_Trainer
 from .node_classification_ac import NodeClassificationAC
 from .DSSL_trainer import DSSL_trainer
 from .lightGCN_trainer import lightGCNTrainer
+from .SeHGNN_trainer import SeHGNNtrainer
 
 from .Grail_trainer import GrailTrainer
 from .ComPILE_trainer import ComPILETrainer
@@ -176,6 +179,7 @@ __all__ = [
     'DSSL_trainer',
     'HGCLtrainer',
     'lightGCNTrainer',
+    'SeHGNNtrainer'
     'GrailTrainer',
     'ComPILETrainer',
     'AdapropTTrainer',
@@ -184,5 +188,6 @@ __all__ = [
     'SACNTrainer',
     'ExpressGNNTrainer',
     'Ingram_trainer',
+
 ]
 classes = __all__
