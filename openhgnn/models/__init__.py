@@ -60,6 +60,10 @@ def build_model(model):
 
 
 SUPPORTED_MODELS = {
+#####       add models here
+    'HGA':'openhgnn.models.HGA',
+####################################
+    "SIAN": "openhgnn.models.SIAN",
     "CompGCN": "openhgnn.models.CompGCN",
     "HetGNN": "openhgnn.models.HetGNN",
     'RGCN': 'openhgnn.models.RGCN',
@@ -112,8 +116,23 @@ SUPPORTED_MODELS = {
     'HGCL': 'openhgnn.models.HGCL',
     'lightGCN': 'openhgnn.models.lightGCN',
     'SeHGNN' : 'openhgnn.models.SeHGNN',
+    'Grail': 'openhgnn.models.Grail',
+    'ComPILE': 'openhgnn.models.ComPILE',
+    'AdapropT': 'openhgnn.models.AdapropT',
+    'AdapropI':'openhgnn.models.AdapropI',
+    'LTE': 'openhgnn.models.LTE',
+    'LTE_Transe': 'openhgnn.models.LTE_Transe',
+    'SACN':'openhgnn.models.SACN',
+    'ExpressGNN': 'openhgnn.models.ExpressGNN',
+    'NBF': 'openhgnn.models.NBF', 
+    'Ingram': 'openhgnn.models.Ingram',
+    'RedGNN': 'openhgnn.models.RedGNN',
+    'RedGNNT': 'openhgnn.models.RedGNNT',
+
+
 }
 
+from .SIAN import SIAN
 from .HGCL import HGCL
 from .CompGCN import CompGCN
 from .HetGNN import HetGNN
@@ -154,7 +173,21 @@ from .HGNN_AC import HGNN_AC
 from .KGAT import KGAT
 from .DSSL import DSSL
 from .lightGCN import lightGCN
+
 from .SeHGNN import SeHGNN
+from .Grail import Grail
+from .ComPILE import ComPILE
+from .AdapropT import AdapropT
+from .AdapropI import AdapropI
+from .LTE import LTE
+from .LTE_Transe import LTE_Transe
+from .SACN import SACN
+from .ExpressGNN import ExpressGNN
+from .Ingram import Ingram
+from .RedGNN import RedGNN
+from .RedGNNT import RedGNNT
+
+
 
 __all__ = [
     'BaseModel',
@@ -195,5 +228,15 @@ __all__ = [
     'DSSL',
     'lightGCN',
     'SeHGNN',
+    'Grail',
+    'ComPILE',
+    'AdapropT',
+    'AdapropI',
+    'LTE',
+    'LTE_Transe',
+    'SACN',
+    'ExpressGNN',
+    'Ingram',
+
 ]
 classes = __all__

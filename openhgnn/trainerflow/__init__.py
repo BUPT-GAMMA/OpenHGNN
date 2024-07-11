@@ -1,5 +1,6 @@
 import importlib
 from .base_flow import BaseFlow
+from abc import ABC     
 
 FLOW_REGISTRY = {}
 
@@ -22,8 +23,8 @@ def register_flow(name):
     def register_flow_cls(cls):
         if name in FLOW_REGISTRY:
             raise ValueError("Cannot register duplicate flow ({})".format(name))
-        if not issubclass(cls, BaseFlow):
-            raise ValueError("Flow ({}: {}) must extend BaseFlow".format(name, cls.__name__))
+        if not issubclass(cls, (BaseFlow,ABC)):
+            raise ValueError("Flow ({}: {}) must extend BaseFlow or ABC".format(name, cls.__name__))
         FLOW_REGISTRY[name] = cls
         return cls
 
@@ -47,6 +48,7 @@ def build_flow(args, flow_name):
 
 
 SUPPORTED_FLOWS = {
+    'SIAN_trainer': 'openhgnn.trainerflow.SIAN_trainer',
     'entity_classification': 'openhgnn.trainerflow.entity_classification',
     'node_classification': 'openhgnn.trainerflow.node_classification',
     'node_classification_ac': 'openhgnn.trainerflow.node_classfication_ac',
@@ -81,8 +83,29 @@ SUPPORTED_FLOWS = {
     'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer',
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
     'SeHGNN_trainer': 'openhgnn.trainerflow.SeHGNN_trainer'
+    'Grail_trainer': 'openhgnn.trainerflow.Grail_trainer',
+    'ComPILE_trainer': 'openhgnn.trainerflow.ComPILE_trainer',
+    'AdapropT_trainer': 'openhgnn.trainerflow.AdapropT_trainer',
+    'AdapropI_trainer':'openhgnn.trainerflow.AdapropI_trainer',
+    'LTE_trainer': 'openhgnn.trainerflow.LTE_trainer',
+    'SACN_trainer': 'openhgnn.trainerflow.SACN_trainer',
+    'ExpressGNN_trainer': 'openhgnn.trainerflow.ExpressGNN_trainer',
+    'NBF_trainer':'openhgnn.trainerflow.NBF_trainer',
+    'Ingram_Trainer' : 'openhgnn.trainerflow.Ingram_trainer',
+    'DisenKGAT_trainer':'openhgnn.trainerflow.DisenKGAT_trainer',
+    'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
+    'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
+    'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
+###########     add trainer_flow here
+    'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
+    'hga_trainer':'openhgnn.trainerflow.HGATrainer',
+#####################################################
+
+
+
 }
 
+from .sian_trainer import SIAN_Trainer
 from .hgcl_trainer import HGCLtrainer
 from .node_classification import NodeClassification
 from .link_prediction import LinkPrediction
@@ -111,6 +134,24 @@ from .DSSL_trainer import DSSL_trainer
 from .lightGCN_trainer import lightGCNTrainer
 from .SeHGNN_trainer import SeHGNNtrainer
 
+from .Grail_trainer import GrailTrainer
+from .ComPILE_trainer import ComPILETrainer
+from .AdapropT_trainer import AdapropTTrainer
+from .AdapropI_trainer import AdapropITrainer
+from .LTE_trainer import LTETrainer
+from .SACN_trainer import SACNTrainer
+from .ExpressGNN_trainer import ExpressGNNTrainer
+from .NBF_trainer import * 
+from .Ingram_trainer import Ingram_Trainer
+from .DisenKGAT_trainer import *
+from .RedGNNT_trainer import RedGNNTTrainer
+from .HGPrompt import HGPrompt_trainer
+######      add trainer_flow here
+from .HGMAE_trainer import HGMAE_trainer
+from .hga_trainer import HGATrainer
+#####################################
+
+
 __all__ = [
     'BaseFlow',
     'NodeClassification',
@@ -126,6 +167,7 @@ __all__ = [
     'DMGI_trainer',
     'SLiCETrainer',
     'hde_trainer',
+    'SIAN_Trainer',
     'GATNE',
     'HANNodeClassification',
     'HANLinkPrediction',
@@ -138,5 +180,14 @@ __all__ = [
     'HGCLtrainer',
     'lightGCNTrainer',
     'SeHGNNtrainer'
+    'GrailTrainer',
+    'ComPILETrainer',
+    'AdapropTTrainer',
+    'AdapropITrainer',
+    'LTETrainer',
+    'SACNTrainer',
+    'ExpressGNNTrainer',
+    'Ingram_trainer',
+
 ]
 classes = __all__

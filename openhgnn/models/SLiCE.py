@@ -44,15 +44,15 @@ class NodeEncoder(torch.nn.Module):
         if not is_pre_trained:
             self.base_embedding_layer = torch.nn.Embedding(
                 num_nodes, base_embedding_dim
-            ).cuda()
+            )#.cuda()
             self.base_embedding_layer.weight.data.uniform_(-1, 1)
         else:
             self.base_embedding_layer = torch.nn.Embedding.from_pretrained(
                 pretrained_node_embedding_tensor
-            ).cuda()
+            )#.cuda()
 
     def forward(self, node_id):
-        node_id = torch.LongTensor([int(node_id)]).cuda()
+        node_id = torch.LongTensor([int(node_id)])#.cuda()
         x_base = self.base_embedding_layer(node_id)
 
         return x_base
@@ -136,7 +136,7 @@ def get_attn_pad_mask(subgraph_list, pad_id, max_len):
         # print(tmp_mask)
     # print('mask', len(pad_attn_mask), len(pad_attn_mask[0]))
     pad_attn_mask = Variable(torch.ByteTensor(pad_attn_mask)).unsqueeze(1)
-    pad_attn_mask = pad_attn_mask.cuda()
+    pad_attn_mask = pad_attn_mask#.cuda()
 
     return pad_attn_mask.expand(batch_size, len_q, len_q)  # batch_size x len_q x len_k
 
@@ -242,7 +242,7 @@ class SLiCE(BaseModel):
         returns tensor containing node_embeddings
         for graph nodes 0 to n-1
         """
-        node_embeddings = torch.empty(self.g.num_nodes(), base_emb_dim)
+        node_embeddings = torch.empty(self.g.num_nodes(), 100)
         with open(filename, "r") as f:
             header = f.readline()
             emb_dim = int(header.strip().split()[1])
@@ -300,12 +300,12 @@ class SLiCE(BaseModel):
             from gensim.models import Word2Vec
             model = Word2Vec(
                 walks,
-                size=base_embedding_dim,
+                # size=base_embedding_dim,
                 window=10,
                 min_count=0,
                 sg=1,
                 workers=8,
-                iter=1,
+                # iter=1,
             )
             model.wv.save_word2vec_format(args.pretrained_embeddings)
 
@@ -323,12 +323,12 @@ class SLiCE(BaseModel):
 
         self.layers = torch.nn.ModuleList(
             [EncoderLayer(d_model, d_k, d_v, d_ff, n_heads) for _ in range(num_layers)]
-        ).cuda()
-        self.linear = torch.nn.Linear(d_model, d_model).cuda()
-        self.norm = torch.nn.LayerNorm(d_model).cuda()
+        )#.cuda()
+        self.linear = torch.nn.Linear(d_model, d_model)#.cuda()
+        self.norm = torch.nn.LayerNorm(d_model)#.cuda()
 
         # decoder
-        self.decoder = torch.nn.Linear(self.d_model, self.no_nodes).cuda()
+        self.decoder = torch.nn.Linear(self.d_model, self.no_nodes)#.cuda()
     def set_fine_tuning(self):
         self.fine_tuning_layer = True
     def GCN_MaskGeneration(self,subgraph_sequences):
@@ -357,7 +357,7 @@ class SLiCE(BaseModel):
         # 将节点embedding和关系的embedding初始化，并采样得到
         # context generation
         node_emb = self.gcn_graph_encoder(subgraph_list, masked_nodes)
-        output = node_emb.cuda()
+        output = node_emb#.cuda()
         enc_self_attn_mask = get_attn_pad_mask(subgraph_list,self.no_nodes,self.max_length+1)
         # contextual translation
         for layer in self.layers:
@@ -365,7 +365,7 @@ class SLiCE(BaseModel):
             try:
                 layer_output = torch.cat((layer_output, output.unsqueeze(1)), 1)#output embedding of each layer
             except NameError:  # FIXME - replaced bare except
-                layer_output = output.unsqueeze(1).cuda()
+                layer_output = output.unsqueeze(1)#.cuda()
 
             if self.fine_tuning_layer:
                 try:
@@ -386,7 +386,7 @@ class SLiCE(BaseModel):
                 -1, -1, output.size(-1)
             )  # [batch_size, maxlen, d_model]
             h_masked = torch.gather(
-                output, 1, masked_pos.cuda()
+                output, 1, masked_pos#.cuda()
             )  # masking position [batch_size, len, d_model]
             h_masked = self.norm(gelu(self.linear(h_masked)))
             pred_score = self.decoder(h_masked)  # [batch_size, maxlen, n_vocab]
@@ -402,7 +402,7 @@ class SLiCEFinetuneLayer(torch.nn.Module):
     def build_model_from_args(cls, args):
         return cls(d_model=args.d_model,ft_d_ff=args.ft_d_ff,
         ft_layer=args.ft_layer,ft_drop_rate=args.ft_drop_rate,
-        ft_input_option=args.ft_input_option,n_layers=args.num_layers)
+        ft_input_option=args.ft_input_option, num_layers=args.num_layers)
     def __init__(
         self,
         d_model,
@@ -428,12 +428,12 @@ class SLiCEFinetuneLayer(torch.nn.Module):
             cnt_layers = 1
 
         if self.ft_layer == "linear":
-            self.ft_decoder = torch.nn.Linear(d_model * cnt_layers, d_model).cuda()
+            self.ft_decoder = torch.nn.Linear(d_model * cnt_layers, d_model)#.cuda()
         elif self.ft_layer == "ffn":
-            self.ffn1 = torch.nn.Linear(d_model * cnt_layers, ft_d_ff).cuda()
+            self.ffn1 = torch.nn.Linear(d_model * cnt_layers, ft_d_ff)#.cuda()
             print(self.num_layers, cnt_layers, self.ffn1)
-            self.dropout = torch.nn.Dropout(ft_drop_rate).cuda()
-            self.ffn2 = torch.nn.Linear(ft_d_ff, d_model).cuda()
+            self.dropout = torch.nn.Dropout(ft_drop_rate)#.cuda()
+            self.ffn2 = torch.nn.Linear(ft_d_ff, d_model)#.cuda()
 
     def forward(self, graphbert_layer_output):
         """

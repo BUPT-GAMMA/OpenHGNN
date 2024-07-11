@@ -3,7 +3,7 @@ import torch as th
 import torch.nn.functional as F
 from dgl.dataloading.negative_sampler import Uniform
 from . import BaseTask, register_task
-from ..dataset import build_dataset
+from ..dataset import build_dataset,build_dataset_GB
 from ..utils import Evaluator
 
 
@@ -29,12 +29,34 @@ class LinkPrediction(BaseTask):
     """
 
     def __init__(self, args):
-        super(LinkPrediction, self).__init__()
+        super(LinkPrediction, self).__init__( )
         self.name_dataset = args.dataset
         self.logger = args.logger
-        self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger)
+
+        if args.model=="Grail" or args.model =="ComPILE":
+            self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger,args = args)
+            return
+        if(args.dataset=='AdapropT'):
+            self.dataloader = build_dataset(args.dataset, 'Adaprop', logger=self.logger,args = args)
+            return
+        if(args.dataset=='AdapropI'):
+            self.dataloader = build_dataset(args.dataset, 'AdapropI', logger=self.logger, args = args)
+            return
+        if (args.dataset_name == 'LTE'):
+            build_dataset(args, 'LTE')
+            return
+        if (args.dataset_name == 'SACN'):
+            build_dataset(args, 'SACN')
+            return
+        self.dataset = build_dataset(args.dataset, 'link_prediction', logger=self.logger, args=args)
+        if args.graphbolt:
+            self.dataset_GB = build_dataset_GB(args.dataset,   
+                                            logger=self.logger, 
+                                            args = args)        
         # self.evaluator = Evaluator()
-        self.train_hg, self.val_hg, self.test_hg, self.neg_val_graph, self.neg_test_graph = self.dataset.get_split()
+        if args.model == 'ExpressGNN' or args.model == 'RedGNN' or args.model == 'RedGNNT' or args.model == 'DisenKGAT':
+            return
+        self.train_hg, self.val_hg, self.test_hg, self.neg_val_graph, self.neg_test_graph = self.dataset.get_split( )
         self.pred_hg = getattr(self.dataset, 'pred_graph', None)
         if self.val_hg is None and self.test_hg is None:
             pass
@@ -43,14 +65,14 @@ class LinkPrediction(BaseTask):
             self.test_hg = self.test_hg.to(args.device)
         self.evaluator = Evaluator(args.seed)
         if not hasattr(args, 'score_fn'):
-            self.ScorePredictor = HeteroDistMultPredictor()
+            self.ScorePredictor = HeteroDistMultPredictor( )
             args.score_fn = 'distmult'
         elif args.score_fn == 'dot-product':
-            self.ScorePredictor = HeteroDotProductPredictor()
+            self.ScorePredictor = HeteroDotProductPredictor( )
         elif args.score_fn == 'distmult':
-            self.ScorePredictor = HeteroDistMultPredictor()
+            self.ScorePredictor = HeteroDistMultPredictor( )
         # deprecated, new score predictor of these score_fn are in their model
-        #elif args.score_fn in ['transe', 'transh', 'transr', 'transd', 'gie'] :
+        # elif args.score_fn in ['transe', 'transh', 'transr', 'transd', 'gie'] :
         #    self.ScorePredictor = HeteroTransXPredictor(args.dis_norm)
 
         self.negative_sampler = Uniform(1)
@@ -58,7 +80,7 @@ class LinkPrediction(BaseTask):
         self.evaluation_metric = getattr(args, 'evaluation_metric', 'roc_auc')  # default evaluation_metric is roc_auc
         if args.dataset in ['wn18', 'FB15k', 'FB15k-237']:
             self.evaluation_metric = 'mrr'
-            self.filtered = args.filtered
+            # self.filtered = args.filtered
             if hasattr(args, "valid_percent"):
                 self.dataset.modify_size(args.valid_percent, 'valid')
             if hasattr(args, "test_percent"):
@@ -130,7 +152,7 @@ class LinkPrediction(BaseTask):
             n_score = th.sigmoid(self.ScorePredictor(neg_hg, n_embedding, r_embedding))
             p_label = th.ones(len(p_score), device=p_score.device)
             n_label = th.zeros(len(n_score), device=p_score.device)
-            roc_auc = self.evaluator.cal_roc_auc(th.cat((p_label, n_label)).cpu(), th.cat((p_score, n_score)).cpu())
+            roc_auc = self.evaluator.cal_roc_auc(th.cat((p_label, n_label)).cpu( ), th.cat((p_score, n_score)).cpu( ))
             loss = F.binary_cross_entropy_with_logits(th.cat((p_score, n_score)), th.cat((p_label, n_label)))
             return dict(roc_auc=roc_auc, loss=loss)
         else:
@@ -138,13 +160,13 @@ class LinkPrediction(BaseTask):
 
     def predict(self, n_embedding, r_embedding, **kwargs):
         score = th.sigmoid(self.ScorePredictor(self.pred_hg, n_embedding, r_embedding))
-        indices = self.pred_hg.edges()
+        indices = self.pred_hg.edges( )
         return indices, score
 
     def tranX_predict(self):
         pred_triples_T = self.dataset.pred_triples.T
         score = th.sigmoid(self.ScorePredictor(pred_triples_T[0], pred_triples_T[1], pred_triples_T[2]))
-        indices = self.pred_hg.edges()
+        indices = self.pred_hg.edges( )
         return indices, score
 
     def downstream_evaluate(self, logits, evaluation_metric):
@@ -160,13 +182,13 @@ class LinkPrediction(BaseTask):
         return self.train_hg
 
     def get_labels(self):
-        return self.dataset.get_labels()
+        return self.dataset.get_labels( )
 
     def dict2emd(self, r_embedding):
         r_emd = []
         for i in range(self.dataset.num_rels):
             r_emd.append(r_embedding[str(i)])
-        return th.stack(r_emd).squeeze()
+        return th.stack(r_emd).squeeze( )
 
     def construct_negative_graph(self, hg):
         e_dict = {
@@ -181,7 +203,7 @@ class LinkPrediction(BaseTask):
 class HeteroDotProductPredictor(th.nn.Module):
     """
     References: `documentation of dgl <https://docs.dgl.ai/guide/training-link.html#heterogeneous-graphs>_`
-    
+
     """
 
     def forward(self, edge_subgraph, x, *args, **kwargs):
@@ -192,14 +214,14 @@ class HeteroDotProductPredictor(th.nn.Module):
             the prediction graph only contains the edges of the target link
         x: dict[str: th.Tensor]
             the embedding dict. The key only contains the nodes involving with the target link.
-    
+
         Returns
         -------
         score: th.Tensor
             the prediction of the edges in edge_subgraph
         """
 
-        with edge_subgraph.local_scope():
+        with edge_subgraph.local_scope( ):
             for ntype in edge_subgraph.ntypes:
                 edge_subgraph.nodes[ntype].data['x'] = x[ntype]
                 for etype in edge_subgraph.canonical_etypes:
@@ -208,10 +230,10 @@ class HeteroDotProductPredictor(th.nn.Module):
             score = edge_subgraph.edata['score']
             if isinstance(score, dict):
                 result = []
-                for _, value in score.items():
+                for _, value in score.items( ):
                     result.append(value)
                 score = th.cat(result)
-            return score.squeeze()
+            return score.squeeze( )
 
 
 class HeteroDistMultPredictor(th.nn.Module):
@@ -220,13 +242,13 @@ class HeteroDistMultPredictor(th.nn.Module):
         """
         DistMult factorization (Yang et al. 2014) as the scoring function,
         which is known to perform well on standard link prediction benchmarks when used on its own.
-    
+
         In DistMult, every relation r is associated with a diagonal matrix :math:`R_{r} \in \mathbb{R}^{d \times d}`
         and a triple (s, r, o) is scored as
-    
+
         .. math::
             f(s, r, o)=e_{s}^{T} R_{r} e_{o}
-    
+
         Parameters
         ----------
         edge_subgraph: dgl.Heterograph
@@ -235,13 +257,13 @@ class HeteroDistMultPredictor(th.nn.Module):
             the node embedding dict. The key only contains the nodes involving with the target link.
         r_embedding: th.Tensor
             the all relation types embedding
-    
+
         Returns
         -------
         score: th.Tensor
             the prediction of the edges in edge_subgraph
         """
-        with edge_subgraph.local_scope():
+        with edge_subgraph.local_scope( ):
             for ntype in edge_subgraph.ntypes:
                 edge_subgraph.nodes[ntype].data['x'] = x[ntype]
             for etype in edge_subgraph.canonical_etypes:
@@ -259,14 +281,14 @@ class HeteroDistMultPredictor(th.nn.Module):
             score = edge_subgraph.edata['score']
             if isinstance(score, dict):
                 result = []
-                for _, value in score.items():
+                for _, value in score.items( ):
                     result.append(th.sum(value, dim=1))
                 score = th.cat(result)
             else:
                 score = th.sum(score, dim=1)
             return score
 
-#class HeteroTransXPredictor(th.nn.Module):
+# class HeteroTransXPredictor(th.nn.Module):
 #    def __init__(self, dis_norm):
 #        super(HeteroTransXPredictor, self).__init__()
 #        self.dis_norm = dis_norm
@@ -277,3 +299,36 @@ class HeteroDistMultPredictor(th.nn.Module):
 #        t = F.normalize(t, 2, -1)
 #        dist = th.norm(h+r-t, self.dis_norm, dim=-1)
 #        return dist
+
+@register_task("NBF_link_prediction")    
+class NBF_LinkPrediction(BaseTask):
+    r"""
+    Link prediction tasks for NBF
+
+    """
+
+    def __init__(self, args):
+        super(NBF_LinkPrediction, self).__init__()
+        self.logger = None
+        # dataset = 'NBF_WN18RR' or 'NBF_FB15k-237'
+        self.dataset = build_dataset(args.dataset, 'link_prediction',logger=self.logger,args=args) 
+    
+    def evaluate(self):
+        return None
+    
+
+
+@register_task("DisenKGAT_link_prediction")
+class DisenKGAT_LinkPrediction(BaseTask):
+
+    def __init__(self,   args  )  :
+        super(DisenKGAT_LinkPrediction, self).__init__()
+        self.logger = None
+
+        self.dataset = build_dataset(dataset = args.dataset, task='link_prediction', 
+                                     logger=self.logger, args=args) 
+
+    
+    def evaluate(self):
+        return None
+    

@@ -26,7 +26,7 @@ author = 'BUPT-GAMMA LAB'
 project = 'OpenHGNN'
 copyright = f'{datetime.datetime.now().year}, {author}'
 
-version = 'v0.4.0'
+version = 'v0.6.0'
 
 html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
