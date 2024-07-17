@@ -168,20 +168,4 @@ class RHINETrainer(BaseFlow):
             self.optimizer.step()
         return loss_all / (i + 1)
 
-    def calculate_D(self,canonical_etypes,threshold=10):
-        r'''
-        compute the relation type between u and v(AR or IR)
-        args:
-            relation_type:str relation type
-            threshold: int, default=10
-        return 
-            str: relation type
-        '''
-        d_tu=self.hg.out_degrees(etype=canonical_etypes[0])/self.hg.num_nodes(canonical_etypes[0])
-        d_tv=self.hg.in_degrees(etype=canonical_etypes[2])/self.hg.num_nodes(canonical_etypes[2])
-        D=max(d_tu,d_tv)/min(d_tu,d_tv)
-        if(D>threshold):
-            return 'AR'
-        else:
-            return 'IR'
 
