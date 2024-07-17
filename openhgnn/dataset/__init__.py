@@ -102,7 +102,6 @@ def build_dataset(dataset, task, *args, **kwargs):
     if not try_import_task_dataset(task):
         exit(1)
 
-
     if dataset == 'NL-100':
         train_dataloader = Ingram_KG_TrainData('',dataset)
         valid_dataloader = Ingram_KG_TestData('', dataset,'valid')
@@ -127,7 +126,7 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'rdf_' + task
 
 #####################     add dataset here
-    elif dataset in ['acm4HGMAE','hgprompt_acm_dblp']:      
+    elif dataset in ['acm4HGMAE','hgprompt_acm_dblp','acm4FedHGNN']:      
         return DATASET_REGISTRY['common_dataset'](dataset, logger=kwargs['logger'],args = kwargs['args'])
 
     elif dataset in ['acm4HGA','dblp4HGA']:
