@@ -669,7 +669,6 @@ class HGB_NodeClassification(NodeClassificationDataset):
             for nid, l in zip(self.test_idx, pred):
                 f.write(f"{nid}\t\t{0}\t{l}\n")
 
-
 @register_dataset('ogbn_node_classification')
 class OGB_NodeClassification(NodeClassificationDataset):
     def __init__(self, dataset_name, *args, **kwargs):
@@ -857,3 +856,31 @@ class Common_NodeClassification(NodeClassificationDataset):
 
         return g,category,num_classes
 
+@register_dataset('rhine_node_classification')
+class RHINE_NodeClassification(NodeClassificationDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(RHINE_NodeClassification, self).__init__(*args, **kwargs)
+        self.dataset_name = dataset_name
+        assert self.dataset_name in['dblp4RHINE']
+        self.load_rhine_data()
+        
+    
+    def load_rhine_data(self):
+        if self.dataset_name == 'dblp4RHINE':
+            if os.path.exists('/home/cwx/OpenHGNN/dataset/Common_Dataset/dblp4rhine.bin'):
+                self.g=dgl.load_graphs('/home/cwx/OpenHGNN/dataset/Common_Dataset/dblp4rhine.bin')[0][0].long()
+            self.node_types = {'a': 'author', 'p': 'paper', 't': 'term', 'c': 'conf'}
+            self.IRs = ['ap', 'pt', 'apt']
+            self.ARs = ['pc', 'apc']
+            self.category='paper'
+            self.meta_paths_dict={
+                'ap':[('author', 'writes', 'paper'),('paper','written_by','author')],
+                'pt':[('paper', 'has_term', 'term'),('term','term_of','paper')],
+                'apt':[('author', 'writes', 'paper'), ('paper', 'has_term', 'term'),('term','term_of','paper'),('paper','written_by','author')],
+                'pc':[('paper', 'published_in', 'conf'), ('conf', 'publish', 'paper')],
+                'apc':[('author', 'writes', 'paper'), ('paper', 'published_in', 'conf'), ('conf', 'publish', 'paper'),('paper','written_by','author')]
+            }
+            test_mask = [i!=-1 for i in self.g.nodes['paper'].data['label']]
+            self.g.nodes['paper'].data['label_mask']=th.tensor(test_mask)
+            self.train_id = th.tensor(range(self.g.num_nodes('paper')))
+            self.pred_id=self.test_id=self.valid_id = th.tensor(range(self.g.num_nodes('paper')))[test_mask]

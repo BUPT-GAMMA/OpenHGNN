@@ -82,8 +82,8 @@ SUPPORTED_FLOWS = {
     'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer',
     'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer',
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
-    'KTN_trainer':'openhgnn.trainerflow.KTN_trainer'
-    'SeHGNN_trainer': 'openhgnn.trainerflow.SeHGNN_trainer'
+    'KTN_trainer':'openhgnn.trainerflow.KTN_trainer',
+    'SeHGNN_trainer': 'openhgnn.trainerflow.SeHGNN_trainer',
     'Grail_trainer': 'openhgnn.trainerflow.Grail_trainer',
     'ComPILE_trainer': 'openhgnn.trainerflow.ComPILE_trainer',
     'AdapropT_trainer': 'openhgnn.trainerflow.AdapropT_trainer',
@@ -100,6 +100,7 @@ SUPPORTED_FLOWS = {
 ###########     add trainer_flow here
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
     'hga_trainer':'openhgnn.trainerflow.HGATrainer',
+    'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
 #####################################################
 
 
@@ -149,6 +150,7 @@ from .HGPrompt import HGPrompt_trainer
 ######      add trainer_flow here
 from .HGMAE_trainer import HGMAE_trainer
 from .hga_trainer import HGATrainer
+from .RHINE_trainer import RHINETrainer
 #####################################
 
 
@@ -179,8 +181,8 @@ __all__ = [
     'DSSL_trainer',
     'HGCLtrainer',
     'lightGCNTrainer',
-    'KTN_NodeClassification'
-    'SeHGNNtrainer'
+    'KTN_NodeClassification',
+    'SeHGNNtrainer',
     'GrailTrainer',
     'ComPILETrainer',
     'AdapropTTrainer',
@@ -189,7 +191,7 @@ __all__ = [
     'SACNTrainer',
     'ExpressGNNTrainer',
     'Ingram_trainer',
-
+    'RHINETrainer',
 
 ]
 classes = __all__
