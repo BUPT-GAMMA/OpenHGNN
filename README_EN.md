@@ -113,7 +113,7 @@ We release the latest version v0.2.
   - 新增模型：【KDD2017】Metapath2vec、【TKDE2018】HERec、【KDD2021】HeCo、【KDD2021】SimpleHGN、【TKDE2021】HPN、【ICDM2021】HDE、fastGTN
   - 新增日志功能
   - 新增美团外卖数据集
-</details>
+  </details>
   
 ## Key Features
 
@@ -302,6 +302,7 @@ The link will give some basic usage.
 | [HDE](../openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
 | [HetSANN](../openhgnn/output/HGT)[AAAI 2020]               | :heavy_check_mark:  |                    |                    |
 | [ieHGCN](../openhgnn/output/HGT)[TKDE 2021]                | :heavy_check_mark:  |                    |                    |
+| [KTN](../openhgnn/output/KTN)[NIPS 2022]                  | :heavy_check_mark: |                    |                    |
 
 ### Candidate models
 

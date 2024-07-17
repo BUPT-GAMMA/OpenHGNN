@@ -6,7 +6,6 @@ import argparse
 
 
 from openhgnn.experiment import Experiment
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', default='GTN', type=str, help='name of models')

@@ -67,6 +67,8 @@ class Experiment(object):
         'SHGP': 'SHGP_trainer',
         'HGCL': 'hgcltrainer',
         'lightGCN': 'lightGCN_trainer',
+        'HMPNN':'KTN_trainer'
+        'SeHGNN': 'SeHGNN_trainer',
         'Grail': 'Grail_trainer',
         'ComPILE': 'ComPILE_trainer',
         'AdapropT':'AdapropT_trainer',
@@ -82,12 +84,14 @@ class Experiment(object):
         'HGMAE':'HGMAE_trainer',
         'HGA':'hga_trainer',
 ##########################
+
+
     }
     
     immutable_params = ['model', 'dataset', 'task']
 
     def __init__(self, model, dataset, task,
-                 gpu: int = -1,
+                 gpu: int=-1,
                  use_best_config: bool = False,
                  load_from_pretrained: bool = False,
                  hpo_search_space=None,

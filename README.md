@@ -114,7 +114,7 @@ OpenHGNN荣获启智社区优秀孵化项⽬奖！详细链接：https://mp.weix
   - 新增模型：【KDD2017】Metapath2vec、【TKDE2018】HERec、【KDD2021】HeCo、【KDD2021】SimpleHGN、【TKDE2021】HPN、【ICDM2021】HDE、fastGTN
   - 新增日志功能
   - 新增美团外卖数据集
-</details>
+  </details>
   
 ## 关键特性
 
@@ -263,8 +263,8 @@ python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_con
 
 表格中的链接给出了模型的基本使用方法.
 
-| 模型                                                       | 节点分类               | 链路预测               | 推荐                 |
-|----------------------------------------------------------|--------------------|--------------------|--------------------|
+| 模型                                                     | 节点分类           | 链路预测           | 推荐               |
+| -------------------------------------------------------- | ------------------ | ------------------ | ------------------ |
 | [TransE](./openhgnn/output/TransE)[NIPS 2013]            |                    | :heavy_check_mark: |                    |
 | [TransH](./openhgnn/output/TransH)[AAAI 2014]            |                    | :heavy_check_mark: |                    |
 | [TransR](./openhgnn/output/TransR)[AAAI 2015]            |                    | :heavy_check_mark: |                    |
@@ -296,6 +296,7 @@ python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_con
 | [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                    | :heavy_check_mark: |                    |
 | [HetSANN](./openhgnn/output/HGT)[AAAI 2020]              | :heavy_check_mark: |                    |                    |
 | [ieHGCN](./openhgnn/output/HGT)[TKDE 2021]               | :heavy_check_mark: |                    |                    |
+| [KTN](./openhgnn/output/KTN)[NIPS 2022]                  | :heavy_check_mark: |                    |                    |
 
 ### 候选模型
 
