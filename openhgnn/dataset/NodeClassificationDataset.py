@@ -27,7 +27,7 @@ class Common_Dataset(BaseDataset):
     #   父类初始化函数中，定义了一堆None，没啥具体内容
         
         super(Common_Dataset, self).__init__(*args, **kwargs)
-        assert dataset_name in ['acm4HGMAE','hgprompt_acm_dblp']
+        assert dataset_name in ['acm4HGMAE','hgprompt_acm_dblp','acm4FedHGNN']
 
         if dataset_name == 'acm4HGMAE':
             # 这是从云盘上下载下来的   本地zip文件
@@ -76,6 +76,29 @@ class Common_Dataset(BaseDataset):
             else:
                 os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
                 extract_archive(self.zip_file, self.base_dir)  # 把  本地zip文件  解压到  base_dir文件夹中
+
+        elif dataset_name == 'acm4FedHGNN':
+            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
+            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
+            if os.path.exists(self.zip_file):  
+                pass
+            else:
+                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                download(self.url, 
+                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        )     
+            if os.path.exists( self.base_dir ):
+                pass
+            else:
+                os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
+                extract_archive(self.zip_file, self.base_dir)  
+
+            self.acm_mat_file = os.path.join(self.base_dir,'acm4FedHGNN.mat')
+            import scipy.io as sio
+            self.data = sio.loadmat(self.acm_mat_file)
+
+
 
 
 @register_dataset('GraphBolt_Dataset')
