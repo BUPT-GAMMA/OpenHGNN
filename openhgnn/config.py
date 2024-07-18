@@ -40,7 +40,7 @@ class Config(object):
             self.seed = conf.getint("General", "seed")
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
-##############      add config.py    #################
+        ##############      add config.py    #################
         elif self.model_name == 'HGA':
             self.lr = conf.getfloat("HGA", "lr")
             self.weight_decay = conf.getfloat("HGA", "weight_decay")
@@ -100,8 +100,6 @@ class Config(object):
             self.eva_lr = conf.getfloat("HGMAE", "eva_lr")
             self.eva_wd = conf.getfloat("HGMAE", "eva_wd")
             self.scheduler_gamma = conf.getfloat("HGMAE", "scheduler_gamma")
-
-
 
         elif self.model_name == "HGPrompt":
             self.feats_type = conf.getint("HGPrompt", "feats-type")
@@ -177,8 +175,7 @@ class Config(object):
             self.semantic_prompt_weight_down = conf.getfloat("HGPrompt", "semantic_prompt_weight_down")
             self.shgn_hidden_dim_down = conf.getint("HGPrompt", "shgn_hidden_dim_down")
 
-
-##########################################
+        ##########################################
 
         elif self.model_name == "DisenKGAT":
 
@@ -241,7 +238,6 @@ class Config(object):
             self.mi_drop = conf.getboolean("DisenKGAT", "mi_drop")
             self.fix_gamma = conf.getboolean("DisenKGAT", "fix_gamma")
 
-
         elif self.model_name == "NBF" and self.dataset_name =="NBF_WN18RR":
 
             self.input_dim = conf.getint("NBF", "input_dim")
@@ -263,7 +259,7 @@ class Config(object):
             self.num_epoch = conf.getint("NBF","num_epoch")
             self.log_interval = conf.getint("NBF","log_interval")
 
-###############################################################################################################
+        ###############################################################################################################
 
         elif self.model_name == "NSHE":
             self.dim_size = {}
@@ -285,9 +281,6 @@ class Config(object):
             self.num_heads = conf.getint('NSHE', 'num_heads')
             self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
             self.mini_batch_flag = conf.getboolean("NSHE", "mini_batch_flag")
-            
-            
-            
 
         elif self.model_name in ["GTN", "fastGTN"]:
             self.lr = conf.getfloat("GTN", "learning_rate")
@@ -471,9 +464,8 @@ class Config(object):
 
             self.ff_layer = conf.getint("NARS", "ff_layer")
 
-
         elif self.model_name == 'MAGNN':
-          
+
             self.graph_address = ''
             self.user_name = ''
             self.password = ''
@@ -1113,7 +1105,6 @@ class Config(object):
             self.neg_alpha = conf.getint("DSSL", "neg_alpha")
             self.load_json = conf.getint("DSSL", "load_json")
 
-
         elif model == 'SHGP':
             self.dataset = conf.get("SHGP", 'dataset')
             self.target_type = conf.get("SHGP", 'target_type')
@@ -1148,7 +1139,6 @@ class Config(object):
             self.ssl_beta = conf.getfloat("HGCL", "ssl_beta")
             self.rank = conf.getint("HGCL", "rank")
             self.Layers = conf.getint("HGCL", "Layers")
-
 
         elif self.model_name == 'lightGCN':
             self.lr = conf.getfloat("lightGCN", "lr")
@@ -1283,7 +1273,7 @@ class Config(object):
             self.noltr=conf.getboolean("LTE", "noltr")
             self.encoder=conf.get("LTE", "encoder")
             self.max_epochs=conf.getint("LTE", "max_epochs")
-            
+
         elif self.model_name == 'SACN':
             self.seed=conf.getint("SACN","seed")
             self.init_emb_size=conf.getint("SACN","init_emb_size")
@@ -1483,13 +1473,36 @@ class Config(object):
             self.worker_num = conf.getint("SIAN", "worker_num")
             self.seed = conf.getint("SIAN", "seed")
 
-
         elif self.model_name == "HMPNN":
             self.lr = conf.getfloat("HMPNN", "lr")
             self.num_layers = conf.getint("HMPNN", "num_layers")
             self.hid_dim = conf.getint("HMPNN", "hid_dim")
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
+
+        elif self.model_name == "MetaHIN":
+            self.use_cuda = conf.getboolean("MetaHIN", "use_cuda")
+            self.file_num = conf.getint("MetaHIN", "file_num")
+            self.num_location = conf.getint("MetaHIN", "num_location")
+            self.num_fea_item = conf.getint("MetaHIN", "num_fea_item")
+            self.num_publisher = conf.getint("MetaHIN", "num_publisher")
+            self.num_fea_user = conf.getint("MetaHIN", "num_fea_user")
+            self.item_fea_len = conf.getint("MetaHIN", "item_fea_len")
+            self.embedding_dim = conf.getint("MetaHIN", "embedding_dim")
+            self.user_embedding_dim = conf.getint("MetaHIN", "user_embedding_dim")
+            self.item_embedding_dim = conf.getint("MetaHIN", "item_embedding_dim")
+            self.first_fc_hidden_dim = conf.getint("MetaHIN", "first_fc_hidden_dim")
+            self.second_fc_hidden_dim = conf.getint("MetaHIN", "second_fc_hidden_dim")
+            self.mp_update = conf.getint("MetaHIN", "mp_update")
+            self.local_update = conf.getint("MetaHIN", "local_update")
+            self.lr = conf.getfloat("MetaHIN", "lr")
+            self.mp_lr = conf.getfloat("MetaHIN", "mp_lr")
+            self.local_lr = conf.getfloat("MetaHIN", "local_lr")
+            self.batch_size = conf.getint("MetaHIN", "batch_size")
+            self.num_epoch = conf.getint("MetaHIN", "num_epoch")
+            self.input_dir = conf.get("MetaHIN", "input_dir")
+            self.output_dir = conf.get("MetaHIN", "output_dir")
+            self.seed = conf.getint("MetaHIN", "seed")
 
         if hasattr(self, "device"):
             self.device = th.device(self.device)

@@ -48,6 +48,7 @@ def build_flow(args, flow_name):
 
 
 SUPPORTED_FLOWS = {
+    "coldstart_recommmendation": "openhgnn.trainerflow.coldstart_recommendation",
     'SIAN_trainer': 'openhgnn.trainerflow.SIAN_trainer',
     'entity_classification': 'openhgnn.trainerflow.entity_classification',
     'node_classification': 'openhgnn.trainerflow.node_classification',
@@ -82,8 +83,8 @@ SUPPORTED_FLOWS = {
     'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer',
     'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer',
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
-    'KTN_trainer':'openhgnn.trainerflow.KTN_trainer'
-    'SeHGNN_trainer': 'openhgnn.trainerflow.SeHGNN_trainer'
+    'KTN_trainer':'openhgnn.trainerflow.KTN_trainer',
+    'SeHGNN_trainer': 'openhgnn.trainerflow.SeHGNN_trainer',
     'Grail_trainer': 'openhgnn.trainerflow.Grail_trainer',
     'ComPILE_trainer': 'openhgnn.trainerflow.ComPILE_trainer',
     'AdapropT_trainer': 'openhgnn.trainerflow.AdapropT_trainer',
