@@ -119,7 +119,7 @@ class coldstart_recommendation(BaseFlow):
 
         print(
             "epoch: {}, loss: {:.6f}, cost time: {:.1f}s, mae: {:.5f}, rmse: {:.5f}, ndcg@5: {:.5f}".format(
-                i,
+                epoch,
                 np.mean(loss),
                 time.time() - start,
                 np.mean(mae),
