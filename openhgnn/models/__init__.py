@@ -132,6 +132,7 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
+    'RHINE': 'openhgnn.models.RHINE'
 }
 
 from .SIAN import SIAN
@@ -189,6 +190,7 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
+from .RHINE import RHINE
 
 
 
@@ -242,6 +244,6 @@ __all__ = [
     'SACN',
     'ExpressGNN',
     'Ingram',
-
+    'RHINE',
 ]
 classes = __all__
