@@ -56,6 +56,15 @@ class Config(object):
             self.batch_size=conf.getint("HGA", "batch_size")
             self.num_layers = conf.getint('HGA','num_layers')
 
+        elif self.model_name == "RHINE":
+            self.emb_dim=conf.getint("RHINE", "emb_dim")
+            self.mini_batch_flag = conf.getboolean("RHINE", "mini_batch_flag")
+            self.lr = conf.getfloat("RHINE", "lr")
+            self.weight_decay = conf.getfloat("RHINE", "weight_decay")
+            self.hidden_dim=conf.getint("RHINE", "hid_dim")
+            self.batch_size=conf.getint("RHINE", "batch_size")
+            self.max_epoch=conf.getint("RHINE", "max_epoch")
+
         elif self.model_name == "HGMAE":
             self.dataset = conf.get("HGMAE", "dataset")
             self.in_dim = conf.getint("HGMAE", "in_dim")
@@ -1490,6 +1499,8 @@ class Config(object):
             self.hid_dim = conf.getint("HMPNN", "hid_dim")
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
+
+
 
         if hasattr(self, "device"):
             self.device = th.device(self.device)
