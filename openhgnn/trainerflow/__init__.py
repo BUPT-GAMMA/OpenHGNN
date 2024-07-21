@@ -97,10 +97,11 @@ SUPPORTED_FLOWS = {
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
-###########     add trainer_flow here
+###########     add trainer_flow here. 【register name】 ： 【class name】
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
     'hga_trainer':'openhgnn.trainerflow.HGATrainer',
     'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
+    'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation'
 #####################################################
 
 
@@ -151,6 +152,7 @@ from .HGPrompt import HGPrompt_trainer
 from .HGMAE_trainer import HGMAE_trainer
 from .hga_trainer import HGATrainer
 from .RHINE_trainer import RHINETrainer
+from .FED_REC_trainer import *
 #####################################
 
 
