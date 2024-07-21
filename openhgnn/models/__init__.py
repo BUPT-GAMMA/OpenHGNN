@@ -65,6 +65,8 @@ def build_model(model):
 SUPPORTED_MODELS = {
 #####       add models here
     'HGA':'openhgnn.models.HGA',
+    'RHINE': 'openhgnn.models.RHINE',
+    'FedHGNN':'openhgnn.models.FedHGNN',
 ####################################
     "SIAN": "openhgnn.models.SIAN",
     "CompGCN": "openhgnn.models.CompGCN",
@@ -132,7 +134,7 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
-    'RHINE': 'openhgnn.models.RHINE'
+
 }
 
 from .SIAN import SIAN
@@ -177,7 +179,6 @@ from .KGAT import KGAT
 from .DSSL import DSSL
 from .lightGCN import lightGCN
 from .HMPNN import HMPNN
-
 from .SeHGNN import SeHGNN
 from .Grail import Grail
 from .ComPILE import ComPILE
@@ -190,8 +191,9 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
+#####       add model here
 from .RHINE import RHINE
-
+from .FedHGNN import FedHGNN
 
 
 __all__ = [
