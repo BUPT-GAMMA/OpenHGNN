@@ -1,9 +1,7 @@
 import datetime
 import doctest
-
 import sphinx_rtd_theme
-
-import openhgnn
+import openhgnn     # build docs may error here
 
 extensions = [
     'sphinx.ext.autodoc',
