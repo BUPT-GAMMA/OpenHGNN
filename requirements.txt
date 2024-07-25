@@ -3,9 +3,9 @@ optuna
 rdflib
 colorama
 igraph
-torch==2.3.0
+torch==2.3.0+cu118
 -f https://data.dgl.ai/wheels/repo.html
-dgl==2.2.1
+dgl==2.2.1+cu118
 TensorBoard>=2.0.0
 lmdb
 rdflib
