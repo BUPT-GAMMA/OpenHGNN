@@ -1,9 +1,7 @@
 import datetime
 import doctest
-
 import sphinx_rtd_theme
-
-import openhgnn
+import openhgnn     # build docs may error here
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -26,7 +24,7 @@ author = 'BUPT-GAMMA LAB'
 project = 'OpenHGNN'
 copyright = f'{datetime.datetime.now().year}, {author}'
 
-version = 'v0.6.0'
+version = 'v0.7.0'
 
 html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]

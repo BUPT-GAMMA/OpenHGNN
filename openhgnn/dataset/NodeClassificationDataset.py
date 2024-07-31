@@ -27,8 +27,6 @@ from abc import ABC
 @register_dataset('common_dataset')
 class Common_Dataset(BaseDataset):
     def __init__(self, dataset_name, *args, **kwargs):
-    #   父类初始化函数中，定义了一堆None，没啥具体内容
-        
         super(Common_Dataset, self).__init__(*args, **kwargs)
         assert dataset_name in ['acm4HGMAE','hgprompt_acm_dblp','acm4FedHGNN']
 
@@ -61,11 +59,8 @@ class Common_Dataset(BaseDataset):
             self.has_feature = True    #   是否有初始特征
 
         elif dataset_name == 'hgprompt_acm_dblp':
-            # 这是从云盘上下载下来的   本地zip文件
             self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
-            #本地base_dir文件夹.
             self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
-            #   云端的zip文件
             self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
             if os.path.exists(self.zip_file):  
                 pass
@@ -78,7 +73,30 @@ class Common_Dataset(BaseDataset):
                 pass
             else:
                 os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
-                extract_archive(self.zip_file, self.base_dir)  # 把  本地zip文件  解压到  base_dir文件夹中
+                extract_archive(self.zip_file, self.base_dir)  
+
+        elif dataset_name == 'acm4FedHGNN':
+            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
+            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
+            if os.path.exists(self.zip_file):  
+                pass
+            else:
+                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                download(self.url, 
+                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        )     
+            if os.path.exists( self.base_dir ):
+                pass
+            else:
+                os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
+                extract_archive(self.zip_file, self.base_dir)  
+
+            self.acm_mat_file = os.path.join(self.base_dir,'acm4FedHGNN.mat')
+            import scipy.io as sio
+            self.data = sio.loadmat(self.acm_mat_file)
+
+
 
         elif dataset_name == 'acm4FedHGNN':
             self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
@@ -305,6 +323,59 @@ class HGA_NodeClassification(NodeClassificationDataset):
                 '121': [('1', '1', '2'), ('2', '1', '1')],
             }
             self.has_feature = True    
+
+
+@register_dataset('rhine_node_classification')
+class RHINE_NodeClassification(NodeClassificationDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(RHINE_NodeClassification, self).__init__(*args, **kwargs)
+        self.dataset_name = dataset_name
+        assert self.dataset_name in['dblp4RHINE']
+
+
+        self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
+        self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+        self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
+        if os.path.exists(self.zip_file):  
+            pass
+        else:
+            os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+            download(self.url, 
+                    path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                    )     
+        if os.path.exists( self.base_dir ):
+            pass
+        else:
+            os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
+            extract_archive(self.zip_file, self.base_dir)          
+    
+
+        self.graph_file = os.path.join(self.base_dir,'dblp4RHINE.bin')
+        self.load_rhine_data()
+
+
+    def load_rhine_data(self):
+        if self.dataset_name == 'dblp4RHINE':
+            if os.path.exists(self.graph_file):
+                self.g=dgl.load_graphs(self.graph_file)[0][0].long()
+            
+            self.node_types = {'a': 'author', 'p': 'paper', 't': 'term', 'c': 'conf'}
+            self.IRs = ['ap', 'pt', 'apt']
+            self.ARs = ['pc', 'apc']
+            self.category='paper'
+            self.meta_paths_dict={
+                'ap':[('author', 'writes', 'paper'),('paper','written_by','author')],
+                'pt':[('paper', 'has_term', 'term'),('term','term_of','paper')],
+                'apt':[('author', 'writes', 'paper'), ('paper', 'has_term', 'term'),('term','term_of','paper'),('paper','written_by','author')],
+                'pc':[('paper', 'published_in', 'conf'), ('conf', 'publish', 'paper')],
+                'apc':[('author', 'writes', 'paper'), ('paper', 'published_in', 'conf'), ('conf', 'publish', 'paper'),('paper','written_by','author')]
+            }
+            test_mask = [i!=-1 for i in self.g.nodes['paper'].data['label']]
+            self.g.nodes['paper'].data['label_mask']=th.tensor(test_mask)
+            self.train_id = th.tensor(range(self.g.num_nodes('paper')))
+            self.pred_id=self.test_id=self.valid_id = th.tensor(range(self.g.num_nodes('paper')))[test_mask]
+
+
 
 
 
@@ -690,7 +761,6 @@ class HGB_NodeClassification(NodeClassificationDataset):
         with open(file_path, "w") as f:
             for nid, l in zip(self.test_idx, pred):
                 f.write(f"{nid}\t\t{0}\t{l}\n")
-
 
 @register_dataset('ogbn_node_classification')
 class OGB_NodeClassification(NodeClassificationDataset):

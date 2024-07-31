@@ -11,8 +11,28 @@
 OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包，集成了异质图神经网络的前沿模型。
 
 ## 新闻
-<details>
 
+
+<details>
+<summary>
+2024-07-23 开源0.7版本
+</summary>
+<br/>
+
+我们开源了0.7版本
+- 新增模型和数据集
+- 新增图提示学习框架
+- 新增DGL的数据处理框架Graphbolt
+- 新增GNN消息聚合方式：dgl.sparse
+- 新增分布式训练流程
+
+</details>
+
+
+
+
+
+<details>
 <summary>
 2023-07-17 开源0.5版本
 </summary>
@@ -212,10 +232,22 @@ python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 
 ``--use_database`` 从数据库加载数据集
 
+
+``---mini_batch_flag`` 使用mini_batch方式训练HGNN
+
+``---graphbolt`` 使用graphbolt框架的mini_batch训练流程
+
+``---use_distributed`` 使用分布式方式训练HGNN
+
+
+
 示例: 
 
 ```bash
 python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
+
+python main.py -m RGCN -d imdb4GTN -t node_classification -g 0 --mini_batch_flag --graphbolt
+
 ```
 
 **提示**: 如果你对某个模型感兴趣,你可以参考下列的模型列表。

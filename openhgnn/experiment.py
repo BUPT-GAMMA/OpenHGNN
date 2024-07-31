@@ -79,10 +79,12 @@ class Experiment(object):
         'NBF':'NBF_trainer',
         'Ingram': 'Ingram_trainer',
         'DisenKGAT': 'DisenKGAT_trainer',
-######################          add trainer_flow  here
+######################          add trainer_flow  here。 【model name】：【register name】
         'HGPrompt':'HGPrompt_trainer',
         'HGMAE':'HGMAE_trainer',
         'HGA':'hga_trainer',
+        'RHINE':'rhine_trainer',
+        'FedHGNN':'FED_REC_trainer',
 ##########################
 
 

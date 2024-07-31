@@ -15,18 +15,36 @@ of heterogeneous graph.
 ## News
 <details>
 <summary>
+2024-07-23 release v0.7
+</summary>
+<br/>
+
+We release the latest version v0.7.0
+- New models and datasets.
+- Graph Prompt pipeline
+- Data process frame: dgl.graphBolt
+- New GNN aggregator: dgl.sparse
+- Distributed training
+
+</details>
+
+
+
+<details>
+<summary>
 2023-07-17 release v0.5
 </summary>
 <br/>
 
 We release the latest version v0.5.0
-
 - New models and datasets.
 - 4 New tasks: pretrain, recommendation, graph attacks and defenses, abnorm_event detection.
 - TensorBoard visualization.
 - Maintenance and test module.
 
 </details>
+
+
 <details>
 
 <summary>
@@ -218,10 +236,18 @@ will override the parameter in config.ini.
 
 ``--use_database`` get dataset from database
 
+``---mini_batch_flag`` train model with mini-batchs
+
+``---graphbolt`` mini-batch training with dgl.graphbolt
+
+``---use_distributed`` train model with distributed way
+
 e.g.:
 
 ```bash
 python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
+
+python main.py -m RGCN -d imdb4GTN -t node_classification -g 0 --mini_batch_flag --graphbolt
 ```
 
 **Note**: If you are interested in some model, you can refer to the below models list.
