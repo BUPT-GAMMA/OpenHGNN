@@ -48,6 +48,7 @@ def build_flow(args, flow_name):
 
 
 SUPPORTED_FLOWS = {
+    "coldstart_recommmendation": "openhgnn.trainerflow.coldstart_recommendation",
     'SIAN_trainer': 'openhgnn.trainerflow.SIAN_trainer',
     'entity_classification': 'openhgnn.trainerflow.entity_classification',
     'node_classification': 'openhgnn.trainerflow.node_classification',
