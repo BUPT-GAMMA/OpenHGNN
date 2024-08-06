@@ -55,6 +55,22 @@ class Config(object):
             self.num_ns_neg = conf.getint("NSHE", "num_ns_neg")
             self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
             self.mini_batch_flag = conf.getboolean("NSHE", "mini_batch_flag")
+        
+        elif self.model_name == "MHGCN":
+            self.seed=conf.getint("MHGCN","seed")
+            self.epochs=conf.getint("MHGCN","epochs")
+            self.lr=conf.getfloat("MHGCN","lr")
+            self.weight_decay=conf.getfloat("MHGCN","weight_decay")
+            self.hidden=conf.getint("MHGCN","hidden")
+            self.out=conf.getint("MHGCN","out")
+            self.dropout=conf.getint("MHGCN","dropout")
+            self.feature=conf.get("MHGCN","feature")
+            self.normalization=conf.get("MHGCN","normalization")
+            self.degree=conf.getint("MHGCN","degree")
+            self.per=conf.getint("MHGCN","per")
+            self.experiment=conf.get("MHGCN","experiment")
+
+
 
         elif self.model_name in ["GTN", "fastGTN"]:
             self.lr = conf.getfloat("GTN", "learning_rate")

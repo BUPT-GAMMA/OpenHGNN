@@ -6,12 +6,13 @@ import os
 import pickle
 import random
 import torch as th
+from dgl import sparse as dglsp
 
 from dgl.data.utils import download, get_download_dir, _get_dgl_url
 from pprint import pprint
 from scipy import sparse
 from scipy import io as sio
-
+import dgl.sparse
 
 def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     """Convert a scipy sparse matrix to a torch sparse tensor."""
@@ -151,3 +152,37 @@ def generate_random_hg(num_nodes_dict, num_edges_dict):
         data_dict[etype] = th.randint(low=0, high=num_nodes_dict[etype[0]], size=(num,)), \
                            th.randint(low=0, high=num_nodes_dict[etype[2]], size=(num,))
     return dgl.heterograph(data_dict=data_dict, num_nodes_dict=num_nodes_dict)
+
+def to_symmetric(self):
+    N = max(self.shape[0], self.shape[1])
+
+    row, col = self.coo()
+    idx = col.new_full((2 * col.numel() + 1,), -1)
+    idx[1:row.numel() + 1] = row
+    idx[row.numel() + 1:] = col
+    idx[1:] *= N
+    idx[1:row.numel() + 1] += col
+    idx[row.numel() + 1:] += row
+
+    idx, perm = idx.sort()
+    mask = idx[1:] > idx[:-1]
+    perm = perm[1:].sub_(1)
+    idx = perm[mask]
+
+    new_row = th.cat([row, col], dim=0)[idx]
+    new_col = th.cat([col, row], dim=0)[idx]
+    return dglsp.spmatrix(th.stack((new_row, new_col)), shape = (self.shape[0], self.shape[1]))
+
+
+def row_norm(self) -> dgl.sparse.SparseMatrix:
+    rownum, colnum = self.shape
+    nodenum = self.nnz
+    row = self.row
+    rowptr, colind ,_= self.csr()
+    rowcnt = rowptr[1:] - rowptr[:-1]
+    nw = 0
+    val = th.ones(nodenum)
+    for k in range(rownum):
+        val[nw:nw + rowcnt[k].item()] = 1. / rowcnt[k]
+        nw += rowcnt[k].item()
+    return dglsp.from_csr(rowptr, colind, val, shape = (rownum, colnum))
