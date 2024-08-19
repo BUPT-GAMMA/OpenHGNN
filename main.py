@@ -7,7 +7,7 @@ from openhgnn.experiment import Experiment
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', '-m', default='MHGCN', type=str, help='name of models')
+    parser.add_argument('--model', '-m', default='BPHGNN', type=str, help='name of models')
     parser.add_argument('--task', '-t', default='node_classification', type=str, help='name of task')
     # link_prediction / node_classification
     parser.add_argument('--dataset', '-d', default='acm4GTN', type=str, help='name of datasets')

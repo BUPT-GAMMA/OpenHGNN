@@ -74,7 +74,7 @@ SUPPORTED_MODELS = {
     'fastGTN': 'openhgnn.models.fastGTN',
     'MHNF': 'openhgnn.models.MHNF',
     'MAGNN': 'openhgnn.models.MAGNN',
-    'MHGCN' : 'openhgnn.models.MHGCN',
+    'BPHGNN' : 'openhgnn.models.BPHGNN',
     'HeGAN': 'openhgnn.models.HeGAN',
     'NSHE': 'openhgnn.models.NSHE',
     'NARS': 'openhgnn.models.NARS',
@@ -104,7 +104,7 @@ SUPPORTED_MODELS = {
 }
 
 from .CompGCN import CompGCN
-from .MHGCN import MHGCN
+from .BPHGNN import BPHGNN
 from .HetGNN import HetGNN
 from .RGCN import RGCN
 from .RGAT import RGAT
@@ -141,7 +141,7 @@ __all__ = [
     'BaseModel',
     'CompGCN',
     'HetGNN',
-    'MHGCN',
+    'BPHGNN',
     'RGCN',
     'RGAT',
     'RSHN',

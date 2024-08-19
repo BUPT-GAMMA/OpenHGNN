@@ -10,7 +10,7 @@ Trainerflow
     {% for cls in openhgnn.trainerflow.classes %}
       {{ cls }}
     {% endfor %}
-    openhgnn.trainerflow.MHGCN_trainer
+    
 .. automodule:: openhgnn.trainerflow
     :members:
     :exclude-members:

@@ -38,7 +38,7 @@ class NodeClassificationDataset(BaseDataset):
 
     def __init__(self, *args, **kwargs):
         super(NodeClassificationDataset, self).__init__(*args, **kwargs)
-        self.g = self.load_graph_from_disk('./openhgnn/dataset/graph.bin')
+        self.g = self.load_graph_from_disk('/home/bjf/OpenHGNN/openhgnn/dataset/data/BPHGNN_dataset/graph.bin')
         self.category = None
         self.num_classes = None
         self.has_feature = False
@@ -502,7 +502,7 @@ class OGB_NodeClassification(NodeClassificationDataset):
         self.train_idx, self.valid_idx, self.test_idx = split_idx["train"][self.category], split_idx["valid"][
             self.category], split_idx["test"][self.category]
         self.g, self.label_dict = dataset[0]
-        self.MHGCN_g = self.mag4mhgcn(dataset)
+        self.BPHGNN_g = self.mag4mhgcn(dataset)
         self.g = self.mag4HGT(self.g)
         self.label = self.label_dict[self.category].squeeze(dim=-1)
         # 2-dim label
