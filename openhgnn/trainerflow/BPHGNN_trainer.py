@@ -39,17 +39,6 @@ class LogReg(nn.Module):
     def forward(self, seq):
         ret = self.fc(seq)  
         return ret
-class TextDataset(Dataset):
-    def __init__(self, filepath):
-        self.data = []
-        with open(filepath, 'r') as f:
-            for line in f:
-      
-                split_line = list(map(int, line.strip().split()))
-                self.data.append(split_line)
-                
-    def __len__(self):
-        return len(self.data)
 def sparse_mx_to_torch_sparse_tensor(sparse_mx):  
     """Convert a scipy sparse matrix to a torch sparse tensor."""
     sparse_mx = sparse_mx.tocoo().astype(np.float32)
@@ -216,7 +205,7 @@ class BPHGNN_trainer(BaseFlow):
         self.model = BPHGNN(
             nfeat=self.feature.size(1),
             out=args.out,
-            nhid=args.hidden,               
+            nhid=args.hidden_dim,               
             dropout=args.dropout
         )
         self.optimizer = (
@@ -263,7 +252,7 @@ class BPHGNN_trainer(BaseFlow):
 
         for _ in range(1):
             log = LogReg(hid_units, nb_classes)
-            opt = torch.optim.Adam([{'params': self.model.parameters(), 'lr': 0.01}, {'params': log.parameters()}], lr=0.001, weight_decay=0.0005)
+            opt = torch.optim.Adam([{'params': self.model.parameters(), 'lr':self.args.lr}, {'params': log.parameters()}], lr=self.args.lr, weight_decay=self.args.weight_decay)
             log.to(device)
 
             val_accs = []

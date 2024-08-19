@@ -28,7 +28,7 @@ class NodeClassification(BaseTask):
     def __init__(self, args):
         super(NodeClassification, self).__init__()
         self.logger = args.logger
-        self.dataset = build_dataset(args.dataset, 'node_classification', logger=self.logger) # 返回node_classificationDataset对象
+        self.dataset = build_dataset(args.dataset, 'node_classification', logger=self.logger) 
         # self.evaluator = Evaluator()
         self.logger = args.logger
         if hasattr(args, 'validation'):

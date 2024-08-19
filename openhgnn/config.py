@@ -61,7 +61,7 @@ class Config(object):
             self.epochs=conf.getint("BPHGNN","epochs")
             self.lr=conf.getfloat("BPHGNN","lr")
             self.weight_decay=conf.getfloat("BPHGNN","weight_decay")
-            self.hidden=conf.getint("BPHGNN","hidden")
+            self.hidden_dim=conf.getint("BPHGNN","hidden_dim")
             self.out=conf.getint("BPHGNN","out")
             self.dropout=conf.getint("BPHGNN","dropout")
             self.feature=conf.get("BPHGNN","feature")

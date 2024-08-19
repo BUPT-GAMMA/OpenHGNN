@@ -137,11 +137,11 @@ class BaseFlow(ABC):
         if isinstance(self.hg.ndata['h'], dict):
             # The heterogeneous contains more than one node type.
             input_feature = HeteroFeature(self.hg.ndata['h'], get_nodes_dict(self.hg),
-                                            self.args.hidden, act=act).to(self.device)
+                                            self.args.hidden_dim, act=act).to(self.device)
         elif isinstance(self.hg.ndata['h'], torch.Tensor):
             # The heterogeneous only contains one node type.
             input_feature = HeteroFeature({self.hg.ntypes[0]: self.hg.ndata['h']}, get_nodes_dict(self.hg),
-                                            self.args.hidden, act=act).to(self.device)
+                                            self.args.hidden_dim, act=act).to(self.device)
         return input_feature
 
     @abstractmethod

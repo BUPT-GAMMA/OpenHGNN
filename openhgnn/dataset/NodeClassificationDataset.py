@@ -502,7 +502,6 @@ class OGB_NodeClassification(NodeClassificationDataset):
         self.train_idx, self.valid_idx, self.test_idx = split_idx["train"][self.category], split_idx["valid"][
             self.category], split_idx["test"][self.category]
         self.g, self.label_dict = dataset[0]
-        self.BPHGNN_g = self.mag4mhgcn(dataset)
         self.g = self.mag4HGT(self.g)
         self.label = self.label_dict[self.category].squeeze(dim=-1)
         # 2-dim label
