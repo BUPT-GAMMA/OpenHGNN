@@ -10,7 +10,7 @@ class TextDataset(Dataset):
         self.data = []
         with open(filepath, 'r') as f:
             for line in f:
-                # 假设每行的数据由空格分隔
+                
                 split_line = list(map(int, line.strip().split()))
                 self.data.append(split_line)
                 
@@ -18,7 +18,7 @@ class TextDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        # 获取数据并转换为张量
+      
         data = self.data[idx]
         features = torch.tensor(data[:-1], dtype=torch.float32)
         labels = torch.tensor(data[-1], dtype=torch.long)
@@ -26,14 +26,14 @@ class TextDataset(Dataset):
     
 def load_edges(file_path):
     edge_data = {
-        1: [],  # 用于存储类型1的边
-        2: [],  # 用于存储类型2的边
-        3: []   # 用于存储类型3的边
+        1: [],  
+        2: [],   
+        3: []   
     }
     
     with open(file_path, 'r') as f:
         for line in f:
-            # 假设每行的数据由空格分隔
+           
             split_line = list(map(int, line.strip().split()))
             edge_type, src_id, dst_id, _ = split_line
             edge_data[edge_type].append((src_id, dst_id))
@@ -41,10 +41,9 @@ def load_edges(file_path):
     return edge_data
 
 def build_hetero_graph():
-    # 假设边的文件路径为 'train.txt'
+   
     edge_data = load_edges('OpenHGNN/openhgnn/dataset/data/test/BPHGNN_dataset/alibaba_small/train.txt')
     
-    # 创建异质图
     data_dict = {
         ('node', 'relation1', 'node'): edge_data[1],
         ('node', 'relation2', 'node'): edge_data[2],

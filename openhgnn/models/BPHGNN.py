@@ -8,20 +8,20 @@ import numpy as np
 from scipy.sparse import coo_matrix
 
 device=torch.device('cuda')
-def coototensor(A):  # 将一个 SciPy 的 coo_matrix（坐标列表格式的稀疏矩阵）转换为 PyTorch 的稀疏张量。
+def coototensor(A): 
     """
     Convert a coo_matrix to a torch sparse tensor
     """
 
     values = A.data
-    indices = np.vstack((A.row, A.col))  # 将行和列索引堆叠在一起以形成坐标。
+    indices = np.vstack((A.row, A.col)) 
     i = torch.LongTensor(indices)
     v = torch.FloatTensor(values)
     shape = A.shape
 
     return torch.sparse.FloatTensor(i, v, torch.Size(shape))
 
-def construct_adj(encode, struct_weight):  # 构建权重对角矩阵（用于广度行为模式聚合）
+def construct_adj(encode, struct_weight):  
     weight=torch.diag(struct_weight)
     adjust_encode=torch.mm(encode.to(torch.float32),weight)
     # print(adjust_encode)
@@ -29,14 +29,14 @@ def construct_adj(encode, struct_weight):  # 构建权重对角矩阵（用于�
     normal_struct_adj=torch.nn.functional.softmax(struct_adj, dim=1)
     return normal_struct_adj
 
-def adj_matrix_weight_merge(A, adj_weight):  # 将多个稀疏矩阵（通过 A 参数传入）转换为 PyTorch 的稠密矩阵，并进行加权聚合
+def adj_matrix_weight_merge(A, adj_weight): 
     """
     Multiplex Relation Aggregation
     """
 
     N = A[0][0].shape[0]
     temp = coo_matrix((N, N))
-    temp = coototensor(temp)  # 将 A 中的多个 COO 矩阵转换为 PyTorch 的稀疏张量
+    temp = coototensor(temp)  
     # Alibaba_small
     a = coototensor(A[0][0].tocoo())
     b = coototensor(A[0][1].tocoo())
@@ -48,7 +48,7 @@ def adj_matrix_weight_merge(A, adj_weight):  # 将多个稀疏矩阵（通过 A 
 
     A_t = torch.stack([a, b,c,d,e,f,g], dim=2).to_dense()
 
-    temp = torch.matmul(A_t, adj_weight)  # 矩阵乘法
+    temp = torch.matmul(A_t, adj_weight)  
     temp = torch.squeeze(temp, 2)
 
     return temp + temp.transpose(0, 1)
@@ -64,7 +64,7 @@ class GraphConvolution(Module):
         self.out_features = out_features
         self.weight = Parameter(torch.FloatTensor(in_features, out_features)).to(device)
         if bias:
-            self.bias = Parameter(torch.FloatTensor(out_features)).to(device) #鍋忕Щ鍚戦噺
+            self.bias = Parameter(torch.FloatTensor(out_features)).to(device) 
         else:
             self.register_parameter('bias', None)
         self.reset_parameters()
@@ -80,17 +80,13 @@ class GraphConvolution(Module):
             input = input.float()
         except:
             pass
-        support = torch.mm(input, self.weight).to(device)  # 矩阵乘法
-        output = torch.spmm(adj, support).to(device)   # 稀疏矩阵乘法
+        support = torch.mm(input, self.weight).to(device)  
+        output = torch.spmm(adj, support).to(device)   
         if self.bias is not None:
             return output + self.bias
         else:
             return output
-    #
-    # def __repr__(self):
-    #     return self.__class__.__name__ + ' (' \
-    #            + str(self.in_features) + ' -> ' \
-    #            + str(self.out_features) + ')'
+   
 
 class GCN(nn.Module):
     """

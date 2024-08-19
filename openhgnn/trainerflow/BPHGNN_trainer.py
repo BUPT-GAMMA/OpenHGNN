@@ -15,43 +15,42 @@ from scipy.sparse import csc_matrix
 import torch.nn.functional as F
 from sklearn.metrics import f1_score, roc_auc_score
 import scipy.io as sio
-#from info_nce import InfoNCE
 import pickle as pkl
 import time
 
-class LogReg(nn.Module):  # 这个 LogReg 类定义了一个逻辑分类器，它是一个简单的线性模型。这个模型接受输入特征并输出类别的概率。
+class LogReg(nn.Module):  
     """
     Logical classifier
     """
 
     def __init__(self, ft_in, nb_classes):
         super(LogReg, self).__init__()  
-        self.fc = nn.Linear(ft_in, nb_classes)  # 定义一个线性层
+        self.fc = nn.Linear(ft_in, nb_classes)  
 
-        for m in self.modules():  # 初始化所有模块的权重
+        for m in self.modules():  
             self.weights_init(m)
 
     def weights_init(self, m):
-        if isinstance(m, nn.Linear):   # 如果是线性层，使用Xavier初始化权重和偏执值
+        if isinstance(m, nn.Linear):  
             torch.nn.init.xavier_uniform_(m.weight.data)
             if m.bias is not None:
                 m.bias.data.fill_(0.0)
 
     def forward(self, seq):
-        ret = self.fc(seq)  # self.fc是经过线性层处理进行线性变幻的意思
+        ret = self.fc(seq)  
         return ret
 class TextDataset(Dataset):
     def __init__(self, filepath):
         self.data = []
         with open(filepath, 'r') as f:
             for line in f:
-                # 假设每行的数据由空格分隔
+      
                 split_line = list(map(int, line.strip().split()))
                 self.data.append(split_line)
                 
     def __len__(self):
         return len(self.data)
-def sparse_mx_to_torch_sparse_tensor(sparse_mx):  # 稀疏矩阵转换为torch张量形式
+def sparse_mx_to_torch_sparse_tensor(sparse_mx):  
     """Convert a scipy sparse matrix to a torch sparse tensor."""
     sparse_mx = sparse_mx.tocoo().astype(np.float32)
     indices = torch.from_numpy(
@@ -59,7 +58,7 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):  # 稀疏矩阵转换为torch�
     values = torch.from_numpy(sparse_mx.data)
     shape = torch.Size(sparse_mx.shape)
     return torch.sparse.FloatTensor(indices, values, shape)
-def load_our_data(dataset_str, cuda=True):  # 加载数据
+def load_our_data(dataset_str, cuda=True):  
     """
     Load our Networks Datasets
     Avoid awful code
@@ -239,8 +238,7 @@ class BPHGNN_trainer(BaseFlow):
         labels = labels.astype(np.int16)
         device=torch.device('cuda')
         embeds= torch.tensor(embeds[np.newaxis], dtype=torch.float32, device=device)
-        # near_embs = torch.FloatTensor(near_embs[np.newaxis]).to(device)
-        # far_embs = torch.FloatTensor(far_embs[np.newaxis]).to(device)
+    
 
         labels = torch.FloatTensor(labels[np.newaxis]).to(device)
         idx_train = torch.LongTensor(idx_train).to(device)
@@ -250,7 +248,7 @@ class BPHGNN_trainer(BaseFlow):
         hid_units = embeds.shape[2]
         nb_classes = labels.shape[2]
         xent = nn.CrossEntropyLoss()
-        #contrast = InfoNCE()
+    
         train_embs = embeds[0, idx_train]
         val_embs = embeds[0, idx_val]
         test_embs = embeds[0, idx_test]
@@ -283,15 +281,6 @@ class BPHGNN_trainer(BaseFlow):
                 train_embs = embeds[0, idx_train]
                 val_embs = embeds[0, idx_val]
                 test_embs = embeds[0, idx_test]
-
-
-                # near_embs=torch.FloatTensor(near_embs[np.newaxis]).to(device)
-                # far_embs = torch.FloatTensor(far_embs[np.newaxis]).to(device)
-                #
-                # train_near_embs= near_embs[0, idx_train]
-                # train_far_embs = far_embs[0, idx_train]
-
-
                 # train
                 log.train()
                 opt.zero_grad()
@@ -299,13 +288,8 @@ class BPHGNN_trainer(BaseFlow):
                 logits = log(train_embs)
 
                 loss = xent(logits, train_lbls)
-                #loss = xent(logits, train_lbls) + 0.01 * contrast(near_embeds, far_embeds)
-                # loss = contrast(near_embeds, far_embeds)
                 loss.backward()
                 opt.step()
-
-
-
 
                 logits_tra = log(train_embs)
                 preds = torch.argmax(logits_tra, dim=1)
