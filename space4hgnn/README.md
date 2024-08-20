@@ -53,7 +53,7 @@ python space4hgnn.py -m general_HGNN -u metapath -t node_classification -d HGBn-
 
 ``--repeat -r`` times to repeat, default 5
 
-``--gnn_type -a `` gun type. 
+``--gnn_type -a `` gnn type. 
 
 ``--times -t`` same with generating random designs
 

@@ -28,8 +28,10 @@ class BaseFlow(ABC):
         """
         super(BaseFlow, self).__init__()
         self.evaluator = None
-        self.evaluate_interval = 1
-        if hasattr(args, '_checkpoint'):
+        self.evaluate_interval = getattr(args, 'evaluate_interval', 1)
+        if hasattr(args, 'model_path'):
+            self._checkpoint = args.model_path
+        elif hasattr(args, '_checkpoint'):
             self._checkpoint = os.path.join(args._checkpoint, f"{args.model_name}_{args.dataset_name}.pt")
         else:
             if hasattr(args, 'load_from_pretrained'):
@@ -42,6 +44,9 @@ class BaseFlow(ABC):
             args.HGB_results_path = os.path.join(args.output_dir,
                                                  "{}_{}_{}.txt".format(args.model_name, args.dataset_name[5:],
                                                                        args.seed))
+
+        # Distributed models will check this parameter during the training process to determine whether to use distributed.
+        self.use_distributed = args.use_distributed
 
         # stage flags: whether to run the corresponding stages
         # todo: only take effects in node classification trainer flow
@@ -58,14 +63,21 @@ class BaseFlow(ABC):
         self.model = args.model
         self.device = args.device
         self.task = build_task(args)
+        self.max_epoch = args.max_epoch
+        self.optimizer = None
+
+        if self.model_name in ["SIAN", "MeiREC", "ExpressGNN", "Ingram", "RedGNN","RedGNNT",  "AdapropI", "AdapropT","RedGNNT", "Grail", "ComPILE","DisenKGAT"]:
+            return
+        if self.model_name == "Ingram":
+            return
+
         if self.args.use_uva:
             self.hg = self.task.get_graph()
         else:
             self.hg = self.task.get_graph().to(self.device)
         self.args.meta_paths_dict = self.task.dataset.meta_paths_dict
         self.patience = args.patience
-        self.max_epoch = args.max_epoch
-        self.optimizer = None
+
         self.loss_fn = self.task.get_loss_fn()
 
     def preprocess(self):

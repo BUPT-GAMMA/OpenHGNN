@@ -8,7 +8,7 @@ import numpy as np
 import random
 from . import load_HIN, load_KG, load_OGB
 from .best_config import BEST_CONFIGS
-
+from typing import Optional, Tuple
 
 def sum_up_params(model):
     """ Count the model parameters """
@@ -105,7 +105,7 @@ class EarlyStopping(object):
             self.save_model(model)
         elif (loss > self.best_loss) and (score < self.best_score):
             self.counter += 1
-            # print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -136,11 +136,11 @@ class EarlyStopping(object):
 
     def loss_step(self, loss, model):
         """
-        
+
         Parameters
         ----------
         loss Float or torch.Tensor
-        
+
         model torch.nn.Module
 
         Returns
@@ -393,11 +393,11 @@ def extract_metapaths(category, canonical_etypes, self_loop=False):
 
 def to_hetero_feat(h, type, name):
     """Feature convert API.
-    
+
     It uses information about the type of the specified node
     to convert features ``h`` in homogeneous graph into a heteorgeneous
     feature dictionay ``h_dict``.
-    
+
     Parameters
     ----------
     h: Tensor
@@ -407,15 +407,15 @@ def to_hetero_feat(h, type, name):
         It should correspond to the parameter ``name``.
     name: list
         The node or edge types list.
-    
+
     Return
     ------
     h_dict: dict
         output feature dictionary of heterogeneous graph
-    
+
     Example
     -------
-    
+
     >>> h = torch.tensor([[1, 2, 3],
                           [1, 1, 1],
                           [0, 2, 1],
@@ -431,7 +431,7 @@ def to_hetero_feat(h, type, name):
     [0, 2, 1],
     [1, 3, 3]]), 'paper': tensor([[1, 1, 1],
     [2, 1, 1]])}
-    
+
     """
     h_dict = {}
     for index, ntype in enumerate(name):
@@ -491,3 +491,97 @@ def get_ntypes_from_canonical_etypes(canonical_etypes=None):
         ntypes.add(src)
         ntypes.add(dst)
     return ntypes
+
+def broadcast(src: torch.Tensor, other: torch.Tensor, dim: int):
+    if dim < 0:
+        dim = other.dim() + dim
+    if src.dim() == 1:
+        for _ in range(0, dim):
+            src = src.unsqueeze(0)
+    for _ in range(src.dim(), other.dim()):
+        src = src.unsqueeze(-1)
+    src = src.expand(other.size())
+    return src
+
+def scatter_sum(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
+                out: Optional[torch.Tensor] = None,
+                dim_size: Optional[int] = None) -> torch.Tensor:
+    index = broadcast(index, src, dim)
+    if out is None:
+        size = list(src.size())
+        if dim_size is not None:
+            size[dim] = dim_size
+        elif index.numel() == 0:
+            size[dim] = 0
+        else:
+            size[dim] = int(index.max()) + 1
+        out = torch.zeros(size, dtype=src.dtype, device=src.device)
+        return out.scatter_add_(dim, index, src)
+    else:
+        return out.scatter_add_(dim, index, src)
+
+
+def scatter_add(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
+                out: Optional[torch.Tensor] = None,
+                dim_size: Optional[int] = None) -> torch.Tensor:
+    return scatter_sum(src, index, dim, out, dim_size)
+
+
+def scatter_mul(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
+                out: Optional[torch.Tensor] = None,
+                dim_size: Optional[int] = None) -> torch.Tensor:
+    return torch.ops.torch_scatter.scatter_mul(src, index, dim, out, dim_size)
+
+
+def scatter_mean(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
+                 out: Optional[torch.Tensor] = None,
+                 dim_size: Optional[int] = None) -> torch.Tensor:
+    out = scatter_sum(src, index, dim, out, dim_size)
+    dim_size = out.size(dim)
+
+    index_dim = dim
+    if index_dim < 0:
+        index_dim = index_dim + src.dim()
+    if index.dim() <= index_dim:
+        index_dim = index.dim() - 1
+
+    ones = torch.ones(index.size(), dtype=src.dtype, device=src.device)
+    count = scatter_sum(ones, index, index_dim, None, dim_size)
+    count[count < 1] = 1
+    count = broadcast(count, out, dim)
+    if out.is_floating_point():
+        out.true_divide_(count)
+    else:
+        out.div_(count, rounding_mode='floor')
+    return out
+
+
+def scatter_min(
+        src: torch.Tensor, index: torch.Tensor, dim: int = -1,
+        out: Optional[torch.Tensor] = None,
+        dim_size: Optional[int] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+    return torch.ops.torch_scatter.scatter_min(src, index, dim, out, dim_size)
+
+
+def scatter_max(
+        src: torch.Tensor, index: torch.Tensor, dim: int = -1,
+        out: Optional[torch.Tensor] = None,
+        dim_size: Optional[int] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+    return torch.ops.torch_scatter.scatter_max(src, index, dim, out, dim_size)
+
+
+def scatter(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
+            out: Optional[torch.Tensor] = None, dim_size: Optional[int] = None,
+            reduce: str = "sum") -> torch.Tensor:
+    if reduce == 'sum' or reduce == 'add':
+        return scatter_sum(src, index, dim, out, dim_size)
+    if reduce == 'mul':
+        return scatter_mul(src, index, dim, out, dim_size)
+    elif reduce == 'mean':
+        return scatter_mean(src, index, dim, out, dim_size)
+    elif reduce == 'min':
+        return scatter_min(src, index, dim, out, dim_size)[0]
+    elif reduce == 'max':
+        return scatter_max(src, index, dim, out, dim_size)[0]
+    else:
+        raise ValueError

@@ -7,20 +7,18 @@ Dataset
 
 .. autosummary::
     :nosignatures:
-    {% for cls in openhgnn.dataset.classes %}
-      {{ cls }}
-    {% endfor %}
+    :toctree: ../generated
+    :template: _templates/class.rst
 
-.. automodule:: openhgnn.dataset
-    :members:
-    :exclude-members: BaseDataset, NodeClassificationDataset
-
-    .. autoclass:: BaseDataset
-        :special-members:
-        :show-inheritance:
-
-    .. _api-base-node-dataset:
-
-    .. autoclass:: NodeClassificationDataset
-        :special-members:
-        :show-inheritance:
+    openhgnn.dataset.BaseDataset
+    openhgnn.dataset.NodeClassificationDataset
+    openhgnn.dataset.LinkPredictionDataset
+    openhgnn.dataset.RecommendationDataset
+    openhgnn.dataset.AcademicDataset
+    openhgnn.dataset.HGBDataset
+    openhgnn.dataset.OHGBDataset
+    openhgnn.dataset.GTNDataset
+    openhgnn.dataset.AsLinkPredictionDataset
+    openhgnn.dataset.AsNodeClassificationDataset
+    openhgnn.dataset.EdgeClassificationDataset
+    openhgnn.dataset.OAGDataset

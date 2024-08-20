@@ -16,7 +16,7 @@ from torch.utils.data import IterableDataset, DataLoader
 def get_node_data_loader(node_neighbors_min_num: int, num_layers: int,
                          graph: dgl.DGLGraph, batch_size: int, sampled_node_type: str,
                          train_idx: th.Tensor, valid_idx: th.Tensor, test_idx: th.Tensor,
-                         shuffle: bool = True, drop_last: bool = False, num_workers: int = 0, device: str = 'cpu'):
+                         shuffle: bool = True, drop_last: bool = False, num_workers: int = 0, device: str = 'cpu', **kwargs):
     """
     get graph node data loader, including train_loader, val_loader and test_loader
     :return:
@@ -31,7 +31,7 @@ def get_node_data_loader(node_neighbors_min_num: int, num_layers: int,
 
     train_loader = dgl.dataloading.DataLoader(
         graph, {sampled_node_type: train_idx}, sampler,
-        batch_size=batch_size, shuffle=shuffle, drop_last=drop_last, num_workers=num_workers, device=device)
+        batch_size=batch_size, shuffle=shuffle, drop_last=drop_last, num_workers=num_workers, device=device, use_ddp=kwargs['use_distributed'])
 
     val_loader = dgl.dataloading.DataLoader(
         graph, {sampled_node_type: valid_idx}, sampler,

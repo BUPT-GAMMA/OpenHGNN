@@ -11,6 +11,41 @@
 OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 和 [PyTorch](https://pytorch.org/) 的开源异质图神经网络工具包，集成了异质图神经网络的前沿模型。
 
 ## 新闻
+
+
+<details>
+<summary>
+2024-07-23 开源0.7版本
+</summary>
+<br/>
+
+我们开源了0.7版本
+- 新增模型和数据集
+- 新增图提示学习框架
+- 新增DGL的数据处理框架Graphbolt
+- 新增GNN消息聚合方式：dgl.sparse
+- 新增分布式训练流程
+
+</details>
+
+
+
+
+
+<details>
+<summary>
+2023-07-17 开源0.5版本
+</summary>
+<br/>
+
+我们开源了0.5版本。
+
+- 新增模型和数据集
+- 四个新的前沿图学习任务：预训练、推荐、图攻防、异常事件检测
+- TensorBoard可视化功能
+- 维护和测试模块
+
+</details>
 <details>
 
 <summary>
@@ -99,7 +134,7 @@ OpenHGNN荣获启智社区优秀孵化项⽬奖！详细链接：https://mp.weix
   - 新增模型：【KDD2017】Metapath2vec、【TKDE2018】HERec、【KDD2021】HeCo、【KDD2021】SimpleHGN、【TKDE2021】HPN、【ICDM2021】HDE、fastGTN
   - 新增日志功能
   - 新增美团外卖数据集
-</details>
+  </details>
   
 ## 关键特性
 
@@ -113,9 +148,9 @@ OpenHGNN荣获启智社区优秀孵化项⽬奖！详细链接：https://mp.weix
 
 - Python  >= 3.6
 
-- [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
+- [PyTorch](https://pytorch.org/get-started/)  >= 2.3.0
 
-- [DGL](https://github.com/dmlc/dgl) >= 0.8.0
+- [DGL](https://github.com/dmlc/dgl) >= 2.2.1
 
 - CPU 或者 NVIDIA GPU, Linux, Python3
 
@@ -154,14 +189,30 @@ cd OpenHGNN
 pip install .
 ```
 
+
+
+**5. 安装 gdbi(可选):** 
+
+- 安装gdbi
+```bash
+pip install git+https://github.com/xy-Ji/gdbi.git
+```
+
+- 安装图数据库
+```bash
+pip install neo4j==5.16.0
+pip install nebula3-python==3.4.0
+```
+
+
 #### 在已有的评测上运行已有的基线模型 [数据集](./openhgnn/dataset/#Dataset)
 
 ```bash
-python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --load_from_pretrained
+python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config --load_from_pretrained 
 ```
 
 使用方法: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
-               [--gpu GPU] [--use_best_config]
+               [--gpu GPU] [--use_best_config][--use_database]
 
 *可选参数*:
 
@@ -179,15 +230,64 @@ python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 
 ``--load_from_pretrained`` 从默认检查点加载模型。
 
+``--use_database`` 从数据库加载数据集
+
+
+``---mini_batch_flag`` 使用mini_batch方式训练HGNN
+
+``---graphbolt`` 使用graphbolt框架的mini_batch训练流程
+
+``---use_distributed`` 使用分布式方式训练HGNN
+
+
+
 示例: 
 
 ```bash
 python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
+
+python main.py -m RGCN -d imdb4GTN -t node_classification -g 0 --mini_batch_flag --graphbolt
+
 ```
 
 **提示**: 如果你对某个模型感兴趣,你可以参考下列的模型列表。
 
 请参考 [文档](https://openhgnn.readthedocs.io/en/latest/index.html) 了解更多的基础和进阶的使用方法。
+
+
+#### 使用TensorBoard可视化训练结果
+```bash
+tensorboard --logdir=./openhgnn/output/{model_name}/
+```
+示例：
+```bash
+tensorboard --logdir=./openhgnn/output/RGCN/
+```
+
+**提示**:需要先运行一次你想要可视化的模型，才能用以上命令可视化结果。
+
+#### 使用gdbi访问数据库中的标准图数据
+以neo4j数据库和imdb数据集为例
+- 构造图数据集的csv文件(节点级:A.csv，连接级:A_P.csv)
+- 导入csv文件到图数据库中
+```bash
+LOAD CSV WITH HEADERS FROM "file:///data.csv" AS row
+CREATE (:graphname_labelname {ID: row.ID, ... });
+```
+- 在config.py文件中添加访问图数据库所需的用户信息
+```python
+self.graph_address = [graph_address]
+self.user_name = [user_name]
+self.password = [password]
+```
+
+- 示例: 
+
+```bash
+python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_config --use_database
+```
+
+
 
 ## [模型](./openhgnn/models/#Model)
 
@@ -195,8 +295,8 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 
 表格中的链接给出了模型的基本使用方法.
 
-| 模型                                                       | 节点分类               | 链路预测               | 推荐                 |
-|----------------------------------------------------------|--------------------|--------------------|--------------------|
+| 模型                                                     | 节点分类           | 链路预测           | 推荐               |
+| -------------------------------------------------------- | ------------------ | ------------------ | ------------------ |
 | [TransE](./openhgnn/output/TransE)[NIPS 2013]            |                    | :heavy_check_mark: |                    |
 | [TransH](./openhgnn/output/TransH)[AAAI 2014]            |                    | :heavy_check_mark: |                    |
 | [TransR](./openhgnn/output/TransR)[AAAI 2015]            |                    | :heavy_check_mark: |                    |
@@ -228,6 +328,7 @@ python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
 | [HDE](./openhgnn/output/HDE)[ICDM 2021]                  |                    | :heavy_check_mark: |                    |
 | [HetSANN](./openhgnn/output/HGT)[AAAI 2020]              | :heavy_check_mark: |                    |                    |
 | [ieHGCN](./openhgnn/output/HGT)[TKDE 2021]               | :heavy_check_mark: |                    |                    |
+| [KTN](./openhgnn/output/KTN)[NIPS 2022]                  | :heavy_check_mark: |                    |                    |
 
 ### 候选模型
 

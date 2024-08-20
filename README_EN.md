@@ -14,6 +14,38 @@ of heterogeneous graph.
 
 ## News
 <details>
+<summary>
+2024-07-23 release v0.7
+</summary>
+<br/>
+
+We release the latest version v0.7.0
+- New models and datasets.
+- Graph Prompt pipeline
+- Data process frame: dgl.graphBolt
+- New GNN aggregator: dgl.sparse
+- Distributed training
+
+</details>
+
+
+
+<details>
+<summary>
+2023-07-17 release v0.5
+</summary>
+<br/>
+
+We release the latest version v0.5.0
+- New models and datasets.
+- 4 New tasks: pretrain, recommendation, graph attacks and defenses, abnorm_event detection.
+- TensorBoard visualization.
+- Maintenance and test module.
+
+</details>
+
+
+<details>
 
 <summary>
 2023-02-24 OpenI Excellent Incubation Award
@@ -99,7 +131,7 @@ We release the latest version v0.2.
   - 新增模型：【KDD2017】Metapath2vec、【TKDE2018】HERec、【KDD2021】HeCo、【KDD2021】SimpleHGN、【TKDE2021】HPN、【ICDM2021】HDE、fastGTN
   - 新增日志功能
   - 新增美团外卖数据集
-</details>
+  </details>
   
 ## Key Features
 
@@ -114,9 +146,9 @@ We release the latest version v0.2.
 
 - Python  >= 3.6
 
-- [PyTorch](https://pytorch.org/get-started/)  >= 1.9.0
+- [PyTorch](https://pytorch.org/get-started/)  >= 2.3.0
 
-- [DGL](https://github.com/dmlc/dgl) >= 0.8.0
+- [DGL](https://github.com/dmlc/dgl) >= 2.2.1
 
 - CPU or NVIDIA GPU, Linux, Python3
 
@@ -157,6 +189,24 @@ cd OpenHGNN
 pip install .
 ```
 
+
+**5. Install gdbi(Optional):** 
+
+- install gdbi from git
+```bash
+pip install git+https://github.com/xy-Ji/gdbi.git
+```
+
+- install graph database from pypi
+```bash
+pip install neo4j==5.16.0
+pip install nebula3-python==3.4.0
+```
+
+
+
+
+
 #### Running an existing baseline model on an existing benchmark [dataset](../openhgnn/dataset/#Dataset)
 
 ```bash
@@ -164,7 +214,7 @@ python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
 ```
 
 usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
-[--gpu GPU] [--use_best_config]
+[--gpu GPU] [--use_best_config][--use_database]
 
 *optional arguments*:
 
@@ -184,15 +234,60 @@ will override the parameter in config.ini.
 
 ``--load_from_pretrained`` will load the model from a default checkpoint.
 
+``--use_database`` get dataset from database
+
+``---mini_batch_flag`` train model with mini-batchs
+
+``---graphbolt`` mini-batch training with dgl.graphbolt
+
+``---use_distributed`` train model with distributed way
+
 e.g.:
 
 ```bash
 python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
+
+python main.py -m RGCN -d imdb4GTN -t node_classification -g 0 --mini_batch_flag --graphbolt
 ```
 
 **Note**: If you are interested in some model, you can refer to the below models list.
 
 Refer to the [docs](https://openhgnn.readthedocs.io/en/latest/index.html) to get more basic and depth usage.
+
+#### Use TensorBoard to visualize your train result
+```bash
+tensorboard --logdir=./openhgnn/output/{model_name}/
+```
+e.g.：
+```bash
+tensorboard --logdir=./openhgnn/output/RGCN/
+```
+**Note**: To visualize results, you need to train the model first.
+
+
+#### Use gdbi to get grpah dataset
+take neo4j and imdb dataset for example
+- construct csv file for dataset(node-level:A.csv,edge-level:A_P.csv)
+- import csv file to database
+```bash
+LOAD CSV WITH HEADERS FROM "file:///data.csv" AS row
+CREATE (:graphname_labelname {ID: row.ID, ... });
+```
+- add user information to access database in config.py file
+```python
+self.graph_address = [graph_address]
+self.user_name = [user_name]
+self.password = [password]
+```
+
+- e.g.:
+
+```bash
+python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_config --use_database
+```
+
+
+
 
 ## [Models](../openhgnn/models/#Model)
 
@@ -233,6 +328,7 @@ The link will give some basic usage.
 | [HDE](../openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
 | [HetSANN](../openhgnn/output/HGT)[AAAI 2020]               | :heavy_check_mark:  |                    |                    |
 | [ieHGCN](../openhgnn/output/HGT)[TKDE 2021]                | :heavy_check_mark:  |                    |                    |
+| [KTN](../openhgnn/output/KTN)[NIPS 2022]                  | :heavy_check_mark: |                    |                    |
 
 ### Candidate models
 

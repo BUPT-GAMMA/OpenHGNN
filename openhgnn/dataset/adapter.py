@@ -193,7 +193,7 @@ class AsNodeClassificationDataset(DGLDataset):
             self.label_mask_feat_name = info['label_mask_feat_name']
         gs, _ = utils.load_graphs(os.path.join(self.save_path, 'graph_{}.bin'.format(self.hash)))
         self.g = gs[0]
-        self._set_split_index()
+        self._set_split_index(self.target_ntype)
 
     def save(self):
         utils.save_graphs(os.path.join(self.save_path, 'graph_{}.bin'.format(self.hash)), [self.g])

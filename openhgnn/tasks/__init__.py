@@ -24,7 +24,9 @@ def register_task(name):
         if name in TASK_REGISTRY:
             raise ValueError("Cannot register duplicate tasks ({})".format(name))
         if not issubclass(cls, BaseTask):
-            raise ValueError("Task ({}: {}) must extend BaseTask".format(name, cls.__name__))
+            raise ValueError(
+                "Task ({}: {}) must extend BaseTask".format(name, cls.__name__)
+            )
         TASK_REGISTRY[name] = cls
         return cls
 
@@ -48,13 +50,22 @@ def try_import_task(task):
 
 
 SUPPORTED_TASKS = {
+    "KTN_trainer": "openhgnn.tasks.KTN",
     'demo': 'openhgnn.tasks.demo',
     'node_classification': 'openhgnn.tasks.node_classification',
     'link_prediction': 'openhgnn.tasks.link_prediction',
     'recommendation': 'openhgnn.tasks.recommendation',
     'embedding': 'openhgnn.tasks.embedding',
     'edge_classification': 'openhgnn.tasks.edge_classification',
-    'hypergraph': 'openhgnn.tasks.hypergraph'
+    'hypergraph': 'openhgnn.tasks.hypergraph',
+    'meirec': 'openhgnn.tasks.meirec',
+    'pretrain': 'openhgnn.tasks.pretrain',
+    'abnorm_event_detection': 'openhgnn.tasks.AbnormEventDetection',
+    'DSSL_trainer': 'openhgnn.tasks.DSSL_task',
+    'NBF_link_prediction':'openhgnn.tasks.link_prediction',
+    'Ingram': 'openhgnn.tasks.Ingram',
+    'DisenKGAT_link_prediction':'openhgnn.tasks.link_prediction',
+
 }
 
 from .node_classification import NodeClassification
@@ -62,14 +73,21 @@ from .link_prediction import LinkPrediction
 from .recommendation import Recommendation
 from .edge_classification import EdgeClassification
 from .hypergraph import hypergraph
+from .node_classification import DSSL_task
+from .ktn import KTN4MultiLabelNodeClassification
+from .Ingram_task import Ingram
+
+
 
 __all__ = [
-    'BaseTask',
-    'NodeClassification',
-    'LinkPrediction',
-    'Recommendation',
-    'EdgeClassification',
-    'hypergraph'
+    "BaseTask",
+    "NodeClassification",
+    "LinkPrediction",
+    "Recommendation",
+    "EdgeClassification",
+    "hypergraph",
+    "pretrain",
+    "ktn",
 ]
 
 classes = __all__

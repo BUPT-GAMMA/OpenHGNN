@@ -87,7 +87,10 @@ class HGSL(BaseModel):
 
         feat_dims = dict()
         for ntype in hg.ntypes:
-            feat_dims[ntype] = hg.nodes[ntype].data['h'].shape[1]
+            if 'h' in hg.nodes[ntype].data.keys():
+                feat_dims[ntype] = hg.nodes[ntype].data['h'].shape[1]
+            else:
+                feat_dims[ntype] = 128
 
         # Extract undirected_relations
         und_rels = args.undirected_relations.split(',')
@@ -99,11 +102,26 @@ class HGSL(BaseModel):
         device = hg.device
 
         metapaths = list()
-        for feature_name in hg.nodes["paper"].data.keys():
-            if "m2v" in feature_name:
-                metapaths.append(feature_name)
-
-        mp_emb_dim = hg.nodes["paper"].data["pap_m2v_emb"].shape[1]
+        if args.dataset_name == 'acm4GTN':
+            for feature_name in hg.nodes["paper"].data.keys():
+                if "m2v" in feature_name:
+                    metapaths.append(feature_name)
+            mp_emb_dim = hg.nodes["paper"].data["pap_m2v_emb"].shape[1]
+        
+        elif args.dataset_name == 'dblp4GTN':
+            for feature_name in hg.nodes['paper'].data.keys():
+                if 'h' not in feature_name:
+                    metapaths.append(feature_name)
+            mp_emb_dim = hg.nodes['paper'].data['PAPCP'].shape[1]
+        
+        elif args.dataset_name == 'yelp4HGSL':
+            for feature_name in hg.nodes['b'].data.keys():
+                if 'h' not in feature_name:
+                    metapaths.append(feature_name)
+            mp_emb_dim = hg.nodes['b'].data['bub'].shape[1]
+            
+        else:
+            raise NotImplemented("HGSL on dataset {} has not been implemented".format(args.dataset_name))
 
         return cls(feat_dims=feat_dims, undirected_relations=undirected_relations, device=device, metapaths=metapaths,
                    mp_emb_dim=mp_emb_dim, hidden_dim=args.hidden_dim, num_heads=args.num_heads,
@@ -166,7 +184,6 @@ class HGSL(BaseModel):
             Every node type in graph should have its metapath2vec embedding feature named 'xxx_m2v_emb'
             and the same feature dimension.
         h_features : dict
-            Not used.
 
         Returns
         --------
@@ -207,7 +224,10 @@ class HGSL(BaseModel):
         # Heterogeneous Feature Mapping
         mapped_feats = dict()
         for ntype in self.node_types:
-            mapped_feats[ntype] = self.non_linear(self.encoder[ntype](hg.nodes[ntype].data['h']))
+            if 'h' in hg.nodes[ntype].data.keys():
+                mapped_feats[ntype] = self.non_linear(self.encoder[ntype](hg.nodes[ntype].data['h'].clone()))
+            else:
+                mapped_feats[ntype] = self.non_linear(self.encoder[ntype](h_features[ntype].clone()))
 
         # Heterogeneous Graph Generation
         new_adjs = dict()
@@ -218,8 +238,10 @@ class HGSL(BaseModel):
             # Feature Graph Generation
             fg_direct = self.fgg_direct[undirected_relation](mapped_feats[canonical_etype[0]],
                                                              mapped_feats[canonical_etype[2]])
-
-            fmat_l, fmat_r = hg.nodes[canonical_etype[0]].data['h'], hg.nodes[canonical_etype[2]].data['h']
+            if 'h' in hg.nodes[canonical_etype[0]].data.keys() and 'h' in hg.nodes[canonical_etype[2]].data.keys():
+                fmat_l, fmat_r = hg.nodes[canonical_etype[0]].data['h'], hg.nodes[canonical_etype[2]].data['h']
+            else:
+                fmat_l, fmat_r = h_features[canonical_etype[0]], h_features[canonical_etype[2]]
             sim_l, sim_r = self.fgg_left[undirected_relation](fmat_l, fmat_l), self.fgg_right[undirected_relation](
                 fmat_r, fmat_r)
             fg_left, fg_right = sim_l.mm(ori_g), sim_r.mm(ori_g.t()).t()
