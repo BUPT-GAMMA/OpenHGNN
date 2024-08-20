@@ -791,13 +791,8 @@ class OGB_NodeClassification(NodeClassificationDataset):
 
     def get_labels(self):
         return self.label
-<<<<<<< HEAD
-    
-    def mag4mhgcn(self, dataset):
-=======
 
     def mag4sehgnn(self, dataset):
->>>>>>> upstream/main
         g, _ = dataset[0]
         embed_size = g.nodes['paper'].data['feat'].size(0)
 
@@ -878,10 +873,7 @@ class OGB_NodeClassification(NodeClassificationDataset):
             th.save(PFP_rm_diag, diag_name)
 
         return new_g
-<<<<<<< HEAD
     
-=======
->>>>>>> upstream/main
     def mag4HGT(self, hg):
         # Add reverse edge types
 
