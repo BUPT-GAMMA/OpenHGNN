@@ -47,6 +47,7 @@ class Experiment(object):
         'HDE': 'hde_trainer',
         'SIAN': 'SIAN_trainer',
         'GATNE-T': 'GATNE_trainer',
+        'BPHGNN': 'BPHGNN_trainer',
         'TransE': 'TransX_trainer',
         'TransH': 'TransX_trainer',
         'TransR': 'TransX_trainer',

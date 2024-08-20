@@ -64,6 +64,7 @@ SUPPORTED_FLOWS = {
     'mp2vec_trainer': 'openhgnn.trainerflow.mp2vec_trainer',
     'herec_trainer': 'openhgnn.trainerflow.herec_trainer',
     'HeCo_trainer': 'openhgnn.trainerflow.HeCo_trainer',
+    'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',
     'DMGI_trainer': 'openhgnn.trainerflow.DMGI_trainer',
     'slicetrainer': 'openhgnn.trainerflow.slice_trainer',
     'hde_trainer': 'openhgnn.trainerflow.hde_trainer',
@@ -112,6 +113,7 @@ from .hgcl_trainer import HGCLtrainer
 from .node_classification import NodeClassification
 from .link_prediction import LinkPrediction
 from .recommendation import Recommendation
+from .BPHGNN_trainer import BPHGNN_trainer
 from .hetgnn_trainer import HetGNNTrainer
 from .hgt_trainer import HGTTrainer
 from .kgcn_trainer import KGCNTrainer
@@ -161,6 +163,7 @@ __all__ = [
     'NodeClassification',
     'LinkPrediction',
     'Recommendation',
+    'BPHGNN_trainer',
     'HetGNNTrainer',
     'HGTTrainer',
     'KGCNTrainer',

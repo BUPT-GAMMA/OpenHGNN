@@ -1,6 +1,7 @@
 import os
 import dgl
 import dgl.function as fn
+from dgl import sparse as dglsp
 import torch as th
 import numpy as np
 from dgl.data.rdf import AIFBDataset, MUTAGDataset, BGSDataset, AMDataset
@@ -13,7 +14,7 @@ from ogb.nodeproppred import DglNodePropPredDataset
 from . import load_acm_raw
 from . import BaseDataset, register_dataset
 
-from . import AcademicDataset, HGBDataset, OHGBDataset,IMDB4MAGNN_Dataset
+from . import AcademicDataset, HGBDataset, OHGBDataset, IMDB4MAGNN_Dataset
 from .utils import sparse_mx_to_torch_sparse_tensor, to_symmetric, row_norm
 from ..utils import add_reverse_edges
 import os
@@ -171,7 +172,7 @@ class NodeClassificationDataset(BaseDataset):
 
     def __init__(self, *args, **kwargs):
         super(NodeClassificationDataset, self).__init__(*args, **kwargs)
-        self.g = None
+        self.g = self.load_graph_from_disk('/home/bjf/OpenHGNN/openhgnn/dataset/data/BPHGNN_dataset/graph.bin')
         self.category = None
         self.num_classes = None
         self.has_feature = False
@@ -872,6 +873,7 @@ class OGB_NodeClassification(NodeClassificationDataset):
             th.save(PFP_rm_diag, diag_name)
 
         return new_g
+    
     def mag4HGT(self, hg):
         # Add reverse edge types
 

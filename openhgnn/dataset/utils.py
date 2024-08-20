@@ -6,6 +6,7 @@ import os
 import pickle
 import random
 import torch as th
+from dgl import sparse as dglsp
 
 from dgl import sparse as dglsp
 from dgl.data.utils import download, get_download_dir, _get_dgl_url
@@ -172,6 +173,8 @@ def to_symmetric(self):
     new_row = th.cat([row, col], dim=0)[idx]
     new_col = th.cat([col, row], dim=0)[idx]
     return dglsp.spmatrix(th.stack((new_row, new_col)), shape = (self.shape[0], self.shape[1]))
+
+
 def row_norm(self) -> dgl.sparse.SparseMatrix:
     rownum, colnum = self.shape
     nodenum = self.nnz
