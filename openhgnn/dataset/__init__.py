@@ -204,7 +204,8 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset in ['DisenKGAT_WN18RR','DisenKGAT_FB15k-237']:
         _dataset = 'DisenKGAT_' + task  #  == 'DisenKGAT_link_prediction'
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))  
-
+    elif dataset in ['dblp4mhgcn','imdb4mhgcn','aminer4mhgcn','alibaba4mhgcn','amazon4mhgcn']:
+        _dataset = 'mhgcn_' + task
     if kwargs['args'].model=='Grail' or kwargs['args'].model=='ComPILE':
         _dataset = 'grail_'+ task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args=kwargs['args'])
@@ -220,6 +221,7 @@ SUPPORTED_DATASETS = {
     "hypergraph": "openhgnn.dataset.HypergraphDataset",
     "pretrain": "openhgnn.dataset.mag_dataset",
     "ktn": "openhgnn.dataset.oag_dataset",
+    'MHGCN':'openhgnn.dataset.MHGCN_dataset',
 
 }
 
@@ -285,6 +287,8 @@ __all__ = [
     "AbnormEventDetectionDataset",
     "mag_dataset",
     "OAGDataset",
+    'MHGCN_dataset',
+
 ]
 
 classes = __all__

@@ -85,6 +85,10 @@ class Experiment(object):
         'HGA':'hga_trainer',
         'RHINE':'rhine_trainer',
         'FedHGNN':'FED_REC_trainer',
+        "MHGCN":{
+            "node_classification":"MHGCN_NC_Trainer",
+            "link_prediction":"MHGCN_LP_Trainer"
+        }
 ##########################
 
 
