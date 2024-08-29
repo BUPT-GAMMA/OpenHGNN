@@ -13,14 +13,15 @@ class MHGCN_Base_Dataset(BaseDataset):
     def __init__(self, *args, **kwargs):
         # train_percent = kwargs.pop('train_percent', 0.1)
         super(MHGCN_Base_Dataset, self).__init__(*args, **kwargs)
-        _dataset_list = ['dblp4mhgcn','imdb4mhgcn','aminer4mhgcn','alibaba4mhgcn','amazon4mhgcn']
+        _dataset_list = ['dblp4MHGCN','imdb4MHGCN','alibaba4MHGCN']
         self.data_path = ""
         self.name = args[0]
         if not self.name in _dataset_list:
             raise ValueError("Unsupported dataset name {}".format(self.name))
         self.data_path = 'openhgnn/dataset/data/{}'.format(self.name)
         
-        self.url = 'https://raw.githubusercontent.com/AckerlyLau/raw_openhgnn_test/main/{}.zip'.format(self.name)
+        # self.url = 'https://raw.githubusercontent.com/AckerlyLau/raw_openhgnn_test/main/{}.zip'.format(self.name)
+        self.url = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{}.zip'.format(self.name)
         self.process()
         self.multi_label = False
 
@@ -90,7 +91,7 @@ class MHGCN_Base_Dataset(BaseDataset):
         self.g.edata['tag'] = etag
 
     def load_data(self):
-        if self.name == 'dblp4mhgcn':
+        if self.name == 'dblp4MHGCN':
             self.labels = np.load(os.path.join(self.data_path,"labels_mat.npy"))
             self.edges_paper_author = sp.load_npz(os.path.join(self.data_path,'edge_paper_author.npz'))
             self.edges_paper_term = sp.load_npz(os.path.join(self.data_path,'edge_paper_term.npz'))
@@ -104,7 +105,7 @@ class MHGCN_Base_Dataset(BaseDataset):
             self.etype_num = 3
             self.num_classes = self.labels.shape[1]
 
-        elif self.name == 'imdb4mhgcn':
+        elif self.name == 'imdb4MHGCN':
             self.labels = np.load(os.path.join(self.data_path,"labels.npy"))
             self.edges_A = sp.load_npz(os.path.join(self.data_path,'edges_A.npz'))
             self.edges_B = sp.load_npz(os.path.join(self.data_path,'edges_B.npz'))
@@ -117,7 +118,7 @@ class MHGCN_Base_Dataset(BaseDataset):
             self.etype_num = 2
             self.num_classes = self.labels.shape[1]
 
-        elif self.name == 'alibaba4mhgcn':
+        elif self.name == 'alibaba4MHGCN':
             self.labels = np.load(os.path.join(self.data_path,"labels.npy"))
             self.edges_A = sp.load_npz(os.path.join(self.data_path,'edges_A.npz'))
             self.edges_B = sp.load_npz(os.path.join(self.data_path,'edges_B.npz'))
@@ -143,14 +144,17 @@ class MHGCN_Base_Dataset(BaseDataset):
     def download(self):
         # download raw data to local disk
         # path to store the file
-        if os.path.exists(self.data_path):  # pragma: no cover
-           pass
-        else:
-            file_path = os.path.join(self.data_path,self.name+".zip")
-            # download file
-            download(self.url, path=file_path)
-        extract_archive(os.path.join(self.data_path, self.name+".zip"),self.data_path)
-
+        try:
+            if os.path.exists(self.data_path):  # pragma: no cover
+                pass
+            else:
+                file_path = os.path.join(self.data_path,self.name+".zip")
+                # download file
+                download(self.url, path=file_path)
+            extract_archive(os.path.join(self.data_path, self.name+".zip"),self.data_path)
+        except Exception as e:
+            os.removedirs(os.path.join(self.data_path))
+            raise e
 @register_dataset('mhgcn_node_classification')
 class MHGCN_NC_Dataset(MHGCN_Base_Dataset):
     def __init__(self, *args, **kwargs):

@@ -18,7 +18,7 @@
   
   ##### Supported dataset
 
-  dblp4mhgcn/imdb4mhgcn/alibaba4mhgcn
+  dblp4mhgcn / imdb4mhgcn / alibaba4mhgcn
 
   
 
