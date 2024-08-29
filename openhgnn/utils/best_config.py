@@ -476,14 +476,12 @@ BEST_CONFIGS = {
                 'batch_size':20, 'hidden_dim' : 16, 'lr': 0.0005, 'weight_decay': 0.000398, 'decay_rate': 1, 'attn_dim':3,
                      'act': 'tanh', 'n_layer': 5
             },
-            
         },
         'MHGCN':{
             'general':{
                 'hidden_dim': 384, 'num_layers': 2, 'lr': 0.0001, 'weight_decay': 0.0005, 'max_epoch': 500, 
             },
         },
-
     },
     "recommendation": {
         'KGCN': {

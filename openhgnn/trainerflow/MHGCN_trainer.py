@@ -67,7 +67,6 @@ class MHGCN_NC_Trainer(BaseFlow):
         self.model.train()
         self.log.train()
         embeds = self.model(self.dataset.g, self.features)
-        # embeds = embeds[np.newaxis]
         train_embs = embeds[self.idx_train]
         self.optimizer.zero_grad()
         logits = self.log(train_embs)
@@ -79,9 +78,7 @@ class MHGCN_NC_Trainer(BaseFlow):
         self.model.eval()
         self.log.eval()
         embeds = self.model(self.dataset.g, self.features)
-        # embeds = embeds[np.newaxis]
         logits = self.log(embeds)
-        # modes = ['train', 'val', 'test']
         masks = {'train': self.idx_train, 'valid': self.idx_val, 'test': self.idx_test}
         metric_dict = {key:self.task.evaluate(logits,mode=key) for key in masks}
         loss_dict = {key:self.loss_fn(logits[mask],self.labels[mask]).item() for key ,mask in masks.items()}
@@ -192,7 +189,6 @@ class MHGCN_LP_Trainer(BaseFlow):
         self.features = torch.tensor(self.dataset.features,dtype=torch.float32,device=self.device)
         epoch_iter = tqdm(range(self.max_epoch))
         start_time=time.time()
-
         for epoch in epoch_iter:
             loss = self.train_step()
             test_metric = self.test_step()
