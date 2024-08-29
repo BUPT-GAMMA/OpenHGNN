@@ -13,13 +13,10 @@ import numpy
 import scipy.sparse
 from . import BaseModel, register_model
 
-
-
 class GraphConvolution(Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
     """
-
     def __init__(self, in_features, out_features, bias=True):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
@@ -38,10 +35,7 @@ class GraphConvolution(Module):
         g.update_all(message_func=dgl.function.u_mul_e('h','w','m'),reduce_func=dgl.function.sum('m','h'))
         support = g.ndata['h']
         output = support @ self.weight
-
         return output + self.bias
-
-
 
 @register_model('MHGCN')
 class MHGCN(BaseModel):
@@ -67,7 +61,6 @@ class MHGCN(BaseModel):
         return cls(args.feature_dim,
                    args.emb_dim,
                    args.etype_num,
-                #    int(g.edata['tag'].max().item()),
                    args.num_layers - 2)
     
     def __init__(self, 
@@ -76,7 +69,6 @@ class MHGCN(BaseModel):
                  etype_num,
                  num_hidden_layers=1,):
         super(MHGCN,self).__init__()
-
         self.layers = nn.ModuleList()
         # input layer
         self.input_layer = GraphConvolution(in_dim, out_dim)
@@ -85,8 +77,6 @@ class MHGCN(BaseModel):
             self.layers.append(GraphConvolution(out_dim, out_dim))
         # output layer
         self.layers.append(GraphConvolution(out_dim, out_dim))
-
-
         self.weight_b = torch.nn.Parameter(torch.FloatTensor(etype_num, 1), requires_grad=True)
         torch.nn.init.uniform_(self.weight_b, a=0, b=0.1)
 
@@ -96,8 +86,6 @@ class MHGCN(BaseModel):
         """
         g.edata['w'] = g.edata['tag'] @ self.weight_b
         return g
-
-
 
     def forward(self, g, features):
         # features = features.int().float()

@@ -23,11 +23,9 @@ class LogReg(nn.Module):
     """
     Logical classifier
     """
-
     def __init__(self, ft_in, nb_classes):
         super(LogReg, self).__init__()
         self.fc = nn.Linear(ft_in, nb_classes)
-
         for m in self.modules():
             self.weights_init(m)
 
@@ -94,30 +92,21 @@ class MHGCN_NC_Trainer(BaseFlow):
         start_time = time.time()
         self.features = torch.tensor(self.dataset.features,dtype=torch.float32,device=self.device)
         embeds = self.model(self.dataset.g, self.features)
-
-        # labels = self.dataset.labels
         idx_train = self.dataset.train_idx
         idx_val = self.dataset.val_idx
         idx_test = self.dataset.test_idx
         self.idx_train = torch.LongTensor(idx_train).to(self.device)
         self.idx_val = torch.LongTensor(idx_val).to(self.device)
         self.idx_test = torch.LongTensor(idx_test).to(self.device)
-        # labels = labels.astype(np.int16)
-        # labels = torch.tensor(labels,dtype=torch.float32).to(self.device)
-        # self.labels = torch.tensor(self.dataset.get_labels(),device=self.device)
         self.labels = self.dataset.get_labels().to(self.device)
         hid_units = embeds.shape[1]
         nb_classes = self.dataset.labels.shape[1]
         self.log = LogReg(hid_units, nb_classes)
         self.log.to(self.device)
-        self.best_evaluation = {
-            
-        }
         self.optimizer = torch.optim.Adam([{'params': self.model.parameters(), 'lr': self.args.model_lr}, {'params': self.log.parameters()}], lr=self.args.lr, weight_decay=self.args.weight_decay)
         epoch_iter = tqdm(range(self.max_epoch))
         for iter_ in epoch_iter:
             train_loss = self.train_step()
-            
             metric_dict,loss_dict = self.test_step()
             val_loss = loss_dict['valid']
             current_time = time.time()
@@ -128,8 +117,6 @@ class MHGCN_NC_Trainer(BaseFlow):
                     self.writer.add_scalars(f'metric_{mode}', metric_dict[mode], global_step=iter_)
         self.writer.close()
 
-
-    
 @register_flow("MHGCN_LP_Trainer")
 class MHGCN_LP_Trainer(BaseFlow):
 
@@ -164,12 +151,9 @@ class MHGCN_LP_Trainer(BaseFlow):
             if type(vector1) != np.ndarray:
                 vector1 = vector1.toarray()[0]
                 vector2 = vector2.toarray()[0]
-
             return np.dot(vector1, vector2)
-            # return np.dot(vector1, vector2) / ((np.linalg.norm(vector1) * np.linalg.norm(vector2) + 0.00000000000000001))
         except Exception as e:
             pass
-
 
     def embeding_process(self,embeds,g):
         g.ndata['embeds'] = embeds
@@ -180,24 +164,16 @@ class MHGCN_LP_Trainer(BaseFlow):
         return self.dataset.g
     
     def train_step(self):
-
         self.model.train()
-        
         emb = self.model(self.dataset.g, self.features)
-       
         pos_score = self.embeding_process(emb,self.dataset.val_g).squeeze(-1)
         neg_score = -self.embeding_process(emb,self.dataset.val_neg_g).squeeze(-1)
         loss = -torch.mean(F.logsigmoid(pos_score) + F.logsigmoid(neg_score))
-
         loss = loss.requires_grad_()
-
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-   
         return loss
-
-
 
     def test_step(self):
         self.model.eval()
@@ -206,33 +182,19 @@ class MHGCN_LP_Trainer(BaseFlow):
         neg_valid_score = self.embeding_process(emb,self.dataset.val_neg_g).squeeze(-1)
         pos_test_score = self.embeding_process(emb,self.dataset.test_g).squeeze(-1)
         neg_test_score = self.embeding_process(emb,self.dataset.test_neg_g).squeeze(-1)
-        
-       
-        
-        
         return {"valid":self.evaluate(pos_valid_score,neg_valid_score),"test":self.evaluate(pos_test_score,neg_test_score)}
+    
     def train(self):
         """
         Link prediction training proces
         """
         self.model.to(self.device)
-
         self.features = torch.tensor(self.dataset.features,dtype=torch.float32,device=self.device)
-        # # 12312312
-        # self.network_data = self.train_edge_data_by_type
-        # self.edge_types = list(self.network_data.keys())
-        # self.edge_type_count = len(self.edge_types) - 1
-        # self.comp_model = MHGCN(self.args.feature_dim, self.args.emb_dim, self.args.emb_dim,None).to(self.device)
-        # # 22131312
-
         epoch_iter = tqdm(range(self.max_epoch))
         start_time=time.time()
 
         for epoch in epoch_iter:
-            
-
             loss = self.train_step()
-
             test_metric = self.test_step()
             current_time = time.time()
             self.logger.train_info(
@@ -246,15 +208,10 @@ class MHGCN_LP_Trainer(BaseFlow):
         true_num = len(pos_scores)
         true_list = np.concatenate([np.ones(pos_scores.shape[0]),np.zeros(neg_scores.shape[0])])
         prediction_list = torch.cat([pos_scores,neg_scores])
-        # Determine the positive and negative sample threshold
         sorted_pred = prediction_list[:].detach().cpu().numpy()
         sorted_pred.sort()
         threshold = sorted_pred[-true_num]
-
-        # Compare the similarity score with the threshold to predict whether the connection exists
         y_pred = np.array([1 if x >= threshold else 0 for x in prediction_list.detach().cpu().numpy()])
-
-
         y_true = np.array(true_list)
         y_scores = np.array(prediction_list.detach().cpu())
         ps, rs, _ = precision_recall_curve(y_true, y_scores)
