@@ -9,4 +9,3 @@ dgl<=2.2.1
 TensorBoard>=2.0.0
 lmdb
 ordered_set
-igraph
