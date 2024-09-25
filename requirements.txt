@@ -8,6 +8,5 @@ torch<=2.2.1
 dgl<=2.2.1
 TensorBoard>=2.0.0
 lmdb
-rdflib
 ordered_set
 igraph
