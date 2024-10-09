@@ -1535,7 +1535,15 @@ class Config(object):
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
 
-
+        elif self.model_name == 'MHGCN':
+            self.lr = conf.getfloat("MHGCN", "lr")
+            self.weight_decay = conf.getfloat("MHGCN", "weight_decay")
+            self.model_lr = conf.getfloat("MHGCN", "model_lr")
+            self.hidden_dim = conf.getint("MHGCN", "hidden_dim")
+            self.emb_dim = conf.getint("MHGCN","emb_dim")
+            self.num_layers = conf.getint("MHGCN", "num_layers")
+            self.max_epoch = conf.getint("MHGCN", "max_epoch")
+           
 
         if hasattr(self, "device"):
             self.device = th.device(self.device)
