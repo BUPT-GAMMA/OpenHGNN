@@ -1,7 +1,7 @@
 import numpy as np
 import torch as th
 from sklearn.cluster import KMeans
-from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error,normalized_mutual_info_score, adjusted_rand_score
 from sklearn.metrics import f1_score, accuracy_score, ndcg_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -105,6 +105,38 @@ class Evaluator():
         micro_f1 = metrics.f1_score(Y_test, Y_pred, average='micro')
         acc = metrics.accuracy_score(Y_test, Y_pred)
         return micro_f1, macro_f1, acc
+
+
+    def prediction(self, real_score, pred_score):
+        MAE = mean_absolute_error(real_score, pred_score)
+        RMSE = math.sqrt(mean_squared_error(real_score, pred_score))
+        return MAE, RMSE
+
+    def dcg_at_k(self, scores):
+        # assert scores
+        return scores[0] + sum(
+            sc / math.log(ind + 1, 2)
+            for sc, ind in zip(scores[1:], range(2, len(scores) + 1))
+        )
+
+    def ndcg_at_k(self, real_scores, predicted_scores):
+        idcg = self.dcg_at_k(sorted(real_scores, reverse=True))
+        return (self.dcg_at_k(predicted_scores) / idcg) if idcg > 0.0 else 0.0
+
+    def ranking(self, real_score, pred_score, k):
+        # ndcg@k
+        sorted_idx = sorted(
+            np.argsort(real_score)[::-1][:k]
+        )  # get the index of the top k real score
+        r_s_at_k = real_score[sorted_idx]
+        p_s_at_k = pred_score[sorted_idx]
+
+        ndcg_5 = self.ndcg_at_k(r_s_at_k, p_s_at_k)
+
+        return ndcg_5
+
+
+
 
 def filter(triplets_to_filter, target_s, target_r, target_o, num_entities, mode):
     triplets_to_filter = triplets_to_filter.copy()
