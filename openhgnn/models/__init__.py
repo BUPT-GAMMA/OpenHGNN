@@ -64,6 +64,7 @@ def build_model(model):
 
 SUPPORTED_MODELS = {
 #####       add models here
+    "MetaHIN": "openhgnn.models.MetaHIN",
     'HGA':'openhgnn.models.HGA',
     'RHINE': 'openhgnn.models.RHINE',
     'FedHGNN':'openhgnn.models.FedHGNN',
