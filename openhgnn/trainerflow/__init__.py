@@ -102,7 +102,9 @@ SUPPORTED_FLOWS = {
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
     'hga_trainer':'openhgnn.trainerflow.HGATrainer',
     'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
-    'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation'
+    'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation',
+    'MHGCN_trainer':'openhgnn.trainerflow.MHGCN_trainer',
+
 #####################################################
 
 
@@ -195,6 +197,7 @@ __all__ = [
     'ExpressGNNTrainer',
     'Ingram_trainer',
     'RHINETrainer',
+    'MHGCN_trainer'
 
 ]
 classes = __all__
