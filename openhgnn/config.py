@@ -42,6 +42,23 @@ class Config(object):
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
 ##############      add config.py    #################
 
+
+        elif self.model_name == "BPHGNN":
+            self.seed=conf.getint("BPHGNN","seed")
+            self.epochs=conf.getint("BPHGNN","epochs")
+            self.lr=conf.getfloat("BPHGNN","lr")
+            self.weight_decay=conf.getfloat("BPHGNN","weight_decay")
+            self.hidden_dim=conf.getint("BPHGNN","hidden_dim")
+            self.out=conf.getint("BPHGNN","out")
+            self.dropout=conf.getint("BPHGNN","dropout")
+            self.feature=conf.get("BPHGNN","feature")
+            self.normalization=conf.get("BPHGNN","normalization")
+            self.degree=conf.getint("BPHGNN","degree")
+            self.per=conf.getint("BPHGNN","per")
+            self.experiment=conf.get("BPHGNN","experiment")
+
+
+
         elif self.model_name == "MetaHIN":
             self.use_cuda = conf.getboolean("MetaHIN", "use_cuda")
             self.file_num = conf.getint("MetaHIN", "file_num")
