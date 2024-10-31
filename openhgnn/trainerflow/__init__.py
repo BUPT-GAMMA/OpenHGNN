@@ -99,15 +99,23 @@ SUPPORTED_FLOWS = {
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
 ###########     add trainer_flow here. 【register name】 ： 【class name】
+    'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',    
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
     'hga_trainer':'openhgnn.trainerflow.HGATrainer',
     'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
     'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation'
-#####################################################
+##########
 
 
 }
 
+######      add trainer_flow here
+from .BPHGNN_trainer import BPHGNN_trainer
+from .HGMAE_trainer import HGMAE_trainer
+from .hga_trainer import HGATrainer
+from .RHINE_trainer import RHINETrainer
+from .FED_REC_trainer import *
+##########
 from .sian_trainer import SIAN_Trainer
 from .hgcl_trainer import HGCLtrainer
 from .node_classification import NodeClassification
@@ -149,15 +157,12 @@ from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
 from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
-######      add trainer_flow here
-from .HGMAE_trainer import HGMAE_trainer
-from .hga_trainer import HGATrainer
-from .RHINE_trainer import RHINETrainer
-from .FED_REC_trainer import *
-#####################################
 
 
+
+#   don't add here
 __all__ = [
+
     'BaseFlow',
     'NodeClassification',
     'LinkPrediction',

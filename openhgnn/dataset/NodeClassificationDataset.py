@@ -28,7 +28,7 @@ from abc import ABC
 class Common_Dataset(BaseDataset):
     def __init__(self, dataset_name, *args, **kwargs):
         super(Common_Dataset, self).__init__(*args, **kwargs)
-        assert dataset_name in ['acm4HGMAE','hgprompt_acm_dblp','acm4FedHGNN']
+        assert dataset_name in ['BPHGNN_dataset','acm4HGMAE','hgprompt_acm_dblp','acm4FedHGNN']
 
         if dataset_name == 'acm4HGMAE':
             # 这是从云盘上下载下来的   本地zip文件
@@ -57,6 +57,29 @@ class Common_Dataset(BaseDataset):
             
             self.meta_paths_dict = {}   #   元路径
             self.has_feature = True    #   是否有初始特征
+
+######  add dataset here
+        elif dataset_name == 'BPHGNN_dataset':
+            # 这是从云盘上下载下来的   本地zip文件
+            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
+            #本地base_dir文件夹.
+            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            #   云端的zip文件
+            self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
+            if os.path.exists(self.zip_file):  
+                pass
+            else:
+                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                download(self.url, 
+                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        )     
+            if os.path.exists( self.base_dir ):
+                pass
+            else:
+                os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
+                extract_archive(self.zip_file, self.base_dir)  
+
+
 
         elif dataset_name == 'hgprompt_acm_dblp':
             self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'

@@ -64,6 +64,7 @@ def build_model(model):
 
 SUPPORTED_MODELS = {
 #####       add models here
+    'BPHGNN' : 'openhgnn.models.BPHGNN',
     "MetaHIN": "openhgnn.models.MetaHIN",
     'HGA':'openhgnn.models.HGA',
     'RHINE': 'openhgnn.models.RHINE',
@@ -138,6 +139,11 @@ SUPPORTED_MODELS = {
 
 }
 
+#####       add model here
+from .BPHGNN import BPHGNN
+from .RHINE import RHINE
+from .FedHGNN import FedHGNN
+#####
 from .SIAN import SIAN
 from .HGCL import HGCL
 from .CompGCN import CompGCN
@@ -192,13 +198,11 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
-#####       add model here
-from .RHINE import RHINE
-from .FedHGNN import FedHGNN
+
 
 
 __all__ = [
-
+    'BPHGNN',
     "HMPNN",
     'BaseModel',
     'CompGCN',
