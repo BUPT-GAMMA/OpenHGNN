@@ -49,6 +49,7 @@ def build_flow(args, flow_name):
 
 SUPPORTED_FLOWS = {
 ###########     add trainer_flow here. 【register name】 ： 【class name】
+
     'MHGCN_trainer':'openhgnn.trainerflow.MHGCN_trainer',
     'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',    
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
@@ -164,7 +165,7 @@ from .HGPrompt import HGPrompt_trainer
 
 #   don't add here
 __all__ = [
-
+    'MHGCN_trainer',
     'BaseFlow',
     'NodeClassification',
     'LinkPrediction',
