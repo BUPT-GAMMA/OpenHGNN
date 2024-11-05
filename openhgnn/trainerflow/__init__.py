@@ -48,6 +48,15 @@ def build_flow(args, flow_name):
 
 
 SUPPORTED_FLOWS = {
+###########     add trainer_flow here. 【register name】 ： 【class name】
+
+    'MHGCN_trainer':'openhgnn.trainerflow.MHGCN_trainer',
+    'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',    
+    'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
+    'hga_trainer':'openhgnn.trainerflow.HGATrainer',
+    'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
+    'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation',
+##########
     "coldstart_recommmendation": "openhgnn.trainerflow.coldstart_recommendation",
     'SIAN_trainer': 'openhgnn.trainerflow.SIAN_trainer',
     'entity_classification': 'openhgnn.trainerflow.entity_classification',
@@ -98,13 +107,7 @@ SUPPORTED_FLOWS = {
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
-###########     add trainer_flow here. 【register name】 ： 【class name】
-    'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',    
-    'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
-    'hga_trainer':'openhgnn.trainerflow.HGATrainer',
-    'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
-    'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation'
-##########
+
 
 
 }
@@ -162,7 +165,7 @@ from .HGPrompt import HGPrompt_trainer
 
 #   don't add here
 __all__ = [
-
+    'MHGCN_trainer',
     'BaseFlow',
     'NodeClassification',
     'LinkPrediction',

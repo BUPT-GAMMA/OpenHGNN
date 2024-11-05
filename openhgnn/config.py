@@ -41,7 +41,14 @@ class Config(object):
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
 ##############      add config.py    #################
-
+        elif self.model_name == 'MHGCN':
+            self.lr = conf.getfloat("MHGCN", "lr")
+            self.weight_decay = conf.getfloat("MHGCN", "weight_decay")
+            self.model_lr = conf.getfloat("MHGCN", "model_lr")
+            self.hidden_dim = conf.getint("MHGCN", "hidden_dim")
+            self.emb_dim = conf.getint("MHGCN","emb_dim")
+            self.num_layers = conf.getint("MHGCN", "num_layers")
+            self.max_epoch = conf.getint("MHGCN", "max_epoch")
 
         elif self.model_name == "BPHGNN":
             self.seed=conf.getint("BPHGNN","seed")
