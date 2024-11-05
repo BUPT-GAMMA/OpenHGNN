@@ -317,7 +317,13 @@ BEST_CONFIGS = {
         'ieHGCN':{
             'general':{'num_layers' : 5, 'hidden_dim' : 64, 'attn_dim' : 32, 'out_dim' : 16, 'patience' : 100, 'seed' : 0, 'lr' : 0.001, 'weight_decay' : 5e-4, 'max_epoch' : 3500, 'mini_batch_flag' : True, 'fanout' : 10, 'batch_size' : 512, 'dropout' : 0.2, 'bias' : True, 'batchnorm' : True},
             'alircd_session1':{'lr': 0.01, 'hidden_dim': 64, 'dropout': 0.12}
-        }
+        },
+        'MHGCN':{
+            'general':{
+                'hidden_dim': 384, 'num_layers': 2,'model_lr':0.05, 'lr': 0.005, 'weight_decay': 0.0005, 'max_epoch': 200, 
+            },
+        },
+
     },
 
     "link_prediction": {
@@ -471,8 +477,12 @@ BEST_CONFIGS = {
                 'batch_size':20, 'hidden_dim' : 16, 'lr': 0.0005, 'weight_decay': 0.000398, 'decay_rate': 1, 'attn_dim':3,
                      'act': 'tanh', 'n_layer': 5
             },
-        }
-
+        },
+        'MHGCN':{
+            'general':{
+                'hidden_dim': 384, 'num_layers': 2, 'lr': 0.0001, 'weight_decay': 0.0005, 'max_epoch': 500, 
+            },
+        },
     },
     "recommendation": {
         'KGCN': {
