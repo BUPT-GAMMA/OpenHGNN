@@ -97,8 +97,8 @@ def build_dataset(dataset, task, *args, **kwargs):
 #######  add  dataset  here
 
     if dataset == "meirec":
-        train_dataloader = get_data_loader("train", batch_size=args.batch_num)
-        test_dataloader = get_data_loader("test", batch_size=args.batch_num)
+        train_dataloader = get_data_loader("train", batch_size=args.batch_num , args = args)
+        test_dataloader = get_data_loader("test", batch_size=args.batch_num , args = args)
         return train_dataloader, test_dataloader
     elif dataset == 'NL-100':
         train_dataloader = Ingram_KG_TrainData('',dataset)
