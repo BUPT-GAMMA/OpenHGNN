@@ -2,11 +2,9 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
-
+from dgl.data.utils import download, extract_archive
 import os
-#   FOLD = ./openhgnn/dataset/meirec/
-FOLD = os.path.join(    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  , 
-                'openhgnn','dataset','meirec')
+
 
 
 class MeiRECDataset(Dataset):
