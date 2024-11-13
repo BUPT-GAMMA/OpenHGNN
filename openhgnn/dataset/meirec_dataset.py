@@ -11,12 +11,34 @@ FOLD = os.path.join(    os.path.dirname(os.path.dirname(os.path.dirname(os.path.
 
 class MeiRECDataset(Dataset):
 
-    def __init__(self, phase):
+    def __init__(self, phase , args = None):
+      
+        # 这是从云盘上下载下来的   本地zip文件
+        self.zip_file = os.path.join(  args.openhgnn_dir ,'dataset','Common_Dataset','meirec.zip'  )
+        #本地base_dir文件夹.
+        self.base_dir = os.path.join(  args.openhgnn_dir ,'dataset','Common_Dataset','meirec_dir'  )
+        #   云端的zip文件
+        self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/meirec.zip'
+        if os.path.exists(self.zip_file):  
+            pass
+        else:
+            os.makedirs(    os.path.join(  args.openhgnn_dir ,'dataset','Common_Dataset')  ,exist_ok= True)
+            download(self.url, 
+                    path=os.path.join(  args.openhgnn_dir ,'dataset','Common_Dataset')
+                    )     
+            
+        if os.path.exists( self.base_dir ):
+            pass
+        else:
+            os.makedirs( os.path.join( self.base_dir )  ,exist_ok= True       )
+            extract_archive(self.zip_file, self.base_dir)  # 把meirec.zip文件 解压到 base_dir文件夹中，得到2个文件train_data.txt和 test_data.txt
+
+      
         assert phase in ['train', 'test']
         if phase == 'train':
-            self.data_path = os.path.join(FOLD , "train_data.txt")
+            self.data_path = os.path.join(self.base_dir , "train_data.txt")
         else:
-            self.data_path = os.path.join(FOLD , "train_data.txt")
+            self.data_path = os.path.join(self.base_dir, "test_data.txt")
         self.load_data(self.data_path)
 
     def load_data(self, path):
@@ -50,8 +72,8 @@ class MeiRECDataset(Dataset):
         return self.data_len
 
 
-def get_data_loader(type, batch_size=64, num_workers=0):
-    dataset = MeiRECDataset(type)
+def get_data_loader(type, batch_size=64, num_workers=0 , args = None):
+    dataset = MeiRECDataset(type , args = args)
     dataloader = DataLoader(
         dataset,
         batch_size=batch_size,
