@@ -86,16 +86,19 @@ def build_dataset_GB(dataset,*args,**kwargs):
 
 
 def build_dataset(dataset, task, *args, **kwargs):
-    args =kwargs.get('args')
-    model = args.model
+    args =kwargs.get('args', None)
+    
+    if hasattr(args,'model'):
+        model = args.model
+        
     if isinstance(dataset, DGLDataset):
         return dataset
 
 #######  add  dataset  here
 
     if dataset == "meirec":
-        train_dataloader = get_data_loader("train", batch_size=args[0])
-        test_dataloader = get_data_loader("test", batch_size=args[0])
+        train_dataloader = get_data_loader("train", batch_size=args.batch_num)
+        test_dataloader = get_data_loader("test", batch_size=args.batch_num)
         return train_dataloader, test_dataloader
     elif dataset == 'NL-100':
         train_dataloader = Ingram_KG_TrainData('',dataset)
