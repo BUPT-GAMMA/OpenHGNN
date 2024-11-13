@@ -3,7 +3,10 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-FOLD = Path(__file__).resolve().parent / "meirec"
+import os
+#   FOLD = ./openhgnn/dataset/meirec/
+FOLD = os.path.join(    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  , 
+                'openhgnn','dataset','meirec')
 
 
 class MeiRECDataset(Dataset):
@@ -11,9 +14,9 @@ class MeiRECDataset(Dataset):
     def __init__(self, phase):
         assert phase in ['train', 'test']
         if phase == 'train':
-            self.data_path = FOLD / "train_data.txt"
+            self.data_path = os.path.join(FOLD , "train_data.txt")
         else:
-            self.data_path = FOLD / "test_data.txt"
+            self.data_path = os.path.join(FOLD , "train_data.txt")
         self.load_data(self.data_path)
 
     def load_data(self, path):
