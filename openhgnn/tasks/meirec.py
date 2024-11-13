@@ -13,7 +13,9 @@ class MeiREC(BaseTask):
         self.train_loader, self.test_loader = build_dataset(args.dataset,
                                                             args.task,
                                                             args.batch_num,
-                                                            logger=self.logger)
+                                                            logger=self.logger,
+                                                            args = args
+                                                           )
 
     def evaluate(self, y_true, y_score):
         pass
