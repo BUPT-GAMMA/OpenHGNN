@@ -37,17 +37,17 @@ class Common_Dataset(BaseDataset):
 
         if dataset_name == 'acm4HGMAE':
             # 这是从云盘上下载下来的   本地zip文件
-            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
+            self.zip_file = os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset',f'{dataset_name}.zip'  )
             #本地base_dir文件夹.
-            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            self.base_dir = os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset',f'{dataset_name}'+'_dir'  )
             #   云端的zip文件
             self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
             if os.path.exists(self.zip_file):  
                 pass
             else:
-                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                os.makedirs(    os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset')  ,exist_ok= True)
                 download(self.url, 
-                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        path=os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset')
                         )     
             if os.path.exists( self.base_dir ):
                 pass
@@ -66,17 +66,17 @@ class Common_Dataset(BaseDataset):
 ######  add dataset here
         elif dataset_name == 'BPHGNN_dataset':
             # 这是从云盘上下载下来的   本地zip文件
-            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
+            self.zip_file = os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset',f'{dataset_name}.zip'  )
             #本地base_dir文件夹.
-            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            self.base_dir = os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset',f'{dataset_name}'+'_dir'  )
             #   云端的zip文件
             self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
             if os.path.exists(self.zip_file):  
                 pass
             else:
-                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                os.makedirs(    os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset')  ,exist_ok= True)
                 download(self.url, 
-                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        path=  os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset')
                         )     
             if os.path.exists( self.base_dir ):
                 pass
@@ -87,15 +87,15 @@ class Common_Dataset(BaseDataset):
 
 
         elif dataset_name == 'hgprompt_acm_dblp':
-            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
-            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            self.zip_file = os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset',f'{dataset_name}.zip'  )
+            self.base_dir = os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset',f'{dataset_name}'+'_dir'  )
             self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
             if os.path.exists(self.zip_file):  
                 pass
             else:
-                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                os.makedirs(    os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset') ,exist_ok= True)
                 download(self.url, 
-                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        path=  os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset')
                         )     
             if os.path.exists( self.base_dir ):
                 pass
@@ -104,15 +104,15 @@ class Common_Dataset(BaseDataset):
                 extract_archive(self.zip_file, self.base_dir)  
 
         elif dataset_name == 'acm4FedHGNN':
-            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
-            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            self.zip_file =  os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset',f'{dataset_name}.zip'  )
+            self.base_dir = os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset',f'{dataset_name}'+'_dir'  )
             self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
             if os.path.exists(self.zip_file):  
                 pass
             else:
-                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                os.makedirs(    os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset')  ,exist_ok= True)
                 download(self.url, 
-                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        path= os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset')   
                         )     
             if os.path.exists( self.base_dir ):
                 pass
@@ -127,15 +127,15 @@ class Common_Dataset(BaseDataset):
 
 
         elif dataset_name == 'acm4FedHGNN':
-            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{dataset_name}.zip'
-            self.base_dir = './openhgnn/dataset/Common_Dataset/' + dataset_name + '_dir'
+            self.zip_file = os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset',f'{dataset_name}.zip'  )
+            self.base_dir = os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset',f'{dataset_name}'+'_dir'  )
             self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{dataset_name}.zip'
             if os.path.exists(self.zip_file):  
                 pass
             else:
-                os.makedirs(    os.path.join('./openhgnn/dataset/Common_Dataset/')  ,exist_ok= True)
+                os.makedirs(    os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset')  ,exist_ok= True)
                 download(self.url, 
-                        path=os.path.join('./openhgnn/dataset/Common_Dataset/')     
+                        path=  os.path.join(  kwargs.get('args').openhgnn_dir ,'dataset','Common_Dataset')
                         )     
             if os.path.exists( self.base_dir ):
                 pass
