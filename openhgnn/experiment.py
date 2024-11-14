@@ -129,18 +129,20 @@ class Experiment(object):
         #   openhgnn_dir incorporate output_dir and dataset_dir
         #   openhgnn目录  和  本地HGNN仓库  属于同一个目录之下
         self.openhgnn_dir = os.path.join(os.path.dirname(HGNN_repository_dir),'openhgnn')
-        if os.path.exists(self.openhgnn_dir):  
-            pass
-        else:
-            os.makedirs( self.openhgnn_dir ,exist_ok= True)
-            #   openhgnn目录下的  output目录用来放程序输出日志，dataset目录用来存放数据集
-            os.makedirs( os.path.join(self.openhgnn_dir,'output'),exist_ok=True)
-            os.makedirs( os.path.join(self.openhgnn_dir,'dataset'),exist_ok=True)
+        os.makedirs( self.openhgnn_dir ,exist_ok= True)
+
+        
+        #   openhgnn目录下的  output目录用来放程序输出日志，dataset目录用来存放数据集
+        os.makedirs( os.path.join(self.openhgnn_dir,'output'),exist_ok=True)
+        os.makedirs( os.path.join(self.openhgnn_dir,'dataset'),exist_ok=True)
+
         self.config.openhgnn_dir = self.openhgnn_dir
 #######
 
 
-        self.config.output_dir = os.path.join(self.openhgnn_dir,'output', self.config.model_name)
+        self.config.output_dir = os.path.join(self.openhgnn_dir , 'output', self.config.model_name)
+        os.makedirs( self.config.output_dir ,exist_ok= True)
+
 
         # self.config.seed = seed
         self.config.hpo_search_space = hpo_search_space
