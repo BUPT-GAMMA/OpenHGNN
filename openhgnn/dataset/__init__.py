@@ -211,9 +211,17 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'DisenKGAT_' + task  #  == 'DisenKGAT_link_prediction'
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))  
 
-    if kwargs['args'].model=='Grail' or kwargs['args'].model=='ComPILE':
-        _dataset = 'grail_'+ task
-        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args=kwargs['args'])
+
+
+
+    
+    if args != None and hasattr(args,'model'):
+        if args.model=='Grail' or args.model=='ComPILE':
+            _dataset = 'grail_'+ task
+            return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args=kwargs['args'])
+
+    
+    
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
