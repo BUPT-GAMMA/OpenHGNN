@@ -86,7 +86,8 @@ def build_dataset_GB(dataset,*args,**kwargs):
 
 
 def build_dataset(dataset, task, *args, **kwargs):
-    args =kwargs.get('args', None)
+    
+    args = kwargs.get('args', None)
     
     if hasattr(args,'model'):
         model = args.model
