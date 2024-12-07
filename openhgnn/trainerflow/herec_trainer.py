@@ -29,12 +29,17 @@ class HERecTrainer(BaseFlow):
         for i, elem in enumerate(self.metapath):
             if i == 0:
                 adj = self.hg.adj(etype=elem)
-            else:
-                adj = sparse.mm(adj, self.hg.adj(etype=elem))
+            else:                
+                if type(adj) == dgl.sparse.sparse_matrix.SparseMatrix:  #   两个dgl.sparse_matrix
+                    adj = dgl.sparse.spspmm(adj, self.hg.adj(etype=elem))
+                else:   #   两个torch.sparse_matrix
+                    adj = sparse.mm(adj, self.hg.adj(etype=elem))
         adj = adj.coalesce()
 
         g = dgl.graph(data=(adj.indices()[0], adj.indices()[1]))
-        g.edata['rw_prob'] = adj.values()
+        
+        # g.edata['rw_prob'] = adj.values()
+        g.edata['rw_prob'] = adj.val
 
         self.random_walk_sampler = random_walk_sampler.RandomWalkSampler(g=g.to('cpu'),
                                                                          rw_length=self.args.rw_length,
