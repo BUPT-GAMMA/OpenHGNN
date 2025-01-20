@@ -1,0 +1,53 @@
+{
+    "general": {
+        "func": "adapt",
+        "cache_dir": "storage/.cache", 
+        "save_dir": "storage/fagcn/balanced_few_shot_fine_tune_backbone_with_rec", 
+        "few_shot" : 1 ,
+        "reconstruct": 0.0 
+
+
+    },
+
+
+    "model": {
+
+        "backbone": {
+            "model_type": "fagcn",
+            "hid_dim": 128,
+            "fagcn": {
+                "num_conv_layers": 2,
+                "dropout": 0.2,
+                "epsilon": 0.1
+            }
+        },
+
+        "saliency": {
+            "model_type" :  "none"
+        }
+    },
+
+
+    "data": {
+        "node_feature_dim": 100 ,
+        "name" : "photo"  
+        
+    },  
+
+
+    "adapt":{
+        "pretrained_file" : "storage/fagcn/reconstruct/pretrained_model.pt" ,
+        "method" : "finetune" ,
+        "batch_size" : "100",
+
+        "finetune": {
+            
+            "learning_rate": 1e-2,
+            "backbone_tuning":  1
+        }
+
+
+    }
+
+
+    }
