@@ -1,0 +1,1 @@
+from dgl.data.knowledge_graph import load_data

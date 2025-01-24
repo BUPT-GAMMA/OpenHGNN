@@ -1,0 +1,42 @@
+{
+    "general": {
+        "func": "pretrain",
+        "cache_dir": "storage/.cache",
+        "save_dir" :  "storage/fagcn/reconstruct" ,
+        "seed": 777,
+        "reconstruct"  :  0.2
+    },
+    "model": {
+        "backbone": {
+            "model_type": "fagcn",
+            "hid_dim": 128,
+            "fagcn": {
+                "num_conv_layers": 2,
+                "dropout": 0.2,
+                "epsilon": 0.1
+            }
+        }, 
+        "saliency": {
+            "model_type": "none"
+        }
+    },
+    "data": {
+        "seed": 777,
+        "name"  :  "cora,citeseer,cornell",
+        "node_feature_dim": 100 
+    },
+    "pretrain": {
+        "method": "graphcl",
+        
+        "learning_rate": 1e-04,
+        "weight_decay": 1e-05,
+
+        "epoch": 100,
+        "batch_size": 10,
+
+        "cross_link":1,
+        "cl_init_method": "learnable",
+
+        "split_method" :  "RandomWalk"
+    }
+}
