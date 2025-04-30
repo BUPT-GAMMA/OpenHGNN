@@ -212,7 +212,9 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'DisenKGAT_' + task  #  == 'DisenKGAT_link_prediction'
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))  
 
-
+    elif dataset in ['acm4RMR','aminer4RMR','imdb4RMR']:
+        _dataset = 'rmr_' + task
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))
 
 
     
