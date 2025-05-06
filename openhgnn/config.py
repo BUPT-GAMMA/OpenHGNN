@@ -1584,6 +1584,79 @@ class Config(object):
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
 
+        elif self.model_name == "RMR":
+            if self.dataset_name == 'acm4RMR':
+                self.save_emb = conf.getboolean("acm4RMR", "save_emb", fallback=False)
+                self.turn = conf.getint("acm4RMR", "turn")
+                self.dataset = conf.get("acm4RMR", "dataset")
+                self.ratio = list(map(int, conf.get("acm4RMR", "ratio").split(',')))
+                self.use_cuda = conf.getboolean("acm4RMR", "use_cuda", fallback=True)
+                self.seed = conf.getint("acm4RMR", "seed")
+                self.hidden_dim = conf.getint("acm4RMR", "hidden_dim")
+                self.nb_epochs = conf.getint("acm4RMR", "nb_epochs")
+
+                # eval params
+                self.eva_lr = conf.getfloat("acm4RMR", "eva_lr")
+                self.eva_wd = conf.getfloat("acm4RMR", "eva_wd")
+
+                # learning params
+                self.lr = conf.getfloat("acm4RMR", "lr")
+                self.w = conf.getfloat("acm4RMR", "w")
+                self.epoch = conf.getint("acm4RMR", "epoch")
+
+                # model-specific
+                self.attr1 = conf.getfloat("acm4RMR", "attr1")
+                self.attr2 = conf.getfloat("acm4RMR", "attr2")
+                self.feat = conf.getfloat("acm4RMR", "feat")
+                self.r1 = conf.getfloat("acm4RMR", "r1")
+                self.r2 = conf.getfloat("acm4RMR", "r2")
+                self.r3 = conf.getfloat("acm4RMR", "r3")
+            elif self.dataset_name == 'aminer4RMR':
+                self.save_emb = conf.getboolean("aminer4RMR", "save_emb", fallback=False)
+                self.turn = conf.getint("aminer4RMR", "turn")
+                self.dataset = conf.get("aminer4RMR", "dataset")
+                self.ratio = list(map(int, conf.get("aminer4RMR", "ratio").split(',')))
+                self.hidden_dim = conf.getint("aminer4RMR", "hidden_dim")
+                self.nb_epochs = conf.getint("aminer4RMR", "nb_epochs")
+
+                self.eva_lr = conf.getfloat("aminer4RMR", "eva_lr")
+                self.eva_wd = conf.getfloat("aminer4RMR", "eva_wd")
+
+                self.lr = conf.getfloat("aminer4RMR", "lr")
+                self.w = conf.getfloat("aminer4RMR", "w")
+                self.epoch = conf.getint("aminer4RMR", "epoch")
+
+                self.attr1 = conf.getfloat("aminer4RMR", "attr1")
+                self.attr2 = conf.getfloat("aminer4RMR", "attr2")
+                self.feat = conf.getfloat("aminer4RMR", "feat")
+                self.r1 = conf.getfloat("aminer4RMR", "r1")
+                self.r2 = conf.getfloat("aminer4RMR", "r2")
+                self.r3 = conf.getfloat("aminer4RMR", "r3")
+
+            elif self.dataset_name == 'imdb4RMR':
+                self.save_emb = conf.getboolean("imdb4RMR", "save_emb", fallback=False)
+                self.turn = conf.getint("imdb4RMR", "turn")
+                self.dataset = conf.get("imdb4RMR", "dataset")
+                self.ratio = list(map(int, conf.get("imdb4RMR", "ratio").split(',')))
+                self.use_cuda = conf.getboolean("imdb4RMR", "use_cuda", fallback=True)
+                self.seed = conf.getint("imdb4RMR", "seed")
+                self.hidden_dim = conf.getint("imdb4RMR", "hidden_dim")
+                self.nb_epochs = conf.getint("imdb4RMR", "nb_epochs")
+
+                self.eva_lr = conf.getfloat("imdb4RMR", "eva_lr")
+                self.eva_wd = conf.getfloat("imdb4RMR", "eva_wd")
+
+                self.lr = conf.getfloat("imdb4RMR", "lr")
+                self.w = conf.getfloat("imdb4RMR", "w")
+                self.epoch = conf.getint("imdb4RMR", "epoch")
+
+                self.attr1 = conf.getfloat("imdb4RMR", "attr1")
+                self.attr2 = conf.getfloat("imdb4RMR", "attr2")
+                self.feat = conf.getfloat("imdb4RMR", "feat")
+                self.r1 = conf.getfloat("imdb4RMR", "r1")
+                self.r2 = conf.getfloat("imdb4RMR", "r2")
+                self.r3 = conf.getfloat("imdb4RMR", "r3")
+
 
 
         if hasattr(self, "device"):

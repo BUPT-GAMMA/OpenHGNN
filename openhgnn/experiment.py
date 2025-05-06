@@ -90,6 +90,7 @@ class Experiment(object):
             "node_classification":"MHGCN_NC_Trainer",
             "link_prediction":"MHGCN_LP_Trainer"
         },
+        'RMR': 'rmr_trainer',
 ##########################
 
 
@@ -239,6 +240,7 @@ class Experiment(object):
         self.config.logger = Logger(self.config)
 
         set_random_seed(self.config.seed)
+        ## 如果specific_trainerflow内存在就返回对应key，否则默认为self.config.task
         trainerflow = self.specific_trainerflow.get(self.config.model, self.config.task)
         if type(trainerflow) is not str:
             trainerflow = trainerflow.get(self.config.task)

@@ -137,7 +137,7 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
-
+    'RMR':'openhgnn.models.RMR',
 }
 
 #####       add model here
@@ -199,7 +199,7 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
-
+from .RMR import RMR
 
 
 __all__ = [
@@ -253,5 +253,6 @@ __all__ = [
     'ExpressGNN',
     'Ingram',
     'RHINE',
+    'RMR'
 ]
 classes = __all__
