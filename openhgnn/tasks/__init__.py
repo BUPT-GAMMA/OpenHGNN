@@ -50,10 +50,10 @@ def try_import_task(task):
 
 
 SUPPORTED_TASKS = {
-    "coldstart_recommendation": "openhgnn.tasks.coldstart_recommendation",
     "KTN_trainer": "openhgnn.tasks.KTN",
     'demo': 'openhgnn.tasks.demo',
     'node_classification': 'openhgnn.tasks.node_classification',
+    'PolyGNN': 'openhgnn.tasks.PolyGNN',
     'link_prediction': 'openhgnn.tasks.link_prediction',
     'recommendation': 'openhgnn.tasks.recommendation',
     'embedding': 'openhgnn.tasks.embedding',
@@ -70,6 +70,7 @@ SUPPORTED_TASKS = {
 }
 
 from .node_classification import NodeClassification
+from .PolyGNN import PolyGNN
 from .link_prediction import LinkPrediction
 from .recommendation import Recommendation
 from .edge_classification import EdgeClassification
@@ -83,6 +84,7 @@ from .Ingram_task import Ingram
 __all__ = [
     "BaseTask",
     "NodeClassification",
+    "PolyGNN",
     "LinkPrediction",
     "Recommendation",
     "EdgeClassification",

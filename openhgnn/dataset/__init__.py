@@ -16,7 +16,6 @@ from .LTE_dataset import *
 from .SACN_dataset import *
 from .NBF_dataset import NBF_Dataset 
 from .Ingram_dataset import Ingram_KG_TrainData, Ingram_KG_TestData
-from .MetaHIN_dataset import Meta_DataHelper
 
 DATASET_REGISTRY = {}
 
@@ -86,26 +85,32 @@ def build_dataset_GB(dataset,*args,**kwargs):
 
 
 def build_dataset(dataset, task, *args, **kwargs):
-    
-    args = kwargs.get('args', None)
-    
-    if hasattr(args,'model'):
-        model = args.model
-        
+    args =kwargs.get('args')
+    model = args.model
     if isinstance(dataset, DGLDataset):
         return dataset
 
-#######  add  dataset  here
 
     if dataset == "meirec":
-        train_dataloader = get_data_loader("train", batch_size=args.batch_num , args = args)
-        test_dataloader = get_data_loader("test", batch_size=args.batch_num , args = args)
+        train_dataloader = get_data_loader("train", batch_size=args[0])
+        test_dataloader = get_data_loader("test", batch_size=args[0])
         return train_dataloader, test_dataloader
-    elif dataset == 'NL-100':
+
+
+    if dataset in CLASS_DATASETS:
+        return build_dataset_v2(dataset, task)
+    if not try_import_task_dataset(task):
+        exit(1)
+
+    if dataset == 'NL-100':
         train_dataloader = Ingram_KG_TrainData('',dataset)
         valid_dataloader = Ingram_KG_TestData('', dataset,'valid')
         test_dataloader = Ingram_KG_TestData('',dataset,'test')
         return train_dataloader,valid_dataloader,test_dataloader
+    elif dataset == 'meirec':
+        train_dataloader = get_data_loader("train", batch_size=args[0])
+        test_dataloader = get_data_loader("test", batch_size=args[0])
+        return train_dataloader, test_dataloader
     elif dataset == 'AdapropT':
         dataload=AdapropTDataLoader(args)
         return dataload
@@ -114,41 +119,32 @@ def build_dataset(dataset, task, *args, **kwargs):
         return dataload
     elif dataset == 'SACN' or dataset == 'LTE':
         return
-    elif dataset == "dbook":
-        dataload = Meta_DataHelper(args.input_dir, args)
-        return dataload
 
-#############
-
-    if dataset in CLASS_DATASETS:
-        return build_dataset_v2(dataset, task)
-    if not try_import_task_dataset(task):
-        exit(1)
 
     _dataset = None
     if dataset in ['aifb', 'mutag', 'bgs', 'am']:
         _dataset = 'rdf_' + task
 
-###########    add dataset here
+#####################     add dataset here
     elif dataset in ['acm4HGMAE','hgprompt_acm_dblp','acm4FedHGNN']:      
         return DATASET_REGISTRY['common_dataset'](dataset, logger=kwargs['logger'],args = kwargs['args'])
 
     elif dataset in ['acm4HGA','dblp4HGA']:
         _dataset = 'hga_'+ task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
+    elif dataset in ['building','mnist','mnist_sparse','mbuilding','sbuilding','dbp']:
+        _dataset = 'PolyGNNDataset'
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
     elif dataset in ['dblp4RHINE']:
         _dataset = 'rhine_'+task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
-    elif dataset in ['dblp4MHGCN','imdb4MHGCN','alibaba4MHGCN']:
-        _dataset = 'mhgcn_' + task   
-        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args']) 
-##########
+######################
 
     elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp',
                      'dblp4MAGNN', 'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie',
                      'Book-Crossing', 'amazon4SLICE', 'MTWM', 'HNE-PubMed', 'HGBl-ACM', 'HGBl-DBLP', 'HGBl-IMDB',
                      'amazon', 'yelp4HGSL']:
-        _dataset = 'hin_' + task
+        _dataset = 'hin_' + task 
     elif dataset in ['imdb4MAGNN']:
         _dataset = 'hin_' + task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],
@@ -212,23 +208,16 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'DisenKGAT_' + task  #  == 'DisenKGAT_link_prediction'
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))  
 
-
-
-
-    
-    if args != None and hasattr(args,'model'):
-        if args.model=='Grail' or args.model=='ComPILE':
-            _dataset = 'grail_'+ task
-            return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args=kwargs['args'])
-
-    
-    
+    if kwargs['args'].model=='Grail' or kwargs['args'].model=='ComPILE':
+        _dataset = 'grail_'+ task
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args=kwargs['args'])
     return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
 
 SUPPORTED_DATASETS = {
     "node_classification": "openhgnn.dataset.NodeClassificationDataset",
+    "PolyGNNDataset":"openhgnn.dataset.PolyGNNDataset",
     "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
     "recommendation": "openhgnn.dataset.RecommendationDataset",
     "edge_classification": "openhgnn.dataset.EdgeClassificationDataset",
@@ -238,6 +227,7 @@ SUPPORTED_DATASETS = {
 
 }
 
+from .PolyGNNDataset import PolyGNNDataset
 from .NodeClassificationDataset import NodeClassificationDataset
 from .LinkPredictionDataset import LinkPredictionDataset
 from .RecommendationDataset import RecommendationDataset
@@ -287,6 +277,7 @@ CLASS_DATASETS = {
 __all__ = [
     "BaseDataset",
     "NodeClassificationDataset",
+    "PolyGNNDataset",
     "LinkPredictionDataset",
     "RecommendationDataset",
     "AcademicDataset",

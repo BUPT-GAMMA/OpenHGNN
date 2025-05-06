@@ -25,9 +25,9 @@ def register_model(name):
     """
 
     def register_model_cls(cls):
-        if name in MODEL_REGISTRY:
+        if name in MODEL_REGISTRY: # 如果已经有此名字，则异常
             raise ValueError("Cannot register duplicate models ({})".format(name))
-        if not issubclass(cls, BaseModel):
+        if not issubclass(cls, BaseModel): # 如果没有继承BaseModel，则异常
             raise ValueError(
                 "Model ({}: {}) must extend BaseModel".format(name, cls.__name__)
             )
@@ -64,9 +64,6 @@ def build_model(model):
 
 SUPPORTED_MODELS = {
 #####       add models here
-    'MHGCN':'openhgnn.models.MHGCN',
-    'BPHGNN' : 'openhgnn.models.BPHGNN',
-    "MetaHIN": "openhgnn.models.MetaHIN",
     'HGA':'openhgnn.models.HGA',
     'RHINE': 'openhgnn.models.RHINE',
     'FedHGNN':'openhgnn.models.FedHGNN',
@@ -76,7 +73,7 @@ SUPPORTED_MODELS = {
     "HetGNN": "openhgnn.models.HetGNN",
     "HMPNN": "openhgnn.models.HMPNN",
     'RGCN': 'openhgnn.models.RGCN',
-    "RGAT": 'openhgnn.models.RGAT',
+    "RGAT": 'openhgnn.models.RGAT', 
     'RSHN': 'openhgnn.models.RSHN',
     'Metapath2vec': 'openhgnn.models.SkipGram',
     'HERec': 'openhgnn.models.SkipGram',
@@ -91,6 +88,7 @@ SUPPORTED_MODELS = {
     'HeGAN': 'openhgnn.models.HeGAN',
     'NSHE': 'openhgnn.models.NSHE',
     'NARS': 'openhgnn.models.NARS',
+    'PolyGNN':'openhgnn.models.PolyGNN',
     'RHGNN': 'openhgnn.models.RHGNN',
     'HPN': 'openhgnn.models.HPN',
     'KGCN': 'openhgnn.models.KGCN',
@@ -140,11 +138,6 @@ SUPPORTED_MODELS = {
 
 }
 
-#####       add model here
-from .BPHGNN import BPHGNN
-from .RHINE import RHINE
-from .FedHGNN import FedHGNN
-#####
 from .SIAN import SIAN
 from .HGCL import HGCL
 from .CompGCN import CompGCN
@@ -164,6 +157,7 @@ from .MAGNN import MAGNN
 from .HeGAN import HeGAN
 from .NSHE import NSHE
 from .NARS import NARS
+from .PolyGNN import PolyGNN
 from .RHGNN import RHGNN
 from .HPN import HPN
 from .KGCN import KGCN
@@ -199,11 +193,13 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
-
+#####       add model here
+from .RHINE import RHINE
+from .FedHGNN import FedHGNN
 
 
 __all__ = [
-    'BPHGNN',
+
     "HMPNN",
     'BaseModel',
     'CompGCN',
@@ -222,6 +218,7 @@ __all__ = [
     'HeGAN',
     'NSHE',
     'NARS',
+    'PolyGNN',
     'RHGNN',
     'HPN',
     'KGCN',
