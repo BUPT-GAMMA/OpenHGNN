@@ -48,19 +48,10 @@ def build_flow(args, flow_name):
 
 
 SUPPORTED_FLOWS = {
-###########     add trainer_flow here. 【register name】 ： 【class name】
-
-    'MHGCN_trainer':'openhgnn.trainerflow.MHGCN_trainer',
-    'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',    
-    'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
-    'hga_trainer':'openhgnn.trainerflow.HGATrainer',
-    'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
-    'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation',
-##########
-    "coldstart_recommmendation": "openhgnn.trainerflow.coldstart_recommendation",
     'SIAN_trainer': 'openhgnn.trainerflow.SIAN_trainer',
     'entity_classification': 'openhgnn.trainerflow.entity_classification',
     'node_classification': 'openhgnn.trainerflow.node_classification',
+    'PolyGNN': 'openhgnn.trainerflow.PolyGNN',
     'node_classification_ac': 'openhgnn.trainerflow.node_classfication_ac',
     'distmult': 'openhgnn.trainerflow.dist_mult',
     'link_prediction': 'openhgnn.trainerflow.link_prediction',
@@ -107,21 +98,20 @@ SUPPORTED_FLOWS = {
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
-
+###########     add trainer_flow here. 【register name】 ： 【class name】
+    'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
+    'hga_trainer':'openhgnn.trainerflow.HGATrainer',
+    'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
+    'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation'
+#####################################################
 
 
 }
 
-######      add trainer_flow here
-from .BPHGNN_trainer import BPHGNN_trainer
-from .HGMAE_trainer import HGMAE_trainer
-from .hga_trainer import HGATrainer
-from .RHINE_trainer import RHINETrainer
-from .FED_REC_trainer import *
-##########
 from .sian_trainer import SIAN_Trainer
 from .hgcl_trainer import HGCLtrainer
 from .node_classification import NodeClassification
+from .PolyGNN import PolyGNN
 from .link_prediction import LinkPrediction
 from .recommendation import Recommendation
 from .hetgnn_trainer import HetGNNTrainer
@@ -160,14 +150,18 @@ from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
 from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
+######      add trainer_flow here
+from .HGMAE_trainer import HGMAE_trainer
+from .hga_trainer import HGATrainer
+from .RHINE_trainer import RHINETrainer
+from .FED_REC_trainer import *
+#####################################
 
 
-
-#   don't add here
 __all__ = [
-    'MHGCN_trainer',
     'BaseFlow',
     'NodeClassification',
+    'PolyGNN',
     'LinkPrediction',
     'Recommendation',
     'HetGNNTrainer',

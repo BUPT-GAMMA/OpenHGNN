@@ -8,6 +8,7 @@ from ..utils import EarlyStopping, to_hetero_idx, to_homo_feature, to_homo_idx
 import warnings
 from torch.utils.tensorboard import SummaryWriter
 import dgl.graphbolt as gb
+import tkinter as tk
 
 @register_flow("node_classification")
 class NodeClassification(BaseFlow):
@@ -30,6 +31,17 @@ class NodeClassification(BaseFlow):
         """
 
         super(NodeClassification, self).__init__(args)
+
+##      父类  BaseFlow中  初始化的  成员
+        # self.args = args
+        # self.logger = self.args.logger
+        # self.model_name = args.model_name
+        # self.model = args.model
+        # self.device = args.device
+        # self.task = build_task(args)
+        # self.max_epoch = args.max_epoch
+
+
         self.args.category = self.task.dataset.category
         self.category = self.args.category
 
@@ -139,9 +151,6 @@ class NodeClassification(BaseFlow):
 
 
 
-
-
-
     def preprocess(self):
         r"""
         Preprocess for different models, e.g.: different optimizer for GTN.
@@ -192,6 +201,14 @@ class NodeClassification(BaseFlow):
         stopper = EarlyStopping(self.args.patience, self._checkpoint)
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
+
+            if self.args.output_widget != None:
+                #   这里直接用main.py中传入的参数output_widget（GUI输出框），把内容输出到GUI中
+                self.args.output_widget.insert(tk.END, f"当前是第{epoch}个epoch  \n")
+                self.args.output_widget.see(tk.END)
+                self.args.output_widget.update_idletasks()
+                ####
+
             if self.args.mini_batch_flag:
                 train_loss = self._mini_train_step()
             else:
@@ -202,13 +219,24 @@ class NodeClassification(BaseFlow):
                     modes = modes + ['test']
                 if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
                     metric_dict, losses = self._mini_test_step(modes=modes)
-                    # train_score, train_loss = self._mini_test_step(modes='train')
-                    # val_score, val_loss = self._mini_test_step(modes='valid')
                 else:
                     metric_dict, losses = self._full_test_step(modes=modes)
                 val_loss = losses['valid']
                 self.logger.train_info(f"Epoch: {epoch}, Train loss: {train_loss:.4f}, Valid loss: {val_loss:.4f}. "
                                        + self.logger.metric2str(metric_dict))
+
+                #   这里直接用main.py中传入的参数output_widget（GUI输出框），把内容输出到GUI中
+                if self.args.output_widget != None:
+                    self.args.output_widget.insert(tk.END, f"第{epoch}个epoch中:" +
+                                                f"Train LOSS : {train_loss:.4f}  ," +
+                                                f"Valid LOSS : {val_loss:.4f} ,"  +
+                                                f"日志测试信息:{self.logger.metric2str(metric_dict)}.  \n "
+                                                    )
+                    self.args.output_widget.see(tk.END)
+                    self.args.output_widget.update_idletasks()
+                ####                
+
+
                 self.writer.add_scalars('loss', {'train': train_loss, 'valid': val_loss}, global_step=epoch)
                 for mode in modes:
                     self.writer.add_scalars(f'metric_{mode}', metric_dict[mode], global_step=epoch)
@@ -244,8 +272,12 @@ class NodeClassification(BaseFlow):
             else:
                 metric_dict, _ = self._full_test_step(modes=['valid', 'test'])
             self.logger.train_info('[Test Info]' + self.logger.metric2str(metric_dict))
+            self.logger.info('trainerflow  finished  ')
             return dict(metric=metric_dict, epoch=epoch)
+        
         self.writer.close()
+
+        
 
     def _full_train_step(self):
         self.model.train()
