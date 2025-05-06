@@ -1020,19 +1020,6 @@ class Config(object):
             self.num_heads = conf.getint("RGAT", "num_heads")
             self.dropout = conf.getfloat("RGAT", "dropout")
             self.out_dim = conf.getint("RGAT", "out_dim")
-        elif self.model_name == "RrGAT":
-            self.weight_decay = conf.getfloat("RrGAT", "weight_decay")
-            self.lr = conf.getfloat("RrGAT", "lr")
-            self.max_epoch = conf.getint("RrGAT", "max_epoch")
-            self.seed = conf.getint("RrGAT", "seed")
-            self.num_layers = conf.getint("RrGAT", "num_layers")
-            self.mini_batch_flag = False
-            self.hidden_dim = conf.getint("RrGAT", "hidden_dim")
-            self.in_dim = conf.getint("RrGAT", "in_dim")
-            self.patience = conf.getint("RrGAT", "patience")
-            self.num_heads = conf.getint("RrGAT", "num_heads")
-            self.dropout = conf.getfloat("RrGAT", "dropout")
-            self.out_dim = conf.getint("RrGAT", "out_dim")
         elif self.model_name == "PolyGNN": 
             self.lr = conf.getfloat("PolyGNN", "lr")
             self.nepoch = conf.getint("PolyGNN", "nepoch")
