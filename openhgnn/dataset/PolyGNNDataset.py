@@ -6,6 +6,9 @@ import numpy as np
 from torch.utils.data import Dataset
 import random
 import pickle as pkl
+import os
+import zipfile
+import requests
 @register_dataset('PolyGNNDataset')
 class PolyGNNDataset(BaseDataset):
     r"""
@@ -26,28 +29,37 @@ class PolyGNNDataset(BaseDataset):
         self.args = args
         self.dataset_name = dataset_name
         self.num_classes = None
-        assert dataset_name in ['building','mnist','mnist_sparse','mbuilding','sbuilding','dbp']
-        if dataset_name in ["mnist"]:  # 导入数据集
+        assert dataset_name in ['MNIST-P-2','Building-2-C','Building-2-R','Building-S','DBSR-cplx46K']
+        def download_and_extract_zip(url, extract_to):
+            os.makedirs(extract_to, exist_ok=True)
+            
+            zip_path = os.path.join(extract_to, "PolyGNN.zip")
+            response = requests.get(url)
+            with open(zip_path, "wb") as f:
+                f.write(response.content)
+            
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                zip_ref.extractall(extract_to)
+
+        url = "https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/PolyGNN.zip"
+        extract_to = "./openhgnn/PolyGNN"
+        download_and_extract_zip(url, extract_to)
+
+        if dataset_name in ["MNIST-P-2"]:
             x_out=90
-            self.data_dir='data/multi_mnist_with_index.pkl'  
-        elif dataset_name in ["mnist_sparse"]:
-            x_out=90
-            self.data_dir='data/multi_mnist_sparse.pkl'
-        elif dataset_name in ["building"]:
+            self.data_dir='./openhgnn/PolyGNN/MNIST-P-2.pkl'
+        elif dataset_name in ["Building-2-C"]:
             x_out=100
-            self.data_dir='data/building_with_index.pkl'
-        elif dataset_name in ["mbuilding"]:
+            self.data_dir='./openhgnn/PolyGNN/Building-2-C.pkl'
+        elif dataset_name in ["Building-2-R"]:
             x_out=100
-            self.data_dir='data/mp_building.pkl'
-        elif dataset_name in ["sbuilding"]:
+            self.data_dir='./openhgnn/PolyGNN/Building-2-R.pkl'
+        elif dataset_name in ["Building-S"]:
             x_out=10
-            self.data_dir='data/single_building.pkl'
-        elif dataset_name in ["smnist"]:
+            self.data_dir='./openhgnn/PolyGNN/Building-S.pkl'
+        elif dataset_name in ["DBSR-cplx46K"]:
             x_out=10
-            self.data_dir='data/single_mnist.pkl'
-        elif dataset_name in ["dbp"]:
-            x_out=2
-            self.data_dir='data/triple_building_600.pkl'
+            self.data_dir='./openhgnn/PolyGNN/DBSR-cplx46K.pkl'
         self.num_classes = x_out
     def get_labels(self):
         pass
@@ -61,18 +73,16 @@ class PolyGNNDataset(BaseDataset):
         train_loader,val_loader,test_loader : torch_geometric.loader.DataLoader,torch_geometric.loader.DataLoader,torch_geometric.loader.DataLoader
         """
         test_ratio = 0.2
-        if self.args.dataset in ['mnist',"mnist_sparse"]:
+        if self.args.dataset in ['MNIST-P-2']:
             train_ds,val_ds,test_ds= get_mnist_dataset(self.data_dir,self.args.man_seed,test_ratio=test_ratio)
-        elif self.args.dataset in ['building']:
+        elif self.args.dataset in ['Building-2-C']:
             train_ds,val_ds,test_ds= get_building_dataset(self.data_dir,self.args.man_seed,test_ratio=test_ratio)
-        elif self.args.dataset in ['mbuilding']:
+        elif self.args.dataset in ['Building-2-R']:
             train_ds,val_ds,test_ds=get_mbuilding_dataset(self.data_dir,self.args.man_seed,test_ratio=test_ratio)
-        elif self.args.dataset in ['sbuilding']:
+        elif self.args.dataset in ['Building-S']:
             train_ds,val_ds,test_ds=get_sbuilding_dataset(self.data_dir,self.args.man_seed,test_ratio=test_ratio)
-        elif self.args.dataset in ['smnist']:
+        elif self.args.dataset in ['DBSR-cplx46K']:
             train_ds,val_ds,test_ds=get_smnist_dataset(self.data_dir,self.args.man_seed,test_ratio=test_ratio)    
-        elif self.args.dataset in ['dbp']:
-            train_ds,val_ds,test_ds=get_dbp_dataset(self.data_dir,self.args.man_seed,test_ratio=test_ratio)
 
         train_ds= affine_transform_to_range(train_ds,target_range=(-1, 1))
         val_ds= affine_transform_to_range(val_ds,target_range=(-1, 1))
@@ -97,7 +107,7 @@ single_alphabetic_labels.sort()
 single_label_mapping = {label: idx for idx, label in enumerate(single_alphabetic_labels)}
 single_reverse_label_mapping = {v: k for k, v in single_label_mapping.items()}
 
-def get_mnist_dataset(data_dir='data/multi_mnist.pkl',Seed=0,test_ratio=0.2):
+def get_mnist_dataset(data_dir='./openhgnn/PolyGNN/MNIST-P-2.pkl',Seed=0,test_ratio=0.2):
 
     random.seed(Seed)
     torch.manual_seed(Seed)  
@@ -122,7 +132,7 @@ def get_mnist_dataset(data_dir='data/multi_mnist.pkl',Seed=0,test_ratio=0.2):
         
     return train_ds,val_ds,test_ds
 
-def get_building_dataset(data_dir='data/building_with_index.pkl',Seed=0,test_ratio=0.2):
+def get_building_dataset(data_dir='./openhgnn/PolyGNN/Building-2-C.pkl',Seed=0,test_ratio=0.2):
 
     random.seed(Seed)
     torch.manual_seed(Seed)  
@@ -147,7 +157,7 @@ def get_building_dataset(data_dir='data/building_with_index.pkl',Seed=0,test_rat
         
     return train_ds,val_ds,test_ds
 
-def get_mbuilding_dataset(data_dir='data/mp_building.pkl',Seed=0,test_ratio=0.2):
+def get_mbuilding_dataset(data_dir='./openhgnn/PolyGNN/Building-2-R.pkl',Seed=0,test_ratio=0.2):
 
     random.seed(Seed)
     torch.manual_seed(Seed)  
@@ -172,7 +182,7 @@ def get_mbuilding_dataset(data_dir='data/mp_building.pkl',Seed=0,test_ratio=0.2)
         
     return train_ds,val_ds,test_ds
 
-def get_sbuilding_dataset(data_dir='data/single_building.pkl',Seed=0,test_ratio=0.2):
+def get_sbuilding_dataset(data_dir='./openhgnn/PolyGNN/Building-S.pkl',Seed=0,test_ratio=0.2):
 
     random.seed(Seed)
     torch.manual_seed(Seed)  
@@ -197,7 +207,7 @@ def get_sbuilding_dataset(data_dir='data/single_building.pkl',Seed=0,test_ratio=
         
     return train_ds,val_ds,test_ds
 
-def get_smnist_dataset(data_dir='data/single_mnist.pkl',Seed=0,test_ratio=0.2):
+def get_smnist_dataset(data_dir='./openhgnn/PolyGNN/DBSR-cplx46K.pkl',Seed=0,test_ratio=0.2):
 
     random.seed(Seed)
     torch.manual_seed(Seed)  
@@ -205,31 +215,6 @@ def get_smnist_dataset(data_dir='data/single_mnist.pkl',Seed=0,test_ratio=0.2):
 
     with open(data_dir, 'rb') as f:
         dataset = pkl.load(f)
-         
-    np.random.shuffle(dataset)
-    val_test_split = int(np.around( test_ratio * len(dataset) ))
-    train_val_split = int(len(dataset)-2*val_test_split)
-    train_ds = dataset[:train_val_split]
-    val_ds = dataset[train_val_split:train_val_split+val_test_split]
-    test_ds = dataset[train_val_split+val_test_split:]  
-
-    print(data_dir)
-    print('Train: ' +str(len(train_ds)))
-    print('Val  : ' +str(len(val_ds)))
-    print('Test : ' +str(len(test_ds)))  
-        
-    return train_ds,val_ds,test_ds
-
-def get_dbp_dataset(data_dir='data/triple_building.pkl',Seed=0,test_ratio=0.2):
-
-    random.seed(Seed)
-    torch.manual_seed(Seed)  
-    np.random.seed(Seed) 
-
-    with open(data_dir, 'rb') as f:
-        dataset = pkl.load(f)
-    for entry in dataset:
-        entry.y = 1 if entry.y>=1 else 0
          
     np.random.shuffle(dataset)
     val_test_split = int(np.around( test_ratio * len(dataset) ))
