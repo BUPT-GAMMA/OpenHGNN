@@ -8,7 +8,8 @@ from .micro_layer import *
 from .AdapropT import *
 from .AdapropI import *
 from .rgcn_layer import *
-
+from .Fully_connect import *
+from .Linear_layer import *
 __all__ = [
     'HeteroEmbedLayer',
     'GeneralLinear',
@@ -24,7 +25,9 @@ __all__ = [
     'AttConv',
     'LSTMConv',
     'AdapropT',
-    'AdapropI'
+    'AdapropI',
+    'Fully_connect',
+    'Linear_layer',
 ]
 
 classes = __all__

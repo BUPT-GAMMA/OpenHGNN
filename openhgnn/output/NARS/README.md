@@ -26,7 +26,7 @@ NOTE: NARS can handle mag oag dataset, we will add these two datasets in our fur
 
 - Number of nodes
 
-  | paper    | 4025 |
+  | paper    | 4z025 |
   | -------- | ---- |
   | author    | 17431 |
   | field   | 73 |
