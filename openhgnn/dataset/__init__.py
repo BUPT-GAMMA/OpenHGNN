@@ -132,7 +132,7 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset in ['acm4HGA','dblp4HGA']:
         _dataset = 'hga_'+ task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
-    elif dataset in ['MNIST-P-2','Building-2-C','Building-2-R','Building-S','DBSR-cplx46K']:
+    elif dataset in ['MNIST-P-2','Building-2-C','Building-2-R','Building-S']:
         _dataset = 'PolyGNNDataset'
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
     elif dataset in ['dblp4RHINE']:
