@@ -34,6 +34,7 @@ class Evaluator():
         return micro_f1, macro_f1
 
     def f1_node_classification(self, y_label, y_pred):
+        y_label= y_label.to(y_pred.device)
         macro_f1 = f1_score(y_label, y_pred, average='macro')
         micro_f1 = f1_score(y_label, y_pred, average='micro')
         return dict(Macro_f1=macro_f1, Micro_f1=micro_f1)

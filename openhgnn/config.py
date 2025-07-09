@@ -1583,6 +1583,36 @@ class Config(object):
             self.hid_dim = conf.getint("HMPNN", "hid_dim")
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
+        elif self.model_name == "SlotGAT":
+            self.edge_dim = conf.getint("SlotGAT", "edge_dim")
+            in_dim_str = conf.get("SlotGAT", "in_dim")  
+            self.in_dim = [int(x) for x in in_dim_str.split(',')]
+            self.num_etypes = conf.getint("SlotGAT", "num_etypes")
+            self.hid_dim = conf.getint("SlotGAT", "hid_dim")
+            self.num_classes = conf.getint("SlotGAT", "num_classes")
+            self.num_layers = conf.getint("SlotGAT", "num_layers")
+            self.num_heads = conf.getint("SlotGAT", "num_heads")
+            self.feat_drop = conf.getfloat("SlotGAT", "feat_drop")
+            self.attn_drop = conf.getfloat("SlotGAT", "attn_drop")
+            self.negative_slope = conf.getfloat("SlotGAT", "negative_slope")
+            self.residual = conf.getboolean("SlotGAT", "residual")
+            self.alpha = conf.getfloat("SlotGAT", "alpha")
+            self.num_ntype = conf.getint("SlotGAT", "num_ntype")
+            self.lr = conf.getfloat("SlotGAT", "lr")
+            self.weight_decay = conf.getfloat("SlotGAT", "weight_decay")
+            self.feats_type = conf.getint("SlotGAT", "feats_type")
+            self.epoch = conf.getint("SlotGAT", "epoch")
+            self.SAattDim = conf.getint("SlotGAT", "SAattDim")
+            self.multi_label = conf.getboolean("SlotGAT", "multi_label")
+            self.max_epoch = conf.getint("SlotGAT", "max_epoch")
+            self.patience = conf.getint("SlotGAT", "patience")
+            self.test_flag = conf.getboolean("SlotGAT", "test_flag")
+            
+            
+            
+            
+
+
 
 
 

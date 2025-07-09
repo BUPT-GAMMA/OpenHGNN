@@ -64,7 +64,7 @@ class NodeClassification(BaseFlow):
 
         self.train_idx, self.val_idx, self.test_idx = self.task.get_split()
         self.pred_idx = getattr(self.task.dataset, 'pred_idx', None)
-
+        
         self.labels = self.task.get_labels().to(self.device)
         self.num_nodes_dict = {ntype: self.hg.num_nodes(ntype) for ntype in self.hg.ntypes}
         self.to_homo_flag = getattr(self.model, 'to_homo_flag', False)
@@ -283,7 +283,12 @@ class NodeClassification(BaseFlow):
         self.model.train()
         h_dict = self.model.input_feature()
         self.hg = self.hg.to(self.device)
-        logits = self.model(self.hg, h_dict)[self.category]
+        if self.model_name == "SlotGAT":
+            self.task.dataset.e_feat = self.task.dataset.e_feat.to(self.device)
+            self.task.dataset.features_list = [features.to(self.device) for features in self.task.dataset.features_list]  
+            logits,_ = self.model(self.hg,self.task.dataset.features_list, self.task.dataset.e_feat) 
+        else:
+            logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
         self.optimizer.zero_grad()
         loss.backward()
@@ -357,7 +362,10 @@ class NodeClassification(BaseFlow):
         with torch.no_grad():
             h_dict = self.model.input_feature()
             h_dict = {k: e.to(self.device) for k, e in h_dict.items()}
-            logits = logits if logits else self.model(self.hg, h_dict)[self.category]
+            if self.model_name == "SlotGAT":
+                logits,_ = self.model(self.hg,self.task.dataset.features_list, self.task.dataset.e_feat) 
+            else:
+                logits = logits if logits else self.model(self.hg, h_dict)[self.category]
             masks = {}
             for mode in modes:
                 if mode == "train":
