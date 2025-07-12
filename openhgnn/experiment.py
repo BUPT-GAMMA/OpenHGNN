@@ -90,6 +90,7 @@ class Experiment(object):
             "node_classification":"MHGCN_NC_Trainer",
             "link_prediction":"MHGCN_LP_Trainer"
         },
+        "HCMGNN":'HCMGNN_trainer',
 ##########################
 
 

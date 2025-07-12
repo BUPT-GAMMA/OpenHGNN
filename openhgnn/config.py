@@ -1585,6 +1585,16 @@ class Config(object):
             self.batch_size= conf.getint("HMPNN", "batch_size")
 
 
+        elif self.model_name == "HCMGNN":
+            self.seed = conf.getint("HCMGNN", "seed")
+            self.lr = conf.getfloat("HCMGNN", "lr")
+            self.weight_decay = conf.getfloat("HCMGNN", "weight_decay")
+            self.num_epochs = conf.getint("HCMGNN", "num_epochs")
+            self.dropout = conf.getfloat("HCMGNN", "dropout")
+            self.loss_gamma = conf.getfloat("HCMGNN", "loss_gamma")
+            self.hidden_size = conf.getint("HCMGNN", "hidden_size")
+            self.num_heads = conf.getint("HCMGNN", "num_heads")
+            self.patience = conf.getint("HCMGNN", "patience")
 
         if hasattr(self, "device"):
             self.device = th.device(self.device)
