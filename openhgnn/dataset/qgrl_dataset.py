@@ -1,3 +1,8 @@
+import os
+from dgl.data.utils import download, extract_archive
+from dgl.data import DGLDataset
+from dgl.data.utils import load_graphs
+
 import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset
@@ -7,14 +12,31 @@ from ..layers import to_tensor
 
 
 class QGRLdataset(Dataset):
+    prefix = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/'
+    _urls = {
+
+    }
+
     def __init__(self, name, is_train=True):
         super(QGRLdataset, self).__init__()
         self.name = name
+        self.data_path = "./openhgnn/dataset/QGRLData.rar"
         self.is_train = is_train
         self.g = None
         self.meta_paths = None
         self.meta_paths_dict = None
         self.load_data()
+
+    def download(self):
+        # download raw data to local disk
+        # path to store the file
+        if os.path.exists(self.data_path):  # pragma: no cover
+           pass
+        else:
+            file_path = os.path.join(self.raw_dir)
+            # download file
+            download(self.url, path=file_path)
+        extract_archive(self.data_path, os.path.join(self.raw_dir, self.name))
 
     def load_data(self):
         if self.name == 'zoo':
