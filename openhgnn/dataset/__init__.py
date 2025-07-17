@@ -75,6 +75,7 @@ kg_subT_datasets = ['family']
 ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
 hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
+qgrl_datasets = ['zoo', 'iris', 'wine', 'heart', 'ttt', 'yeast', 'breast', 'glass', 'aa', 'mm', 'qgrl_example']
 
 
 
@@ -210,7 +211,9 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'NBF_' + task  
     elif dataset in ['DisenKGAT_WN18RR','DisenKGAT_FB15k-237']:
         _dataset = 'DisenKGAT_' + task  #  == 'DisenKGAT_link_prediction'
-        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))  
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))
+    elif dataset in qgrl_datasets:
+        _dataset = task
 
 
 
@@ -235,6 +238,7 @@ SUPPORTED_DATASETS = {
     "hypergraph": "openhgnn.dataset.HypergraphDataset",
     "pretrain": "openhgnn.dataset.mag_dataset",
     "ktn": "openhgnn.dataset.oag_dataset",
+    "qgrl_dataset":"openhgnn.dataset.qgrl_dataset",
 
 }
 
@@ -281,6 +285,7 @@ CLASS_DATASETS = {
     "ohgbn-alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
     "pretrain": "openhgnn.dataset.mag_dataset",
     "ktn": "openhgnn.dataset.oag_dataset",
+    "qgrl": "openhgnn.dataset.qgrl_dataset",
 
 }
 
@@ -300,6 +305,7 @@ __all__ = [
     "AbnormEventDetectionDataset",
     "mag_dataset",
     "OAGDataset",
+    'qgrl_dataset',
 ]
 
 classes = __all__
