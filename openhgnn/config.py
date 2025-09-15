@@ -41,7 +41,56 @@ class Config(object):
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
 ##############      add config.py    #################
-            
+        elif self.model_name == 'MHGCN':
+            self.lr = conf.getfloat("MHGCN", "lr")
+            self.weight_decay = conf.getfloat("MHGCN", "weight_decay")
+            self.model_lr = conf.getfloat("MHGCN", "model_lr")
+            self.hidden_dim = conf.getint("MHGCN", "hidden_dim")
+            self.emb_dim = conf.getint("MHGCN","emb_dim")
+            self.num_layers = conf.getint("MHGCN", "num_layers")
+            self.max_epoch = conf.getint("MHGCN", "max_epoch")
+
+        elif self.model_name == "BPHGNN":
+            self.seed=conf.getint("BPHGNN","seed")
+            self.epochs=conf.getint("BPHGNN","epochs")
+            self.lr=conf.getfloat("BPHGNN","lr")
+            self.weight_decay=conf.getfloat("BPHGNN","weight_decay")
+            self.hidden_dim=conf.getint("BPHGNN","hidden_dim")
+            self.out=conf.getint("BPHGNN","out")
+            self.dropout=conf.getint("BPHGNN","dropout")
+            self.feature=conf.get("BPHGNN","feature")
+            self.normalization=conf.get("BPHGNN","normalization")
+            self.degree=conf.getint("BPHGNN","degree")
+            self.per=conf.getint("BPHGNN","per")
+            self.experiment=conf.get("BPHGNN","experiment")
+
+
+
+        elif self.model_name == "MetaHIN":
+            self.use_cuda = conf.getboolean("MetaHIN", "use_cuda")
+            self.file_num = conf.getint("MetaHIN", "file_num")
+            self.num_location = conf.getint("MetaHIN", "num_location")
+            self.num_fea_item = conf.getint("MetaHIN", "num_fea_item")
+            self.num_publisher = conf.getint("MetaHIN", "num_publisher")
+            self.num_fea_user = conf.getint("MetaHIN", "num_fea_user")
+            self.item_fea_len = conf.getint("MetaHIN", "item_fea_len")
+            self.embedding_dim = conf.getint("MetaHIN", "embedding_dim")
+            self.user_embedding_dim = conf.getint("MetaHIN", "user_embedding_dim")
+            self.item_embedding_dim = conf.getint("MetaHIN", "item_embedding_dim")
+            self.first_fc_hidden_dim = conf.getint("MetaHIN", "first_fc_hidden_dim")
+            self.second_fc_hidden_dim = conf.getint("MetaHIN", "second_fc_hidden_dim")
+            self.mp_update = conf.getint("MetaHIN", "mp_update")
+            self.local_update = conf.getint("MetaHIN", "local_update")
+            self.lr = conf.getfloat("MetaHIN", "lr")
+            self.mp_lr = conf.getfloat("MetaHIN", "mp_lr")
+            self.local_lr = conf.getfloat("MetaHIN", "local_lr")
+            self.batch_size = conf.getint("MetaHIN", "batch_size")
+            self.num_epoch = conf.getint("MetaHIN", "num_epoch")
+            self.input_dir = conf.get("MetaHIN", "input_dir")
+            self.output_dir = conf.get("MetaHIN", "output_dir")
+            self.seed = conf.getint("MetaHIN", "seed")
+
+
         elif self.model_name =='FedHGNN':
             self.fea_dim = conf.getint("FedHGNN","fea_dim")
             self.in_dim = conf.getint("FedHGNN","in_dim")
