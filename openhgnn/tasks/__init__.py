@@ -50,6 +50,7 @@ def try_import_task(task):
 
 
 SUPPORTED_TASKS = {
+    "coldstart_recommendation": "openhgnn.tasks.coldstart_recommendation",
     "KTN_trainer": "openhgnn.tasks.KTN",
     'demo': 'openhgnn.tasks.demo',
     'node_classification': 'openhgnn.tasks.node_classification',
