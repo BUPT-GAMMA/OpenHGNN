@@ -16,6 +16,7 @@ from .LTE_dataset import *
 from .SACN_dataset import *
 from .NBF_dataset import NBF_Dataset 
 from .Ingram_dataset import Ingram_KG_TrainData, Ingram_KG_TestData
+from .MetaHIN_dataset import Meta_DataHelper
 
 DATASET_REGISTRY = {}
 
@@ -119,7 +120,16 @@ def build_dataset(dataset, task, *args, **kwargs):
         return dataload
     elif dataset == 'SACN' or dataset == 'LTE':
         return
+    elif dataset == "dbook":
+        dataload = Meta_DataHelper(args.input_dir, args)
+        return dataload
 
+#############
+
+    if dataset in CLASS_DATASETS:
+        return build_dataset_v2(dataset, task)
+    if not try_import_task_dataset(task):
+        exit(1)
 
     _dataset = None
     if dataset in ['aifb', 'mutag', 'bgs', 'am']:
@@ -139,6 +149,9 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'rhine_'+task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
 ######################
+     elif dataset in ['dblp4MHGCN','imdb4MHGCN','alibaba4MHGCN']:
+        _dataset = 'mhgcn_' + task   
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args']) 
 
     elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp',
                      'dblp4MAGNN', 'imdb4MAGNN', 'imdb4GTN', 'acm4NARS', 'demo_graph', 'yelp4HeGAN', 'DoubanMovie',
