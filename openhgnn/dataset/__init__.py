@@ -149,7 +149,7 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'rhine_'+task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
 ######################
-     elif dataset in ['dblp4MHGCN','imdb4MHGCN','alibaba4MHGCN']:
+    elif dataset in ['dblp4MHGCN','imdb4MHGCN','alibaba4MHGCN']:
         _dataset = 'mhgcn_' + task   
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args']) 
 
