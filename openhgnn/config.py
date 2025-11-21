@@ -88,7 +88,7 @@ class Config(object):
             self.num_epoch = conf.getint("MetaHIN", "num_epoch")
             self.input_dir = conf.get("MetaHIN", "input_dir")
             self.output_dir = conf.get("MetaHIN", "output_dir")
-            self.seed = conf.getint("MetaHIN", "seed")                 
+            self.seed = conf.getint("MetaHIN", "seed")
 
 
         elif self.model_name =='FedHGNN':
@@ -1069,7 +1069,26 @@ class Config(object):
             self.num_heads = conf.getint("RGAT", "num_heads")
             self.dropout = conf.getfloat("RGAT", "dropout")
             self.out_dim = conf.getint("RGAT", "out_dim")
-
+        elif self.model_name == "PolyGNN": 
+            self.lr = conf.getfloat("PolyGNN", "lr")
+            self.nepoch = conf.getint("PolyGNN", "nepoch")
+            self.man_seed = conf.getint("PolyGNN", "man_seed")
+            self.h_dim = conf.getint("PolyGNN", "h_dim")
+            self.in_dim = conf.getint("PolyGNN", "in_dim")
+            self.num_interactions = conf.getint("PolyGNN", "num_interactions")
+            self.localdepth = conf.getint("PolyGNN", "localdepth")
+            self.finaldepth = conf.getint("PolyGNN", "finaldepth")
+            self.loss_coef = conf.getfloat("PolyGNN","loss_coef")
+            self.patience = conf.getint("PolyGNN","patience")
+            self.classifier_depth = conf.getint("PolyGNN","classifier_depth")
+            self.weight_decay = conf.getfloat("PolyGNN","weight_decay")
+            self.dropout = conf.getfloat("PolyGNN","dropout")
+            self.mini_batch_flag = False
+            self.classifier_depth = conf.getint("PolyGNN","classifier_depth")
+            self.train_batch = conf.getint("PolyGNN","train_batch")
+            self.test_batch = conf.getint("PolyGNN","test_batch")
+            self.test_per_round = conf.getint("PolyGNN","test_per_round")
+            self.edge_rep = conf.getboolean("PolyGNN","edge_rep")
         elif self.model_name == "Rsage":
             self.weight_decay = conf.getfloat("Rsage", "weight_decay")
             self.lr = conf.getfloat("Rsage", "lr")
