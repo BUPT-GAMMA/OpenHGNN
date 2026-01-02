@@ -23,23 +23,23 @@ warnings.filterwarnings("ignore")
 class HCMGNN_trainer(BaseFlow):
     def __init__(self, args):
         super(HCMGNN_trainer, self).__init__(args)
-        # 初始化任务，获取数据集实例
+        # Initialize the task and obtain the dataset instance
         self.task = build_task(args)
-        # self.dataset 是 HCM_recommendation 实例，它已经处理并加载了所有数据
+        # self.dataset is an instance of HCM_recommendation, which has processed and loaded all the data.
         self.dataset = self.task.dataset
         self.metapaths = [['g', 'm', 'd'], ['m', 'g', 'd'], ['d', 'g', 'm'], ['d', 'm', 'g'], ['g', 'd', 'm'],
                                  ['m', 'd', 'g']]
         self.etypes = [[0, 1], [2, 3], [4, 0], [5, 2], [3, 5], [1, 4]]
-        # 从 dataset 获取 DGL 图、特征和独立测试集数据
-        # HCM_recommendation.get_split() 返回 (graph, train_data_combined_indep, test_data_combined_indep)
+        # Obtain the DGL graph, features, and independent test set data from the dataset.
+        # HCM_recommendation.get_split() return (graph, train_data_combined_indep, test_data_combined_indep)
         self.hg, self.train_data_indep, self.test_data_indep = self.dataset.get_split()
 
-        # 获取特征字典和维度字典
+        # Obtain the feature dictionary and dimension dictionary
         self.features = self.dataset.features
         self.in_size = self.dataset.in_size
 
-        # 将特征数据和图数据移动到指定设备
-        # self.features 是 PyTorch Tensor 字典，需要移动
+        # Move the feature data and graph data to the designated device
+        # self.features is a dictionary of PyTorch Tensors that needs to be moved.
         if isinstance(self.features, dict):
             for k in self.features:
                 if hasattr(self.features[k], 'to'):
@@ -47,11 +47,10 @@ class HCMGNN_trainer(BaseFlow):
         elif hasattr(self.features, 'to'):
             self.features = self.features.to(self.device)
 
-        # 初始化 HCMGNN 模型 (在 _run_experiment_loop 中会重新初始化以确保每次实验都是新的模型)
-        # 这里只是一个占位符，用于获取模型类名
-        self.model_name = self.model  # self.model 来自 BaseFlow，通常是模型名称字符串
+        # Initialize the HCMGNN model (it will be reinitialized within the _run_experiment_loop to ensure a new model for each experiment)
+        self.model_name = self.model  # self.model originates from BaseFlow and is usually a string representing the model name.
 
-        # 初始化损失函数和评估指标 (这些是通用的，可以在每次实验中重用)
+        # Initialize the loss function and evaluation metrics (these are common and can be reused in each experiment)
         self.myloss = HCMGNN_utils.Myloss()
         self.mrr = HCMGNN_utils.MRR()
         self.matrix = HCMGNN_utils.Matrix()
@@ -98,7 +97,7 @@ class HCMGNN_trainer(BaseFlow):
         shuffle_index_current = np.random.choice(range(len(test_data_combined)), len(test_data_combined), replace=False)
         task_test_data_tensor_current = th.from_numpy(test_data_combined[shuffle_index_current]).to(self.device)
 
-        # 此处可以调整训练轮数
+        # the number of training rounds can be adjusted here.
         max_epoch = self.args.num_epochs
         # max_epoch = 101
         for self.epoch in range(max_epoch):
@@ -263,7 +262,7 @@ class HCMGNN_trainer(BaseFlow):
 
     def train(self):
         """
-        HCMGNN 模型的训练主循环，依次执行独立测试和 5 折交叉验证。
+        The training main loop of the HCMGNN model sequentially executes independent testing and 5-fold cross-validation.
         """
         # Execute 5-Fold Cross Validation
         cv_results = self._run_cross_validation()
@@ -277,30 +276,30 @@ class HCMGNN_trainer(BaseFlow):
 
     def _mini_train_step(self):
         """
-        此方法已弃用。其逻辑已集成到 _run_experiment_loop 中。
+        This method has been deprecated. Its logic has been integrated into _run_experiment_loop 中。
         """
         raise NotImplementedError("This method is deprecated. Use _run_experiment_loop for training steps.")
 
     def evaluate(self, data_type='eval'):
         """
-        此方法已弃用。其逻辑已集成到 _run_experiment_loop 中。
+        This method has been deprecated. Its logic has been integrated into _run_experiment_loop 中。
         """
         raise NotImplementedError("This method is deprecated. Use _run_experiment_loop for evaluation steps.")
 
     def loss_calculation(self, scores, labels):
         """
-        计算模型的损失。
-        HCMGNN 使用自定义的 Myloss 函数。
+        Calculate the loss of the model.
+        HCMGNN uses the custom Myloss function.
         """
-        # Myloss 实例在 __init__ 中已初始化
-        # 损失计算不包含显式的 L2 正则化项，因为 Adam 优化器通过 weight_decay 隐式处理
+        # The Myloss instance has been initialized in the __init__ method.
+        # The loss calculation does not include an explicit L2 regularization term, as the Adam optimizer implicitly handles it through the weight_decay parameter.
         loss = self.myloss(scores, labels, self.args.loss_gamma)
         return loss
 
     def preprocess(self, dataIndex):
         """
-        HCMGNN_trainer 不使用 DGL DataLoader 的 preprocess 模式，
-        所有数据在 __init__ 中已加载并准备好。
+        HCMGNN_trainer does not use the preprocess mode of DGL DataLoader.
+        All the data has been loaded and prepared in the __init__ method.
         """
         pass
 

@@ -7,6 +7,24 @@ from dgl.data.utils import download, extract_archive, load_graphs, save_graphs #
 from dgl.data import DGLDataset
 from sklearn.model_selection import KFold
 
+import subprocess
+try:
+    import boto3
+    from botocore import UNSIGNED
+    from botocore.config import Config
+    from botocore.exceptions import NoCredentialsError
+    _HAS_BOTO3 = True
+    _HAS_BOTOCORE_UNSIGNED = True
+except Exception:
+    # boto3 or parts of botocore may not be available
+    try:
+        import boto3
+        _HAS_BOTO3 = True
+        _HAS_BOTOCORE_UNSIGNED = False
+    except Exception:
+        _HAS_BOTO3 = False
+        _HAS_BOTOCORE_UNSIGNED = False
+
 
 
 def neg_data_generate(adj_data_all, train_data_fix, val_data_fix, neg_num_test, seed):
@@ -258,13 +276,13 @@ def get_indep_data(adj, train_data_pos, val_data_pos, seed):
 
 class HCMDataset(DGLDataset):
     _prefix = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/'
+    # Prefer S3 location for this dataset
     _urls = {
-        # Define URL for dataHCMGNN if it's different from the default construction
-        # 'dataHCMGNN': 'https://example.com/path/to/dataHCMGNN.zip'
+        'GMD4HCMGNN': 's3://dgl-data/dataset/openhgnn/GMD4HCMGNN.zip'
     }
 
     def __init__(self, name, raw_dir=None, force_reload=False, verbose=True, args=None):
-        assert name in ['dataHCMGNN']
+        assert name in ['GMD4HCMGNN']
         # self.name = name
         self.args = args
         # Corrected data_path and g_path to be within the raw_dir/name subdirectory
@@ -279,16 +297,173 @@ class HCMDataset(DGLDataset):
                                          force_reload=force_reload,
                                          verbose=verbose)
 
+    def _find_extracted_dir(self):
+        """Return the actual extracted data directory.
+
+        Some zips extract into a nested folder (e.g. GMD4HCMGNN/dataHCMGNN). This helper
+        prefers the nested 'dataHCMGNN' folder if present, otherwise falls back to the
+        top-level extraction folder or a direct 'dataHCMGNN' under raw_path.
+        """
+        base = os.path.join(self.raw_path, self.name)
+        nested = os.path.join(base, 'dataHCMGNN')
+        alt = os.path.join(self.raw_path, 'dataHCMGNN')
+        if os.path.exists(nested):
+            return nested
+        if os.path.exists(base):
+            return base
+        if os.path.exists(alt):
+            return alt
+        # Default to base even if not present; caller will raise when files missing
+        return base
+
     def _download(self):
         """
         Download raw data to local disk and extract it.
+        Supports s3:// URLs via boto3 or AWS CLI fallback.
         """
-        if os.path.exists(self.data_path):
-           pass
+        # Allow local override: user can set OPENHGNN_DATASET_PATH to a local zip path
+        local_override = os.environ.get('OPENHGNN_DATASET_PATH') or os.environ.get('OPENHGNN_DATA_PATH')
+        if local_override and os.path.exists(local_override):
+            print(f"Using local dataset from OPENHGNN_DATASET_PATH: {local_override}")
+            os.makedirs(os.path.dirname(self.data_path), exist_ok=True)
+            if os.path.abspath(local_override) != os.path.abspath(self.data_path):
+                # copy the file to expected location
+                try:
+                    import shutil
+                    shutil.copy(local_override, self.data_path)
+                    print(f"Copied dataset to {self.data_path}")
+                except Exception as e:
+                    print(f"Failed to copy local dataset file: {e}")
+                    raise
+        elif os.path.exists(self.data_path):
+            print(f"Found existing dataset archive at {self.data_path}")
         else:
-            file_path = os.path.join(self.raw_dir)
-            # download file
-            download(self.url, path=file_path)
+            # Try HTTP mirror first if provided
+            mirror_base = os.environ.get('OPENHGNN_MIRROR_URL') or os.environ.get('OPENHGNN_MIRROR')
+            if mirror_base:
+                # mirror_base can be a base URL or a full file URL containing '{name}' placeholder
+                if '{name}' in mirror_base:
+                    mirror_url = mirror_base.format(name=self.name)
+                else:
+                    mirror_url = mirror_base.rstrip('/') + f'/{self.name}.zip'
+                try:
+                    print(f"Attempting to download from mirror: {mirror_url}")
+                    # allow a few quick retries
+                    last_exc = None
+                    for attempt in range(3):
+                        try:
+                            download(mirror_url, path=self.raw_dir)
+                            if os.path.exists(self.data_path):
+                                print(f"Downloaded dataset from mirror to {self.data_path}")
+                                break
+                            else:
+                                last_exc = RuntimeError("Mirror download didn't produce expected file")
+                        except Exception as e:
+                            print(f"Mirror attempt {attempt+1} failed: {e}")
+                            last_exc = e
+                    else:
+                        print(f"All mirror attempts failed: {last_exc}")
+                except Exception as e:
+                    print(f"Mirror download failed: {e}")
+
+            os.makedirs(self.raw_dir, exist_ok=True)
+            attempted = False
+            # If S3 URL, try unsigned/signed boto3 then AWS CLI --no-sign-request
+            if str(self.url).startswith('s3://'):
+                attempted = True
+                s3_error = None
+                if _HAS_BOTO3:
+                    try:
+                        s3_path = str(self.url)[5:]
+                        bucket, key = s3_path.split('/', 1)
+                        if _HAS_BOTOCORE_UNSIGNED:
+                            try:
+                                print(f"Attempting unsigned download of {self.url} using boto3/botocore UNSIGNED...")
+                                s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+                                s3.download_file(bucket, key, self.data_path)
+                                print(f"Downloaded to {self.data_path} (unsigned)")
+                            except Exception as e_unsigned:
+                                print(f"Unsigned boto3 download failed: {e_unsigned}")
+                                s3_error = e_unsigned
+                                # Fall through
+                        # Try signed boto3 (may require credentials) if unsigned failed
+                        if not os.path.exists(self.data_path):
+                            try:
+                                print(f"Attempting boto3 download of {self.url} (may require credentials)...")
+                                s3 = boto3.client('s3')
+                                s3.download_file(bucket, key, self.data_path)
+                                print(f"Downloaded to {self.data_path} via boto3")
+                            except Exception as e_signed:
+                                print(f"Signed boto3 download failed: {e_signed}")
+                                s3_error = e_signed
+                    except Exception as e:
+                        s3_error = e
+
+                # try aws cli as fallback (no-sign-request)
+                if not os.path.exists(self.data_path):
+                    try:
+                        print(f"Attempting to download {self.url} using AWS CLI with --no-sign-request...")
+                        subprocess.check_call(['aws', 's3', 'cp', self.url, self.data_path, '--no-sign-request'])
+                        print(f"Downloaded to {self.data_path} via AWS CLI (no sign request)")
+                    except FileNotFoundError as fnf:
+                        print("AWS CLI not found on PATH; skipping AWS CLI fallback")
+                        if s3_error:
+                            # keep s3_error for final message
+                            pass
+                        else:
+                            s3_error = fnf
+                    except Exception as e_cli:
+                        print(f"AWS CLI download failed: {e_cli}")
+                        s3_error = e_cli
+
+                # If still missing, try HTTPS fallbacks using known endpoints
+                if not os.path.exists(self.data_path):
+                    print("S3 access failed or object not public; attempting HTTPS fallbacks...")
+                    https_candidates = []
+                    # Use configured prefix if likely to be an http endpoint
+                    try:
+                        https_candidates.append(f"{self._prefix}dataset/{self.name}.zip")
+                    except Exception:
+                        pass
+                    https_candidates.extend([
+                        f"https://dgl-data.s3.amazonaws.com/dataset/openhgnn/{self.name}.zip",
+                        f"https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{self.name}.zip",
+                        f"https://s3.amazonaws.com/dgl-data/dataset/openhgnn/{self.name}.zip",
+                    ])
+                    http_success = False
+                    for candidate in https_candidates:
+                        try:
+                            print(f"Trying HTTPS candidate: {candidate}")
+                            download(candidate, path=self.raw_dir)
+                            if os.path.exists(self.data_path):
+                                print(f"Downloaded via HTTPS to {self.data_path}")
+                                http_success = True
+                                break
+                        except Exception as eh:
+                            print(f"HTTPS candidate failed: {eh}")
+                    if not http_success:
+                        if s3_error:
+                            raise RuntimeError(
+                                "Failed to download dataset from S3 (unsigned/signed) and HTTPS fallbacks did not work. "
+                                f"Last error: {s3_error}.\n\n" 
+                                "Options: 1) Make the S3 object public or provide credentials in the environment; "
+                                "2) Install AWS CLI and ensure network access and try again; "
+                                "3) Manually download the zip and set environment variable OPENHGNN_DATASET_PATH to its path."
+                            ) from s3_error
+                        else:
+                            raise RuntimeError(
+                                "Failed to download dataset from S3 and HTTPS fallbacks did not work. "
+                                "Please manually download the zip and set OPENHGNN_DATASET_PATH to its path."
+                            )
+            else:
+                # Not an s3 URL, try normal download
+                try:
+                    file_path = os.path.join(self.raw_dir)
+                    print(f"Downloading {self.url} via dgl.utils.download to {file_path}...")
+                    download(self.url, path=file_path)
+                except Exception as e:
+                    raise RuntimeError(f"Failed to download {self.url}: {e}") from e
+
         extract_archive(self.data_path, os.path.join(self.raw_path))
 
 
@@ -300,7 +475,7 @@ class HCMDataset(DGLDataset):
 
 
         # Base path for raw data files within the extracted directory
-        extracted_data_dir = os.path.join(self.raw_path, self.name)
+        extracted_data_dir = self._find_extracted_dir()
 
         # 1. Load initial features (gene, microbe, disease similarities)
         try:
@@ -501,20 +676,19 @@ class HCMDataset(DGLDataset):
 
     def has_cache(self):
         self.args.output_dir = os.path.join('./openhgnn/output', self.args.model)
-        self.g_path = os.path.join(self.raw_path, self.name, 'graph.bin')
+        extracted_raw_data_dir = self._find_extracted_dir()
+        self.g_path = os.path.join(extracted_raw_data_dir, 'graph.bin')
         graph_exists = os.path.exists(self.g_path)
 
-        extracted_raw_data_dir = os.path.join(self.raw_path, self.name)
         raw_data_folder_exists = os.path.exists(extracted_raw_data_dir)
 
         train_csv_exists = os.path.exists(os.path.join(self.args.output_dir, 'indepent_data', 'train_data_pos.csv'))
         test_csv_exists = os.path.exists(os.path.join(self.args.output_dir, 'indepent_data', 'test_data_pos.csv'))
 
         return raw_data_folder_exists and graph_exists and train_csv_exists and test_csv_exists
-
     def _load_features_and_set_paths(self):
         """Helper to load features and set paths when loading from cache or after processing."""
-        extracted_data_dir = os.path.join(self.raw_path, self.name)
+        extracted_data_dir = self._find_extracted_dir()
         mic_feat_path = os.path.join(extracted_data_dir, 'mic_sim176.txt')
         gene_feat_path = os.path.join(extracted_data_dir, 'gene_sim_BP301.csv')
         disease_feat_path = os.path.join(extracted_data_dir, 'dis_sim153.txt')

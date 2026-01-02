@@ -131,7 +131,7 @@ class MessageAggregator(nn.Module):
                 a2 = (eft * self.attn2).sum(dim=-1)
                 a = (a1 + a2).unsqueeze(dim=-1)
                 a = self.leaky_relu(a)
-                attention = F.softmax(a, dim=0) # F 通常是 torch.nn.functional 的别名
+                attention = F.softmax(a, dim=0)
                 attention = self.attn_drop(attention)
                 h = F.elu((attention * eft).sum(dim=0)).view(-1, self.hidden_size * self.num_heads)
                 h_.append(h[0])
