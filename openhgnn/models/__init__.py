@@ -70,6 +70,7 @@ SUPPORTED_MODELS = {
     'HGA':'openhgnn.models.HGA',
     'RHINE': 'openhgnn.models.RHINE',
     'FedHGNN':'openhgnn.models.FedHGNN',
+    'HCMGNN':'openhgnn.models.HCMGNN',
 ####################################
     "SIAN": "openhgnn.models.SIAN",
     "CompGCN": "openhgnn.models.CompGCN",
