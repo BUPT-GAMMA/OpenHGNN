@@ -529,6 +529,22 @@ class Config(object):
             self.patience = conf.getint("HAN", "patience")
             self.max_epoch = conf.getint("HAN", "max_epoch")
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")
+        elif self.model_name == "HGOT":
+            self.lr = conf.getfloat("HGOT", "learning_rate")
+            self.weight_decay = conf.getfloat("HGOT", "weight_decay")
+            self.seed = conf.getint("HGOT", "seed")
+            self.dropout = conf.getfloat("HGOT", "dropout")
+
+            self.hidden_dim = conf.getint("HGOT", "hidden_dim")
+            self.out_dim = conf.getint("HGOT", "out_dim")
+            num_heads = conf.get("HGOT", "num_heads").split("-")
+            self.num_heads = [int(i) for i in num_heads]
+            self.patience = conf.getint("HGOT", "patience")
+            self.max_epoch = conf.getint("HGOT", "max_epoch")
+            self.mini_batch_flag = conf.getboolean("HGOT", "mini_batch_flag")
+
+            self.sigma = conf.getfloat("HGOT", "sigma")
+            self.rho = conf.getfloat("HGOT", "rho")
 
         elif self.model_name == "RoHe":
             self.lr = conf.getfloat("RoHe", "learning_rate")
