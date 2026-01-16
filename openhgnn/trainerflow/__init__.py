@@ -107,6 +107,7 @@ SUPPORTED_FLOWS = {
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
+    'SlotGAT_trainer':'openhgnn.trainerflow.SlotGAT_trainer'
 
 
 

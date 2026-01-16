@@ -58,6 +58,7 @@ class NodeClassification(BaseTask):
 
     def get_graph(self):
         return self.dataset.g
+    
 
     def get_loss_fn(self):
         if self.multi_label:

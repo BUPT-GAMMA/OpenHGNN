@@ -137,6 +137,7 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
+    'SlotGAT':'openhgnn.models.SlotGAT'
 
 }
 
@@ -199,6 +200,7 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
+from .SlotGAT import SlotGAT
 
 
 

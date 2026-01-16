@@ -17,6 +17,7 @@ from .SACN_dataset import *
 from .NBF_dataset import NBF_Dataset 
 from .Ingram_dataset import Ingram_KG_TrainData, Ingram_KG_TestData
 from .MetaHIN_dataset import Meta_DataHelper
+from .SlotGAT_dataset import SlotGATDataLoader
 
 DATASET_REGISTRY = {}
 
@@ -116,6 +117,9 @@ def build_dataset(dataset, task, *args, **kwargs):
         return
     elif dataset == "dbook":
         dataload = Meta_DataHelper(args.input_dir, args)
+        return dataload
+    elif dataset == 'acmSlotGAT':
+        dataload = SlotGATDataLoader(args)
         return dataload
 
 #############
