@@ -63,25 +63,14 @@ def build_model(model):
 
 
 SUPPORTED_MODELS = {
-#####       add models here
-    'MHGCN':'openhgnn.models.MHGCN',
-    'BPHGNN' : 'openhgnn.models.BPHGNN',
-    "MetaHIN": "openhgnn.models.MetaHIN",
-    'HGA':'openhgnn.models.HGA',
-    'RHINE': 'openhgnn.models.RHINE',
-    'FedHGNN':'openhgnn.models.FedHGNN',
-####################################
-    "SIAN": "openhgnn.models.SIAN",
     "CompGCN": "openhgnn.models.CompGCN",
     "HetGNN": "openhgnn.models.HetGNN",
-    "HMPNN": "openhgnn.models.HMPNN",
     'RGCN': 'openhgnn.models.RGCN',
     "RGAT": 'openhgnn.models.RGAT',
     'RSHN': 'openhgnn.models.RSHN',
     'Metapath2vec': 'openhgnn.models.SkipGram',
     'HERec': 'openhgnn.models.SkipGram',
     'HAN': 'openhgnn.models.HAN',
-    'RoHe': 'openhgnn.models.RoHe',
     'HeCo': 'openhgnn.models.HeCo',
     'HGT': 'openhgnn.models.HGT',
     'GTN': 'openhgnn.models.GTN_sparse',
@@ -111,42 +100,12 @@ SUPPORTED_MODELS = {
     'TransR': 'openhgnn.models.TransR',
     'TransD': 'openhgnn.models.TransD',
     'GIE':'openhgnn.models.GIE',
-    'GIN':'openhgnn.models.GIN',
     'Rsage': 'openhgnn.models.Rsage',
     'Mg2vec': 'openhgnn.models.MG2vec',
     'DHNE': 'openhgnn.models.DHNE',
-    'DiffMG': 'openhgnn.models.DiffMG',
-    'MeiREC': 'openhgnn.models.MeiREC',
-    'HGNN_AC': 'openhgnn.models.HGNN_AC',
-    'AEHCL': 'openhgnn.models.AEHCL',
-    'KGAT': 'openhgnn.models.KGAT',
-    'SHGP': 'openhgnn.models.ATT_HGCN',
-    'DSSL': 'openhgnn.models.DSSL',
-    'HGCL': 'openhgnn.models.HGCL',
-    'lightGCN': 'openhgnn.models.lightGCN',
-    'SeHGNN' : 'openhgnn.models.SeHGNN',
-    'Grail': 'openhgnn.models.Grail',
-    'ComPILE': 'openhgnn.models.ComPILE',
-    'AdapropT': 'openhgnn.models.AdapropT',
-    'AdapropI':'openhgnn.models.AdapropI',
-    'LTE': 'openhgnn.models.LTE',
-    'LTE_Transe': 'openhgnn.models.LTE_Transe',
-    'SACN':'openhgnn.models.SACN',
-    'ExpressGNN': 'openhgnn.models.ExpressGNN',
-    'NBF': 'openhgnn.models.NBF', 
-    'Ingram': 'openhgnn.models.Ingram',
-    'RedGNN': 'openhgnn.models.RedGNN',
-    'RedGNNT': 'openhgnn.models.RedGNNT',
-
+    'QGRL':'openhgnn.models.QGRL'
 }
 
-#####       add model here
-from .BPHGNN import BPHGNN
-from .RHINE import RHINE
-from .FedHGNN import FedHGNN
-#####
-from .SIAN import SIAN
-from .HGCL import HGCL
 from .CompGCN import CompGCN
 from .HetGNN import HetGNN
 from .RGCN import RGCN
@@ -154,7 +113,6 @@ from .RGAT import RGAT
 from .RSHN import RSHN
 from .SkipGram import SkipGram
 from .HAN import HAN
-from .RoHe import RoHe
 from .HeCo import HeCo
 from .HGT import HGT
 from .GTN_sparse import GTN
@@ -180,31 +138,9 @@ from .GATNE import GATNE
 from .Rsage import Rsage
 from .Mg2vec import Mg2vec
 from .DHNE import DHNE
-from .DiffMG import DiffMG
-from .MeiREC import MeiREC
-from .HGNN_AC import HGNN_AC
-from .KGAT import KGAT
-from .DSSL import DSSL
-from .lightGCN import lightGCN
-from .HMPNN import HMPNN
-from .SeHGNN import SeHGNN
-from .Grail import Grail
-from .ComPILE import ComPILE
-from .AdapropT import AdapropT
-from .AdapropI import AdapropI
-from .LTE import LTE
-from .LTE_Transe import LTE_Transe
-from .SACN import SACN
-from .ExpressGNN import ExpressGNN
-from .Ingram import Ingram
-from .RedGNN import RedGNN
-from .RedGNNT import RedGNNT
-
-
+from .QGRLModel import QGRL
 
 __all__ = [
-    'BPHGNN',
-    "HMPNN",
     'BaseModel',
     'CompGCN',
     'HetGNN',
@@ -235,23 +171,6 @@ __all__ = [
     'Rsage',
     'Mg2vec',
     'DHNE',
-    'DiffMG',
-    'MeiREC',
-    'KGAT',
-    'ATT_HGCN',
-    'KGAT',
-    'DSSL',
-    'lightGCN',
-    'SeHGNN',
-    'Grail',
-    'ComPILE',
-    'AdapropT',
-    'AdapropI',
-    'LTE',
-    'LTE_Transe',
-    'SACN',
-    'ExpressGNN',
-    'Ingram',
-    'RHINE',
+    'QGRL'
 ]
 classes = __all__
