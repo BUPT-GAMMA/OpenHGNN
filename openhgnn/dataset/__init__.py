@@ -117,6 +117,8 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset == "dbook":
         dataload = Meta_DataHelper(args.input_dir, args)
         return dataload
+    elif dataset == 'covid_regression':
+        return DATASET_REGISTRY[dataset](**kwargs)
 
 #############
 
@@ -235,7 +237,7 @@ SUPPORTED_DATASETS = {
     "hypergraph": "openhgnn.dataset.HypergraphDataset",
     "pretrain": "openhgnn.dataset.mag_dataset",
     "ktn": "openhgnn.dataset.oag_dataset",
-
+    "node_regression": "openhgnn.dataset.covid_dataset",
 }
 
 from .NodeClassificationDataset import NodeClassificationDataset
@@ -244,6 +246,7 @@ from .RecommendationDataset import RecommendationDataset
 from .EdgeClassificationDataset import EdgeClassificationDataset
 from .HypergraphDataset import HGraphDataset
 from .oag_dataset import OAGDataset
+from .covid_dataset import COVIDDataset
 
 
 
@@ -300,6 +303,7 @@ __all__ = [
     "AbnormEventDetectionDataset",
     "mag_dataset",
     "OAGDataset",
+    "COVIDDataset",
 ]
 
 classes = __all__

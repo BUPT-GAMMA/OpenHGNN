@@ -1583,6 +1583,18 @@ class Config(object):
             self.hid_dim = conf.getint("HMPNN", "hid_dim")
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
+        
+        elif self.model_name == 'SEHTGNN':
+            self.lr = conf.getfloat("SEHTGNN", "lr")
+            self.weight_decay = conf.getfloat("SEHTGNN", "weight_decay")
+            self.dropout = conf.getfloat("SEHTGNN", "dropout")
+            self.hidden_dim = conf.getint("SEHTGNN", "hidden_dim")
+            self.num_layers = conf.getint("SEHTGNN", "num_layers")
+            self.num_heads = conf.getint("SEHTGNN", "num_heads")
+            self.time_window = conf.getint("SEHTGNN", "time_window")
+            self.max_epoch = conf.getint("SEHTGNN", "max_epoch")
+            self.patience = conf.getint("SEHTGNN", "patience")
+            self.norm = conf.getboolean("SEHTGNN", "norm")
 
 
 
