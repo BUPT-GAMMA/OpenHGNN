@@ -108,6 +108,7 @@ SUPPORTED_FLOWS = {
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
     'covid_node_regression': 'openhgnn.trainerflow.covid_trainer',
+    'sehtgnn_trainer': 'openhgnn.trainerflow.sehtgnn_trainer',
 }
 
 ######      add trainer_flow here
@@ -159,6 +160,7 @@ from .DisenKGAT_trainer import *
 from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
 from .covid_trainer import COVIDTrainer
+from .sehtgnn_trainer import SEHTGNNTrainer
 
 
 #   don't add here
@@ -202,5 +204,6 @@ __all__ = [
     'Ingram_trainer',
     'RHINETrainer',
     'COVIDTrainer',
+    'SEHTGNNTrainer',
 ]
 classes = __all__

@@ -91,8 +91,7 @@ class Experiment(object):
             "link_prediction":"MHGCN_LP_Trainer"
         },
 ##########################
-
-
+        'SEHTGNN': 'sehtgnn_trainer',
     }
     
     immutable_params = ['model', 'dataset', 'task']

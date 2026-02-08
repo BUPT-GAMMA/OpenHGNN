@@ -117,8 +117,8 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset == "dbook":
         dataload = Meta_DataHelper(args.input_dir, args)
         return dataload
-    elif dataset == 'covid_regression':
-        return DATASET_REGISTRY[dataset](**kwargs)
+    # elif dataset == 'covid_regression':
+    #     return DATASET_REGISTRY[dataset](**kwargs)
 
 #############
 
@@ -176,6 +176,12 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset in kg_sub_datasets:
         assert task == 'link_prediction'
         _dataset = 'kg_sub_link_prediction'
+    elif dataset == 'sehtgnn_mag':
+        _dataset = 'sehtgnn_mag'
+    elif dataset == 'sehtgnn_aminer':
+        _dataset = 'sehtgnn_aminer'
+    elif dataset == 'sehtgnn_covid':
+        _dataset = 'sehtgnn_covid'
     elif dataset in kg_subT_datasets:
         assert task == 'link_prediction'
         _dataset = 'kg_subT_link_prediction'
@@ -237,7 +243,9 @@ SUPPORTED_DATASETS = {
     "hypergraph": "openhgnn.dataset.HypergraphDataset",
     "pretrain": "openhgnn.dataset.mag_dataset",
     "ktn": "openhgnn.dataset.oag_dataset",
-    "node_regression": "openhgnn.dataset.covid_dataset",
+    "sehtgnn_covid": "openhgnn.dataset.sehtgnn_dataset",
+    'sehtgnn_mag': 'openhgnn.dataset.sehtgnn_dataset',
+    'sehtgnn_aminer': 'openhgnn.dataset.sehtgnn_dataset',
 }
 
 from .NodeClassificationDataset import NodeClassificationDataset
@@ -246,8 +254,11 @@ from .RecommendationDataset import RecommendationDataset
 from .EdgeClassificationDataset import EdgeClassificationDataset
 from .HypergraphDataset import HGraphDataset
 from .oag_dataset import OAGDataset
-from .covid_dataset import COVIDDataset
 
+# SEHTGNN Dataset
+from .sehtgnn_dataset import COVIDDataset
+from .sehtgnn_dataset import SEHTGNN_MAG_Dataset
+from .sehtgnn_dataset import SEHTGNN_Aminer_Dataset
 
 
 def build_dataset_v2(dataset, task):
@@ -304,6 +315,8 @@ __all__ = [
     "mag_dataset",
     "OAGDataset",
     "COVIDDataset",
+    'SEHTGNN_MAG_Dataset',
+    'SEHTGNN_Aminer_Dataset',
 ]
 
 classes = __all__

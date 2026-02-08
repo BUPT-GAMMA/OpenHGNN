@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import dgl
 import dgl.function as fn
 from torch.nn import GRU
-from torch_geometric.nn.norm import LayerNorm
+from torch.nn import LayerNorm
 from collections import defaultdict
 from . import BaseModel, register_model
 
@@ -35,7 +35,7 @@ class GraphConv(nn.Module):
         with g.local_scope():
             feat_src, feat_dst = feat
             if self._norm in ["left", "both"]:
-                degs = g.out_degrees().to(feat_src.device).float().clamp(min=1) + 1
+                degs = g.out_degrees().to(feat_src.device).float().clamp(min=1) 
                 norm = torch.pow(degs, -0.5) if self._norm == "both" else 1.0 / degs
                 feat_src = feat_src * norm.unsqueeze(-1)
             
@@ -44,7 +44,7 @@ class GraphConv(nn.Module):
             rst = feat_dst + g.dstdata['h_neigh']
             
             if self._norm in ["right", "both"]:
-                degs = g.in_degrees().to(feat_dst.device).float().clamp(min=1) + 1
+                degs = g.in_degrees().to(feat_dst.device).float().clamp(min=1)
                 norm = torch.pow(degs, -0.5) if self._norm == "both" else 1.0 / degs
                 rst = rst * norm.unsqueeze(-1)
             
@@ -204,6 +204,15 @@ class SEHTGNN(BaseModel):
             print(f"[SEHTGNN] LLM feature dimension: {dim}")
             
         n_inp = 1
+        for ntype in hg.ntypes:
+            if 't0' in hg.nodes[ntype].data:
+                feat = hg.nodes[ntype].data['t0']
+                if feat.dim() > 1:
+                    n_inp = feat.shape[1]
+                    break
+        
+        print(f"[SEHTGNN] Detected input feature dimension: {n_inp}")
+
         hidden_dim = getattr(args, 'hidden_dim', 64)
         num_layers = getattr(args, 'num_layers', 2)
         time_window = getattr(args, 'time_window', 7)
@@ -220,9 +229,15 @@ class SEHTGNN(BaseModel):
         self.norm = norm
         self.drop = nn.Dropout(dropout)
         
-        self.adaption_layer = nn.ModuleDict({
-            ntype: nn.Linear(n_inp, n_hid) for ntype in graph.ntypes
-        })
+        self.adaption_layer = nn.ModuleDict()
+        for ntype in graph.ntypes:
+            feat_dim = n_inp
+            if 't0' in graph.nodes[ntype].data:
+                feat = graph.nodes[ntype].data['t0']
+                if feat.dim() > 1:
+                    feat_dim = feat.shape[1]
+            
+            self.adaption_layer[ntype] = nn.Linear(feat_dim, n_hid)
         
         if LLM_feature is not None: 
             self.LLM_init = LLM4init(graph, n_hid, LLM_feature, device)
@@ -248,6 +263,10 @@ class SEHTGNN(BaseModel):
                     raw_feat = hg.nodes[ntype].data[ttype]
                     if raw_feat.dtype != torch.float32: 
                         raw_feat = raw_feat.float()
+                    
+                    if raw_feat.dim() == 1:
+                        raw_feat = raw_feat.unsqueeze(1)
+                        
                     spatial_feat[ntype][ttype] = self.adaption_layer[ntype](self.drop(raw_feat))
         
         for layer in self.gnn_layers:

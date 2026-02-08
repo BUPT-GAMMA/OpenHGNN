@@ -1590,12 +1590,17 @@ class Config(object):
             self.dropout = conf.getfloat("SEHTGNN", "dropout")
             self.hidden_dim = conf.getint("SEHTGNN", "hidden_dim")
             self.num_layers = conf.getint("SEHTGNN", "num_layers")
-            self.num_heads = conf.getint("SEHTGNN", "num_heads")
             self.time_window = conf.getint("SEHTGNN", "time_window")
             self.max_epoch = conf.getint("SEHTGNN", "max_epoch")
             self.patience = conf.getint("SEHTGNN", "patience")
-            self.norm = conf.getboolean("SEHTGNN", "norm")
+            
+            if conf.has_option("SEHTGNN", "norm"):
+                self.norm = conf.getboolean("SEHTGNN", "norm")
+            else:
+                self.norm = True
 
+            if self.dataset == 'covid_dataset':
+                self.hidden_dim = 8
 
 
         if hasattr(self, "device"):
