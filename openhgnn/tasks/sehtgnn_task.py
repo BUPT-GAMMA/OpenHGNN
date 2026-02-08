@@ -1,5 +1,3 @@
-# openhgnn/tasks/sehtgnn_task.py
-
 import torch.nn.functional as F
 from sklearn.metrics import average_precision_score
 from . import BaseTask, register_task
@@ -21,8 +19,10 @@ class SEHTGNNTask(BaseTask):
             time_window=getattr(args, 'time_window', 3),
             device=args.device,
             logger=self.logger,
-            args=args,
         )
+
+        if hasattr(self.dataset, 'set_args_and_load_feats'):
+            self.dataset.set_args_and_load_feats(args)
 
         if getattr(self.dataset, 'dataset_name', '') == 'sehtgnn_covid':
             self.task_type = 'node_regression'

@@ -7,6 +7,7 @@ import numpy as np
 from collections import Counter
 from dgl.data.utils import load_graphs, save_graphs, download, extract_archive
 from torch_geometric.utils import negative_sampling
+from sklearn.metrics import roc_auc_score, average_precision_score
 
 try:
     import gensim
@@ -33,13 +34,13 @@ def setorderidx(data):
 def time_merge(glist, num_nodes_dict=None, link_pre=True):
     """
     合并时间窗口内的异构图特征
-    逻辑对齐：如果是 author/user/item 等 ID 特征节点，进行 unsqueeze 处理
     """
     hetero_dict = {}
     for (t, g_s) in enumerate(glist):
         for srctype, etype, dsttype in g_s.canonical_etypes:
             src, dst = g_s.edges(etype=etype)
             hetero_dict[(srctype, f'{etype}_t{t}', dsttype)] = (src, dst)
+            # hetero_dict[(dsttype, f'{etype}_r_t{t}', srctype)] = (dst, src)
             
     if num_nodes_dict is None:
         G_feat = dgl.heterograph(hetero_dict)
@@ -54,20 +55,27 @@ def time_merge(glist, num_nodes_dict=None, link_pre=True):
                 elif 'feat' in g_s.nodes[ntype].data:
                     feat = g_s.nodes[ntype].data['feat']
                 else:
-                    feat = None
+                    continue 
                 
-                if feat is not None:
-                    feat = feat.type(torch.float32)
-                    if link_pre and feat.dim() == 1:
+                feat = feat.type(torch.float32)
+                
+                target_types = ['user', 'item', 'author', 'venue'] # 包含 Aminer/Eco/Yelp 常见 ID 类型
+                
+                if link_pre and (ntype in target_types):
+                     if feat.dim() == 1:
                          feat = feat.unsqueeze(1)
-                    
-                    G_feat.nodes[ntype].data[f't{t}'] = feat
+                
+                G_feat.nodes[ntype].data[f't{t}'] = feat
+                
+            else:
+                dim = 32
+                pass
+                
     return G_feat
 
 def remove_edges_unseen_nodes(data, train_nodes):
     """
     剔除不在 train_nodes 集合中的节点所构成的边。
-    对应下版代码中的同名函数。
     """
     num_nodes = data.num_nodes()
     node_mask = torch.zeros(num_nodes, dtype=torch.bool, device=data.device)
@@ -115,6 +123,7 @@ def get_author_graph(hetero_g):
     values = torch.ones(len(row), device=row.device)
     adj = torch.sparse_coo_tensor(indices, values, (num_row, num_col))
     
+    # A * A.T
     try:
         co_adj = torch.matmul(adj, adj.t())
         co_adj = co_adj.coalesce()
@@ -126,26 +135,12 @@ def get_author_graph(hetero_g):
         indices = torch.nonzero(co_adj_dense, as_tuple=True)
         src_co, dst_co = indices[0], indices[1]
 
-    # 移除自环
     mask = src_co != dst_co
     src_co = src_co[mask]
     dst_co = dst_co[mask]
     
     g = dgl.graph((src_co, dst_co), num_nodes=num_row)
     return g
-
-# def linksplit(data, device, num_nodes):
-#     u, v = data.edges()
-    
-#     pos_g = dgl.graph((u, v), num_nodes=num_nodes).to(device)
-    
-#     num_neg = data.num_edges()
-#     # 简单的随机负采样
-#     neg_u = torch.randint(0, num_nodes, (num_neg,), device=device)
-#     neg_v = torch.randint(0, num_nodes, (num_neg,), device=device)
-    
-#     neg_g = dgl.graph((neg_u, neg_v), num_nodes=num_nodes).to(device)
-#     return pos_g, neg_g
 
 def linksplit(data, device, num_nodes):
     u, v = data.edges()
@@ -190,6 +185,128 @@ def time_select_edge_time(dataset_dict, t):
         g.nodes[ntype].data['x'] = feat
         
     return g
+
+def construct_htg_covid(glist, idx, time_window):
+    sub_glist = glist[idx-time_window:idx]
+    hetero_dict = {}
+    for (t, g_s) in enumerate(sub_glist):
+        for srctype, etype, dsttype in g_s.canonical_etypes:
+            src, dst = g_s.in_edges(g_s.nodes(dsttype), etype=etype)
+            hetero_dict[(srctype, f'{etype}_t{t}', dsttype)] = (src, dst)
+
+    G_feat = dgl.heterograph(hetero_dict)
+    
+    for (t, g_s) in enumerate(sub_glist):
+        for ntype in G_feat.ntypes:
+            if 'feat' in g_s.nodes[ntype].data:
+                G_feat.nodes[ntype].data[f't{t}'] = g_s.nodes[ntype].data['feat']
+            elif 'x' in g_s.nodes[ntype].data:
+                 G_feat.nodes[ntype].data[f't{t}'] = g_s.nodes[ntype].data['x']
+
+    G_label = glist[idx]
+    return G_feat, G_label
+
+def construct_htg_mag(glist, idx, time_window):
+    """
+    1. 建立 ID 映射 (Global ID dict within window)
+    2. 合并大图
+    3. 特征填充 (不存在的节点填0)
+    """
+    sub_glist = glist[idx-time_window:idx]
+    ID_dict = {}
+    
+    for ntype in glist[0].ntypes:
+        ID_set = set()
+        for g_s in sub_glist:
+            if '_ID' in g_s.ndata:
+                tmp_set = set(g_s.ndata['_ID'][ntype].tolist())
+                ID_set.update(tmp_set)
+        ID_dict[ntype] = {ID: idx for idx, ID in enumerate(sorted(list(ID_set)))}
+
+    hetero_dict = {}
+    for (t, g_s) in enumerate(sub_glist):
+        for srctype, etype, dsttype in g_s.canonical_etypes:
+            src, dst = g_s.in_edges(g_s.nodes(dsttype), etype=etype)
+            if '_ID' in g_s.ndata:
+                ID_src = g_s.ndata['_ID'][srctype]
+                ID_dst = g_s.ndata['_ID'][dsttype]
+                new_src = ID_src[src]
+                new_dst = ID_dst[dst]
+                
+                new_new_src = [ID_dict[srctype][e.item()] for e in new_src]
+                new_new_dst = [ID_dict[dsttype][e.item()] for e in new_dst]
+                
+                hetero_dict[(srctype, f'{etype}_t{t}', dsttype)] = (new_new_src, new_new_dst)
+                hetero_dict[(dsttype, f'{etype}_r_t{t}', srctype)] = (new_new_dst, new_new_src)
+            else:
+                hetero_dict[(srctype, f'{etype}_t{t}', dsttype)] = (src, dst)
+                hetero_dict[(dsttype, f'{etype}_r_t{t}', srctype)] = (dst, src)
+
+    G_feat = dgl.heterograph(hetero_dict)
+
+    for (t, g_s) in enumerate(sub_glist):
+        for ntype in G_feat.ntypes:
+            feat_dim = g_s.nodes[ntype].data['feat'].shape[1]
+            G_feat.nodes[ntype].data[f't{t}'] = torch.zeros(G_feat.num_nodes(ntype), feat_dim)
+            
+            if '_ID' in g_s.ndata:
+                node_id = g_s.ndata['_ID'][ntype]
+                node_feat = g_s.ndata['feat'][ntype]
+                for (id, feat) in zip(node_id, node_feat):
+                    G_feat.nodes[ntype].data[f't{t}'][ID_dict[ntype][id.item()]] = feat
+            else:
+                 G_feat.nodes[ntype].data[f't{t}'] = g_s.nodes[ntype].data['feat']
+
+    return G_feat
+
+def generate_APA(graph, device):
+    if ('author', 'writes', 'paper') in graph.canonical_etypes:
+        etype = ('author', 'writes', 'paper')
+    else:
+        return None 
+        
+    AP = graph.adj(etype=etype).to_dense()
+    PA = AP.t()
+    APA = torch.mm(AP.to(device), PA.to(device)).detach().cpu()
+    APA[torch.eye(APA.shape[0]).bool()] = 0.5
+    return APA
+
+def construct_htg_label_mag(glist, idx, device):
+    APA_cur = generate_APA(glist[idx], device)
+    APA_pre = generate_APA(glist[idx-1], device)
+    
+    if APA_cur is None or APA_pre is None:
+        return None, None
+
+    APA_pre = (APA_pre > 0.5).float()
+    APA_cur = (APA_cur > 0.5).float()
+    
+    APA_sub = APA_cur - APA_pre # 新增的合著关系 (Label=1)
+    APA_add = APA_cur + APA_pre
+    APA_add[torch.eye(APA_add.shape[0]).bool()] = 0.5
+    
+    indices_true = (APA_sub == 1).nonzero(as_tuple=True)
+    indices_false = (APA_add == 0).nonzero(as_tuple=True) # 从未合著过的 (Label=0)
+    
+    pos_src = indices_true[0]
+    pos_dst = indices_true[1]
+    
+    # 采样比例 10%
+    size = int(pos_src.shape[0] * 0.1)
+    if size == 0: size = 1
+    
+    pos_idx = torch.randperm(pos_src.shape[0])[:size]
+    pos_src = pos_src[pos_idx]
+    pos_dst = pos_dst[pos_idx] 
+    
+    neg_src = indices_false[0]
+    neg_dst = indices_false[1]
+
+    neg_idx = torch.randperm(neg_src.shape[0])[:size]
+    neg_src = neg_src[neg_idx]
+    neg_dst = neg_dst[neg_idx]
+    
+    return dgl.graph((pos_src, pos_dst), num_nodes=APA_cur.shape[0]), dgl.graph((neg_src, neg_dst), num_nodes=APA_cur.shape[0])
 
 class AminerProcessor:
     def __init__(self, root_dir, word2vec_size=32):
@@ -248,17 +365,15 @@ class AminerProcessor:
         venues = list(set(papers[:, 0]))
         v2id = {v: i for i, v in enumerate(venues)}
         
-        # 建立 Venue -> Field 映射 (用于特征对齐)
         v2field = {}
         for row in papers:
-            v2field[row[0]] = row[5] # row[0] is venue, row[5] is field
+            v2field[row[0]] = row[5] 
 
         # Author
         all_authors = []
         for row in papers:
             all_authors.extend(row[2].split(","))
         
-        # Counter -> sort by value(freq) -> keys
         cnt = Counter(all_authors)
         sorted_authors = sorted(cnt.items(), key=lambda x: x[1], reverse=True)
         authors = [x[0] for x in sorted_authors]
@@ -266,8 +381,7 @@ class AminerProcessor:
         
         # Field
         fields = list(set(papers[:, 5]))
-        fields.sort() # sort for consistency
-        # f2id = {f: i for i, f in enumerate(fields)}
+        fields.sort() 
         
         num_papers = len(papers)
         
@@ -293,27 +407,24 @@ class AminerProcessor:
                     pa_time.append(year)
 
         # Features
-        
         # --- Paper Features: Abstract + Field (Word2Vec) ---
         print("Generating Paper features (Abstract + Field)...")
         abstracts = papers[:, 4]
         content = [a + " " + f for a, f in zip(abstracts, papers[:, 5])]
         feat_paper = torch.FloatTensor(self.sen2vec(content))
         
-        # --- Venue Features: Field Embedding (Not Venue Name) ---
-        # data["venue"].x = emb_field[venue_field]
+        # --- Venue Features: Field Embedding ---
         print("Generating Venue features (Field Embedding)...")
-        # 训练 Field 的 Word2Vec
         field_embs = dict(zip(fields, self.sen2vec(fields)))
         
         venue_feats_list = []
         for i in range(len(venues)):
             v_name = venues[i]
-            f_name = v2field.get(v_name, fields[0]) # fallback
+            f_name = v2field.get(v_name, fields[0]) 
             venue_feats_list.append(field_embs.get(f_name, np.zeros(self.word2vec_size)))
         feat_venue = torch.FloatTensor(np.stack(venue_feats_list))
         
-        # --- Author Features: ID Embedding (Not Word2Vec) ---
+        # --- Author Features: ID (Float) ---
         print("Generating Author features (ID)...")
         feat_author = torch.arange(len(authors), dtype=torch.float32)
         
@@ -365,7 +476,6 @@ class SEHTGNN_Aminer_Dataset(BaseDataset):
         self.device = kwargs.get('device', 'cpu')
         current_dir = osp.dirname(osp.abspath(__file__))
         self.data_path = osp.join(current_dir, 'data/Aminer')
-        # self.data_path = kwargs.get('raw_dir', './openhgnn/dataset/data/Aminer')
         
         self.train_set = []
         self.val_set = []
@@ -387,9 +497,6 @@ class SEHTGNN_Aminer_Dataset(BaseDataset):
         # Build Label Graphs (Co-author)
         eval_datas = [get_author_graph(g) for g in datas]
         
-        # Transductive Setting Filtering
-        # Validation 和 Test 只能包含在 Training 阶段见过的节点
-        
         test_idx = len(years) - 1
         val_idx = len(years) - 2
         train_idx = len(years) - 3
@@ -397,23 +504,25 @@ class SEHTGNN_Aminer_Dataset(BaseDataset):
         # 累计训练节点
         train_nodes_list = [set()]
         
-        # 填充 train_nodes_list
+        # 填充 train_nodes_list [0 ~ train_idx-1]
         for i in range(train_idx):
             # 获取当前时刻图中的活跃节点
             src, dst = eval_datas[i].edges()
             active_nodes = set(torch.cat([src, dst]).unique().tolist())
             
+            # 累积
             current_set = train_nodes_list[-1] | active_nodes
             train_nodes_list.append(current_set)
             
-        # Remove edges unseen nodes
+        # Remove edges unseen nodes (Transductive split)
         # train_nodes_list[i] 存储的是 0 到 i-1 时刻的累计节点
+        # 对训练集内部也做过滤 (remove for [1, train_idx-1])
         for i in range(1, train_idx):
             eval_datas[i] = remove_edges_unseen_nodes(eval_datas[i], train_nodes_list[i])
             
-        # 过滤 Val 和 Test 数据
+        # 对 Val 和 Test 数据，只能保留 train_idx (即 0~train_idx-1) 见过的节点
         for i in range(train_idx, test_idx + 1):
-            eval_datas[i] = remove_edges_unseen_nodes(eval_datas[i], train_nodes_list[-1])
+            eval_datas[i] = remove_edges_unseen_nodes(eval_datas[i], train_nodes_list[train_idx]) # 注意这里取 train_nodes_list[train_idx] 即最后一次累计
 
         # Generate Positive/Negative Labels (Link Split)
         eval_datas_split = [linksplit(g, self.device, dataset_dict['num_nodes']['author']) for g in eval_datas]
@@ -423,6 +532,7 @@ class SEHTGNN_Aminer_Dataset(BaseDataset):
         # Train
         for k in range(self.time_window, train_idx + 1):
             # Input: [k-window, k)
+            # link_pre=True 触发 time_merge 中的维度 unsqueeze
             feat_g = time_merge(datas[k-self.time_window : k], num_nodes_dict, link_pre=True).to(self.device)
             # Label: k
             label_g = eval_datas_split[k]
@@ -456,24 +566,19 @@ class SEHTGNN_Aminer_Dataset(BaseDataset):
     def num_classes(self):
         return 1
 
-
-@register_dataset('covid_regression')
+@register_dataset('sehtgnn_covid')
 class COVIDDataset(BaseDataset):
     _url = None 
-    
+
     def __init__(self, dataset_name, *args, **kwargs):
         super(COVIDDataset, self).__init__(*args, **kwargs)
-        
-        self.args = kwargs.get('args', None)
         self.dataset_name = 'sehtgnn_covid'
-        self.category = 'state'
-        
         self.time_window = kwargs.get('time_window', 7)
-        self.test_len = 30
+        self.device = kwargs.get('device', 'cpu')
         
         current_dir = osp.dirname(osp.abspath(__file__))
-        self.raw_dir = osp.join(current_dir, 'data', 'Covid19')
-        self.save_path = osp.join(self.raw_dir, 'covid_graphs.bin')
+        self.raw_dir = osp.join(current_dir, 'data/Covid19')
+        self.data_path = osp.join(self.raw_dir, 'covid_graphs.bin')
         self.llm_feat_path = osp.join(self.raw_dir, 'LLM_feature_Llama-3-new.pt')
         
         self.train_set = []
@@ -481,86 +586,174 @@ class COVIDDataset(BaseDataset):
         self.test_set = []
         
         self.download()
-        
-        # 加载 LLM 特征
-        if os.path.exists(self.llm_feat_path):
-            print(f"[Dataset] Loading LLM features from {self.llm_feat_path}")
-            llm_feats = torch.load(self.llm_feat_path)
-            if self.args:
-                self.args.semantic_feature = {k: v.float() for k, v in llm_feats.items()}
-        else:
-            if self.args:
-                self.args.semantic_feature = None
+        self.load_data()
 
-        self.process()
-        print(f"[Dataset Info] Train samples: {len(self.train_set)} | Val: {len(self.val_set)} | Test: {len(self.test_set)}")
+    def set_args_and_load_feats(self, args):
+        self.args = args
+        print(f"[Dataset] Receiving args manually. Path check: {self.llm_feat_path}")
+        
+        if os.path.exists(self.llm_feat_path):
+            print(f"[Dataset] Loading LLM features...")
+            try:
+                llm_feats = torch.load(self.llm_feat_path, weights_only=False)
+            except TypeError:
+                llm_feats = torch.load(self.llm_feat_path)
+            
+            clean_feats = {k: v.float() for k, v in llm_feats.items()}
+            
+            target_ntype = self.category # 'state'
+            
+            if target_ntype not in clean_feats:
+                # 如果没找到 state，尝试用第一个键的内容顶替
+                first_key = list(clean_feats.keys())[0]
+                print(f"   > [Auto-Fix] Target '{target_ntype}' missing. Mapping from '{first_key}'")
+                clean_feats[target_ntype] = clean_feats[first_key]
+            else:
+                print(f"   > [Success] Loaded feature for key: '{target_ntype}'")
+
+            # self._g 在 load_data 之后就已经有了
+            if hasattr(self, '_g') and self._g is not None:
+                ref_feat = next(iter(clean_feats.values()))
+                feat_dim = ref_feat.shape[1]
+                
+                for ntype in self._g.ntypes:
+                    if ntype not in clean_feats:
+                        print(f"   > [Warning] Node type '{ntype}' missing in LLM file.")
+                        num_nodes = self._g.num_nodes(ntype)
+                        
+                        # 补全策略：生成全0特征 (或者随机特征)
+                        print(f"     -> Auto-generating Zero features for '{ntype}' (Shape: {num_nodes}x{feat_dim})")
+                        clean_feats[ntype] = torch.zeros(num_nodes, feat_dim)
+            
+            # 挂载到 args
+            self.args.semantic_feature = clean_feats
+        else:
+            print(f"[Warning] LLM feature file not found.")
+            self.args.semantic_feature = None
 
     def download(self):
-        if os.path.exists(self.save_path):
+        if os.path.exists(self.data_path):
             return
+        
         if self._url is None:
-            # 如果本地没有且没有 URL，提示用户放置文件
-            if not os.path.exists(self.save_path):
-                print(f"Dataset file not found at {self.save_path}.")
-                print("Please place 'covid_graphs.bin' and 'LLM_feature_Llama-3-new.pt' in:", self.raw_dir)
+            # 如果本地没有文件，打印提示
+            if not os.path.exists(self.data_path):
+                print(f"\n[Warning] Dataset file not found at {self.data_path}")
+                print(f"Please place 'covid_graphs.bin' and 'LLM_feature_Llama-3-new.pt' in: {self.raw_dir}\n")
         else:
             path = download(self._url, path=self.raw_dir)
             extract_archive(path, self.raw_dir)
 
-    def process(self):
-        if not os.path.exists(self.save_path):
-            return
-
-        glist, _ = load_graphs(self.save_path)
+    def load_data(self):
+        if not osp.exists(self.data_path):
+            return # 如果文件不存在，直接返回
+            
+        print(f"Processing COVID data from {self.data_path}")
+        glist, _ = load_graphs(self.data_path)
         
-        # 预处理：转 float
+        # 预处理：确保所有特征都是 float (融合点)
         for g in glist:
             for ntype in g.ntypes:
                 for key in g.nodes[ntype].data:
                     data = g.nodes[ntype].data[key]
                     if torch.is_floating_point(data):
                         g.nodes[ntype].data[key] = data.float()
-        
-        total_days = len(glist)
-        num_samples = total_days - self.time_window
-        
-        all_data = []
-        
-        sample_g = glist[0]
-        num_nodes_dict = {ntype: sample_g.num_nodes(ntype) for ntype in sample_g.ntypes}
 
-        for i in range(num_samples):
-            sub_glist = glist[i : i + self.time_window]
-            target_g = glist[i + self.time_window]
-            
-            # 获取 Label
-            key = 'feat' if 'feat' in target_g.nodes[self.category].data else 'x'
-            label = target_g.nodes[self.category].data[key].float()
-            
-            if label.dim() == 1:
-                label = label.unsqueeze(1)
-            
-            merged_g = time_merge(sub_glist, num_nodes_dict, link_pre=False)
-            
-            all_data.append((merged_g, label))
-            
-        self.test_set = all_data[-self.test_len:]
-        self.val_set = all_data[-2*self.test_len : -self.test_len]
-        self.train_set = all_data[: -2*self.test_len]
+        testlen = 30
         
+        for i in range(len(glist)):
+            if i >= self.time_window:
+                G_feat, G_label = construct_htg_covid(glist, i, self.time_window)
+                
+                # 获取 Label Tensor
+                target_ntype = 'state'
+                key = 'feat' if 'feat' in G_label.nodes[target_ntype].data else 'x'
+                label_tensor = G_label.nodes[target_ntype].data[key].float()
+                
+                # 确保维度匹配
+                if label_tensor.dim() == 1:
+                    label_tensor = label_tensor.unsqueeze(1)
+
+                G_feat = G_feat.to(self.device)
+                label_tensor = label_tensor.to(self.device)
+                
+                # 划分
+                if i >= len(glist) - testlen:
+                    self.test_set.append((G_feat, label_tensor))
+                elif i >= len(glist) - testlen - 30:
+                    self.val_set.append((G_feat, label_tensor))
+                else:
+                    self.train_set.append((G_feat, label_tensor))
+                    
         if len(self.train_set) > 0:
             self._g = self.train_set[0][0]
-
-    def get_labels(self):
-        return None 
+            print(f"COVID Loaded. Train: {len(self.train_set)}, Val: {len(self.val_set)}, Test: {len(self.test_set)}")
 
     def get_split(self):
         return self.train_set, self.val_set, self.test_set
+        
+    @property
+    def category(self):
+        return 'state'
 
 
 @register_dataset('sehtgnn_mag')
 class SEHTGNN_MAG_Dataset(BaseDataset):
     def __init__(self, dataset_name, *args, **kwargs):
         super(SEHTGNN_MAG_Dataset, self).__init__(*args, **kwargs)
-        pass
-    def get_split(self): return [], [], []
+        self.dataset_name = 'sehtgnn_mag'
+        self.time_window = kwargs.get('time_window', 3)
+        self.device = kwargs.get('device', 'cpu')
+        
+        current_dir = osp.dirname(osp.abspath(__file__))
+        self.data_path = osp.join(current_dir, 'data/ogbn/ogbn_graphs.bin')
+        
+        self.train_set = []
+        self.val_set = []
+        self.test_set = []
+        
+        self.load_data()
+
+    def load_data(self):
+        if not osp.exists(self.data_path):
+            print(f"MAG data not found at {self.data_path}")
+            return
+
+        print(f"Processing MAG data from {self.data_path}")
+        glist, _ = load_graphs(self.data_path)
+        
+        # TODO: 官方代码这里加载了 mp2vec 特征。
+        # glist = [mp2vec_feat(f'mp2vec/g{i}.vector', g) for (i, g) in enumerate(glist)]
+        # 如果你没有 mp2vec 文件，这步会报错。可以暂时注释掉，使用默认特征。
+        
+        testlen = 1 # 官方逻辑通常最后一张图做测试
+        
+        for i in range(len(glist)):
+            if i >= self.time_window:
+                # 1. 构建输入 SuperGraph
+                G_feat = construct_htg_mag(glist, i, self.time_window)
+                
+                # 2. 构建 Label (Pos/Neg Graphs)
+                pos_label, neg_label = construct_htg_label_mag(glist, i, self.device)
+                
+                if pos_label is None: continue
+
+                # 3. 划分数据集
+                if i == len(glist) - 1:
+                    self.test_set.append((G_feat, (pos_label, neg_label)))
+                elif i == len(glist) - 2:
+                    self.val_set.append((G_feat, (pos_label, neg_label)))
+                else: 
+                    self.train_set.append((G_feat, (pos_label, neg_label)))
+                    
+        if len(self.train_set) > 0:
+            self._g = self.train_set[0][0]
+            
+        print(f"MAG Loaded. Train: {len(self.train_set)}, Val: {len(self.val_set)}, Test: {len(self.test_set)}")
+
+    def get_split(self):
+        return self.train_set, self.val_set, self.test_set
+        
+    @property
+    def category(self):
+        return 'author' # 预测的是 author 之间的连边
