@@ -1593,6 +1593,11 @@ class Config(object):
             self.time_window = conf.getint("SEHTGNN", "time_window")
             self.max_epoch = conf.getint("SEHTGNN", "max_epoch")
             self.patience = conf.getint("SEHTGNN", "patience")
+
+            if conf.has_option("SEHTGNN", "use_uva"):
+                self.use_uva = conf.getboolean("SEHTGNN", "use_uva")
+            else:
+                self.use_uva = True
             
             if conf.has_option("SEHTGNN", "norm"):
                 self.norm = conf.getboolean("SEHTGNN", "norm")
@@ -1615,7 +1620,7 @@ class Config(object):
             else:
                 self.device = th.device("cuda", int(gpu))
 
-        if getattr(self, "use_uva", None):  # use_uva is set True
+        if getattr(self, "use_uva", False) and self.device.type != 'cuda':
             self.use_uva = False
             warnings.warn(
                 "'use_uva' is only available when using cuda. please set 'use_uva' to False."

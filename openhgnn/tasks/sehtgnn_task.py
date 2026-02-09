@@ -13,8 +13,8 @@ class SEHTGNNTask(BaseTask):
         self.task_type = 'link_prediction'
         
         self.dataset = build_dataset(
-            args.dataset, 
-            args.dataset,
+            dataset=args.dataset, 
+            task=args.dataset,
             raw_dir=getattr(args, 'data_dir', None),
             time_window=getattr(args, 'time_window', 3),
             device=args.device,

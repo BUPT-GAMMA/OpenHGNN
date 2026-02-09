@@ -75,13 +75,13 @@ kg_subT_datasets = ['family']
 ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
 hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
-
+SEHTGNN_DATASETS = ['sehtgnn_aminer', 'sehtgnn_mag', 'sehtgnn_covid']
 
 
 def build_dataset_GB(dataset,*args,**kwargs):
     #   dataset："imdb4GTN","HGBl-amazon"
     if dataset in ['imdb4GTN','HGBl-amazon']:
-        return DATASET_REGISTRY['GraphBolt_Dataset'](dataset, logger=kwargs['logger'],args = kwargs['args'])
+        return DATASET_REGISTRY['GraphBolt_Dataset'](dataset, logger=kwargs['logger'], args = kwargs['args'])
     
 
 
@@ -117,8 +117,6 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset == "dbook":
         dataload = Meta_DataHelper(args.input_dir, args)
         return dataload
-    # elif dataset == 'covid_regression':
-    #     return DATASET_REGISTRY[dataset](**kwargs)
 
 #############
 
@@ -134,7 +132,6 @@ def build_dataset(dataset, task, *args, **kwargs):
 ###########    add dataset here
     elif dataset in ['acm4HGMAE','hgprompt_acm_dblp','acm4FedHGNN']:      
         return DATASET_REGISTRY['common_dataset'](dataset, logger=kwargs['logger'],args = kwargs['args'])
-
     elif dataset in ['acm4HGA','dblp4HGA']:
         _dataset = 'hga_'+ task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
@@ -143,6 +140,9 @@ def build_dataset(dataset, task, *args, **kwargs):
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
     elif dataset in ['dblp4MHGCN','imdb4MHGCN','alibaba4MHGCN']:
         _dataset = 'mhgcn_' + task   
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args']) 
+    elif dataset in SEHTGNN_DATASETS:
+        _dataset = dataset
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args']) 
 ##########
 
@@ -176,12 +176,6 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset in kg_sub_datasets:
         assert task == 'link_prediction'
         _dataset = 'kg_sub_link_prediction'
-    elif dataset == 'sehtgnn_mag':
-        _dataset = 'sehtgnn_mag'
-    elif dataset == 'sehtgnn_aminer':
-        _dataset = 'sehtgnn_aminer'
-    elif dataset == 'sehtgnn_covid':
-        _dataset = 'sehtgnn_covid'
     elif dataset in kg_subT_datasets:
         assert task == 'link_prediction'
         _dataset = 'kg_subT_link_prediction'
@@ -243,9 +237,6 @@ SUPPORTED_DATASETS = {
     "hypergraph": "openhgnn.dataset.HypergraphDataset",
     "pretrain": "openhgnn.dataset.mag_dataset",
     "ktn": "openhgnn.dataset.oag_dataset",
-    "sehtgnn_covid": "openhgnn.dataset.sehtgnn_dataset",
-    'sehtgnn_mag': 'openhgnn.dataset.sehtgnn_dataset',
-    'sehtgnn_aminer': 'openhgnn.dataset.sehtgnn_dataset',
 }
 
 from .NodeClassificationDataset import NodeClassificationDataset
@@ -254,11 +245,7 @@ from .RecommendationDataset import RecommendationDataset
 from .EdgeClassificationDataset import EdgeClassificationDataset
 from .HypergraphDataset import HGraphDataset
 from .oag_dataset import OAGDataset
-
-# SEHTGNN Dataset
-from .sehtgnn_dataset import COVIDDataset
-from .sehtgnn_dataset import SEHTGNN_MAG_Dataset
-from .sehtgnn_dataset import SEHTGNN_Aminer_Dataset
+from .sehtgnn_dataset import *
 
 
 def build_dataset_v2(dataset, task):
@@ -295,7 +282,6 @@ CLASS_DATASETS = {
     "ohgbn-alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
     "pretrain": "openhgnn.dataset.mag_dataset",
     "ktn": "openhgnn.dataset.oag_dataset",
-
 }
 
 __all__ = [
@@ -314,9 +300,6 @@ __all__ = [
     "AbnormEventDetectionDataset",
     "mag_dataset",
     "OAGDataset",
-    "COVIDDataset",
-    'SEHTGNN_MAG_Dataset',
-    'SEHTGNN_Aminer_Dataset',
 ]
 
 classes = __all__

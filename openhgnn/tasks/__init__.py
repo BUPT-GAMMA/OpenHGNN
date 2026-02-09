@@ -79,7 +79,6 @@ from .hypergraph import hypergraph
 from .node_classification import DSSL_task
 from .ktn import KTN4MultiLabelNodeClassification
 from .Ingram_task import Ingram
-from .node_regression import NodeRegression
 from .sehtgnn_task import SEHTGNNTask
 
 
@@ -92,7 +91,6 @@ __all__ = [
     "hypergraph",
     "pretrain",
     "ktn",
-    "NodeRegression",
     "SEHTGNNTask",
 ]
 

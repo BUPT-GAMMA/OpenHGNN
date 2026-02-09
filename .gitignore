@@ -161,6 +161,9 @@ cython_debug/
 *.bin
 *.pt
 *.mat
+*.tar.gz
+*.csv.gz
+openhgnn/dataset/data/*
 
 # numpy files
 *.npy
@@ -179,3 +182,4 @@ cython_debug/
 
 # history
 .history
+

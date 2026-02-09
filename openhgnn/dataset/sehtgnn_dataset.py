@@ -308,255 +308,157 @@ def construct_htg_label_mag(glist, idx, device):
     
     return dgl.graph((pos_src, pos_dst), num_nodes=APA_cur.shape[0]), dgl.graph((neg_src, neg_dst), num_nodes=APA_cur.shape[0])
 
-class AminerProcessor:
-    def __init__(self, root_dir, word2vec_size=32):
-        self.root_dir = root_dir
-        self.word2vec_size = word2vec_size
-        self.fnames = ["Database", "Data Mining", "Medical Informatics", "Theory", "Visualization"]
+def slice_graph_by_year(whole_graph, t):
+    """
+    从整图(whole_graph)中提取 edge_time == t 的子图。
+    替代原来的 time_select_edge_time。
+    """
+    edge_dict = {}
+    # 遍历所有边类型
+    for etype in whole_graph.canonical_etypes:
+        # 获取边的 key，例如 ('paper', 'published', 'venue') -> 'published' 
+        # DGL存储数据通常用 edge type name (中间那个)
+        # 但如果是多重边，最好用 canonical etype
         
-    def parse(self, datafile):
-        field = os.path.split(datafile)[-1].replace(".txt", "")
-        papers = []
-        with open(datafile, "r", encoding='utf-8', errors='ignore') as file:
-            lines = file.readlines()
-        
-        for line in lines:
-            parts = line.strip().split("\t")
-            if len(parts) < 5: continue
-            (venue, title, authors, year, abstract) = parts[:5]
-            try:
-                year = int(year)
-                papers.append((venue, title, authors, year, abstract, field))
-            except:
-                pass
-        return np.array(papers)
-
-    def sen2vec(self, sentences):
-        if gensim is None:
-            raise ImportError("Please install gensim")
+        if 'time' in whole_graph.edges[etype].data:
+            time_tensor = whole_graph.edges[etype].data['time']
+            mask = (time_tensor == t)
             
-        tokenized = [list(gensim.utils.tokenize(a, lower=True)) for a in sentences]
-        model = Word2Vec(tokenized, vector_size=self.word2vec_size, min_count=1)
-        embs = []
-        for s in tokenized:
-            if len(s) > 0:
-                emb = model.wv[s].mean(axis=0)
+            # 如果这一年这类边没有数据，建立空边
+            if mask.sum() == 0:
+                edge_dict[etype] = ([], [])
             else:
-                emb = np.zeros(self.word2vec_size)
-            embs.append(emb)
-        return np.stack(embs)
+                # 获取源节点和目标节点
+                src, dst = whole_graph.edges(etype=etype)
+                edge_dict[etype] = (src[mask], dst[mask])
+        else:
+            # 如果某些边没有时间属性，根据需求决定是否保留。通常Aminer数据里都有。
+            edge_dict[etype] = ([], [])
 
-    def process(self):
-        #  Read Files
-        all_papers = []
-        for name in self.fnames:
-            path = os.path.join(self.root_dir, f"{name}.txt")
-            if not os.path.exists(path):
-                print(f"Warning: {path} not found.")
-                continue
-            all_papers.append(self.parse(path))
-        
-        if not all_papers:
-            raise FileNotFoundError(f"No data files found in {self.root_dir}")
+    # 保留节点数量信息
+    num_nodes_dict = {ntype: whole_graph.num_nodes(ntype) for ntype in whole_graph.ntypes}
+    
+    # 构建当前时间步的异构图
+    sub_g = dgl.heterograph(edge_dict, num_nodes_dict=num_nodes_dict)
+    
+    # 复制节点特征 (Node features 不随时间变化，直接拷贝)
+    for ntype in whole_graph.ntypes:
+        if 'feat' in whole_graph.nodes[ntype].data:
+            sub_g.nodes[ntype].data['feat'] = whole_graph.nodes[ntype].data['feat']
             
-        papers = np.concatenate(all_papers)
-        
-        # Build ID Mappings & Metadata
-        venues = list(set(papers[:, 0]))
-        v2id = {v: i for i, v in enumerate(venues)}
-        
-        v2field = {}
-        for row in papers:
-            v2field[row[0]] = row[5] 
-
-        # Author
-        all_authors = []
-        for row in papers:
-            all_authors.extend(row[2].split(","))
-        
-        cnt = Counter(all_authors)
-        sorted_authors = sorted(cnt.items(), key=lambda x: x[1], reverse=True)
-        authors = [x[0] for x in sorted_authors]
-        a2id = {a: i for i, a in enumerate(authors)}
-        
-        # Field
-        fields = list(set(papers[:, 5]))
-        fields.sort() 
-        
-        num_papers = len(papers)
-        
-        # Build Edges & Times
-        pv_src, pv_dst, pv_time = [], [], []
-        pa_src, pa_dst, pa_time = [], [], []
-        
-        for i, row in enumerate(papers):
-            pid = i
-            vname = row[0]
-            anames = row[2].split(",")
-            year = int(row[3])
-            
-            if vname in v2id:
-                pv_src.append(pid)
-                pv_dst.append(v2id[vname])
-                pv_time.append(year)
-                
-            for a in anames:
-                if a in a2id:
-                    pa_src.append(pid)
-                    pa_dst.append(a2id[a])
-                    pa_time.append(year)
-
-        # Features
-        # --- Paper Features: Abstract + Field (Word2Vec) ---
-        print("Generating Paper features (Abstract + Field)...")
-        abstracts = papers[:, 4]
-        content = [a + " " + f for a, f in zip(abstracts, papers[:, 5])]
-        feat_paper = torch.FloatTensor(self.sen2vec(content))
-        
-        # --- Venue Features: Field Embedding ---
-        print("Generating Venue features (Field Embedding)...")
-        field_embs = dict(zip(fields, self.sen2vec(fields)))
-        
-        venue_feats_list = []
-        for i in range(len(venues)):
-            v_name = venues[i]
-            f_name = v2field.get(v_name, fields[0]) 
-            venue_feats_list.append(field_embs.get(f_name, np.zeros(self.word2vec_size)))
-        feat_venue = torch.FloatTensor(np.stack(venue_feats_list))
-        
-        # --- Author Features: ID (Float) ---
-        print("Generating Author features (ID)...")
-        feat_author = torch.arange(len(authors), dtype=torch.float32)
-        
-        # Pack into Dict
-        min_year = min(min(pv_time), min(pa_time))
-        pv_time = torch.LongTensor(pv_time) - min_year
-        pa_time = torch.LongTensor(pa_time) - min_year
-        
-        edge_index = {
-            ('paper', 'published', 'venue'): (torch.LongTensor(pv_src), torch.LongTensor(pv_dst)),
-            ('paper', 'written', 'author'): (torch.LongTensor(pa_src), torch.LongTensor(pa_dst)),
-            ('venue', 'published_by', 'paper'): (torch.LongTensor(pv_dst), torch.LongTensor(pv_src)),
-            ('author', 'writes', 'paper'): (torch.LongTensor(pa_dst), torch.LongTensor(pa_src))
-        }
-        
-        edge_time = {
-            ('paper', 'published', 'venue'): pv_time,
-            ('paper', 'written', 'author'): pa_time,
-            ('venue', 'published_by', 'paper'): pv_time,
-            ('author', 'writes', 'paper'): pa_time
-        }
-        
-        node_feat = {
-            'paper': feat_paper,
-            'venue': feat_venue,
-            'author': feat_author
-        }
-        
-        num_nodes = {
-            'paper': num_papers,
-            'venue': len(venues),
-            'author': len(authors)
-        }
-        
-        return {
-            'edge_index': edge_index,
-            'edge_time': edge_time,
-            'node_feat': node_feat,
-            'num_nodes': num_nodes,
-            'years': sorted(list(set(pv_time.numpy())))
-        }
+    return sub_g
 
 @register_dataset('sehtgnn_aminer')
 class SEHTGNN_Aminer_Dataset(BaseDataset):
     def __init__(self, dataset_name, *args, **kwargs):
         super(SEHTGNN_Aminer_Dataset, self).__init__(*args, **kwargs)
         self.dataset_name = 'sehtgnn_aminer'
-        self.time_window = kwargs.get('time_window', 5)
+
+        config = kwargs.get('args')
+
+        if config and hasattr(config, 'time_window'):
+            self.time_window = config.time_window
+        else:
+            self.time_window = 5
+
+        # self.time_window = kwargs.get('time_window', 8)
         self.device = kwargs.get('device', 'cpu')
+        
+        self._url = 'https://s3.your-region.amazonaws.com/your-bucket/aminer_base.bin'
+        
         current_dir = osp.dirname(osp.abspath(__file__))
-        self.data_path = osp.join(current_dir, 'data/Aminer')
+        self.raw_dir = osp.join(current_dir, 'data/Aminer')
+        self.data_path = osp.join(self.raw_dir, 'aminer_base.bin')
         
         self.train_set = []
         self.val_set = []
         self.test_set = []
         self._g = None
         
+        self.download()
         self.load_data()
 
+    def download(self):
+        if osp.exists(self.data_path):
+            return
+        
+        print(f"Downloading Aminer base data to {self.data_path}...")
+        try:
+            if not osp.exists(self.raw_dir):
+                os.makedirs(self.raw_dir)
+            download(self._url, path=self.data_path) 
+        except Exception as e:
+            print(f"Download failed: {e}. Please ensure 'aminer_base.bin' is in {self.raw_dir}")
+
     def load_data(self):
-        # Process Raw Data
-        print(f"Processing Aminer data from {self.data_path}")
-        processor = AminerProcessor(self.data_path, word2vec_size=32)
-        dataset_dict = processor.process()
+        if not osp.exists(self.data_path):
+            # 本地测试如果没有文件，提示报错
+            raise FileNotFoundError(f"Data file not found at {self.data_path}")
+
+        print(f"Loading Atomic Graphs from {self.data_path}")
+        atomic_graphs, _ = load_graphs(self.data_path) 
         
-        # Split by Time
-        years = dataset_dict['years']
-        datas = [time_select_edge_time(dataset_dict, t) for t in years]
+        print("Generating Author Co-occurrence graphs...")
+        eval_datas = [get_author_graph(g) for g in atomic_graphs]
         
-        # Build Label Graphs (Co-author)
-        eval_datas = [get_author_graph(g) for g in datas]
+        # 索引计算
+        test_idx = len(atomic_graphs) - 1
+        val_idx = len(atomic_graphs) - 2
+        train_idx = len(atomic_graphs) - 3
         
-        test_idx = len(years) - 1
-        val_idx = len(years) - 2
-        train_idx = len(years) - 3
-        
-        # 累计训练节点
         train_nodes_list = [set()]
         
-        # 填充 train_nodes_list [0 ~ train_idx-1]
+        # Transductive Setting 过滤
         for i in range(train_idx):
-            # 获取当前时刻图中的活跃节点
             src, dst = eval_datas[i].edges()
             active_nodes = set(torch.cat([src, dst]).unique().tolist())
-            
-            # 累积
             current_set = train_nodes_list[-1] | active_nodes
             train_nodes_list.append(current_set)
             
-        # Remove edges unseen nodes (Transductive split)
-        # train_nodes_list[i] 存储的是 0 到 i-1 时刻的累计节点
-        # 对训练集内部也做过滤 (remove for [1, train_idx-1])
         for i in range(1, train_idx):
             eval_datas[i] = remove_edges_unseen_nodes(eval_datas[i], train_nodes_list[i])
             
-        # 对 Val 和 Test 数据，只能保留 train_idx (即 0~train_idx-1) 见过的节点
         for i in range(train_idx, test_idx + 1):
-            eval_datas[i] = remove_edges_unseen_nodes(eval_datas[i], train_nodes_list[train_idx]) # 注意这里取 train_nodes_list[train_idx] 即最后一次累计
+            eval_datas[i] = remove_edges_unseen_nodes(eval_datas[i], train_nodes_list[train_idx])
 
-        # Generate Positive/Negative Labels (Link Split)
-        eval_datas_split = [linksplit(g, self.device, dataset_dict['num_nodes']['author']) for g in eval_datas]
+        # Link Split
+        num_nodes_author = atomic_graphs[0].num_nodes('author')
+        eval_datas_split = [linksplit(g, self.device, num_nodes_author) for g in eval_datas]
         
-        num_nodes_dict = dataset_dict['num_nodes']
+        # 获取节点数量字典，用于 time_merge
+        num_nodes_dict = {nt: atomic_graphs[0].num_nodes(nt) for nt in atomic_graphs[0].ntypes}
+
+        print(f"Constructing Train/Val/Test sets with TimeWindow={self.time_window}...")
         
         # Train
         for k in range(self.time_window, train_idx + 1):
-            # Input: [k-window, k)
-            # link_pre=True 触发 time_merge 中的维度 unsqueeze
-            feat_g = time_merge(datas[k-self.time_window : k], num_nodes_dict, link_pre=True).to(self.device)
-            # Label: k
+            window_graphs = atomic_graphs[k-self.time_window : k]
+            
+            feat_g = time_merge(window_graphs, num_nodes_dict, link_pre=True).to(self.device)
             label_g = eval_datas_split[k]
             self.train_set.append((feat_g, label_g))
             
         # Val
         if val_idx > self.time_window:
-            feat_g = time_merge(datas[val_idx-self.time_window : val_idx], num_nodes_dict, link_pre=True).to(self.device)
+            window_graphs = atomic_graphs[val_idx-self.time_window : val_idx]
+            feat_g = time_merge(window_graphs, num_nodes_dict, link_pre=True).to(self.device)
             label_g = eval_datas_split[val_idx]
             self.val_set.append((feat_g, label_g))
             
         # Test
         if test_idx > self.time_window:
-            feat_g = time_merge(datas[test_idx-self.time_window : test_idx], num_nodes_dict, link_pre=True).to(self.device)
+            window_graphs = atomic_graphs[test_idx-self.time_window : test_idx]
+            feat_g = time_merge(window_graphs, num_nodes_dict, link_pre=True).to(self.device)
             label_g = eval_datas_split[test_idx]
             self.test_set.append((feat_g, label_g))
             
         if len(self.train_set) > 0:
             self._g = self.train_set[0][0]
             
-        print(f"Aminer Loaded (Aligned). Train: {len(self.train_set)}, Val: {len(self.val_set)}, Test: {len(self.test_set)}")
+        print(f"Aminer Processed. Train: {len(self.train_set)}, Val: {len(self.val_set)}, Test: {len(self.test_set)}")
 
     def get_split(self):
-        return self.train_set, self.val_set, self.test_set
+        return self.train_set, self.val_set, self.test_set, None, None
         
     @property
     def category(self):
@@ -567,11 +469,11 @@ class SEHTGNN_Aminer_Dataset(BaseDataset):
         return 1
 
 @register_dataset('sehtgnn_covid')
-class COVIDDataset(BaseDataset):
+class SEHTGNN_COVID_Dataset(BaseDataset):
     _url = None 
 
     def __init__(self, dataset_name, *args, **kwargs):
-        super(COVIDDataset, self).__init__(*args, **kwargs)
+        super(SEHTGNN_COVID_Dataset, self).__init__(*args, **kwargs)
         self.dataset_name = 'sehtgnn_covid'
         self.time_window = kwargs.get('time_window', 7)
         self.device = kwargs.get('device', 'cpu')
@@ -585,7 +487,14 @@ class COVIDDataset(BaseDataset):
         self.val_set = []
         self.test_set = []
         
-        self.download()
+        # Debug
+        if not osp.exists(self.data_path):
+            print(f"[Local Test] File not found: {self.data_path}")
+            print("Please generate 'aminer_base.bin' and place it here manually.")
+            # self.download()
+        else:
+            print(f"[Local Test] Found local file: {self.data_path}, skipping download.")
+
         self.load_data()
 
     def set_args_and_load_feats(self, args):
@@ -711,6 +620,7 @@ class SEHTGNN_MAG_Dataset(BaseDataset):
         self.train_set = []
         self.val_set = []
         self.test_set = []
+        self._g = None
         
         self.load_data()
 
@@ -722,23 +632,16 @@ class SEHTGNN_MAG_Dataset(BaseDataset):
         print(f"Processing MAG data from {self.data_path}")
         glist, _ = load_graphs(self.data_path)
         
-        # TODO: 官方代码这里加载了 mp2vec 特征。
-        # glist = [mp2vec_feat(f'mp2vec/g{i}.vector', g) for (i, g) in enumerate(glist)]
-        # 如果你没有 mp2vec 文件，这步会报错。可以暂时注释掉，使用默认特征。
-        
-        testlen = 1 # 官方逻辑通常最后一张图做测试
         
         for i in range(len(glist)):
             if i >= self.time_window:
-                # 1. 构建输入 SuperGraph
                 G_feat = construct_htg_mag(glist, i, self.time_window)
+                G_feat = G_feat.to(self.device)
                 
-                # 2. 构建 Label (Pos/Neg Graphs)
                 pos_label, neg_label = construct_htg_label_mag(glist, i, self.device)
                 
                 if pos_label is None: continue
 
-                # 3. 划分数据集
                 if i == len(glist) - 1:
                     self.test_set.append((G_feat, (pos_label, neg_label)))
                 elif i == len(glist) - 2:
@@ -752,8 +655,12 @@ class SEHTGNN_MAG_Dataset(BaseDataset):
         print(f"MAG Loaded. Train: {len(self.train_set)}, Val: {len(self.val_set)}, Test: {len(self.test_set)}")
 
     def get_split(self):
-        return self.train_set, self.val_set, self.test_set
+        return self.train_set, self.val_set, self.test_set, None, None
         
     @property
     def category(self):
-        return 'author' # 预测的是 author 之间的连边
+        return 'author'
+
+    @property
+    def num_classes(self):
+        return 1
