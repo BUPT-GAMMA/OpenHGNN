@@ -2,12 +2,13 @@ import os
 import os.path as osp
 import dgl
 import torch
-import torch as th
 import numpy as np
+import torch.nn.functional as F
+import scipy.sparse as sp
+from tqdm import tqdm
 from collections import Counter
-from dgl.data.utils import load_graphs, save_graphs, download, extract_archive
+from dgl.data.utils import load_graphs, download, extract_archive
 from torch_geometric.utils import negative_sampling
-from sklearn.metrics import roc_auc_score, average_precision_score
 
 try:
     import gensim
@@ -17,30 +18,25 @@ except ImportError:
 
 from . import BaseDataset, register_dataset
 
-def setorderidx(data):
-    data = data.copy()
-    row, col = data.shape
-    cnt = {}
-    for i in range(col):
-        cnt[i] = Counter(data[:, i])
-        k = list(cnt[i].keys())
-        k.sort()
-        k2i = dict(zip(k, range(len(k))))
-        for j in range(row):
-            data[j][i] = k2i[data[j][i]]
-    data = np.vectorize(int)(data)
-    return data
-
 def time_merge(glist, num_nodes_dict=None, link_pre=True):
     """
-    合并时间窗口内的异构图特征
+    合并时间窗口内的异构图特征，并添加反向边
     """
     hetero_dict = {}
+    
     for (t, g_s) in enumerate(glist):
         for srctype, etype, dsttype in g_s.canonical_etypes:
+            # 跳过空边类型
+            if g_s.num_edges(etype) == 0:
+                continue
+
             src, dst = g_s.edges(etype=etype)
+            
+            # 正向边
             hetero_dict[(srctype, f'{etype}_t{t}', dsttype)] = (src, dst)
-            # hetero_dict[(dsttype, f'{etype}_r_t{t}', srctype)] = (dst, src)
+            
+            # 反向边
+            hetero_dict[(dsttype, f'{etype}_r_t{t}', srctype)] = (dst, src)
             
     if num_nodes_dict is None:
         G_feat = dgl.heterograph(hetero_dict)
@@ -59,17 +55,13 @@ def time_merge(glist, num_nodes_dict=None, link_pre=True):
                 
                 feat = feat.type(torch.float32)
                 
-                target_types = ['user', 'item', 'author', 'venue'] # 包含 Aminer/Eco/Yelp 常见 ID 类型
+                target_types = ['user', 'item', 'author', 'venue'] 
                 
                 if link_pre and (ntype in target_types):
                      if feat.dim() == 1:
                          feat = feat.unsqueeze(1)
                 
                 G_feat.nodes[ntype].data[f't{t}'] = feat
-                
-            else:
-                dim = 32
-                pass
                 
     return G_feat
 
@@ -161,34 +153,10 @@ def linksplit(data, device, num_nodes):
     neg_g = dgl.graph((neg_u, neg_v), num_nodes=num_nodes).to(device)
     return pos_g, neg_g
 
-def time_select_edge_time(dataset_dict, t):
-    """
-    从 dataset_dict 中按时间切分 HeteroGraph
-    """
-    new_edges = {}
-    num_nodes_dict = dataset_dict['num_nodes']
-    
-    for etype, time_tensor in dataset_dict['edge_time'].items():
-        mask = (time_tensor == t)
-        if mask.sum() == 0:
-            src, dst = [], []
-        else:
-            edge_index = dataset_dict['edge_index'][etype] 
-            src = edge_index[0][mask]
-            dst = edge_index[1][mask]
-        
-        new_edges[etype] = (src, dst)
-        
-    g = dgl.heterograph(new_edges, num_nodes_dict=num_nodes_dict)
-    
-    for ntype, feat in dataset_dict['node_feat'].items():
-        g.nodes[ntype].data['x'] = feat
-        
-    return g
-
 def construct_htg_covid(glist, idx, time_window):
     sub_glist = glist[idx-time_window:idx]
     hetero_dict = {}
+    
     for (t, g_s) in enumerate(sub_glist):
         for srctype, etype, dsttype in g_s.canonical_etypes:
             src, dst = g_s.in_edges(g_s.nodes(dsttype), etype=etype)
@@ -199,274 +167,359 @@ def construct_htg_covid(glist, idx, time_window):
     for (t, g_s) in enumerate(sub_glist):
         for ntype in G_feat.ntypes:
             if 'feat' in g_s.nodes[ntype].data:
-                G_feat.nodes[ntype].data[f't{t}'] = g_s.nodes[ntype].data['feat']
+                feat = g_s.nodes[ntype].data['feat']
             elif 'x' in g_s.nodes[ntype].data:
-                 G_feat.nodes[ntype].data[f't{t}'] = g_s.nodes[ntype].data['x']
+                feat = g_s.nodes[ntype].data['x']
+            else:
+                continue
+            
+            G_feat.nodes[ntype].data[f't{t}'] = feat
 
     G_label = glist[idx]
     return G_feat, G_label
 
+
 def construct_htg_mag(glist, idx, time_window):
-    """
-    1. 建立 ID 映射 (Global ID dict within window)
-    2. 合并大图
-    3. 特征填充 (不存在的节点填0)
-    """
     sub_glist = glist[idx-time_window:idx]
-    ID_dict = {}
+    global_ids_per_type = {}
     
     for ntype in glist[0].ntypes:
-        ID_set = set()
+        ids_list = []
         for g_s in sub_glist:
-            if '_ID' in g_s.ndata:
-                tmp_set = set(g_s.ndata['_ID'][ntype].tolist())
-                ID_set.update(tmp_set)
-        ID_dict[ntype] = {ID: idx for idx, ID in enumerate(sorted(list(ID_set)))}
+            if '_ID' in g_s.nodes[ntype].data:
+                ids_list.append(g_s.nodes[ntype].data['_ID'])
+            else:
+                ids_list.append(torch.arange(g_s.num_nodes(ntype)))
+        
+        if ids_list:
+            all_ids = torch.cat(ids_list)
+            unique_ids, _ = torch.sort(torch.unique(all_ids))
+            global_ids_per_type[ntype] = unique_ids
+        else:
+            global_ids_per_type[ntype] = torch.tensor([])
 
     hetero_dict = {}
-    for (t, g_s) in enumerate(sub_glist):
+    for t, g_s in enumerate(sub_glist):
         for srctype, etype, dsttype in g_s.canonical_etypes:
-            src, dst = g_s.in_edges(g_s.nodes(dsttype), etype=etype)
-            if '_ID' in g_s.ndata:
-                ID_src = g_s.ndata['_ID'][srctype]
-                ID_dst = g_s.ndata['_ID'][dsttype]
-                new_src = ID_src[src]
-                new_dst = ID_dst[dst]
-                
-                new_new_src = [ID_dict[srctype][e.item()] for e in new_src]
-                new_new_dst = [ID_dict[dsttype][e.item()] for e in new_dst]
-                
-                hetero_dict[(srctype, f'{etype}_t{t}', dsttype)] = (new_new_src, new_new_dst)
-                hetero_dict[(dsttype, f'{etype}_r_t{t}', srctype)] = (new_new_dst, new_new_src)
-            else:
-                hetero_dict[(srctype, f'{etype}_t{t}', dsttype)] = (src, dst)
-                hetero_dict[(dsttype, f'{etype}_r_t{t}', srctype)] = (dst, src)
-
-    G_feat = dgl.heterograph(hetero_dict)
-
-    for (t, g_s) in enumerate(sub_glist):
-        for ntype in G_feat.ntypes:
-            feat_dim = g_s.nodes[ntype].data['feat'].shape[1]
-            G_feat.nodes[ntype].data[f't{t}'] = torch.zeros(G_feat.num_nodes(ntype), feat_dim)
+            if g_s.num_edges(etype) == 0: continue
+            src, dst = g_s.edges(etype=etype)
             
-            if '_ID' in g_s.ndata:
-                node_id = g_s.ndata['_ID'][ntype]
-                node_feat = g_s.ndata['feat'][ntype]
-                for (id, feat) in zip(node_id, node_feat):
-                    G_feat.nodes[ntype].data[f't{t}'][ID_dict[ntype][id.item()]] = feat
+            if '_ID' in g_s.nodes[srctype].data:
+                global_src = g_s.nodes[srctype].data['_ID'][src]
+                global_dst = g_s.nodes[dsttype].data['_ID'][dst]
             else:
-                 G_feat.nodes[ntype].data[f't{t}'] = g_s.nodes[ntype].data['feat']
+                global_src, global_dst = src, dst
+            
+            super_src = torch.searchsorted(global_ids_per_type[srctype], global_src)
+            super_dst = torch.searchsorted(global_ids_per_type[dsttype], global_dst)
+            
+            hetero_dict[(srctype, f'{etype}_t{t}', dsttype)] = (super_src, super_dst)
+            hetero_dict[(dsttype, f'{etype}_r_t{t}', srctype)] = (super_dst, super_src)
+
+    num_nodes_dict = {nt: len(ids) for nt, ids in global_ids_per_type.items()}
+    G_feat = dgl.heterograph(hetero_dict, num_nodes_dict=num_nodes_dict)
+
+    for t, g_s in enumerate(sub_glist):
+        for ntype in G_feat.ntypes:
+            feat = None
+            if 'feat' in g_s.nodes[ntype].data: feat = g_s.nodes[ntype].data['feat']
+            elif 'x' in g_s.nodes[ntype].data: feat = g_s.nodes[ntype].data['x']
+            if feat is None: continue
+            
+            feat_dim = feat.shape[1]
+            target_feat = torch.zeros((G_feat.num_nodes(ntype), feat_dim), dtype=feat.dtype)
+            
+            if '_ID' in g_s.nodes[ntype].data:
+                global_ids_gs = g_s.nodes[ntype].data['_ID']
+            else:
+                global_ids_gs = torch.arange(g_s.num_nodes(ntype))
+            
+            super_indices = torch.searchsorted(global_ids_per_type[ntype], global_ids_gs)
+            target_feat[super_indices] = feat
+            G_feat.nodes[ntype].data[f't{t}'] = target_feat
 
     return G_feat
 
-def generate_APA(graph, device):
-    if ('author', 'writes', 'paper') in graph.canonical_etypes:
-        etype = ('author', 'writes', 'paper')
-    else:
-        return None 
-        
-    AP = graph.adj(etype=etype).to_dense()
-    PA = AP.t()
-    APA = torch.mm(AP.to(device), PA.to(device)).detach().cpu()
-    APA[torch.eye(APA.shape[0]).bool()] = 0.5
-    return APA
-
-def construct_htg_label_mag(glist, idx, device):
-    APA_cur = generate_APA(glist[idx], device)
-    APA_pre = generate_APA(glist[idx-1], device)
+def get_apa_sparse_matrix(g, year_idx):
+    target_et = None
+    is_reverse = False
     
-    if APA_cur is None or APA_pre is None:
+    for et in g.canonical_etypes:
+        if et[0] == 'author' and et[2] == 'paper': target_et = et; break
+        if et[0] == 'paper' and et[2] == 'author': target_et = et; is_reverse = True; break
+            
+    if target_et is None: 
+        print(f"[Debug] Year {year_idx}: No 'author-paper' edge found! Available types: {g.canonical_etypes}")
+        return None
+
+    src, dst = g.edges(etype=target_et)
+    if len(src) == 0:
+        return None
+        
+    src, dst = src.cpu().numpy(), dst.cpu().numpy()
+    
+    if '_ID' in g.nodes[target_et[0]].data:
+        u_global = g.nodes[target_et[0]].data['_ID'][src].numpy()
+        v_global = g.nodes[target_et[2]].data['_ID'][dst].numpy()
+    else:
+        u_global, v_global = src, dst
+
+    if is_reverse: row, col = v_global, u_global
+    else:          row, col = u_global, v_global
+    
+    data = np.ones(len(row), dtype=np.bool_)
+    try:
+        max_r = row.max() + 1
+        max_c = col.max() + 1
+        return sp.csr_matrix((data, (row, col)), shape=(max_r, max_c))
+    except Exception as e:
+        print(f"[Debug] Matrix creation error: {e}")
+        return None
+
+def construct_htg_label_mag(glist, idx, device, time_window):
+    A_cur_raw = get_apa_sparse_matrix(glist[idx], idx)
+    A_pre_raw = get_apa_sparse_matrix(glist[idx-1], idx-1)
+    
+    if A_cur_raw is None: return None, None
+    
+    max_r = A_cur_raw.shape[0]
+    max_c = A_cur_raw.shape[1]
+    if A_pre_raw is not None:
+        max_r = max(max_r, A_pre_raw.shape[0])
+        max_c = max(max_c, A_pre_raw.shape[1])
+        
+    def safe_resize(mat, shape):
+        if mat.shape == shape: return mat
+        mat_coo = mat.tocoo()
+        return sp.csr_matrix((mat_coo.data, (mat_coo.row, mat_coo.col)), shape=shape)
+
+    A_cur = safe_resize(A_cur_raw, (max_r, max_c))
+    if A_pre_raw is not None:
+        A_pre = safe_resize(A_pre_raw, (max_r, max_c))
+    else:
+        A_pre = None
+    
+    APA_cur = A_cur.dot(A_cur.T)
+    if A_pre is not None:
+        APA_pre = A_pre.dot(A_pre.T)
+        APA_diff = (APA_cur > 0).astype(np.int8) - (APA_pre > 0).astype(np.int8)
+        APA_diff = (APA_diff > 0)
+    else:
+        APA_diff = (APA_cur > 0)
+
+    APA_diff = sp.triu(APA_diff, k=1)
+    rows, cols = APA_diff.nonzero()
+    
+    if len(rows) == 0: return None, None
+
+    ids_list = []
+    sub_glist = glist[idx-time_window:idx]
+    
+    for g_s in sub_glist:
+        if '_ID' in g_s.nodes['author'].data: ids_list.append(g_s.nodes['author'].data['_ID'])
+        else: ids_list.append(torch.arange(g_s.num_nodes('author')))
+            
+    if not ids_list: return None, None
+    
+    all_ids = torch.cat(ids_list)
+    unique_ids, _ = torch.sort(torch.unique(all_ids))
+    unique_ids_np = unique_ids.numpy()
+    
+    mask_src = np.isin(rows, unique_ids_np)
+    mask_dst = np.isin(cols, unique_ids_np)
+    valid_mask = mask_src & mask_dst
+    
+    if not np.any(valid_mask): 
         return None, None
 
-    APA_pre = (APA_pre > 0.5).float()
-    APA_cur = (APA_cur > 0.5).float()
-    
-    APA_sub = APA_cur - APA_pre # 新增的合著关系 (Label=1)
-    APA_add = APA_cur + APA_pre
-    APA_add[torch.eye(APA_add.shape[0]).bool()] = 0.5
-    
-    indices_true = (APA_sub == 1).nonzero(as_tuple=True)
-    indices_false = (APA_add == 0).nonzero(as_tuple=True) # 从未合著过的 (Label=0)
-    
-    pos_src = indices_true[0]
-    pos_dst = indices_true[1]
-    
-    # 采样比例 10%
-    size = int(pos_src.shape[0] * 0.1)
-    if size == 0: size = 1
-    
-    pos_idx = torch.randperm(pos_src.shape[0])[:size]
-    pos_src = pos_src[pos_idx]
-    pos_dst = pos_dst[pos_idx] 
-    
-    neg_src = indices_false[0]
-    neg_dst = indices_false[1]
+    rows = rows[valid_mask]
+    cols = cols[valid_mask]
 
-    neg_idx = torch.randperm(neg_src.shape[0])[:size]
-    neg_src = neg_src[neg_idx]
-    neg_dst = neg_dst[neg_idx]
-    
-    return dgl.graph((pos_src, pos_dst), num_nodes=APA_cur.shape[0]), dgl.graph((neg_src, neg_dst), num_nodes=APA_cur.shape[0])
+    src_local = torch.from_numpy(np.searchsorted(unique_ids_np, rows)).long()
+    dst_local = torch.from_numpy(np.searchsorted(unique_ids_np, cols)).long()
+    num_nodes = len(unique_ids_np)
 
-def slice_graph_by_year(whole_graph, t):
-    """
-    从整图(whole_graph)中提取 edge_time == t 的子图。
-    替代原来的 time_select_edge_time。
-    """
-    edge_dict = {}
-    # 遍历所有边类型
-    for etype in whole_graph.canonical_etypes:
-        # 获取边的 key，例如 ('paper', 'published', 'venue') -> 'published' 
-        # DGL存储数据通常用 edge type name (中间那个)
-        # 但如果是多重边，最好用 canonical etype
-        
-        if 'time' in whole_graph.edges[etype].data:
-            time_tensor = whole_graph.edges[etype].data['time']
-            mask = (time_tensor == t)
-            
-            # 如果这一年这类边没有数据，建立空边
-            if mask.sum() == 0:
-                edge_dict[etype] = ([], [])
-            else:
-                # 获取源节点和目标节点
-                src, dst = whole_graph.edges(etype=etype)
-                edge_dict[etype] = (src[mask], dst[mask])
-        else:
-            # 如果某些边没有时间属性，根据需求决定是否保留。通常Aminer数据里都有。
-            edge_dict[etype] = ([], [])
-
-    # 保留节点数量信息
-    num_nodes_dict = {ntype: whole_graph.num_nodes(ntype) for ntype in whole_graph.ntypes}
+    pos_g = dgl.graph((src_local, dst_local), num_nodes=num_nodes).to(device)
     
-    # 构建当前时间步的异构图
-    sub_g = dgl.heterograph(edge_dict, num_nodes_dict=num_nodes_dict)
+    size = max(1, len(src_local))
+    neg_src = torch.randint(0, num_nodes, (size,))
+    neg_dst = torch.randint(0, num_nodes, (size,))
+    neg_g = dgl.graph((neg_src, neg_dst), num_nodes=num_nodes).to(device)
     
-    # 复制节点特征 (Node features 不随时间变化，直接拷贝)
-    for ntype in whole_graph.ntypes:
-        if 'feat' in whole_graph.nodes[ntype].data:
-            sub_g.nodes[ntype].data['feat'] = whole_graph.nodes[ntype].data['feat']
-            
-    return sub_g
+    return pos_g, neg_g
 
-@register_dataset('sehtgnn_aminer')
-class SEHTGNN_Aminer_Dataset(BaseDataset):
+# =============================================================================
+# Datasets
+# =============================================================================
+
+@register_dataset('sehtgnn_ogb')
+class SEHTGNN_OGB_Dataset(BaseDataset):
+    _memory_cache = {}
     def __init__(self, dataset_name, *args, **kwargs):
-        super(SEHTGNN_Aminer_Dataset, self).__init__(*args, **kwargs)
-        self.dataset_name = 'sehtgnn_aminer'
-
+        super(SEHTGNN_OGB_Dataset, self).__init__(*args, **kwargs)
+        self.dataset_name = 'sehtgnn_ogb'
         config = kwargs.get('args')
-
-        if config and hasattr(config, 'time_window'):
-            self.time_window = config.time_window
-        else:
-            self.time_window = 5
-
-        # self.time_window = kwargs.get('time_window', 8)
+        self.time_window = config.time_window if config and hasattr(config, 'time_window') else 5
         self.device = kwargs.get('device', 'cpu')
         
-        self._url = 'https://s3.your-region.amazonaws.com/your-bucket/aminer_base.bin'
+        current_dir = osp.dirname(osp.abspath(__file__))
+        self.data_path = osp.join(current_dir, 'data/ogbn/ogbn_graphs.bin')
+        
+        self.train_set, self.val_set, self.test_set = [], [], []
+        self._g = None
+        
+        cache_key = f"mag_window_{self.time_window}_debug"
+        if cache_key in SEHTGNN_OGB_Dataset._memory_cache:
+            print(f"[Dataset] Hit Cache for {cache_key}")
+            c = SEHTGNN_OGB_Dataset._memory_cache[cache_key]
+            self.train_set, self.val_set, self.test_set, self._g = c['train'], c['val'], c['test'], c['g']
+        else:
+            self.load_data()
+            if self.train_set: SEHTGNN_OGB_Dataset._memory_cache[cache_key] = {'train':self.train_set, 'val':self.val_set, 'test':self.test_set, 'g':self._g}
+
+    def load_data(self):
+        if not osp.exists(self.data_path): return
+        print(f"Processing MAG from {self.data_path}")
+        glist, _ = load_graphs(self.data_path)
+        
+        has_id = '_ID' in glist[0].nodes['author'].data
+        print(f"[Dataset] Has _ID: {has_id}")
+        if not has_id:
+            print("[Dataset] Auto-generating IDs...")
+            for g in glist:
+                for ntype in g.ntypes: g.nodes[ntype].data['_ID'] = torch.arange(g.num_nodes(ntype))
+
+        for i in tqdm(range(len(glist)), desc="Processing"):
+            if i >= self.time_window:
+                G_feat = construct_htg_mag(glist, i, self.time_window).to(self.device)
+                
+                pos_label, neg_label = construct_htg_label_mag(glist, i, self.device, time_window=self.time_window)
+                
+                if pos_label is None: 
+                    print(f" -> Step {i} Skipped (Label is None)")
+                    continue
+                
+                item = (G_feat, (pos_label, neg_label))
+                if i == len(glist)-1: self.test_set.append(item)
+                elif i == len(glist)-2: self.val_set.append(item)
+                else: self.train_set.append(item)
+        
+        if self.train_set: 
+            self._g = self.train_set[0][0]
+            print(f"MAG Loaded: {len(self.train_set)}/{len(self.val_set)}/{len(self.test_set)}")
+        else:
+            print("[Error] MAG dataset is empty! See logs above.")
+
+    def get_split(self): return self.train_set, self.val_set, self.test_set, None, None
+    @property
+    def category(self): return 'author'
+    @property
+    def num_classes(self): return 1
+
+
+@register_dataset('sehtgnn_yelp')
+class SEHTGNN_Yelp_Dataset(BaseDataset):
+    _memory_cache = {}
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(SEHTGNN_Yelp_Dataset, self).__init__(*args, **kwargs)
+        self.dataset_name = 'sehtgnn_yelp'
+        self.time_window = 12 
+        config = kwargs.get('args')
+        if config and hasattr(config, 'time_window'):
+            self.time_window = config.time_window
+        self.device = kwargs.get('device', 'cpu')
         
         current_dir = osp.dirname(osp.abspath(__file__))
-        self.raw_dir = osp.join(current_dir, 'data/Aminer')
-        self.data_path = osp.join(self.raw_dir, 'aminer_base.bin')
+        self.data_path = osp.join(current_dir, 'data/yelp/yelp_graphs.bin')
         
         self.train_set = []
         self.val_set = []
         self.test_set = []
         self._g = None
+        self._num_classes = 3
         
-        self.download()
-        self.load_data()
-
-    def download(self):
-        if osp.exists(self.data_path):
-            return
-        
-        print(f"Downloading Aminer base data to {self.data_path}...")
-        try:
-            if not osp.exists(self.raw_dir):
-                os.makedirs(self.raw_dir)
-            download(self._url, path=self.data_path) 
-        except Exception as e:
-            print(f"Download failed: {e}. Please ensure 'aminer_base.bin' is in {self.raw_dir}")
+        cache_key = f"yelp_window_{self.time_window}_reversed"
+        if cache_key in SEHTGNN_Yelp_Dataset._memory_cache:
+             print(f"[Dataset] Hit Cache for {cache_key}")
+             cached = SEHTGNN_Yelp_Dataset._memory_cache[cache_key]
+             self.train_set = cached['train']
+             self.val_set = cached['val']
+             self.test_set = cached['test']
+             self._g = cached['g']
+        else:
+             self.load_data()
+             if len(self.train_set) > 0:
+                 SEHTGNN_Yelp_Dataset._memory_cache[cache_key] = {
+                    'train': self.train_set, 'val': self.val_set, 'test': self.test_set, 'g': self._g
+                 }
 
     def load_data(self):
-        if not osp.exists(self.data_path):
-            # 本地测试如果没有文件，提示报错
-            raise FileNotFoundError(f"Data file not found at {self.data_path}")
+        if not osp.exists(self.data_path): raise FileNotFoundError(f"File not found: {self.data_path}")
+        atomic_graphs, _ = load_graphs(self.data_path)
+        self._num_classes = 3
 
-        print(f"Loading Atomic Graphs from {self.data_path}")
-        atomic_graphs, _ = load_graphs(self.data_path) 
+        num_items = atomic_graphs[0].num_nodes('item')
+        np.random.seed(0)
+        idxs = np.random.permutation(num_items)
+        val_num = int(0.1 * num_items)
+        test_num = int(0.1 * num_items)
+        train_num = num_items - val_num - test_num
         
-        print("Generating Author Co-occurrence graphs...")
-        eval_datas = [get_author_graph(g) for g in atomic_graphs]
+        train_idx = torch.tensor(idxs[:train_num])
+        val_idx = torch.tensor(idxs[train_num:train_num+val_num])
+        test_idx = torch.tensor(idxs[train_num+val_num:])
         
-        # 索引计算
-        test_idx = len(atomic_graphs) - 1
-        val_idx = len(atomic_graphs) - 2
-        train_idx = len(atomic_graphs) - 3
-        
-        train_nodes_list = [set()]
-        
-        # Transductive Setting 过滤
-        for i in range(train_idx):
-            src, dst = eval_datas[i].edges()
-            active_nodes = set(torch.cat([src, dst]).unique().tolist())
-            current_set = train_nodes_list[-1] | active_nodes
-            train_nodes_list.append(current_set)
-            
-        for i in range(1, train_idx):
-            eval_datas[i] = remove_edges_unseen_nodes(eval_datas[i], train_nodes_list[i])
-            
-        for i in range(train_idx, test_idx + 1):
-            eval_datas[i] = remove_edges_unseen_nodes(eval_datas[i], train_nodes_list[train_idx])
+        train_mask = torch.zeros(num_items).bool()
+        train_mask[train_idx] = True
+        val_mask = torch.zeros(num_items).bool()
+        val_mask[val_idx] = True
+        test_mask = torch.zeros(num_items).bool()
+        test_mask[test_idx] = True
 
-        # Link Split
-        num_nodes_author = atomic_graphs[0].num_nodes('author')
-        eval_datas_split = [linksplit(g, self.device, num_nodes_author) for g in eval_datas]
-        
-        # 获取节点数量字典，用于 time_merge
+        def build_label_graph(g, mask):
+            y = g.nodes['item'].data['y'].long()
+            lg = dgl.heterograph({('user', 'interact', 'item'): ([], [])}, 
+                                 num_nodes_dict={nt: g.num_nodes(nt) for nt in g.ntypes})
+            lg.nodes['item'].data['y'] = y
+            lg.nodes['item'].data['mask'] = mask
+            return lg.to(self.device)
+
+        end_idx = min(len(atomic_graphs), self.time_window)
+        window_graphs = atomic_graphs[0:end_idx]
         num_nodes_dict = {nt: atomic_graphs[0].num_nodes(nt) for nt in atomic_graphs[0].ntypes}
-
-        print(f"Constructing Train/Val/Test sets with TimeWindow={self.time_window}...")
         
-        # Train
-        for k in range(self.time_window, train_idx + 1):
-            window_graphs = atomic_graphs[k-self.time_window : k]
-            
-            feat_g = time_merge(window_graphs, num_nodes_dict, link_pre=True).to(self.device)
-            label_g = eval_datas_split[k]
-            self.train_set.append((feat_g, label_g))
-            
-        # Val
-        if val_idx > self.time_window:
-            window_graphs = atomic_graphs[val_idx-self.time_window : val_idx]
-            feat_g = time_merge(window_graphs, num_nodes_dict, link_pre=True).to(self.device)
-            label_g = eval_datas_split[val_idx]
-            self.val_set.append((feat_g, label_g))
-            
-        # Test
-        if test_idx > self.time_window:
-            window_graphs = atomic_graphs[test_idx-self.time_window : test_idx]
-            feat_g = time_merge(window_graphs, num_nodes_dict, link_pre=True).to(self.device)
-            label_g = eval_datas_split[test_idx]
-            self.test_set.append((feat_g, label_g))
-            
-        if len(self.train_set) > 0:
-            self._g = self.train_set[0][0]
-            
-        print(f"Aminer Processed. Train: {len(self.train_set)}, Val: {len(self.val_set)}, Test: {len(self.test_set)}")
+        feat_g = time_merge(window_graphs, num_nodes_dict, link_pre=False)
+        
+        for ntype in feat_g.ntypes:
+            for key in feat_g.nodes[ntype].data:
+                if 't' in key: # t0, t1, ...
+                    feat_g.nodes[ntype].data[key] = F.normalize(feat_g.nodes[ntype].data[key], p=2, dim=1)
+
+        feat_g = feat_g.to(self.device)
+        
+        train_lg = build_label_graph(atomic_graphs[0], train_mask)
+        val_lg = build_label_graph(atomic_graphs[0], val_mask)
+        test_lg = build_label_graph(atomic_graphs[0], test_mask)
+        
+        self.train_set = [(feat_g, train_lg)]
+        self.val_set = [(feat_g, val_lg)]
+        self.test_set = [(feat_g, test_lg)]
+        self._g = feat_g
+        print("Yelp Processed.")
 
     def get_split(self):
-        return self.train_set, self.val_set, self.test_set, None, None
-        
+        return self.train_set, self.val_set, self.test_set
+    def get_labels(self):
+        return None
+    def multi_label(self):
+        return False
     @property
     def category(self):
-        return 'author'
-    
+        return 'item'
     @property
     def num_classes(self):
-        return 1
+        return self._num_classes
+
 
 @register_dataset('sehtgnn_covid')
 class SEHTGNN_COVID_Dataset(BaseDataset):
@@ -475,7 +528,14 @@ class SEHTGNN_COVID_Dataset(BaseDataset):
     def __init__(self, dataset_name, *args, **kwargs):
         super(SEHTGNN_COVID_Dataset, self).__init__(*args, **kwargs)
         self.dataset_name = 'sehtgnn_covid'
-        self.time_window = kwargs.get('time_window', 7)
+        
+        self.time_window = 7
+        config = kwargs.get('args')
+        if config and hasattr(config, 'time_window'):
+            self.time_window = config.time_window
+        elif 'time_window' in kwargs:
+            self.time_window = kwargs['time_window']
+            
         self.device = kwargs.get('device', 'cpu')
         
         current_dir = osp.dirname(osp.abspath(__file__))
@@ -487,22 +547,12 @@ class SEHTGNN_COVID_Dataset(BaseDataset):
         self.val_set = []
         self.test_set = []
         
-        # Debug
-        if not osp.exists(self.data_path):
-            print(f"[Local Test] File not found: {self.data_path}")
-            print("Please generate 'aminer_base.bin' and place it here manually.")
-            # self.download()
-        else:
-            print(f"[Local Test] Found local file: {self.data_path}, skipping download.")
-
         self.load_data()
 
     def set_args_and_load_feats(self, args):
         self.args = args
-        print(f"[Dataset] Receiving args manually. Path check: {self.llm_feat_path}")
-        
         if os.path.exists(self.llm_feat_path):
-            print(f"[Dataset] Loading LLM features...")
+            print(f"[Dataset] Loading LLM features from {self.llm_feat_path}...")
             try:
                 llm_feats = torch.load(self.llm_feat_path, weights_only=False)
             except TypeError:
@@ -510,57 +560,23 @@ class SEHTGNN_COVID_Dataset(BaseDataset):
             
             clean_feats = {k: v.float() for k, v in llm_feats.items()}
             
-            target_ntype = self.category # 'state'
-            
-            if target_ntype not in clean_feats:
-                # 如果没找到 state，尝试用第一个键的内容顶替
+            target_ntype = self.category
+            if target_ntype not in clean_feats and len(clean_feats) > 0:
                 first_key = list(clean_feats.keys())[0]
-                print(f"   > [Auto-Fix] Target '{target_ntype}' missing. Mapping from '{first_key}'")
                 clean_feats[target_ntype] = clean_feats[first_key]
-            else:
-                print(f"   > [Success] Loaded feature for key: '{target_ntype}'")
-
-            # self._g 在 load_data 之后就已经有了
-            if hasattr(self, '_g') and self._g is not None:
-                ref_feat = next(iter(clean_feats.values()))
-                feat_dim = ref_feat.shape[1]
-                
-                for ntype in self._g.ntypes:
-                    if ntype not in clean_feats:
-                        print(f"   > [Warning] Node type '{ntype}' missing in LLM file.")
-                        num_nodes = self._g.num_nodes(ntype)
-                        
-                        # 补全策略：生成全0特征 (或者随机特征)
-                        print(f"     -> Auto-generating Zero features for '{ntype}' (Shape: {num_nodes}x{feat_dim})")
-                        clean_feats[ntype] = torch.zeros(num_nodes, feat_dim)
             
-            # 挂载到 args
             self.args.semantic_feature = clean_feats
         else:
-            print(f"[Warning] LLM feature file not found.")
             self.args.semantic_feature = None
-
-    def download(self):
-        if os.path.exists(self.data_path):
-            return
-        
-        if self._url is None:
-            # 如果本地没有文件，打印提示
-            if not os.path.exists(self.data_path):
-                print(f"\n[Warning] Dataset file not found at {self.data_path}")
-                print(f"Please place 'covid_graphs.bin' and 'LLM_feature_Llama-3-new.pt' in: {self.raw_dir}\n")
-        else:
-            path = download(self._url, path=self.raw_dir)
-            extract_archive(path, self.raw_dir)
 
     def load_data(self):
         if not osp.exists(self.data_path):
-            return # 如果文件不存在，直接返回
+            print(f"Data not found: {self.data_path}")
+            return
             
         print(f"Processing COVID data from {self.data_path}")
         glist, _ = load_graphs(self.data_path)
         
-        # 预处理：确保所有特征都是 float (融合点)
         for g in glist:
             for ntype in g.ntypes:
                 for key in g.nodes[ntype].data:
@@ -574,19 +590,13 @@ class SEHTGNN_COVID_Dataset(BaseDataset):
             if i >= self.time_window:
                 G_feat, G_label = construct_htg_covid(glist, i, self.time_window)
                 
-                # 获取 Label Tensor
                 target_ntype = 'state'
                 key = 'feat' if 'feat' in G_label.nodes[target_ntype].data else 'x'
                 label_tensor = G_label.nodes[target_ntype].data[key].float()
                 
-                # 确保维度匹配
                 if label_tensor.dim() == 1:
                     label_tensor = label_tensor.unsqueeze(1)
 
-                G_feat = G_feat.to(self.device)
-                label_tensor = label_tensor.to(self.device)
-                
-                # 划分
                 if i >= len(glist) - testlen:
                     self.test_set.append((G_feat, label_tensor))
                 elif i >= len(glist) - testlen - 30:
@@ -604,63 +614,3 @@ class SEHTGNN_COVID_Dataset(BaseDataset):
     @property
     def category(self):
         return 'state'
-
-
-@register_dataset('sehtgnn_mag')
-class SEHTGNN_MAG_Dataset(BaseDataset):
-    def __init__(self, dataset_name, *args, **kwargs):
-        super(SEHTGNN_MAG_Dataset, self).__init__(*args, **kwargs)
-        self.dataset_name = 'sehtgnn_mag'
-        self.time_window = kwargs.get('time_window', 3)
-        self.device = kwargs.get('device', 'cpu')
-        
-        current_dir = osp.dirname(osp.abspath(__file__))
-        self.data_path = osp.join(current_dir, 'data/ogbn/ogbn_graphs.bin')
-        
-        self.train_set = []
-        self.val_set = []
-        self.test_set = []
-        self._g = None
-        
-        self.load_data()
-
-    def load_data(self):
-        if not osp.exists(self.data_path):
-            print(f"MAG data not found at {self.data_path}")
-            return
-
-        print(f"Processing MAG data from {self.data_path}")
-        glist, _ = load_graphs(self.data_path)
-        
-        
-        for i in range(len(glist)):
-            if i >= self.time_window:
-                G_feat = construct_htg_mag(glist, i, self.time_window)
-                G_feat = G_feat.to(self.device)
-                
-                pos_label, neg_label = construct_htg_label_mag(glist, i, self.device)
-                
-                if pos_label is None: continue
-
-                if i == len(glist) - 1:
-                    self.test_set.append((G_feat, (pos_label, neg_label)))
-                elif i == len(glist) - 2:
-                    self.val_set.append((G_feat, (pos_label, neg_label)))
-                else: 
-                    self.train_set.append((G_feat, (pos_label, neg_label)))
-                    
-        if len(self.train_set) > 0:
-            self._g = self.train_set[0][0]
-            
-        print(f"MAG Loaded. Train: {len(self.train_set)}, Val: {len(self.val_set)}, Test: {len(self.test_set)}")
-
-    def get_split(self):
-        return self.train_set, self.val_set, self.test_set, None, None
-        
-    @property
-    def category(self):
-        return 'author'
-
-    @property
-    def num_classes(self):
-        return 1

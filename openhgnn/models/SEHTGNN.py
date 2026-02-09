@@ -216,12 +216,13 @@ class SEHTGNN(BaseModel):
         hidden_dim = getattr(args, 'hidden_dim', 64)
         num_layers = getattr(args, 'num_layers', 2)
         time_window = getattr(args, 'time_window', 7)
+        num_classes = getattr(args, 'num_classes', 1)
         dropout = getattr(args, 'dropout', 0.2)
         norm = getattr(args, 'norm', True)
         
-        return cls(hg, n_inp, hidden_dim, num_layers, time_window, norm, args.device, dropout, llm_feat)
+        return cls(hg, n_inp, hidden_dim, num_layers, time_window, norm, args.device, dropout, llm_feat, num_classes)
 
-    def __init__(self, graph, n_inp, n_hid, n_layers, time_window, norm, device, dropout, LLM_feature):
+    def __init__(self, graph, n_inp, n_hid, n_layers, time_window, norm, device, dropout, LLM_feature, num_classes):
         super(SEHTGNN, self).__init__()
         self.timeframe = [f't{i}' for i in range(time_window)]
         self.device = device
@@ -251,7 +252,7 @@ class SEHTGNN(BaseModel):
         ])
         
         self.LinearProj = LinearProj(n_hid, self.timeframe)
-        self.predictor = NodePredictor(n_hid, 1)
+        self.predictor = NodePredictor(n_hid, num_classes)
 
     def forward(self, hg, h_dict=None):
         init_attention, _ = self.LLM_init()

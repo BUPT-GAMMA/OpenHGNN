@@ -1598,6 +1598,11 @@ class Config(object):
                 self.use_uva = conf.getboolean("SEHTGNN", "use_uva")
             else:
                 self.use_uva = True
+
+            if conf.has_option("SEHTGNN", "num_classes"):
+                self.num_classes = conf.getint("SEHTGNN", "num_classes")
+            else:
+                self.num_classes = 1
             
             if conf.has_option("SEHTGNN", "norm"):
                 self.norm = conf.getboolean("SEHTGNN", "norm")
