@@ -237,6 +237,7 @@ SUPPORTED_DATASETS = {
     "hypergraph": "openhgnn.dataset.HypergraphDataset",
     "pretrain": "openhgnn.dataset.mag_dataset",
     "ktn": "openhgnn.dataset.oag_dataset",
+    "node_regression": "openhgnn.dataset.sehtgnn_dataset",
 }
 
 from .NodeClassificationDataset import NodeClassificationDataset

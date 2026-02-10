@@ -67,8 +67,6 @@ SUPPORTED_TASKS = {
     'Ingram': 'openhgnn.tasks.Ingram',
     'DisenKGAT_link_prediction':'openhgnn.tasks.link_prediction',
     "node_regression": "openhgnn.tasks.node_regression",
-    "covid_node_regression": "openhgnn.tasks.node_regression",
-    "sehtgnn_task": "openhgnn.tasks.sehtgnn_task",
 }
 
 from .node_classification import NodeClassification
@@ -79,7 +77,7 @@ from .hypergraph import hypergraph
 from .node_classification import DSSL_task
 from .ktn import KTN4MultiLabelNodeClassification
 from .Ingram_task import Ingram
-from .sehtgnn_task import SEHTGNNTask
+from .node_regression import NodeRegression
 
 
 __all__ = [
@@ -91,7 +89,7 @@ __all__ = [
     "hypergraph",
     "pretrain",
     "ktn",
-    "SEHTGNNTask",
+    "NodeRegression",
 ]
 
 classes = __all__

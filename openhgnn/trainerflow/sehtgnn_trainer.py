@@ -3,32 +3,41 @@ import torch.nn.functional as F
 from tqdm import tqdm
 import os
 import dgl
-from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, recall_score
+import numpy as np
+from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, recall_score, mean_squared_error, mean_absolute_error
 from . import BaseFlow, register_flow
 from ..tasks import build_task
 from ..models import build_model
 
 class EarlyStopping:
-    def __init__(self, patience=10, save_path='checkpoint.pt'):
+    def __init__(self, patience=10, save_path='checkpoint.pt', mode='max'):
+        """
+        mode: 'max' for AUC/F1 (higher is better), 'min' for RMSE/Loss (lower is better)
+        """
         self.patience = patience
         self.counter = 0
         self.best_score = None
         self.early_stop = False
         self.save_path = save_path
+        self.mode = mode
 
     def step(self, score, model):
         if self.best_score is None:
             self.best_score = score
             self.save_checkpoint(model)
-        elif score < self.best_score:
-            self.counter += 1
-            print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
-            if self.counter >= self.patience:
-                return True
         else:
-            self.best_score = score
-            self.save_checkpoint(model)
-            self.counter = 0
+            improved = (score > self.best_score) if self.mode == 'max' else (score < self.best_score)
+            
+            if improved:
+                self.best_score = score
+                self.save_checkpoint(model)
+                self.counter = 0
+            else:
+                self.counter += 1
+                if self.counter % 5 == 0:
+                    print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+                if self.counter >= self.patience:
+                    return True
         return False
 
     def save_checkpoint(self, model):
@@ -43,53 +52,49 @@ class EarlyStopping:
 
 @register_flow("sehtgnn_trainer")
 class SEHTGNNTrainer(BaseFlow):
-    """
-    Flow for SE-HTGNN model training.
-    Supports both Link Prediction (Aminer/OGB) and Node Classification (Yelp).
-    """
     def __init__(self, args):
         super(SEHTGNNTrainer, self).__init__(args)
         self.args = args
         self.model_name = args.model
         self.device = args.device
         self.dataset_name = args.dataset
-        
-        # Build Task
         self.task = build_task(args)
         
-        # 显式根据数据集名称获取数据
-        if self.dataset_name == 'sehtgnn_yelp':
-            # Yelp (Node Classification)
-            # 在 Task 初始化时我们已经把 list 赋给了这些属性
+        if self.dataset_name == 'sehtgnn_covid':
             self.train_data = self.task.train_hg
             self.val_data = self.task.val_hg
             self.test_data = self.task.test_hg
-            
-            # 强制设置输出维度为类别数 (3类)
+            self.args.out_dim = 1
+            print(f"[Trainer] COVID detected. Setting model out_dim = {self.args.out_dim}")
+        elif self.dataset_name == 'sehtgnn_yelp':
+            self.train_data = self.task.train_hg
+            self.val_data = self.task.val_hg
+            self.test_data = self.task.test_hg
             if hasattr(self.task.dataset, 'num_classes'):
                 self.args.out_dim = self.task.dataset.num_classes
-                print(f"[Trainer] Yelp detected. Setting model out_dim = {self.args.out_dim}")
-                
-        else:
-            # Aminer / OGB (Link Prediction)
+        else: 
             self.train_data = self.task.train_hg
             self.val_data = self.task.val_hg
             self.test_data = self.task.test_hg
 
-        # 采样图用于模型初始化
+        hg_sample = None
         if isinstance(self.train_data, list) and len(self.train_data) > 0:
-            hg_sample = self.train_data[0][0].to(self.device)
+            item = self.train_data[0]
+            hg_sample = item[0] if isinstance(item, tuple) else item
+            hg_sample = hg_sample.to(self.device)
         else:
-            hg_sample = self.task.get_graph().to(self.device)
+            g = self.task.get_graph()
+            if g is not None: hg_sample = g.to(self.device)
 
-        # Build Model
+        if hg_sample is None: raise ValueError("Dataset empty.")
+
         self.model = build_model(self.model_name).build_model_from_args(self.args, hg_sample)
         self.model = self.model.to(self.device)
-        
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         
         ckpt_path = os.path.join(self.args.output_dir, 'checkpoint.pt') if hasattr(self.args, 'output_dir') else 'checkpoint.pt'
-        self.stopper = EarlyStopping(patience=args.patience, save_path=ckpt_path)
+        es_mode = 'min' if self.dataset_name == 'sehtgnn_covid' else 'max'
+        self.stopper = EarlyStopping(patience=args.patience, save_path=ckpt_path, mode=es_mode)
 
     def train(self):
         epoch_iter = tqdm(range(self.max_epoch))
@@ -101,83 +106,76 @@ class SEHTGNNTrainer(BaseFlow):
                 bg = bg.to(self.device)
                 embeddings = self.model(bg) 
                 
-                # 计算 Loss
                 loss = self.loss_calculation(bg, target, embeddings)
                 
                 self.optimizer.zero_grad()
                 loss.backward()
+                
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                
                 self.optimizer.step()
                 total_loss += loss.item()
             
             avg_loss = total_loss / len(self.train_data) if len(self.train_data) > 0 else 0.0
             epoch_iter.set_description(f"Epoch {epoch} | Loss: {avg_loss:.4f}")
 
-            # Validation
             if len(self.val_data) > 0:
                 val_metrics = self._test_step(split='val')
+                early_stop_score = 0
                 
-                # 根据数据集打印不同的指标
-                if self.dataset_name == 'sehtgnn_yelp':
-                    score = val_metrics.get('Macro-F1', 0)
-                    print(f"Epoch {epoch} Val Macro-F1: {score:.4f} | Recall: {val_metrics.get('Recall', 0):.4f}")
+                if self.dataset_name == 'sehtgnn_covid':
+                    early_stop_score = val_metrics.get('RMSE', float('inf'))
+                    print(f"Epoch {epoch} Val MAE: {val_metrics.get('MAE', 0):.4f} | RMSE: {early_stop_score:.4f}")
+                elif self.dataset_name == 'sehtgnn_yelp':
+                    early_stop_score = val_metrics.get('Macro-F1', 0)
+                    print(f"Epoch {epoch} Val Macro-F1: {early_stop_score:.4f}")
                 else:
-                    # Aminer / OGB
-                    score = val_metrics.get('AUC', 0)
-                    print(f"Epoch {epoch} Val AUC: {score:.4f} | AP: {val_metrics.get('AP', 0):.4f}")
+                    early_stop_score = val_metrics.get('AUC', 0)
+                    print(f"Epoch {epoch} Val AUC: {early_stop_score:.4f}")
                 
-                early_stop = self.stopper.step(score, self.model)
-                if early_stop:
+                if self.stopper.step(early_stop_score, self.model):
                     print("Early stopping triggered.")
                     break
         
-        # Test
+        print("Loading best checkpoint for testing...")
         self.stopper.load_checkpoint(self.model)
+        test_metrics = {}
         if len(self.test_data) > 0:
             test_metrics = self._test_step(split='test')
             print(f"Final Test Metrics: {test_metrics}")
-        
-        return dict(Final_Test_Metrics=test_metrics) if len(self.test_data) > 0 else {}
+        return dict(Final_Test_Metrics=test_metrics)
 
     def loss_calculation(self, bg, target, embedding):
         target_ntype = self.task.dataset.category 
         emb = embedding[target_ntype]
         
-        if self.dataset_name == 'sehtgnn_yelp':
+        if self.dataset_name == 'sehtgnn_covid':
+            if isinstance(target, tuple): target = target[0]
+            label = target.to(self.device)
+            if emb.shape != label.shape: label = label.view(emb.shape)
+            
+            return F.l1_loss(emb, label)
+        
+        elif self.dataset_name == 'sehtgnn_yelp':
             target = target.to(self.device)
             labels = target.nodes[target_ntype].data['y']
             mask = target.nodes[target_ntype].data['mask'].bool()
-            
-            preds = emb[mask]
-            labels = labels[mask]
-            
-            return F.cross_entropy(preds, labels.long())
-
+            return F.cross_entropy(emb[mask], labels[mask].long())
         else:
             if isinstance(target, tuple):
                 pos_g, neg_g = target
                 pos_g = pos_g.to(self.device)
                 neg_g = neg_g.to(self.device)
-                
                 u_pos, v_pos = pos_g.edges()
                 pos_score = (emb[u_pos] * emb[v_pos]).sum(dim=1)
-                
                 u_neg, v_neg = neg_g.edges()
                 neg_score = (emb[u_neg] * emb[v_neg]).sum(dim=1)
-                
                 return -torch.mean(F.logsigmoid(pos_score)) - torch.mean(F.logsigmoid(-neg_score))
-            else:
-                 # Fallback for Node Regression (if any)
-                if torch.is_tensor(target):
-                    label = target.to(self.device)
-                    return F.l1_loss(emb, label)
-                else:
-                    raise ValueError(f"Unknown target type for dataset {self.dataset_name}: {type(target)}")
 
     def _test_step(self, split=None):
         self.model.eval()
         data_source = self.val_data if split == 'val' else self.test_data
         target_ntype = self.task.dataset.category
-        
         total_metrics = {}
         count = 0
         
@@ -187,21 +185,32 @@ class SEHTGNNTrainer(BaseFlow):
                 embeddings = self.model(bg)
                 emb = embeddings[target_ntype]
 
-                if self.dataset_name == 'sehtgnn_yelp':
+                if self.dataset_name == 'sehtgnn_covid':
+                    label = target.to(self.device)
+                    if emb.shape != label.shape: label = label.view(emb.shape)
+                    
+                    y_pred_real = emb.cpu().numpy()
+                    y_true_real = label.cpu().numpy()
+
+                    y_pred_real = np.maximum(y_pred_real, 0)
+                    
+                    mae = mean_absolute_error(y_true_real, y_pred_real)
+                    rmse = np.sqrt(mean_squared_error(y_true_real, y_pred_real))
+                    
+                    total_metrics['MAE'] = total_metrics.get('MAE', 0) + mae
+                    total_metrics['RMSE'] = total_metrics.get('RMSE', 0) + rmse
+                    count += 1
+
+                elif self.dataset_name == 'sehtgnn_yelp':
                     target = target.to(self.device)
                     y_true = target.nodes[target_ntype].data['y']
                     mask = target.nodes[target_ntype].data['mask'].bool()
-                    
-                    logits = emb[mask] # [N, 3]
-                    y_true = y_true[mask].cpu().numpy() # [N]
-                    
+                    logits = emb[mask]
+                    y_true = y_true[mask].cpu().numpy()
                     y_pred = logits.argmax(dim=1).cpu().numpy()
                     
-                    macro_f1 = f1_score(y_true, y_pred, average='macro')
-                    recall = recall_score(y_true, y_pred, average='macro')
-                    
-                    total_metrics['Macro-F1'] = total_metrics.get('Macro-F1', 0) + macro_f1
-                    total_metrics['Recall'] = total_metrics.get('Recall', 0) + recall
+                    total_metrics['Macro-F1'] = total_metrics.get('Macro-F1', 0) + f1_score(y_true, y_pred, average='macro')
+                    total_metrics['Recall'] = total_metrics.get('Recall', 0) + recall_score(y_true, y_pred, average='macro')
                     count += 1
 
                 else:
@@ -220,20 +229,9 @@ class SEHTGNNTrainer(BaseFlow):
                         
                         if len(labels) > 0:
                             try:
-                                auc = roc_auc_score(labels, preds)
-                                ap = average_precision_score(labels, preds)
-                                total_metrics['AUC'] = total_metrics.get('AUC', 0) + auc
-                                total_metrics['AP'] = total_metrics.get('AP', 0) + ap
+                                total_metrics['AUC'] = total_metrics.get('AUC', 0) + roc_auc_score(labels, preds)
+                                total_metrics['AP'] = total_metrics.get('AP', 0) + average_precision_score(labels, preds)
                                 count += 1
                             except ValueError: pass
-                    
-                    # Node Regression Fallback
-                    elif torch.is_tensor(target):
-                        label = target.to(self.device)
-                        mae = F.l1_loss(emb, label).item()
-                        mse = F.mse_loss(emb, label).item()
-                        total_metrics['MAE'] = total_metrics.get('MAE', 0) + mae
-                        total_metrics['RMSE'] = total_metrics.get('RMSE', 0) + (mse ** 0.5)
-                        count += 1
 
         return {k: v / count for k, v in total_metrics.items()} if count > 0 else {}

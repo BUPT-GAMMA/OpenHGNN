@@ -156,24 +156,18 @@ def linksplit(data, device, num_nodes):
 def construct_htg_covid(glist, idx, time_window):
     sub_glist = glist[idx-time_window:idx]
     hetero_dict = {}
-    
     for (t, g_s) in enumerate(sub_glist):
         for srctype, etype, dsttype in g_s.canonical_etypes:
             src, dst = g_s.in_edges(g_s.nodes(dsttype), etype=etype)
             hetero_dict[(srctype, f'{etype}_t{t}', dsttype)] = (src, dst)
 
     G_feat = dgl.heterograph(hetero_dict)
-    
     for (t, g_s) in enumerate(sub_glist):
         for ntype in G_feat.ntypes:
             if 'feat' in g_s.nodes[ntype].data:
-                feat = g_s.nodes[ntype].data['feat']
+                G_feat.nodes[ntype].data[f't{t}'] = g_s.nodes[ntype].data['feat']
             elif 'x' in g_s.nodes[ntype].data:
-                feat = g_s.nodes[ntype].data['x']
-            else:
-                continue
-            
-            G_feat.nodes[ntype].data[f't{t}'] = feat
+                G_feat.nodes[ntype].data[f't{t}'] = g_s.nodes[ntype].data['x']
 
     G_label = glist[idx]
     return G_feat, G_label
@@ -416,6 +410,140 @@ class SEHTGNN_OGB_Dataset(BaseDataset):
     @property
     def num_classes(self): return 1
 
+@register_dataset('sehtgnn_aminer')
+class SEHTGNN_Aminer_Dataset(BaseDataset):
+    _memory_cache = {}
+
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(SEHTGNN_Aminer_Dataset, self).__init__(*args, **kwargs)
+        self.dataset_name = 'sehtgnn_aminer'
+
+        config = kwargs.get('args')
+
+        if config and hasattr(config, 'time_window'):
+            self.time_window = config.time_window
+        else:
+            self.time_window = 5
+
+        self.device = kwargs.get('device', 'cpu')
+        
+        self._url = 'https://s3.your-region.amazonaws.com/your-bucket/aminer_base.bin'
+        
+        current_dir = osp.dirname(osp.abspath(__file__))
+        self.raw_dir = osp.join(current_dir, 'data/Aminer')
+        self.data_path = osp.join(self.raw_dir, 'aminer_base.bin')
+        
+        self.train_set = []
+        self.val_set = []
+        self.test_set = []
+        self._g = None
+        
+        cache_key = f"aminer_window_{self.time_window}"
+        
+        if cache_key in SEHTGNN_Aminer_Dataset._memory_cache:
+            print(f"[Dataset] Hit Memory Cache for {cache_key}")
+            cached = SEHTGNN_Aminer_Dataset._memory_cache[cache_key]
+            self.train_set = cached['train']
+            self.val_set = cached['val']
+            self.test_set = cached['test']
+            self._g = cached['g']
+        else:
+            self.download()
+            self.load_data()
+            
+            if len(self.train_set) > 0:
+                SEHTGNN_Aminer_Dataset._memory_cache[cache_key] = {
+                    'train': self.train_set,
+                    'val': self.val_set,
+                    'test': self.test_set,
+                    'g': self._g
+                }
+
+    def download(self):
+        if osp.exists(self.data_path):
+            return
+        
+        print(f"Downloading Aminer base data to {self.data_path}...")
+        try:
+            if not osp.exists(self.raw_dir):
+                os.makedirs(self.raw_dir)
+            download(self._url, path=self.data_path) 
+        except Exception as e:
+            print(f"Download failed: {e}. Please ensure 'aminer_base.bin' is in {self.raw_dir}")
+
+    def load_data(self):
+        if not osp.exists(self.data_path):
+            raise FileNotFoundError(f"Data file not found at {self.data_path}")
+
+        print(f"Loading Atomic Graphs from {self.data_path}")
+        atomic_graphs, _ = load_graphs(self.data_path) 
+        
+        print("Generating Author Co-occurrence graphs...")
+        eval_datas = [get_author_graph(g) for g in atomic_graphs]
+        
+        test_idx = len(atomic_graphs) - 1
+        val_idx = len(atomic_graphs) - 2
+        train_idx = len(atomic_graphs) - 3
+        
+        train_nodes_list = [set()]
+        
+        for i in range(train_idx):
+            src, dst = eval_datas[i].edges()
+            active_nodes = set(torch.cat([src, dst]).unique().tolist())
+            current_set = train_nodes_list[-1] | active_nodes
+            train_nodes_list.append(current_set)
+            
+        for i in range(1, train_idx):
+            eval_datas[i] = remove_edges_unseen_nodes(eval_datas[i], train_nodes_list[i])
+            
+        for i in range(train_idx, test_idx + 1):
+            eval_datas[i] = remove_edges_unseen_nodes(eval_datas[i], train_nodes_list[train_idx])
+
+        num_nodes_author = atomic_graphs[0].num_nodes('author')
+        eval_datas_split = [linksplit(g, self.device, num_nodes_author) for g in eval_datas]
+        
+        num_nodes_dict = {nt: atomic_graphs[0].num_nodes(nt) for nt in atomic_graphs[0].ntypes}
+
+        print(f"Constructing Train/Val/Test sets with TimeWindow={self.time_window}...")
+        
+        # Train
+        for k in range(self.time_window, train_idx + 1):
+            window_graphs = atomic_graphs[k-self.time_window : k]
+            
+            feat_g = time_merge(window_graphs, num_nodes_dict, link_pre=True).to(self.device)
+            label_g = eval_datas_split[k]
+            self.train_set.append((feat_g, label_g))
+            
+        # Val
+        if val_idx > self.time_window:
+            window_graphs = atomic_graphs[val_idx-self.time_window : val_idx]
+            feat_g = time_merge(window_graphs, num_nodes_dict, link_pre=True).to(self.device)
+            label_g = eval_datas_split[val_idx]
+            self.val_set.append((feat_g, label_g))
+            
+        # Test
+        if test_idx > self.time_window:
+            window_graphs = atomic_graphs[test_idx-self.time_window : test_idx]
+            feat_g = time_merge(window_graphs, num_nodes_dict, link_pre=True).to(self.device)
+            label_g = eval_datas_split[test_idx]
+            self.test_set.append((feat_g, label_g))
+            
+        if len(self.train_set) > 0:
+            self._g = self.train_set[0][0]
+            
+        print(f"Aminer Processed. Train: {len(self.train_set)}, Val: {len(self.val_set)}, Test: {len(self.test_set)}")
+
+    def get_split(self):
+        return self.train_set, self.val_set, self.test_set, None, None
+    
+    @property
+    def category(self):
+        return 'author'
+    
+    @property
+    def num_classes(self):
+        return 1
+
 
 @register_dataset('sehtgnn_yelp')
 class SEHTGNN_Yelp_Dataset(BaseDataset):
@@ -524,6 +652,7 @@ class SEHTGNN_Yelp_Dataset(BaseDataset):
 @register_dataset('sehtgnn_covid')
 class SEHTGNN_COVID_Dataset(BaseDataset):
     _url = None 
+    _memory_cache = {}
 
     def __init__(self, dataset_name, *args, **kwargs):
         super(SEHTGNN_COVID_Dataset, self).__init__(*args, **kwargs)
@@ -546,11 +675,18 @@ class SEHTGNN_COVID_Dataset(BaseDataset):
         self.train_set = []
         self.val_set = []
         self.test_set = []
+        self._g = None
+
+        if config:
+            if hasattr(self, '_llm_loaded'): del self._llm_loaded
+            self.set_args_and_load_feats(config)
         
         self.load_data()
 
     def set_args_and_load_feats(self, args):
         self.args = args
+        if hasattr(self, '_llm_loaded') and self._llm_loaded: return
+
         if os.path.exists(self.llm_feat_path):
             print(f"[Dataset] Loading LLM features from {self.llm_feat_path}...")
             try:
@@ -558,14 +694,19 @@ class SEHTGNN_COVID_Dataset(BaseDataset):
             except TypeError:
                 llm_feats = torch.load(self.llm_feat_path)
             
-            clean_feats = {k: v.float() for k, v in llm_feats.items()}
-            
+            clean_feats = {}
+            for k, v in llm_feats.items():
+                feat = v.float()
+                if feat.dim() == 1: feat = feat.unsqueeze(0)
+                feat = torch.nan_to_num(feat, nan=0.0, posinf=0.0, neginf=0.0)
+                clean_feats[k] = feat
+                
             target_ntype = self.category
             if target_ntype not in clean_feats and len(clean_feats) > 0:
-                first_key = list(clean_feats.keys())[0]
-                clean_feats[target_ntype] = clean_feats[first_key]
+                clean_feats[target_ntype] = clean_feats[list(clean_feats.keys())[0]]
             
             self.args.semantic_feature = clean_feats
+            self._llm_loaded = True
         else:
             self.args.semantic_feature = None
 
@@ -577,6 +718,7 @@ class SEHTGNN_COVID_Dataset(BaseDataset):
         print(f"Processing COVID data from {self.data_path}")
         glist, _ = load_graphs(self.data_path)
         
+        print("[Dataset] Loading Data...")
         for g in glist:
             for ntype in g.ntypes:
                 for key in g.nodes[ntype].data:
@@ -592,7 +734,9 @@ class SEHTGNN_COVID_Dataset(BaseDataset):
                 
                 target_ntype = 'state'
                 key = 'feat' if 'feat' in G_label.nodes[target_ntype].data else 'x'
-                label_tensor = G_label.nodes[target_ntype].data[key].float()
+                
+                raw_label = G_label.nodes[target_ntype].data[key].float()
+                label_tensor = raw_label
                 
                 if label_tensor.dim() == 1:
                     label_tensor = label_tensor.unsqueeze(1)
@@ -606,11 +750,10 @@ class SEHTGNN_COVID_Dataset(BaseDataset):
                     
         if len(self.train_set) > 0:
             self._g = self.train_set[0][0]
-            print(f"COVID Loaded. Train: {len(self.train_set)}, Val: {len(self.val_set)}, Test: {len(self.test_set)}")
+            print(f"COVID Loaded (Raw Scale). Train: {len(self.train_set)}, Val: {len(self.val_set)}, Test: {len(self.test_set)}")
 
-    def get_split(self):
-        return self.train_set, self.val_set, self.test_set
-        
+    def get_split(self): return self.train_set, self.val_set, self.test_set
+    def get_labels(self): return None
+    def multi_label(self): return False
     @property
-    def category(self):
-        return 'state'
+    def category(self): return 'state'
