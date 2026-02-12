@@ -75,7 +75,7 @@ kg_subT_datasets = ['family']
 ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
 hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
-SEHTGNN_DATASETS = ['sehtgnn_aminer', 'sehtgnn_ogb', 'sehtgnn_covid', 'sehtgnn_yelp']
+SEHTGNN_DATASETS = ['sehtgnn_aminer', 'sehtgnn_ogbn', 'sehtgnn_covid', 'sehtgnn_yelp']
 
 
 def build_dataset_GB(dataset,*args,**kwargs):

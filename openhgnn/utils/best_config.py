@@ -325,7 +325,7 @@ BEST_CONFIGS = {
         },
         'SEHTGNN': {
             'general':{},
-            'sehtgnn-yelp':{'lr': 0.005, 'weight_decay': 0.0001, 'dropout': 0.6, 'hidden_dim': 32, 'num_layers': 2, 'time_window': 12, 'norm': True, 'patience': 50, 'max_epoch': 500, 'num_classes': 3, 'use_uva': True},
+            'sehtgnn_yelp':{'lr': 0.005, 'weight_decay': 0.0001, 'dropout': 0.6, 'hidden_dim': 32, 'num_layers': 2, 'time_window': 12, 'norm': True, 'patience': 50, 'max_epoch': 500, 'num_classes': 3, 'use_uva': True},
         },
 
     },
@@ -489,7 +489,7 @@ BEST_CONFIGS = {
         },
         'SEHTGNN': {
             'general':{'lr': 0.005, 'weight_decay': 0.0001, 'dropout': 0.3, 'hidden_dim': 32, 'num_layers': 2, 'norm': True, 'patience': 25, 'use_uva': True},
-            'sehtgnn_ogb':{'time_window': 3, 'max_epoch': 500},
+            'sehtgnn_ogbn':{'time_window': 3, 'max_epoch': 500},
             'sehtgnn_aminer':{'time_window': 9, 'max_epoch': 200},
         },
     },

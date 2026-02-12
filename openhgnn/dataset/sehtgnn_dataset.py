@@ -26,16 +26,13 @@ def time_merge(glist, num_nodes_dict=None, link_pre=True):
     
     for (t, g_s) in enumerate(glist):
         for srctype, etype, dsttype in g_s.canonical_etypes:
-            # 跳过空边类型
             if g_s.num_edges(etype) == 0:
                 continue
 
             src, dst = g_s.edges(etype=etype)
             
-            # 正向边
             hetero_dict[(srctype, f'{etype}_t{t}', dsttype)] = (src, dst)
             
-            # 反向边
             hetero_dict[(dsttype, f'{etype}_r_t{t}', srctype)] = (dst, src)
             
     if num_nodes_dict is None:
@@ -346,30 +343,41 @@ def construct_htg_label_mag(glist, idx, device, time_window):
 # Datasets
 # =============================================================================
 
-@register_dataset('sehtgnn_ogb')
-class SEHTGNN_OGB_Dataset(BaseDataset):
+@register_dataset('sehtgnn_ogbn')
+class SEHTGNN_OGBN_Dataset(BaseDataset):
     _memory_cache = {}
+    _url = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/ogbn4SEHTGNN.bin'
+
     def __init__(self, dataset_name, *args, **kwargs):
-        super(SEHTGNN_OGB_Dataset, self).__init__(*args, **kwargs)
-        self.dataset_name = 'sehtgnn_ogb'
+        super(SEHTGNN_OGBN_Dataset, self).__init__(*args, **kwargs)
+        self.dataset_name = 'sehtgnn_ogbn'
         config = kwargs.get('args')
         self.time_window = config.time_window if config and hasattr(config, 'time_window') else 5
         self.device = kwargs.get('device', 'cpu')
         
         current_dir = osp.dirname(osp.abspath(__file__))
-        self.data_path = osp.join(current_dir, 'data/ogbn/ogbn_graphs.bin')
+        self.raw_dir = osp.join(current_dir, 'data/ogbn')
+        self.data_path = osp.join(self.raw_dir, 'ogbn4SEHTGNN.bin')
         
         self.train_set, self.val_set, self.test_set = [], [], []
         self._g = None
         
         cache_key = f"mag_window_{self.time_window}_debug"
-        if cache_key in SEHTGNN_OGB_Dataset._memory_cache:
+        if cache_key in SEHTGNN_OGBN_Dataset._memory_cache:
             print(f"[Dataset] Hit Cache for {cache_key}")
-            c = SEHTGNN_OGB_Dataset._memory_cache[cache_key]
+            c = SEHTGNN_OGBN_Dataset._memory_cache[cache_key]
             self.train_set, self.val_set, self.test_set, self._g = c['train'], c['val'], c['test'], c['g']
         else:
+            self.download()
             self.load_data()
-            if self.train_set: SEHTGNN_OGB_Dataset._memory_cache[cache_key] = {'train':self.train_set, 'val':self.val_set, 'test':self.test_set, 'g':self._g}
+            if self.train_set: 
+                SEHTGNN_OGBN_Dataset._memory_cache[cache_key] = {'train':self.train_set, 'val':self.val_set, 'test':self.test_set, 'g':self._g}
+        
+    def download(self):
+        if not osp.exists(self.data_path):
+            os.makedirs(self.raw_dir, exist_ok=True)
+            print(f"Downloading OGBN data from {self._url}...")
+            download(self._url, path=self.data_path)
 
     def load_data(self):
         if not osp.exists(self.data_path): return
@@ -400,9 +408,9 @@ class SEHTGNN_OGB_Dataset(BaseDataset):
         
         if self.train_set: 
             self._g = self.train_set[0][0]
-            print(f"MAG Loaded: {len(self.train_set)}/{len(self.val_set)}/{len(self.test_set)}")
+            print(f"OGBN-MAG Loaded: {len(self.train_set)}/{len(self.val_set)}/{len(self.test_set)}")
         else:
-            print("[Error] MAG dataset is empty! See logs above.")
+            print("[Error] OGBN-MAG dataset is empty! See logs above.")
 
     def get_split(self): return self.train_set, self.val_set, self.test_set, None, None
     @property
@@ -413,63 +421,37 @@ class SEHTGNN_OGB_Dataset(BaseDataset):
 @register_dataset('sehtgnn_aminer')
 class SEHTGNN_Aminer_Dataset(BaseDataset):
     _memory_cache = {}
+    _url = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/aminer4SEHTGNN.bin'
 
     def __init__(self, dataset_name, *args, **kwargs):
         super(SEHTGNN_Aminer_Dataset, self).__init__(*args, **kwargs)
         self.dataset_name = 'sehtgnn_aminer'
-
         config = kwargs.get('args')
-
-        if config and hasattr(config, 'time_window'):
-            self.time_window = config.time_window
-        else:
-            self.time_window = 5
-
+        self.time_window = config.time_window if config and hasattr(config, 'time_window') else 5
         self.device = kwargs.get('device', 'cpu')
-        
-        self._url = 'https://s3.your-region.amazonaws.com/your-bucket/aminer_base.bin'
         
         current_dir = osp.dirname(osp.abspath(__file__))
         self.raw_dir = osp.join(current_dir, 'data/Aminer')
-        self.data_path = osp.join(self.raw_dir, 'aminer_base.bin')
+        self.data_path = osp.join(self.raw_dir, 'aminer4SEHTGNN.bin')
         
-        self.train_set = []
-        self.val_set = []
-        self.test_set = []
+        self.train_set, self.val_set, self.test_set = [], [], []
         self._g = None
         
         cache_key = f"aminer_window_{self.time_window}"
-        
         if cache_key in SEHTGNN_Aminer_Dataset._memory_cache:
-            print(f"[Dataset] Hit Memory Cache for {cache_key}")
             cached = SEHTGNN_Aminer_Dataset._memory_cache[cache_key]
-            self.train_set = cached['train']
-            self.val_set = cached['val']
-            self.test_set = cached['test']
-            self._g = cached['g']
+            self.train_set, self.val_set, self.test_set, self._g = cached['train'], cached['val'], cached['test'], cached['g']
         else:
             self.download()
             self.load_data()
-            
             if len(self.train_set) > 0:
-                SEHTGNN_Aminer_Dataset._memory_cache[cache_key] = {
-                    'train': self.train_set,
-                    'val': self.val_set,
-                    'test': self.test_set,
-                    'g': self._g
-                }
+                SEHTGNN_Aminer_Dataset._memory_cache[cache_key] = {'train': self.train_set, 'val': self.val_set, 'test': self.test_set, 'g': self._g}
 
     def download(self):
-        if osp.exists(self.data_path):
-            return
-        
-        print(f"Downloading Aminer base data to {self.data_path}...")
-        try:
-            if not osp.exists(self.raw_dir):
-                os.makedirs(self.raw_dir)
-            download(self._url, path=self.data_path) 
-        except Exception as e:
-            print(f"Download failed: {e}. Please ensure 'aminer_base.bin' is in {self.raw_dir}")
+        if not osp.exists(self.data_path):
+            os.makedirs(self.raw_dir, exist_ok=True)
+            print(f"Downloading Aminer data from {self._url}...")
+            download(self._url, path=self.data_path)
 
     def load_data(self):
         if not osp.exists(self.data_path):
@@ -548,38 +530,37 @@ class SEHTGNN_Aminer_Dataset(BaseDataset):
 @register_dataset('sehtgnn_yelp')
 class SEHTGNN_Yelp_Dataset(BaseDataset):
     _memory_cache = {}
+    _url = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/yelp4SEHTGNN.bin'
+
     def __init__(self, dataset_name, *args, **kwargs):
         super(SEHTGNN_Yelp_Dataset, self).__init__(*args, **kwargs)
         self.dataset_name = 'sehtgnn_yelp'
-        self.time_window = 12 
         config = kwargs.get('args')
-        if config and hasattr(config, 'time_window'):
-            self.time_window = config.time_window
+        self.time_window = config.time_window if config and hasattr(config, 'time_window') else 12
         self.device = kwargs.get('device', 'cpu')
         
         current_dir = osp.dirname(osp.abspath(__file__))
-        self.data_path = osp.join(current_dir, 'data/yelp/yelp_graphs.bin')
+        self.raw_dir = osp.join(current_dir, 'data/yelp')
+        self.data_path = osp.join(self.raw_dir, 'yelp4SEHTGNN.bin')
         
-        self.train_set = []
-        self.val_set = []
-        self.test_set = []
+        self.train_set, self.val_set, self.test_set = [], [], []
         self._g = None
-        self._num_classes = 3
         
-        cache_key = f"yelp_window_{self.time_window}_reversed"
+        cache_key = f"yelp_window_{self.time_window}"
         if cache_key in SEHTGNN_Yelp_Dataset._memory_cache:
-             print(f"[Dataset] Hit Cache for {cache_key}")
              cached = SEHTGNN_Yelp_Dataset._memory_cache[cache_key]
-             self.train_set = cached['train']
-             self.val_set = cached['val']
-             self.test_set = cached['test']
-             self._g = cached['g']
+             self.train_set, self.val_set, self.test_set, self._g = cached['train'], cached['val'], cached['test'], cached['g']
         else:
+             self.download()
              self.load_data()
              if len(self.train_set) > 0:
-                 SEHTGNN_Yelp_Dataset._memory_cache[cache_key] = {
-                    'train': self.train_set, 'val': self.val_set, 'test': self.test_set, 'g': self._g
-                 }
+                 SEHTGNN_Yelp_Dataset._memory_cache[cache_key] = {'train': self.train_set, 'val': self.val_set, 'test': self.test_set, 'g': self._g}
+
+    def download(self):
+        if not osp.exists(self.data_path):
+            os.makedirs(self.raw_dir, exist_ok=True)
+            print(f"Downloading Yelp data from {self._url}...")
+            download(self._url, path=self.data_path)
 
     def load_data(self):
         if not osp.exists(self.data_path): raise FileNotFoundError(f"File not found: {self.data_path}")
@@ -651,37 +632,37 @@ class SEHTGNN_Yelp_Dataset(BaseDataset):
 
 @register_dataset('sehtgnn_covid')
 class SEHTGNN_COVID_Dataset(BaseDataset):
-    _url = None 
     _memory_cache = {}
+    _url = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/covid4SEHTGNN.bin'
+    _llm_url = 'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/Llama-3-4SEHTGNN.pt'
 
     def __init__(self, dataset_name, *args, **kwargs):
         super(SEHTGNN_COVID_Dataset, self).__init__(*args, **kwargs)
         self.dataset_name = 'sehtgnn_covid'
-        
-        self.time_window = 7
         config = kwargs.get('args')
-        if config and hasattr(config, 'time_window'):
-            self.time_window = config.time_window
-        elif 'time_window' in kwargs:
-            self.time_window = kwargs['time_window']
-            
+        self.time_window = config.time_window if config and hasattr(config, 'time_window') else 7
         self.device = kwargs.get('device', 'cpu')
         
         current_dir = osp.dirname(osp.abspath(__file__))
         self.raw_dir = osp.join(current_dir, 'data/Covid19')
-        self.data_path = osp.join(self.raw_dir, 'covid_graphs.bin')
-        self.llm_feat_path = osp.join(self.raw_dir, 'LLM_feature_Llama-3-new.pt')
+        self.data_path = osp.join(self.raw_dir, 'covid4SEHTGNN.bin')
+        self.llm_feat_path = osp.join(self.raw_dir, 'Llama-3-4SEHTGNN.pt')
         
-        self.train_set = []
-        self.val_set = []
-        self.test_set = []
-        self._g = None
-
+        self.train_set, self.val_set, self.test_set = [], [], []
+        
         if config:
-            if hasattr(self, '_llm_loaded'): del self._llm_loaded
             self.set_args_and_load_feats(config)
         
+        self.download()
         self.load_data()
+
+    def download(self):
+        if not osp.exists(self.data_path):
+            os.makedirs(self.raw_dir, exist_ok=True)
+            print(f"Downloading COVID data from {self._url}...")
+            download(self._url, path=self.data_path)
+            print(f"Downloading Llama-3 checkpoint for COVID dataset from {self._url}...")
+            download(self._llm_url, path=self.llm_feat_path)
 
     def set_args_and_load_feats(self, args):
         self.args = args

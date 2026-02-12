@@ -96,28 +96,35 @@ class SEHTGNNTrainer(BaseFlow):
         es_mode = 'min' if self.dataset_name == 'sehtgnn_covid' else 'max'
         self.stopper = EarlyStopping(patience=args.patience, save_path=ckpt_path, mode=es_mode)
 
+    def _full_train_step(self):
+        """
+        Full Batch Training Step
+        """
+        self.model.train()
+        total_loss = 0
+        
+        for i, (bg, target) in enumerate(self.train_data):
+            bg = bg.to(self.device)
+            embeddings = self.model(bg) 
+            
+            loss = self.loss_calculation(bg, target, embeddings)
+            
+            self.optimizer.zero_grad()
+            loss.backward()
+            
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+            
+            self.optimizer.step()
+            total_loss += loss.item()
+        
+        return total_loss / len(self.train_data) if len(self.train_data) > 0 else 0.0
+
     def train(self):
         epoch_iter = tqdm(range(self.max_epoch))
         for epoch in epoch_iter:
-            self.model.train()
-            total_loss = 0
+            train_loss = self._full_train_step()
             
-            for i, (bg, target) in enumerate(self.train_data):
-                bg = bg.to(self.device)
-                embeddings = self.model(bg) 
-                
-                loss = self.loss_calculation(bg, target, embeddings)
-                
-                self.optimizer.zero_grad()
-                loss.backward()
-                
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-                
-                self.optimizer.step()
-                total_loss += loss.item()
-            
-            avg_loss = total_loss / len(self.train_data) if len(self.train_data) > 0 else 0.0
-            epoch_iter.set_description(f"Epoch {epoch} | Loss: {avg_loss:.4f}")
+            epoch_iter.set_description(f"Epoch {epoch} | Loss: {train_loss:.4f}")
 
             if len(self.val_data) > 0:
                 val_metrics = self._test_step(split='val')

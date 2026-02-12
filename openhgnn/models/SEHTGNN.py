@@ -194,6 +194,64 @@ class HTGNNLayer(nn.Module):
 
 @register_model('SEHTGNN')
 class SEHTGNN(BaseModel):
+    r"""
+    This is the model SE-HTGNN from `Simple and Efficient Heterogeneous Temporal Graph Neural Network 
+    <https://arxiv.org/abs/2510.18467v1>`__.
+
+    The model proposes a unified spatial-temporal learning paradigm that integrates temporal modeling into 
+    spatial learning via a dynamic attention mechanism, guided by LLM-enhanced prior knowledge.
+
+    1. Heterogeneous Feature Projection:
+
+    .. math::
+        H_v^t = W_v \cdot X_v^t + b_v
+
+    2. Simplified Neighbor Aggregation (GCN-style):
+
+    .. math::
+        H_{v,r}^t = \sigma(A_r^t H_{\mathcal{N}_r^t(v)}^t)
+
+    3. Dynamic-Attention-based Fusion (via GRU):
+
+    .. math::
+        e_{v,r}^t = GRU_r(H_{v,r}^t, e_{v,r}^{t-1})
+        
+    .. math::
+        \alpha_r^t = \frac{\exp(\overline{e}_{v,r}^t)}{\sum_{r' \in \mathcal{R}(v)} \exp(\overline{e}_{v,r'}^t)}
+
+    4. Representation Fusion:
+
+    .. math::
+        H_v^t = \sum_{r \in \mathcal{R}(v)} \alpha_r^t \cdot H_{v,r}^t
+
+    5. Linear Temporal Projection:
+
+    .. math::
+        Z_v' = Z_v \cdot W + b
+
+    Parameters
+    ----------
+    graph : DGLGraph
+        The input heterogeneous temporal graph snapshots.
+    n_inp : int
+        The input feature dimension.
+    n_hid : int
+        The hidden dimension for representations.
+    n_layers : int
+        The number of GNN layers.
+    time_window : int
+        The size of the temporal window (number of snapshots).
+    norm : bool
+        Whether to use LayerNorm or residual connections.
+    device : torch.device
+        The device for computation.
+    dropout : float
+        The dropout rate for feature adaptation.
+    LLM_feature : dict
+        The dictionary containing LLM-encoded semantic features for node types.
+    num_classes : int
+        The number of output classes or prediction steps.
+    """
     @classmethod
     def build_model_from_args(cls, args, hg):
         llm_feat = getattr(args, 'semantic_feature', None)
