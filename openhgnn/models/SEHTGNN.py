@@ -335,13 +335,10 @@ class SEHTGNN(BaseModel):
                         
                     feat_to_adapt = raw_feat
                     
-                    # 如果该节点类型有压缩器，先压缩
                     if ntype in self.feat_compressors:
                         feat_to_adapt = self.feat_compressors[ntype](raw_feat)
-                        # 可选：加个激活函数增加非线性能力
                         feat_to_adapt = F.relu(feat_to_adapt) 
 
-                    # 再过 Adaption Layer
                     spatial_feat[ntype][ttype] = self.adaption_layer[ntype](self.drop(feat_to_adapt))
         
         for layer in self.gnn_layers:
