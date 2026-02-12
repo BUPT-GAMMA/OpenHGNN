@@ -1609,9 +1609,6 @@ class Config(object):
             else:
                 self.norm = True
 
-            if self.dataset == 'covid_dataset':
-                self.hidden_dim = 8
-
 
         if hasattr(self, "device"):
             self.device = th.device(self.device)
