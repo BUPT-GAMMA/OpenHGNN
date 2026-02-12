@@ -1,4 +1,4 @@
-# SE-HTGNN [NeurIPS 2025/ArXiv]
+# SE-HTGNN [NeurIPS 2025]
 
 -   **Paper**: [Simple and Efficient Heterogeneous Temporal Graph Neural Network](https://doi.org/10.48550/arXiv.2510.18467)
 -   **Code from author**: [SE-HTGNN](https://github.com/wangyili00/SE-HTGNN)
