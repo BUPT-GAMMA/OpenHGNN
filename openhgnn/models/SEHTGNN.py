@@ -261,16 +261,6 @@ class SEHTGNN(BaseModel):
             dim = list(llm_feat.values())[0].shape[1]
             print(f"[SEHTGNN] LLM feature dimension: {dim}")
             
-        n_inp = 1
-        for ntype in hg.ntypes:
-            if 't0' in hg.nodes[ntype].data:
-                feat = hg.nodes[ntype].data['t0']
-                if feat.dim() > 1:
-                    n_inp = feat.shape[1]
-                    break
-        
-        print(f"[SEHTGNN] Detected input feature dimension: {n_inp}")
-
         hidden_dim = getattr(args, 'hidden_dim', 32)
         num_layers = getattr(args, 'num_layers', 2)
         time_window = getattr(args, 'time_window', 7)
@@ -278,9 +268,9 @@ class SEHTGNN(BaseModel):
         dropout = getattr(args, 'dropout', 0.3)
         norm = getattr(args, 'norm', True)
         
-        return cls(hg, n_inp, hidden_dim, num_layers, time_window, norm, args.device, dropout, llm_feat, num_classes)
+        return cls(hg, hidden_dim, num_layers, time_window, norm, args.device, dropout, llm_feat, num_classes)
 
-    def __init__(self, graph, n_inp, n_hid, n_layers, time_window, norm, device, dropout, LLM_feature, num_classes):
+    def __init__(self, graph, n_hid, n_layers, time_window, norm, device, dropout, LLM_feature, num_classes):
         super(SEHTGNN, self).__init__()
         self.timeframe = [f't{i}' for i in range(time_window)]
         self.device = device
@@ -289,21 +279,13 @@ class SEHTGNN(BaseModel):
         self.drop = nn.Dropout(dropout)
         
         self.adaption_layer = nn.ModuleDict()
-        self.feat_compressors = nn.ModuleDict()
-        
-        high_dim_threshold = 512
         
         for ntype in graph.ntypes:
-            feat_dim = n_inp
             if 't0' in graph.nodes[ntype].data:
-                feat = graph.nodes[ntype].data['t0']
-                if feat.dim() > 1:
-                    feat_dim = feat.shape[1]
-
-            if feat_dim > high_dim_threshold:
-                self.adaption_layer[ntype] = nn.Linear(feat_dim, n_hid)
+                feat_dim = graph.nodes[ntype].data['t0'].shape[1]
             else:
-                self.adaption_layer[ntype] = nn.Linear(feat_dim, n_hid)
+                feat_dim = 1
+            self.adaption_layer[ntype] = nn.Linear(feat_dim, n_hid)
         
         if LLM_feature is not None: 
             self.LLM_init = LLM4init(graph, n_hid, LLM_feature, device)
@@ -327,19 +309,13 @@ class SEHTGNN(BaseModel):
             for ttype in self.timeframe:
                 if ttype in hg.nodes[ntype].data:
                     raw_feat = hg.nodes[ntype].data[ttype]
-                    if raw_feat.dtype != torch.float32: 
+                    if raw_feat.dtype != torch.float32:
                         raw_feat = raw_feat.float()
                     
                     if raw_feat.dim() == 1:
                         raw_feat = raw_feat.unsqueeze(1)
                         
-                    feat_to_adapt = raw_feat
-                    
-                    if ntype in self.feat_compressors:
-                        feat_to_adapt = self.feat_compressors[ntype](raw_feat)
-                        feat_to_adapt = F.relu(feat_to_adapt) 
-
-                    spatial_feat[ntype][ttype] = self.adaption_layer[ntype](self.drop(feat_to_adapt))
+                    spatial_feat[ntype][ttype] = self.adaption_layer[ntype](self.drop(raw_feat))
         
         for layer in self.gnn_layers:
             spatial_feat = layer(hg, spatial_feat, init_attention)
