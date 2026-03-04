@@ -179,3 +179,10 @@ cython_debug/
 
 # history
 .history
+
+
+.venv_htg/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
