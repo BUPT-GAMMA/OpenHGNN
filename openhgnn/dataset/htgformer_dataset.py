@@ -123,6 +123,8 @@ class AminerHTGDataset(HTGDatasetBase):
         self._num_timestamps = num_timestamps
         self.use_synthetic = use_synthetic
         super().__init__(name='aminer_htg', raw_dir=raw_dir)
+        if not hasattr(self, 'meta'):
+            self.process()
 
     def _build_snapshots(self):
         if self.use_synthetic:
