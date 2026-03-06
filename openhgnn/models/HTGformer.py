@@ -1,294 +1,251 @@
 """
-HTGformer Model Implementation
-================================
-Paper: HTGformer: Heterogeneous Temporal Graph Transformer (SIGIR 2025)
-Paper URL: https://dl.acm.org/doi/10.1145/3726302.3730209
+HTGformer 完整模型
+严格对应论文 HTGformer (SIGIR 2025) Section 3
 
-完整模型架构：
-  输入: T 个时间切片的异质图序列 + 各时间步各类型节点特征
-  流程:
-    Step 1 → GraphEmbeddingLayer
-             ├─ HeteroFeatureProjection (公式1)
-             └─ GCNAggregation per relation (公式2)
-    Step 2 → Token Sequence Construction
-             将所有时间步、所有类型的节点嵌入拼成 [B, L, d]
-    Step 3 → TemporalTypeEmbedding injection (公式3,4)
-    Step 4 → Stacked HTGformerEncoderLayer (公式5)
-    Step 5 → Readout：取目标节点的最后时间步 token 做分类/回归
+整体流程（对应论文Figure 1(a)）：
+  输入: T个时间切片异质图 + 节点特征
+    ↓
+  [Graph Embedding Layer] Section 3.1
+    对每个时间步t，对目标节点v：
+    - 公式(1): H^t_{v,r} = A^t_r H^t_{N^t_r(v)}  （各关系邻居聚合）
+    - 收集 {H^t_{v,r}} ∪ {H^t_v} 作为多视角特征
+    ↓
+  [Hetero-Temporal Encoder] Section 3.2
+    - 公式(3): H^LLM_v = LLM(Prompt(v))          （LLM类型编码）
+    - 公式(4): p^t_i = sin/cos(...)               （正弦时序编码）
+    - 公式(5): H^{sp,t}_v = H^LLM_v + p^t        （时空编码）
+    - Z^t_v = concat(H^t_v, H^{sp,t}_v)          （增强表示）
+    ↓
+  [Spatio-Temporal Attention] Section 3.3
+    - 公式(6)(7): Z'_v = Softmax(QK^T/√d_K)V     （共享参数注意力）
+    ↓
+  [Optimization] Section 3.4
+    - MLP分类头 -> 损失函数
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from openhgnn.models import BaseModel, register_model
 
-# 引入自定义层（在 OpenHGNN 中路径为 openhgnn/layers/htgformer_layer.py）
-# 这里使用相对路径，部署时改为 openhgnn.layers.htgformer_layer
 from openhgnn.layers.htgformer_layer import (
     GraphEmbeddingLayer,
-    TemporalTypeEmbedding,
+    HeteroTemporalEncoder,
     HTGformerEncoderLayer,
 )
+
+try:
+    from openhgnn.models import BaseModel, register_model
+    HAS_OPENHGNN = True
+except ImportError:
+    HAS_OPENHGNN = False
+    BaseModel = nn.Module
+    def register_model(name):
+        def decorator(cls): return cls
+        return decorator
 
 
 @register_model('HTGformer')
 class HTGformer(BaseModel):
     """
     HTGformer: Heterogeneous Temporal Graph Transformer
-
-    核心思想（区别于 HTGNN 等现有方法）：
-      * 现有方法：空间建模 → 时序建模 （串行，参数独立）
-      * HTGformer：将所有时空信息 flatten 成 token 序列，
-                   用单一 Transformer 统一建模，避免参数爆炸和
-                   优化困难，实现最多 6× 加速。
-
-    Args（通过 args 传入）:
-        in_dim_dict    (dict):  {node_type: raw_input_dim}
-        hidden_dim     (int):   统一隐层维度 d，默认 64
-        num_heads      (int):   MHA 头数，默认 4
-        num_layers     (int):   Transformer 层数，默认 2
-        num_gcn_layers (int):   GCN 聚合层数，默认 1
-        dropout        (float): dropout，默认 0.1
-        num_timestamps (int):   时间切片数 T
-        node_types     (list):  所有节点类型列表
-        category       (str):   目标节点类型（用于预测）
-        out_dim        (int):   输出维度（类别数）
+    
+    论文超参数（Section 4.1.3）：
+      hidden_dim = 64（COVID-19用8）
+      num_heads = 4（推断，论文未明确说明头数）
+      num_layers = 2（推断）
+      lr = 5e-3
+      weight_decay = 5e-4
+      max_epochs = 500
+      early_stopping = 25
+      spatio-temporal encoding dim = 64
     """
 
     @classmethod
-    def build_model_from_args(cls, args):
+    def build_model_from_args(cls, args, hg):
         return cls(
-            in_dim_dict=args.in_dim_dict,
+            in_dim_dict={ntype: hg.nodes[ntype].data['h'].shape[-1]
+                         for ntype in hg.ntypes
+                         if 'h' in hg.nodes[ntype].data},
             hidden_dim=getattr(args, 'hidden_dim', 64),
             num_heads=getattr(args, 'num_heads', 4),
             num_layers=getattr(args, 'num_layers', 2),
-            num_gcn_layers=getattr(args, 'num_gcn_layers', 1),
             dropout=getattr(args, 'dropout', 0.1),
-            num_timestamps=args.num_timestamps,
-            node_types=args.node_types,
+            num_timestamps=getattr(args, 'num_timestamps', 10),
+            node_types=hg.ntypes,
             category=args.category,
             out_dim=args.out_dim,
+            use_llm=getattr(args, 'use_llm', False),
+            llm_embed_path=getattr(args, 'llm_embed_path', None),
         )
 
     def __init__(
         self,
-        in_dim_dict: dict,
-        hidden_dim: int,
-        num_heads: int,
-        num_layers: int,
-        num_gcn_layers: int,
-        dropout: float,
-        num_timestamps: int,
-        node_types: list,
-        category: str,
-        out_dim: int,
+        in_dim_dict,        # {ntype: int}，各节点类型原始特征维度
+        hidden_dim,         # int，隐层维度d（论文d=64）
+        num_heads,          # int，注意力头数
+        num_layers,         # int，Transformer层数
+        dropout,            # float
+        num_timestamps,     # int，时间步数T
+        node_types,         # List[str]
+        category,           # str，目标节点类型
+        out_dim,            # int，输出类别数
+        use_llm=False,      # bool，是否使用LLM编码
+        llm_embed_path=None,# str，预计算LLM嵌入路径
     ):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.num_timestamps = num_timestamps
         self.node_types = node_types
         self.category = category
-        self.out_dim = out_dim
 
-        # 节点类型到 ID 的映射
-        self.ntype2id = {ntype: i for i, ntype in enumerate(node_types)}
-        num_node_types = len(node_types)
+        # embed_dim = 2 * hidden_dim
+        # 因为 Z^t_v = concat(H^t_v, H^{sp,t}_v)，各hidden_dim维
+        self.embed_dim = 2 * hidden_dim
 
-        # ── Step 1: Graph Embedding Layer ──────────────────────────────────
-        # 公式(1)(2)
-        self.graph_embedding = GraphEmbeddingLayer(
-            in_dim_dict=in_dim_dict,
+        # ── Section 3.1: Graph Embedding Layer ──────────────────────────
+        # 公式(1): 非参数图卷积
+        self.graph_emb = GraphEmbeddingLayer()
+
+        # ── Section 3.2: Hetero-Temporal Encoder ────────────────────────
+        # 公式(2)(3)(4)(5): LLM类型编码 + 正弦时序编码 + concat
+        self.hetero_temporal_enc = HeteroTemporalEncoder(
+            node_types=node_types,
+            feat_dim_dict=in_dim_dict,
             hidden_dim=hidden_dim,
-            num_layers=num_gcn_layers,
-            dropout=dropout,
+            use_llm=use_llm,
+            llm_embed_path=llm_embed_path,
         )
 
-        # ── Step 2: Temporal & Type Embedding ─────────────────────────────
-        # 公式(3)(4)
-        self.temporal_type_emb = TemporalTypeEmbedding(
-            num_node_types=num_node_types,
-            num_timestamps=num_timestamps,
-            hidden_dim=hidden_dim,
-        )
-
-        # ── Step 3: Stacked Transformer Encoder ───────────────────────────
-        # 公式(5)
+        # ── Section 3.3: Spatio-Temporal Attention ──────────────────────
+        # 公式(6)(7): 共享参数的多头自注意力，堆叠num_layers层
         self.encoder_layers = nn.ModuleList([
             HTGformerEncoderLayer(
-                hidden_dim=hidden_dim,
+                embed_dim=self.embed_dim,
                 num_heads=num_heads,
-                ffn_dim=4 * hidden_dim,
                 dropout=dropout,
             )
             for _ in range(num_layers)
         ])
 
-        # ── Step 4: Output Head ────────────────────────────────────────────
-        self.output_norm = nn.LayerNorm(hidden_dim)
-        self.classifier = nn.Linear(hidden_dim, out_dim)
-        self.dropout = nn.Dropout(dropout)
+        # ── Section 3.4: Optimization ────────────────────────────────────
+        # 两层MLP（论文原文："two layer multilayer perceptron (MLP)"）
+        # 输入：flatten后的Z'_v（T个时间步的预测表示）
+        # 注意：论文取T+1时刻的表示进行预测：H_v = MLP(Z^{T+1}_v)
+        self.classifier = nn.Sequential(
+            nn.Linear(self.embed_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, out_dim),
+        )
 
         self._init_weights()
 
     def _init_weights(self):
-        nn.init.xavier_uniform_(self.classifier.weight)
-        nn.init.zeros_(self.classifier.bias)
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    nn.init.zeros_(module.bias)
 
-    # ──────────────────────────────────────────────────────────────────────
-    # Forward Pass
-    # ──────────────────────────────────────────────────────────────────────
-    def forward(self, graphs: list, feat_dicts: list,
-                target_node_ids: dict = None):
+    def forward(self, graphs, feat_dicts, target_node_ids=None):
         """
+        完整前向传播
+
         Args:
-            graphs:          List[DGLHeteroGraph], 长度 T，每个是一个时间切片
-            feat_dicts:      List[dict], 每个 dict: {node_type: Tensor[N, d_raw]}
-            target_node_ids: {node_type: Tensor[N_target]}，目标节点ID（可选）
-                             若 None，使用所有目标类型节点
+            graphs: List[DGLGraph]，T个时间步的异质图
+            feat_dicts: List[dict]，T个时间步的节点特征 {ntype: tensor}
+            target_node_ids: Optional tensor，目标节点索引（None则取全部）
 
         Returns:
-            logits: Tensor[N_target, out_dim]
+            logits: tensor [N_target, out_dim]
         """
         T = len(graphs)
-        assert T == self.num_timestamps, \
-            f"Expected {self.num_timestamps} time steps, got {T}"
+        device = feat_dicts[0][self.category].device
 
-        # ── Step 1: Graph Embedding for all time slices ────────────────────
-        # emb_list[t] = {ntype: Tensor[N_v, d]}
-        emb_list = self.graph_embedding(graphs, feat_dicts)
+        # ── Step 1: Graph Embedding Layer (公式1) ──────────────────────
+        # seq_list[t]: {'self': [N,d], rel1: [N,d], ...}
+        seq_list = self.graph_emb(graphs, feat_dicts, self.category)
 
-        # ── Step 2: Build Token Sequence ───────────────────────────────────
-        # 对每个时间步 t，对每个节点类型，将所有节点视为 token
-        # 最终拼成 [1, L, d]  (batch_size=1 for full-graph training)
-        # L = T * sum_v |V_v|
-
-        tokens = []      # List of [N_v, d]
-        type_ids = []    # List of [N_v]  (节点类型id)
-        time_ids = []    # List of [N_v]  (时间步id)
-
-        # 记录目标节点在序列中的位置（用于 readout）
-        target_positions = []
-        running_offset = 0
-
+        # ── Step 2: Hetero-Temporal Encoder (公式3,4,5) ─────────────────
+        # 对每个时间步，对每种视角（自身+各关系）生成Z^t_v
+        # 收集成序列 Z: [N, L, embed_dim]
+        # L = T * (1 + num_relations)
+        all_tokens = []
         for t in range(T):
-            emb_t = emb_list[t]
-            for ntype in self.node_types:
-                if ntype not in emb_t:
+            t_repr = seq_list[t]
+            # 对目标节点自身特征
+            self_feat = t_repr['self']  # [N, feat_dim]
+            # 构造临时feat_dict用于hetero_temporal_enc
+            t_feat_dict = {self.category: self_feat}
+            Z_t_self = self.hetero_temporal_enc(
+                t_feat_dict, t, self.category
+            )  # [N, 2*d]
+            all_tokens.append(Z_t_self)
+
+            # 对每种关系的邻居聚合
+            for rel, h_agg in t_repr.items():
+                if rel == 'self':
                     continue
-                feat = emb_t[ntype]         # [N_v, d]
-                N_v = feat.shape[0]
+                t_feat_dict_rel = {self.category: h_agg}
+                Z_t_rel = self.hetero_temporal_enc(
+                    t_feat_dict_rel, t, self.category
+                )  # [N, 2*d]
+                all_tokens.append(Z_t_rel)
 
-                tokens.append(feat)
-                type_ids.append(
-                    torch.full((N_v,), self.ntype2id[ntype],
-                               dtype=torch.long, device=feat.device)
-                )
-                time_ids.append(
-                    torch.full((N_v,), t,
-                               dtype=torch.long, device=feat.device)
-                )
+        # Z: [N, L, embed_dim]
+        Z = torch.stack(all_tokens, dim=1)  # [N, L, 2*d]
 
-                # 如果是目标类型且是最后一个时间步，记录 offset
-                if ntype == self.category and t == T - 1:
-                    if target_node_ids is not None:
-                        tgt_ids = target_node_ids.get(ntype, None)
-                        if tgt_ids is not None:
-                            target_positions.append(
-                                running_offset + tgt_ids
-                            )
-                        else:
-                            target_positions.append(
-                                torch.arange(running_offset,
-                                             running_offset + N_v,
-                                             device=feat.device)
-                            )
-                    else:
-                        target_positions.append(
-                            torch.arange(running_offset,
-                                         running_offset + N_v,
-                                         device=feat.device)
-                        )
-                running_offset += N_v
+        # Z_v: 目标节点在各时间步的自身表示（作为Query）
+        # 取前T个token（对应T个时间步的self表示）
+        Z_v = Z[:, :T, :]  # [N, T, 2*d]
 
-        # [L, d], [L], [L]
-        token_seq = torch.cat(tokens, dim=0)        # [L, d]
-        type_id_seq = torch.cat(type_ids, dim=0)    # [L]
-        time_id_seq = torch.cat(time_ids, dim=0)    # [L]
-
-        # ── Step 3: Inject Temporal & Type Embeddings (公式3,4) ────────────
-        token_seq = self.temporal_type_emb(token_seq, type_id_seq, time_id_seq)
-
-        # Reshape to [1, L, d] for Transformer (batch=1)
-        token_seq = token_seq.unsqueeze(0)           # [1, L, d]
-
-        # ── Step 4: Transformer Encoder Layers (公式5) ─────────────────────
+        # ── Step 3: Spatio-Temporal Attention (公式6,7) ─────────────────
         for layer in self.encoder_layers:
-            token_seq = layer(token_seq)
+            Z_v = layer(Z_v, Z)  # [N, T, 2*d]
 
-        token_seq = token_seq.squeeze(0)             # [L, d]
+        # ── Step 4: Optimization (Section 3.4) ──────────────────────────
+        # 取最后一个时间步（T时刻）的表示做预测
+        # 论文："Take the T+1 as an example: H_v = MLP(Z^{T+1}_v)"
+        # 实际上取Z_v的最后一个时间步（对应预测T+1时刻）
+        h_v = Z_v[:, -1, :]  # [N, 2*d]
 
-        # ── Step 5: Readout ────────────────────────────────────────────────
-        # 取目标节点在最后时间步对应的 token
-        tgt_pos = target_positions[0] if target_positions else \
-                  torch.arange(token_seq.shape[0], device=token_seq.device)
+        if target_node_ids is not None:
+            h_v = h_v[target_node_ids]
 
-        tgt_emb = token_seq[tgt_pos]                 # [N_target, d]
-        tgt_emb = self.output_norm(tgt_emb)
-        tgt_emb = self.dropout(tgt_emb)
-        logits = self.classifier(tgt_emb)            # [N_target, out_dim]
-
+        logits = self.classifier(h_v)  # [N_target, out_dim]
         return logits
 
-    def get_embeddings(self, graphs: list, feat_dicts: list) -> dict:
+    def link_prediction_forward(self, graphs, feat_dicts):
         """
-        返回所有节点在最后时间步的嵌入，用于下游任务或可视化。
-
-        Returns:
-            emb_dict: {node_type: Tensor[N, d]}
+        链路预测任务的前向传播
+        公式(8): L = -sum log σ(H_i^T H_j) - sum log σ(-H_i'^T H_j')
         """
         T = len(graphs)
-        emb_list = self.graph_embedding(graphs, feat_dicts)
+        seq_list = self.graph_emb(graphs, feat_dicts, self.category)
 
-        tokens_by_type = {ntype: [] for ntype in self.node_types}
-        type_ids_all, time_ids_all = [], []
-        offset_map = {}    # {(ntype, t): (start, end)}
-        running = 0
-
+        all_tokens = []
         for t in range(T):
-            emb_t = emb_list[t]
-            for ntype in self.node_types:
-                if ntype not in emb_t:
+            t_repr = seq_list[t]
+            self_feat = t_repr['self']
+            t_feat_dict = {self.category: self_feat}
+            Z_t = self.hetero_temporal_enc(t_feat_dict, t, self.category)
+            all_tokens.append(Z_t)
+            for rel, h_agg in t_repr.items():
+                if rel == 'self':
                     continue
-                feat = emb_t[ntype]
-                N_v = feat.shape[0]
-                tokens_by_type[ntype].append(feat)
-                type_ids_all.append(
-                    torch.full((N_v,), self.ntype2id[ntype],
-                               dtype=torch.long, device=feat.device)
+                t_feat_dict_rel = {self.category: h_agg}
+                Z_t_rel = self.hetero_temporal_enc(
+                    t_feat_dict_rel, t, self.category
                 )
-                time_ids_all.append(
-                    torch.full((N_v,), t,
-                               dtype=torch.long, device=feat.device)
-                )
-                offset_map[(ntype, t)] = (running, running + N_v)
-                running += N_v
+                all_tokens.append(Z_t_rel)
 
-        token_all = torch.cat(
-            [feat for nt in self.node_types for feat in tokens_by_type[nt]
-             if tokens_by_type[nt]], dim=0
-        )
-        type_id_all = torch.cat(type_ids_all, dim=0)
-        time_id_all = torch.cat(time_ids_all, dim=0)
+        Z = torch.stack(all_tokens, dim=1)
+        Z_v = Z[:, :T, :]
 
-        token_all = self.temporal_type_emb(token_all, type_id_all, time_id_all)
-        token_all = token_all.unsqueeze(0)
         for layer in self.encoder_layers:
-            token_all = layer(token_all)
-        token_all = token_all.squeeze(0)
+            Z_v = layer(Z_v, Z)
 
-        result = {}
-        for ntype in self.node_types:
-            start, end = offset_map.get((ntype, T - 1), (0, 0))
-            if end > start:
-                result[ntype] = self.output_norm(token_all[start:end])
-        return result
+        h_v = Z_v[:, -1, :]
+        # 通过MLP得到节点嵌入
+        h_v = self.classifier[0](h_v)  # 只取第一层Linear作为嵌入
+        return h_v

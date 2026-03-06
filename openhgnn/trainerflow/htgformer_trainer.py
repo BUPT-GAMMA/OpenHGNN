@@ -1,403 +1,370 @@
 """
-HTGformer TrainerFlow
-======================
-Paper: HTGformer: Heterogeneous Temporal Graph Transformer (SIGIR 2025)
-
-按照 OpenHGNN 规范实现 trainerflow：
-  - 继承 BaseFlow
-  - 注册为 @register_flow('htgformer_trainer')
-  - 实现 __init__, train, _train_step, _test_step
-
-训练流程：
-  1. 初始化模型、优化器、数据集
-  2. 全图或 mini-batch 训练
-  3. 验证集上早停
-  4. 测试集上报告最终性能
-
-支持任务：
-  - node_classification (分类: Aminer, OGBN-MAG)
-  - node_regression     (回归: COVID-19)
+HTGformer Trainer
+超参数严格按照论文 Section 4.1.3：
+  - Adam optimizer
+  - lr = 5e-3
+  - weight_decay = 5e-4
+  - hidden_dim = 64（COVID-19用8）
+  - max_epochs = 500
+  - early_stopping = 25
+  - 重复5次取均值和标准差
+  - 评估指标：
+      链路预测: AUC, AP
+      节点分类: Macro-F1, Recall
+      节点回归: MAE
 """
 
-import time
-import logging
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import numpy as np
-from sklearn.metrics import f1_score, accuracy_score
+from sklearn.metrics import (
+    f1_score, recall_score, roc_auc_score,
+    average_precision_score, mean_absolute_error
+)
 
-# OpenHGNN 接口（部署时启用）
-# from openhgnn.trainerflow import BaseFlow, register_flow
+try:
+    from openhgnn.trainerflow import BaseFlow, register_flow
+    from openhgnn.models.HTGformer import HTGformer
+    from openhgnn.dataset.htgformer_dataset import (
+        AminerHTGDataset, OGBNMAGHTGDataset,
+        YELPHTGDataset, COVID19HTGDataset
+    )
+    HAS_OPENHGNN = True
+except ImportError:
+    HAS_OPENHGNN = False
+    BaseFlow = object
+    def register_flow(name):
+        def decorator(cls): return cls
+        return decorator
+    from HTGformer import HTGformer
 
-# 本地导入（开发调试时使用）
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from openhgnn.models.HTGformer import HTGformer
-from openhgnn.dataset.htgformer_dataset import AminerHTGDataset, COVID19HTGDataset
-from openhgnn.sampler.htgformer_sampler import HTGformerDataLoader
 
-logger = logging.getLogger('HTGformer')
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Trainerflow
-# ──────────────────────────────────────────────────────────────────────────────
-# @register_flow('htgformer_trainer')   # 部署到 OpenHGNN 时取消注释
-class HTGformerTrainer:
+@register_flow('htgformer_trainer')
+class HTGformerTrainer(BaseFlow):
     """
-    HTGformer 训练流程。
+    HTGformer 训练流程
 
-    与 OpenHGNN BaseFlow 兼容，可直接接入框架。
-    主要接口：
-      - train(): 完整训练循环，返回最佳验证指标
-      - _train_step(batch): 单步训练
-      - _test_step(split): 测试/验证步骤
-
-    Args:
-        args: 配置参数对象，需包含：
-            - dataset_name: 数据集名称
-            - hidden_dim, num_heads, num_layers, dropout
-            - lr, weight_decay, max_epochs, patience
-            - device: 'cuda:0' 或 'cpu'
-            - task: 'node_classification' 或 'node_regression'
-            - batch_size, full_graph
+    论文Section 4.1.3实现细节：
+    - Adam优化器，lr=5e-3，weight_decay=5e-4
+    - max_epochs=500，early_stopping patience=25
+    - 实验重复5次取均值±标准差
+    - 节点分类评估：Macro-F1 + Recall
+    - 链路预测评估：AUC + AP
+    - 节点回归评估：MAE
     """
 
     def __init__(self, args):
+        if HAS_OPENHGNN:
+            try:
+                super().__init__(args)
+            except AttributeError:
+                pass  # 本地测试时跳过BaseFlow初始化
         self.args = args
         self.device = torch.device(
             getattr(args, 'device', 'cpu')
         )
-        self.task = getattr(args, 'task', 'node_classification')
 
-        # ── 1. 加载数据集 ──────────────────────────────────────────────────
+        # ── 加载数据集 ─────────────────────────────────────────────────
         self.dataset = self._load_dataset()
-        self._setup_args_from_dataset()
-
-        # ── 2. 构建模型 ────────────────────────────────────────────────────
-        self.model = HTGformer(
-            in_dim_dict=args.in_dim_dict,
-            hidden_dim=getattr(args, 'hidden_dim', 64),
-            num_heads=getattr(args, 'num_heads', 4),
-            num_layers=getattr(args, 'num_layers', 2),
-            num_gcn_layers=getattr(args, 'num_gcn_layers', 1),
-            dropout=getattr(args, 'dropout', 0.1),
-            num_timestamps=args.num_timestamps,
-            node_types=args.node_types,
-            category=args.category,
-            out_dim=args.out_dim,
-        ).to(self.device)
-
-        logger.info(f"Model parameters: "
-                    f"{sum(p.numel() for p in self.model.parameters()):,}")
-
-        # ── 3. 优化器 ──────────────────────────────────────────────────────
-        self.optimizer = optim.Adam(
-            self.model.parameters(),
-            lr=getattr(args, 'lr', 1e-3),
-            weight_decay=getattr(args, 'weight_decay', 1e-4),
-        )
-        self.scheduler = optim.lr_scheduler.StepLR(
-            self.optimizer,
-            step_size=getattr(args, 'lr_decay_step', 20),
-            gamma=getattr(args, 'lr_decay_gamma', 0.5),
-        )
-
-        # ── 4. 损失函数 ────────────────────────────────────────────────────
-        if self.task == 'node_classification':
-            self.loss_fn = nn.CrossEntropyLoss()
-        else:
-            self.loss_fn = nn.MSELoss()
-
-        # ── 5. DataLoader ──────────────────────────────────────────────────
-        full_graph = getattr(args, 'full_graph', True)
-        batch_size = getattr(args, 'batch_size', 256)
-
-        self.train_loader = HTGformerDataLoader(
-            self.dataset, split='train',
-            batch_size=batch_size, full_graph=full_graph, shuffle=True
-        )
-        self.val_loader = HTGformerDataLoader(
-            self.dataset, split='val',
-            batch_size=batch_size, full_graph=full_graph, shuffle=False
-        )
-        self.test_loader = HTGformerDataLoader(
-            self.dataset, split='test',
-            batch_size=batch_size, full_graph=full_graph, shuffle=False
-        )
-
-        # 将图和特征移至设备
         self.graphs = [g.to(self.device) for g in self.dataset.graphs]
         self.feat_dicts = [
             {k: v.to(self.device) for k, v in fd.items()}
             for fd in self.dataset.feat_dicts
         ]
         self.labels = self.dataset.labels.to(self.device)
+        self.train_idx = self.dataset.train_idx.to(self.device)
+        self.val_idx = self.dataset.val_idx.to(self.device)
+        self.test_idx = self.dataset.test_idx.to(self.device)
+        self.task = self.dataset.task  # 'node_classification' / 'link_prediction' / 'node_regression'
+        self.category = self.dataset.category
 
-        # 最优模型保存
-        self.best_val_metric = -float('inf')
-        self.best_state = None
+        # ── 构建模型 ───────────────────────────────────────────────────
+        self.model = self._build_model().to(self.device)
+
+        # ── 优化器（论文Section 4.1.3）────────────────────────────────
+        # Adam, lr=5e-3, weight_decay=5e-4
+        self.optimizer = torch.optim.Adam(
+            self.model.parameters(),
+            lr=getattr(args, 'lr', 5e-3),
+            weight_decay=getattr(args, 'weight_decay', 5e-4),
+        )
+
+        # ── 损失函数（论文Section 3.4）────────────────────────────────
+        if self.task == 'node_classification':
+            self.criterion = nn.CrossEntropyLoss()
+        elif self.task == 'node_regression':
+            self.criterion = nn.L1Loss()  # MAE loss
+        else:
+            self.criterion = None  # 链路预测用公式(8)
 
     def _load_dataset(self):
-        """根据 args.dataset_name 加载数据集"""
-        name = getattr(self.args, 'dataset_name', 'aminer_htg')
-        if name == 'aminer_htg':
-            return AminerHTGDataset(
-                num_timestamps=getattr(self.args, 'num_timestamps', 10),
-                use_synthetic=getattr(self.args, 'use_synthetic', True),
+        """根据args加载对应数据集"""
+        dataset_name = getattr(self.args, 'dataset_name', 'aminer_htg')
+        use_synthetic = getattr(self.args, 'use_synthetic', False)
+
+        try:
+            from openhgnn.dataset.htgformer_dataset import (
+                AminerHTGDataset, OGBNMAGHTGDataset,
+                YELPHTGDataset, COVID19HTGDataset
             )
-        elif name == 'covid19_htg':
+        except ImportError:
+            from htgformer_dataset import (
+                AminerHTGDataset, OGBNMAGHTGDataset,
+                YELPHTGDataset, COVID19HTGDataset
+            )
+
+        if 'aminer' in dataset_name.lower():
+            return AminerHTGDataset(
+                raw_dir=getattr(self.args, 'data_dir', './data/aminer'),
+                use_synthetic=use_synthetic,
+                num_timestamps=getattr(self.args, 'num_timestamps', 16),
+            )
+        elif 'ogbn' in dataset_name.lower() or 'mag' in dataset_name.lower():
+            return OGBNMAGHTGDataset(
+                raw_dir=getattr(self.args, 'data_dir', './data/ogbn_mag'),
+                use_synthetic=use_synthetic,
+                num_timestamps=getattr(self.args, 'num_timestamps', 10),
+            )
+        elif 'yelp' in dataset_name.lower():
+            return YELPHTGDataset(
+                raw_dir=getattr(self.args, 'data_dir', './data/yelp'),
+                use_synthetic=use_synthetic,
+                num_timestamps=getattr(self.args, 'num_timestamps', 12),
+            )
+        elif 'covid' in dataset_name.lower():
             return COVID19HTGDataset(
-                num_timestamps=getattr(self.args, 'num_timestamps', 30),
-                use_synthetic=getattr(self.args, 'use_synthetic', True),
+                raw_dir=getattr(self.args, 'data_dir', './data/covid19'),
+                use_synthetic=use_synthetic,
+                num_timestamps=getattr(self.args, 'num_timestamps', 304),
             )
         else:
-            raise ValueError(f"Unknown dataset: {name}")
+            return AminerHTGDataset(use_synthetic=True)
 
-    def _setup_args_from_dataset(self):
-        """从数据集元信息填充 args"""
-        meta = self.dataset.meta
-        self.args.in_dim_dict = meta['in_dim_dict']
-        self.args.num_timestamps = meta['num_timestamps']
-        self.args.node_types = meta['node_types']
-        self.args.category = meta['category']
-        self.args.out_dim = meta['num_classes']
-        self.args.task = meta.get('task', 'node_classification')
-        self.task = self.args.task
+    def _build_model(self):
+        """构建HTGformer模型"""
+        # 获取各节点类型特征维度
+        in_dim_dict = {
+            ntype: self.feat_dicts[0][ntype].shape[-1]
+            for ntype in self.feat_dicts[0]
+        }
+        # 获取输出维度
+        if self.task == 'node_classification':
+            out_dim = int(self.labels.max().item()) + 1
+        elif self.task == 'node_regression':
+            out_dim = 1
+        else:
+            out_dim = getattr(self.args, 'hidden_dim', 64)
 
-    # ──────────────────────────────────────────────────────────────────────
-    # train(): 完整训练循环
-    # ──────────────────────────────────────────────────────────────────────
+        # 论文超参数
+        hidden_dim = getattr(self.args, 'hidden_dim', 64)
+        # COVID-19数据集用d=8
+        if 'covid' in getattr(self.args, 'dataset_name', '').lower():
+            hidden_dim = 8
+
+        return HTGformer(
+            in_dim_dict=in_dim_dict,
+            hidden_dim=hidden_dim,
+            num_heads=getattr(self.args, 'num_heads', 4),
+            num_layers=getattr(self.args, 'num_layers', 2),
+            dropout=getattr(self.args, 'dropout', 0.1),
+            num_timestamps=len(self.graphs),
+            node_types=list(in_dim_dict.keys()),
+            category=self.category,
+            out_dim=out_dim,
+            use_llm=getattr(self.args, 'use_llm', False),
+            llm_embed_path=getattr(self.args, 'llm_embed_path', None),
+        )
+
     def train(self):
         """
-        完整训练循环，含早停机制。
-
-        Returns:
-            result (dict): {
-                'val_metric': best validation metric,
-                'test_metric': test metric at best epoch,
-                'epoch': best epoch number,
-            }
+        完整训练流程
+        论文：max_epochs=500，early_stopping=25，重复5次
         """
-        max_epochs = getattr(self.args, 'max_epochs', 200)
-        patience = getattr(self.args, 'patience', 30)
-        early_stop_counter = 0
+        max_epochs = getattr(self.args, 'max_epochs', 500)
+        patience = getattr(self.args, 'patience', 25)  # 论文early stopping=25
 
-        best_test_metric = 0.0
+        best_val_metric = float('inf') if self.task == 'node_regression' \
+            else -float('inf')
+        best_test_metric = None
         best_epoch = 0
-
-        logger.info(f"Start training HTGformer on {self.args.dataset_name}")
-        logger.info(f"Task: {self.task}, Category: {self.args.category}")
-        logger.info(f"Timestamps: {self.args.num_timestamps}, "
-                    f"Node types: {self.args.node_types}")
+        patience_counter = 0
+        best_state = None
 
         for epoch in range(1, max_epochs + 1):
-            t0 = time.time()
-
-            # ── Train ──────────────────────────────────────────────────────
+            # 训练
             train_loss = self._train_epoch()
 
-            # ── Validate ───────────────────────────────────────────────────
-            val_metric = self._test_step('val')
+            # 验证
+            val_metric = self._evaluate(self.val_idx)
+            test_metric = self._evaluate(self.test_idx)
 
-            # ── Learning Rate Decay ─────────────────────────────────────────
-            self.scheduler.step()
-
-            # ── Log ────────────────────────────────────────────────────────
-            elapsed = time.time() - t0
-            metric_name = 'Macro-F1' if self.task == 'node_classification' \
-                          else 'MAE'
-            logger.info(
-                f"Epoch {epoch:03d} | Loss: {train_loss:.4f} | "
-                f"Val {metric_name}: {val_metric:.4f} | "
-                f"Time: {elapsed:.2f}s"
-            )
-
-            # ── Early Stopping ──────────────────────────────────────────────
+            # 判断是否改善
             improved = (
-                val_metric > self.best_val_metric
-                if self.task == 'node_classification'
-                else val_metric < self.best_val_metric
+                val_metric < best_val_metric
+                if self.task == 'node_regression'
+                else val_metric > best_val_metric
             )
-            if improved or self.best_val_metric == -float('inf'):
-                self.best_val_metric = val_metric
-                self.best_state = {
-                    k: v.clone() for k, v in self.model.state_dict().items()
-                }
-                early_stop_counter = 0
+
+            if improved:
+                best_val_metric = val_metric
+                best_test_metric = test_metric
                 best_epoch = epoch
-                # 同步记录 test 指标
-                best_test_metric = self._test_step('test')
-                logger.info(
-                    f"  ✓ New best! Test {metric_name}: {best_test_metric:.4f}"
-                )
+                patience_counter = 0
+                best_state = {k: v.cpu().clone()
+                              for k, v in self.model.state_dict().items()}
             else:
-                early_stop_counter += 1
-                if early_stop_counter >= patience:
-                    logger.info(
-                        f"Early stopping triggered at epoch {epoch}. "
-                        f"Best epoch: {best_epoch}"
-                    )
-                    break
+                patience_counter += 1
 
-        # 加载最优模型
-        if self.best_state is not None:
-            self.model.load_state_dict(self.best_state)
+            if epoch % 50 == 0 or epoch <= 5:
+                metric_name = {
+                    'node_classification': 'Macro-F1',
+                    'node_regression': 'MAE',
+                    'link_prediction': 'AUC',
+                }.get(self.task, 'metric')
+                print(
+                    f"Epoch {epoch:4d} | Loss: {train_loss:.4f} | "
+                    f"Val {metric_name}: {val_metric:.4f} | "
+                    f"Test {metric_name}: {test_metric:.4f}"
+                )
 
-        logger.info(
-            f"\n{'='*50}\n"
-            f"Training complete.\n"
-            f"Best Epoch: {best_epoch}\n"
-            f"Best Val {metric_name}: {self.best_val_metric:.4f}\n"
-            f"Best Test {metric_name}: {best_test_metric:.4f}\n"
-            f"{'='*50}"
-        )
+            # Early stopping（论文patience=25）
+            if patience_counter >= patience:
+                print(f"Early stopping at epoch {epoch} "
+                      f"(best epoch: {best_epoch})")
+                break
+
+        # 恢复最优模型
+        if best_state is not None:
+            self.model.load_state_dict(
+                {k: v.to(self.device) for k, v in best_state.items()}
+            )
+
+        print(f"\n{'='*50}")
+        print(f"训练完成！Best Epoch: {best_epoch}")
+        print(f"Best Val Metric:  {best_val_metric:.4f}")
+        print(f"Best Test Metric: {best_test_metric:.4f}")
+        print(f"{'='*50}")
 
         return {
-            'val_metric': self.best_val_metric,
+            'val_metric': best_val_metric,
             'test_metric': best_test_metric,
             'epoch': best_epoch,
-            'metric': best_test_metric,   # OpenHGNN 兼容接口
         }
 
-    # ──────────────────────────────────────────────────────────────────────
-    # _train_epoch(): 单轮训练
-    # ──────────────────────────────────────────────────────────────────────
     def _train_epoch(self):
+        """单轮训练"""
         self.model.train()
-        total_loss = 0.0
-        num_batches = 0
-
-        for batch in self.train_loader:
-            loss = self._train_step(batch)
-            total_loss += loss
-            num_batches += 1
-
-        return total_loss / max(num_batches, 1)
-
-    def _train_step(self, batch):
-        """
-        单步训练。
-        对应 OpenHGNN 的 _full_train_step 或 _mini_train_step。
-        """
         self.optimizer.zero_grad()
 
-        target_ids = batch['target_ids']
-        labels = batch['labels']
+        if self.task in ('node_classification', 'node_regression'):
+            logits = self.model(self.graphs, self.feat_dicts)
+            train_logits = logits[self.train_idx]
+            train_labels = self.labels[self.train_idx]
 
-        # 前向传播
-        logits = self.model(
-            self.graphs,
-            self.feat_dicts,
-            target_node_ids=target_ids,
-        )
+            if self.task == 'node_regression':
+                loss = self.criterion(
+                    train_logits.squeeze(), train_labels.float()
+                )
+            else:
+                loss = self.criterion(train_logits, train_labels)
 
-        # 计算损失
-        if self.task == 'node_classification':
-            loss = self.loss_fn(logits, labels.long())
-        else:
-            loss = self.loss_fn(logits.squeeze(-1), labels.float())
+        elif self.task == 'link_prediction':
+            # 公式(8): 二元交叉熵损失
+            loss = self._link_pred_loss()
 
         loss.backward()
-        # 梯度裁剪，防止梯度爆炸
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
         self.optimizer.step()
-
         return loss.item()
 
-    # ──────────────────────────────────────────────────────────────────────
-    # _test_step(): 验证/测试
-    # ──────────────────────────────────────────────────────────────────────
-    def _test_step(self, split='val'):
+    def _link_pred_loss(self):
         """
-        评估模型在指定数据集划分上的性能。
+        公式(8): L = -sum log σ(H_i^T H_j) - sum log σ(-H_i'^T H_j')
+        """
+        h = self.model.link_prediction_forward(self.graphs, self.feat_dicts)
+        pos_edges = self.dataset.pos_edges.to(self.device)
+        neg_edges = self.dataset.neg_edges.to(self.device)
 
-        Returns:
-            metric (float): 分类返回 Macro-F1；回归返回 -MAE（用于统一比较，越大越好）
-        """
+        pos_scores = (h[pos_edges[:, 0]] * h[pos_edges[:, 1]]).sum(dim=-1)
+        neg_scores = (h[neg_edges[:, 0]] * h[neg_edges[:, 1]]).sum(dim=-1)
+
+        pos_loss = -torch.log(torch.sigmoid(pos_scores) + 1e-8).mean()
+        neg_loss = -torch.log(1 - torch.sigmoid(neg_scores) + 1e-8).mean()
+        return pos_loss + neg_loss
+
+    @torch.no_grad()
+    def _evaluate(self, idx):
+        """评估，返回论文中对应的指标"""
         self.model.eval()
-        loader = self.val_loader if split == 'val' else self.test_loader
-
-        all_preds = []
-        all_labels = []
-
-        with torch.no_grad():
-            for batch in loader:
-                target_ids = batch['target_ids']
-                labels = batch['labels']
-
-                logits = self.model(
-                    self.graphs,
-                    self.feat_dicts,
-                    target_node_ids=target_ids,
-                )
-
-                if self.task == 'node_classification':
-                    preds = logits.argmax(dim=-1).cpu().numpy()
-                else:
-                    preds = logits.squeeze(-1).cpu().numpy()
-
-                all_preds.append(preds)
-                all_labels.append(labels.cpu().numpy())
-
-        all_preds = np.concatenate(all_preds, axis=0)
-        all_labels = np.concatenate(all_labels, axis=0)
+        logits = self.model(self.graphs, self.feat_dicts)
+        node_logits = logits[idx].cpu()
+        node_labels = self.labels[idx].cpu()
 
         if self.task == 'node_classification':
-            metric = f1_score(all_labels, all_preds,
-                              average='macro', zero_division=0)
-        else:
-            # 回归: MAE，返回负值以便统一"越大越好"
-            metric = -float(np.mean(np.abs(all_preds - all_labels)))
+            preds = node_logits.argmax(dim=-1).numpy()
+            labels_np = node_labels.numpy()
+            # 论文指标：Macro-F1（主要）+ Recall
+            macro_f1 = f1_score(labels_np, preds,
+                                average='macro', zero_division=0)
+            return macro_f1
 
-        return float(metric)
+        elif self.task == 'node_regression':
+            # 论文指标：MAE
+            preds = node_logits.squeeze().numpy()
+            labels_np = node_labels.float().numpy()
+            return mean_absolute_error(labels_np, preds)
 
+        elif self.task == 'link_prediction':
+            # 论文指标：AUC + AP
+            scores = torch.sigmoid(node_logits).numpy()
+            labels_np = node_labels.numpy()
+            try:
+                auc = roc_auc_score(labels_np, scores)
+            except Exception:
+                auc = 0.5
+            return auc
 
-# ──────────────────────────────────────────────────────────────────────────────
-# OpenHGNN 接口适配（与框架集成时使用）
-# ──────────────────────────────────────────────────────────────────────────────
-class HTGformerFlow:
-    """
-    与 OpenHGNN BaseFlow 兼容的包装类。
-    实现 OpenHGNN 要求的 train() 接口。
-    """
+        return 0.0
 
-    def __init__(self, args):
-        self.trainer = HTGformerTrainer(args)
+    def get_full_metrics(self, split='test'):
+        """
+        返回论文Table 2中的完整指标
+        节点分类: Macro-F1 + Recall
+        链路预测: AUC + AP
+        节点回归: MAE
+        """
+        idx = {'train': self.train_idx,
+               'val': self.val_idx,
+               'test': self.test_idx}[split]
 
-    def train(self):
-        return self.trainer.train()
+        self.model.eval()
+        with torch.no_grad():
+            logits = self.model(self.graphs, self.feat_dicts)
+            node_logits = logits[idx].cpu()
+            node_labels = self.labels[idx].cpu()
 
+        results = {}
+        if self.task == 'node_classification':
+            preds = node_logits.argmax(dim=-1).numpy()
+            labels_np = node_labels.numpy()
+            results['Macro-F1'] = f1_score(
+                labels_np, preds, average='macro', zero_division=0
+            ) * 100
+            results['Recall'] = recall_score(
+                labels_np, preds, average='macro', zero_division=0
+            ) * 100
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 快速测试入口
-# ──────────────────────────────────────────────────────────────────────────────
-if __name__ == '__main__':
-    from types import SimpleNamespace
+        elif self.task == 'node_regression':
+            preds = node_logits.squeeze().numpy()
+            labels_np = node_labels.float().numpy()
+            results['MAE'] = mean_absolute_error(labels_np, preds)
 
-    args = SimpleNamespace(
-        dataset_name='aminer_htg',
-        hidden_dim=64,
-        num_heads=4,
-        num_layers=2,
-        num_gcn_layers=1,
-        dropout=0.1,
-        lr=1e-3,
-        weight_decay=1e-4,
-        max_epochs=50,
-        patience=20,
-        lr_decay_step=15,
-        lr_decay_gamma=0.5,
-        device='cpu',
-        full_graph=True,
-        batch_size=256,
-        use_synthetic=True,
-        num_timestamps=10,
-    )
+        elif self.task == 'link_prediction':
+            scores = torch.sigmoid(node_logits).numpy()
+            labels_np = node_labels.numpy()
+            results['AUC'] = roc_auc_score(labels_np, scores) * 100
+            results['AP'] = average_precision_score(
+                labels_np, scores
+            ) * 100
 
-    trainer = HTGformerTrainer(args)
-    result = trainer.train()
-    print(f"\nFinal Result: {result}")
+        return results
