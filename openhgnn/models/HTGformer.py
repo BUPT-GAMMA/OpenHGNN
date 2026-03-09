@@ -247,5 +247,5 @@ class HTGformer(BaseModel):
 
         h_v = Z_v[:, -1, :]
         # 通过MLP得到节点嵌入
-        h_v = self.classifier[0](h_v)  # 只取第一层Linear作为嵌入
+        h_v = self.classifier(h_v)  # 完整MLP，对应论文公式(8)
         return h_v
