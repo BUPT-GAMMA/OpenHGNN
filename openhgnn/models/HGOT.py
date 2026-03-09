@@ -2,10 +2,15 @@ import torch
 import torch.nn as nn   
 import torch.nn.functional as F
 import dgl
+import ot
 from dgl.nn.pytorch import GATConv
 from . import BaseModel, register_model
 from ..layers.macro_layer.SemanticConv import SemanticAttention
 from ..utils.utils import extract_metapaths, get_ntypes_from_canonical_etypes
+from ot.lp import emd
+from ot.gromov import semirelaxed_fused_gromov_wasserstein
+from ot.utils import get_backend, init_matrix_semirelaxed, tensor_product
+from geomloss import SamplesLoss
 
 @register_model('HGOT')
 class HGOT(BaseModel):
@@ -121,158 +126,97 @@ class HGOT(BaseModel):
         return A_agg
 
 class OTSolver(nn.Module):  
-    """最优传输求解器，基于论文 HGOT 中的 Gromov-Wasserstein 距离实现"""
     def __init__(self, sigma=0.5, rho=1.0, num_iter=100, eps=1e-1):
         """
-        初始化参数
         Args:
-            sigma (float): 节点特征与边结构损失的平衡参数 (公式 13 中的 sigma)
-            rho (float): 匹配损失与结构损失的平衡参数 (公式 19 中的 rho)
-            num_iter (int): Sinkhorn 迭代次数
-            eps (float): Sinkhorn 正则化系数 (熵正则化)
+        sigma (float): Balance parameter between node feature loss and edge structure loss
+        rho (float): Balance parameter between matching loss and structure loss
+        num_iter (int): Number of Sinkhorn iterations
+        eps (float): Sinkhorn regularization coefficient (entropy regularization)
         """
         super(OTSolver, self).__init__()  
         self.sigma = sigma  
         self.rho = rho
         self.num_iter = num_iter
         self.eps = eps
-        
-    def _compute_cost_matrix(self, X, Y):
-        """
-        计算成本矩阵 C(X_i, Y_j)
-        这里使用欧氏距离的平方，论文公式(8)提到可以使用 cosine，但通常GW用L2平方效果稳定
-        """
-        # 处理 None 或空张量的情况 (例如当只输入邻接矩阵而不输入特征时)
-        if X is None and Y is None:
-            return torch.tensor(0.0)
-        if X is None:
-            X = torch.zeros(Y.shape, Y.shape).to(Y.device)
-        if Y is None:
-            Y = torch.zeros(X.shape, X.shape).to(X.device)
             
-        # 计算成对距离矩阵 ||x_i - y_j||^2
-        # 使用广播机制
-        XX = torch.sum(X**2, dim=1, keepdim=True) # (n, 1)
-        YY = torch.sum(Y**2, dim=1, keepdim=True) # (m, 1)
-        XY = torch.mm(X, Y.t()) # (n, m)
-        C = XX - 2*XY + YY.t()
-        return C
-    
-    def _sinkhorn(self, C, mu, nu):
-        """
-        使用 Sinkhorn-Knopp 算法求解熵正则化的最优传输问题
-        Args:
-            C: 成本矩阵 (n, m)
-            mu: 源分布 (n,)
-            nu: 目标分布 (m,)
-        Returns:
-            pi: 传输计划矩阵 (n, m)
-        """
-        # 初始化对偶变量
-        psi = torch.zeros_like(nu)
-        # 避免除以零
-        u = torch.ones_like(mu) / mu.shape
-        
-        K = torch.exp(-C / self.eps) # 核矩阵
-        
-        for _ in range(self.num_iter):
-            # 更新 phi (对应 mu)
-            phi = torch.log(u + 1e-8) - torch.log(torch.matmul(K, torch.exp(psi)) + 1e-8)
-            # 更新 psi (对应 nu)
-            psi = torch.log(nu + 1e-8) - torch.log(torch.matmul(K.t(), torch.exp(phi)) + 1e-8)
-        
-        # 计算传输计划 pi
-        pi = torch.matmul(torch.exp(phi).unsqueeze(1), torch.exp(psi).unsqueeze(0)) * K
-        return pi
-    
     def compute_ot_loss(self, branch_views, aggregated_view):  
         """
-        计算完整的 OT 损失 (公式 19)
         Args:
-            branch_views: List of dicts containing 'features' and 'adj' for each meta-path view
-                e.g., [{'features': Z_p1, 'adj': A_p1}, ...]
+            branch_views: Dict containing 'features' and 'adj' for each meta-path view
+                e.g., {'ntype1': {'features': Z_p1, 'adj': A_p1}, ...}
             aggregated_view: Dict containing 'features' and 'adj' for the aggregated view
-                {'features': Z_agg, 'adj': A_agg}
+                {'aggregated': h_agg, 'adjacency': A_agg, 'meta_path_weights': beta_weights}
                 
         Returns:
             total_loss: Scalar tensor
-        """
-        device = branch_views['features'].device
+        """        
+        device = list(branch_views.values())[0]['features'].device
         num_views = len(branch_views)
         total_loss = 0.0
         
-        # 假设均匀分布
-        n_agg = aggregated_view['features'].shape
-        mu = torch.ones(n_agg).to(device) / n_agg
+        Z_agg = aggregated_view['aggregated']
+        A_agg = aggregated_view['adjacency']
         
-        for branch in branch_views:
-            n_branch = branch['features'].shape
-            nu = torch.ones(n_branch).to(device) / n_branch
+        for ntype, branch in branch_views.items():
+            Z_branch = branch['features']
+            A_branch = branch['adj']
             
-            # ==========================================
-            # Step 1: 计算 Graph Space 的最优传输计划 pi_G (公式 15)
-            # 需要计算节点成本 F 和 边成本 E (Gromov-Wasserstein)
-            # ==========================================
+            h1 = ot.unif(Z_branch.shape[0], type_as=Z_branch)
+            h2 = ot.unif(Z_agg.shape[0], type_as=Z_agg)
             
-            # 节点特征成本矩阵 (公式 8 & 9)
-            C_node = self._compute_cost_matrix(branch['features'], aggregated_view['features'])
+            Mp = ot.dist(Z_branch, Z_agg, metric='euclidean')
+            Mb = ot.dist(Z_branch, Z_agg, metric='euclidean')
             
-            # 边结构成本矩阵 (公式 11 & 12) - Gromov-Wasserstein 核心
-            # 计算 |A_ik - A_jl| 近似
-            # 这里简化处理，计算邻接矩阵行/列的差异作为结构成本的近似
-            # 更精确的做法是计算四阶张量，但计算量巨大，通常使用线性近似
-            if branch['adj'] is not None and aggregated_view['adj'] is not None:
-                # 计算度矩阵或邻接矩阵行和的差异
-                # 这是一个简化的 GW 成本近似
-                deg_branch = torch.sum(branch['adj'], dim=1) # (n,)
-                deg_agg = torch.sum(aggregated_view['adj'], dim=1) # (m,)
-                C_edge = self._compute_cost_matrix(
-                    branch['adj'] @ branch['features'] if branch['features'] is not None else deg_branch.unsqueeze(1),
-                    aggregated_view['adj'] @ aggregated_view['features'] if aggregated_view['features'] is not None else deg_agg.unsqueeze(1)
+            if self.sigma < 1:
+                P = semirelaxed_fused_gromov_wasserstein(
+                    Mp, A_branch, A_agg, h1, symmetric=True, 
+                    alpha=1 - self.sigma, log=False, G0=None
                 )
-            else:
-                C_edge = torch.zeros_like(C_node)
+                
+                nx = get_backend(h1, A_branch, A_agg)
+                constC, hC1, hC2, fC2t = init_matrix_semirelaxed(
+                    A_branch, A_agg, h1, loss_fun='square_loss', nx=nx
+                )
+                
+                N1l = Z_branch.shape[0]
+                N2l = Z_agg.shape[0]
+                OM = torch.ones(N1l, N2l).to(device)
+                OM = OM / (N1l * N2l)
+                qOneM = nx.sum(OM, 0)
+                ones_p = nx.ones(h1.shape[0], type_as=h1)
+                marginal_product = nx.outer(ones_p, nx.dot(qOneM, fC2t))
+                
+                Mp2 = tensor_product(constC + marginal_product, hC1, hC2, P, nx=nx)
+                Mp2 = F.normalize(Mp2)
+                
+                Mp = (self.sigma) * Mp + (1 - self.sigma) * Mp2
+                
+                B = emd(h1, h2, Mb)
+                
+                sloss = SamplesLoss(loss="sinkhorn", p=2, blur=.05)
+                loss = sloss(Mp, Mb)
+                
+                loss = self.rho * loss + torch.linalg.matrix_norm(P - B, ord='fro')
+            elif self.sigma == 1:
+                sl = SamplesLoss(loss='sinkhorn', p=2, debias=True, blur=0.1 ** (1 / 2), backend='tensorized')
+                m = 0 * Mb + 1 * Mp
+                sl.potentials = True
+                u, v = sl(Z_branch, Z_agg)
+                P = torch.exp((u.t() + v - m) * 1 / 0.1)
+                
+                sl.potentials = True
+                u, v = sl(Z_branch, Z_agg)
+                B = torch.exp((u.t() + v - m) * 1 / 0.1)
+                
+                sloss = SamplesLoss(loss="sinkhorn", p=2, blur=.05)
+                loss = sloss(Mp, Mb)
+                
+                loss = self.rho * loss + torch.linalg.matrix_norm(P - B, ord='fro')
             
-            # 融合成本矩阵 (公式 13 & 14)
-            # sigma * C_node + (1-sigma) * C_edge
-            # 注意：论文公式(14)中的 E 是张量，这里我们用近似矩阵代替
-            C_fused = self.sigma * C_node + (1 - self.sigma) * C_edge
-            
-            # 求解图空间的传输计划 pi_G
-            pi_G = self._sinkhorn(C_fused, mu, nu)
-            
-            # ==========================================
-            # Step 2: 计算 Representation Space 的传输计划 pi_Z (公式 16)
-            # ==========================================
-            
-            # 获取表示空间的特征 (由编码器输出)
-            Z_branch = branch['features'] # 这里假设输入已经是编码后的 Z
-            Z_agg = aggregated_view['features']
-            
-            # 计算表示空间的成本矩阵 R (公式 16)
-            # 通常使用欧氏距离或余弦距离
-            C_rep = self._compute_cost_matrix(Z_branch, Z_agg)
-            
-            # 求解表示空间的传输计划 pi_Z
-            pi_Z = self._sinkhorn(C_rep, mu, nu)
-            
-            # ==========================================
-            # Step 3: 计算对齐损失 (公式 17 & 18)
-            # ==========================================
-            
-            # Loss 1: 匹配损失 (Matching Loss) - 对齐传输计划 (公式 17)
-            # Frobenius 范数
-            L_mat = torch.norm(pi_G - pi_Z, p='fro')
-            
-            # Loss 2: 结构损失 (Structural Loss) - 校正成本矩阵 (公式 18)
-            # 强制表示空间的成本 R 接近图空间的融合成本
-            L_str = torch.norm(C_fused - C_rep, p='fro')
-            
-            # 总损失 (公式 19)
-            loss = L_mat + self.rho * L_str
             total_loss += loss
             
-        return total_loss / num_views # 平均损失
+        return total_loss / num_views
     
 class _HGOT(nn.Module):    
     def __init__(self, meta_paths_dict, in_dim, hidden_dim, out_dim, num_heads, dropout):  
@@ -314,7 +258,7 @@ class HGOTLayer(nn.Module):
                                               allow_zero_in_degree=True) for mp in meta_paths_dict})  
            
         self.semantic_attention = SemanticAttention(in_size=out_dim * layer_num_heads)  
-        self.use_semantic_attention = False  # HGOT 默认不使用语义融合  
+        self.use_semantic_attention = False 
            
         self._cached_graph = None  
         self._cached_coalesced_graph = {}  
