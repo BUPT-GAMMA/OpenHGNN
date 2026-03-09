@@ -9,7 +9,8 @@ from ..layers.macro_layer.SemanticConv import SemanticAttention
 from ..utils.utils import extract_metapaths, get_ntypes_from_canonical_etypes
 from ot.lp import emd
 from ot.gromov import semirelaxed_fused_gromov_wasserstein
-from ot.utils import get_backend, init_matrix_semirelaxed, tensor_product
+from ot.gromov._utils import init_matrix_semirelaxed, tensor_product
+from ot.utils import get_backend
 from geomloss import SamplesLoss
 
 @register_model('HGOT')
@@ -57,6 +58,8 @@ class HGOT(BaseModel):
                 meta_paths_dict, hidden_dim, hidden_dim, num_heads[0], dropout  
             )  
           
+        self.meta_linear = nn.Linear(hidden_dim, hidden_dim)  
+        self.query_vector = nn.Linear(hidden_dim, 1)  
         self.ot_solver = OTSolver(sigma=ot_sigma, rho=ot_rho)  
 
     def forward(self, g, h_dict):   
@@ -87,17 +90,17 @@ class HGOT(BaseModel):
         meta_path_names = list(h_dict.keys())  
         
         if len(meta_path_views) == 0:  
-            return {'aggregated': torch.zeros_like(list(h_dict.values())[0])}  
+            return {'aggregated': torch.zeros(1, self.out_dim)}  
           
         omega_scores = []  
         for view in meta_path_views:   
             transformed = self.meta_linear(view)    
             activated = torch.tanh(transformed)  
-            pooled = activated.mean(dim=0) 
+            pooled = activated.mean(dim=0)  
             score = self.query_vector(pooled)  
             omega_scores.append(score)  
         omega_scores = torch.stack(omega_scores)  
-        beta_weights = F.softmax(omega_scores, dim=0) 
+        beta_weights = F.softmax(omega_scores, dim=0)  
         h_agg = torch.zeros_like(meta_path_views[0])
         for i, view in enumerate(meta_path_views):  
             h_agg += beta_weights[i] * view  
@@ -110,15 +113,18 @@ class HGOT(BaseModel):
         }  
 
     def build_aggregated_adjacency(self, g):   
-        meta_paths = list(self.meta_paths_dict.keys())  
+        # 从 ntype_meta_paths_dict 中提取所有 meta_path
+        meta_paths = []
+        for ntype, meta_paths_dict in self.ntype_meta_paths_dict.items():
+            meta_paths.extend(meta_paths_dict.values())
         
         if not meta_paths:  
-            return torch.zeros(g.num_nodes(), g.num_nodes())  
+            return torch.zeros(g.num_nodes(), g.num_nodes(), device=g.device)  
          
         A_agg = torch.zeros(g.num_nodes(), g.num_nodes(), device=g.device)  
           
         for meta_path in meta_paths:   
-            mp_graph = dgl.metapath_reachable_graph(g, self.meta_paths_dict[meta_path])  
+            mp_graph = dgl.metapath_reachable_graph(g, meta_path)  
             
             src, dst = mp_graph.edges()  
             A_agg[src, dst] = 1   
