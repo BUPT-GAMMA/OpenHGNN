@@ -1,34 +1,30 @@
 """
 HTGformer Trainer
-超参数严格按照论文 Section 4.1.3：
-  - Adam optimizer
-  - lr = 5e-3
-  - weight_decay = 5e-4
-  - hidden_dim = 64（COVID-19用8）
-  - max_epochs = 500
-  - early_stopping = 25
-  - 重复5次取均值和标准差
-  - 评估指标：
-      链路预测: AUC, AP
-      节点分类: Macro-F1, Recall
-      节点回归: MAE
+==================
+Paper: HTGformer: Heterogeneous Temporal Graph Transformer (SIGIR 2025)
+
+统一训练流程，支持四种数据集/任务：
+  - OGBN-MAG:  链路预测 (多样本遍历, LinkPredictor, AUC/AP)
+  - Aminer:    链路预测 (时间步遍历, LinkPredictor, AUC/AP)
+  - YELP:      节点分类 (全图训练, CrossEntropy, Macro-F1/Recall)
+  - COVID-19:  节点回归 (多样本遍历, L1Loss/MAE)
+
+超参数 (论文 Section 4.1.3):
+  Adam, lr=5e-3 (Aminer/YELP 用 1e-3), weight_decay=5e-4
+  hidden_dim=64 (COVID-19 用 8), max_epochs=500, early_stopping=25
 """
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
+import statistics
 from sklearn.metrics import (
-    f1_score, recall_score, roc_auc_score,
-    average_precision_score, mean_absolute_error
+    f1_score, recall_score, roc_auc_score, average_precision_score
 )
 
 try:
     from openhgnn.trainerflow import BaseFlow, register_flow
-    from openhgnn.models.HTGformer import HTGformer
-    from openhgnn.dataset.htgformer_dataset import (
-        AminerHTGDataset, OGBNMAGHTGDataset,
-        YELPHTGDataset, COVID19HTGDataset
-    )
     HAS_OPENHGNN = True
 except ImportError:
     HAS_OPENHGNN = False
@@ -36,335 +32,418 @@ except ImportError:
     def register_flow(name):
         def decorator(cls): return cls
         return decorator
-    from HTGformer import HTGformer
+
+
+class LinkPredictor(nn.Module):
+    """链路预测头 (对应论文 Section 3.4 MLP)"""
+    def __init__(self, n_inp):
+        super().__init__()
+        self.fc1 = nn.Linear(n_inp * 2, n_inp)
+        self.fc2 = nn.Linear(n_inp, 1)
+
+    def forward(self, pos_g, neg_g, h):
+        """DGL graph 接口 (OGBN-MAG)"""
+        with pos_g.local_scope(), neg_g.local_scope():
+            pos_g.ndata['h'] = h; neg_g.ndata['h'] = h
+            pos_g.apply_edges(lambda e: {'s': self.fc2(F.relu(self.fc1(
+                torch.cat([e.src['h'], e.dst['h']], 1))))})
+            neg_g.apply_edges(lambda e: {'s': self.fc2(F.relu(self.fc1(
+                torch.cat([e.src['h'], e.dst['h']], 1))))})
+            return pos_g.edata['s'], neg_g.edata['s']
+
+    def forward_ids(self, src, dst, h):
+        """ID 索引接口 (Aminer)"""
+        x = torch.cat([h[src], h[dst]], dim=1)
+        return self.fc2(F.relu(self.fc1(x)))
+
+
+def _compute_loss(pos_score, neg_score, device):
+    pred = torch.cat([pos_score.squeeze(), neg_score.squeeze()])
+    label = torch.cat([torch.ones(pos_score.shape[0]),
+                        torch.zeros(neg_score.shape[0])]).to(device)
+    return F.binary_cross_entropy_with_logits(pred, label)
+
+
+def _compute_metric(pos_score, neg_score):
+    pred = torch.cat([pos_score.squeeze(), neg_score.squeeze()]).detach().cpu().numpy()
+    label = np.concatenate([np.ones(pos_score.shape[0]), np.zeros(neg_score.shape[0])])
+    try:
+        return roc_auc_score(label, pred), average_precision_score(label, pred)
+    except:
+        return 0.5, 0.5
 
 
 @register_flow('htgformer_trainer')
 class HTGformerTrainer(BaseFlow):
     """
-    HTGformer 训练流程
-
-    论文Section 4.1.3实现细节：
-    - Adam优化器，lr=5e-3，weight_decay=5e-4
-    - max_epochs=500，early_stopping patience=25
-    - 实验重复5次取均值±标准差
-    - 节点分类评估：Macro-F1 + Recall
-    - 链路预测评估：AUC + AP
-    - 节点回归评估：MAE
+    HTGformer 统一训练器。
+    根据 dataset.task 自动选择训练/评估模式。
     """
 
     def __init__(self, args):
         if HAS_OPENHGNN:
             try:
                 super().__init__(args)
-            except AttributeError:
-                pass  # 本地测试时跳过BaseFlow初始化
+            except:
+                pass
         self.args = args
-        self.device = torch.device(
-            getattr(args, 'device', 'cpu')
-        )
-
-        # ── 加载数据集 ─────────────────────────────────────────────────
+        self.device = torch.device(getattr(args, 'device', 'cpu'))
         self.dataset = self._load_dataset()
-        self.graphs = [g.to(self.device) for g in self.dataset.graphs]
-        self.feat_dicts = [
-            {k: v.to(self.device) for k, v in fd.items()}
-            for fd in self.dataset.feat_dicts
-        ]
-        self.labels = self.dataset.labels.to(self.device)
-        self.train_idx = self.dataset.train_idx.to(self.device)
-        self.val_idx = self.dataset.val_idx.to(self.device)
-        self.test_idx = self.dataset.test_idx.to(self.device)
-        self.task = self.dataset.task  # 'node_classification' / 'link_prediction' / 'node_regression'
+        self.task = self.dataset.task
         self.category = self.dataset.category
 
-        # ── 构建模型 ───────────────────────────────────────────────────
-        self.model = self._build_model().to(self.device)
-
-        # ── 优化器（论文Section 4.1.3）────────────────────────────────
-        # Adam, lr=5e-3, weight_decay=5e-4
-        self.optimizer = torch.optim.Adam(
-            self.model.parameters(),
-            lr=getattr(args, 'lr', 5e-3),
-            weight_decay=getattr(args, 'weight_decay', 5e-4),
-        )
-
-        # ── 损失函数（论文Section 3.4）────────────────────────────────
-        if self.task == 'node_classification':
-            self.criterion = nn.CrossEntropyLoss()
-        elif self.task == 'node_regression':
-            self.criterion = nn.L1Loss()  # MAE loss
-        else:
-            self.criterion = None  # 链路预测用公式(8)
-
     def _load_dataset(self):
-        """根据args加载对应数据集"""
-        dataset_name = getattr(self.args, 'dataset_name', 'aminer_htg')
-        use_synthetic = getattr(self.args, 'use_synthetic', False)
-
-        try:
-            from openhgnn.dataset.htgformer_dataset import (
-                AminerHTGDataset, OGBNMAGHTGDataset,
-                YELPHTGDataset, COVID19HTGDataset
-            )
-        except ImportError:
-            from htgformer_dataset import (
-                AminerHTGDataset, OGBNMAGHTGDataset,
-                YELPHTGDataset, COVID19HTGDataset
-            )
-
-        if 'aminer' in dataset_name.lower():
-            return AminerHTGDataset(
-                raw_dir=getattr(self.args, 'data_dir', './data/aminer'),
-                use_synthetic=use_synthetic,
-                num_timestamps=getattr(self.args, 'num_timestamps', 16),
-            )
-        elif 'ogbn' in dataset_name.lower() or 'mag' in dataset_name.lower():
-            return OGBNMAGHTGDataset(
-                raw_dir=getattr(self.args, 'data_dir', './data/ogbn_mag'),
-                use_synthetic=use_synthetic,
-                num_timestamps=getattr(self.args, 'num_timestamps', 10),
-            )
-        elif 'yelp' in dataset_name.lower():
-            return YELPHTGDataset(
-                raw_dir=getattr(self.args, 'data_dir', './data/yelp'),
-                use_synthetic=use_synthetic,
-                num_timestamps=getattr(self.args, 'num_timestamps', 12),
-            )
-        elif 'covid' in dataset_name.lower():
-            return COVID19HTGDataset(
-                raw_dir=getattr(self.args, 'data_dir', './data/covid19'),
-                use_synthetic=use_synthetic,
-                num_timestamps=getattr(self.args, 'num_timestamps', 304),
-            )
+        from openhgnn.dataset.htgformer_dataset import (
+            OGBNMAGHTGDataset, AminerHTGDataset, YELPHTGDataset, COVID19HTGDataset
+        )
+        name = getattr(self.args, 'dataset_name', '').lower()
+        data_dir = getattr(self.args, 'data_dir', './data')
+        if 'ogbn' in name or 'mag' in name:
+            return OGBNMAGHTGDataset(raw_dir=data_dir, device=self.device,
+                                     time_window=getattr(self.args, 'time_window', 3))
+        elif 'aminer' in name:
+            return AminerHTGDataset(raw_dir=data_dir,
+                                    time_window=getattr(self.args, 'time_window', 5))
+        elif 'yelp' in name:
+            return YELPHTGDataset(raw_dir=data_dir)
+        elif 'covid' in name:
+            return COVID19HTGDataset(raw_dir=data_dir)
         else:
-            return AminerHTGDataset(use_synthetic=True)
+            raise ValueError(f"未知数据集: {name}")
 
     def _build_model(self):
-        """构建HTGformer模型"""
-        # 获取各节点类型特征维度
-        in_dim_dict = {
-            ntype: self.feat_dicts[0][ntype].shape[-1]
-            for ntype in self.feat_dicts[0]
-        }
-        # 获取输出维度
-        if self.task == 'node_classification':
-            out_dim = int(self.labels.max().item()) + 1
-        elif self.task == 'node_regression':
-            out_dim = 1
-        else:
-            out_dim = getattr(self.args, 'hidden_dim', 64)
-
-        # 论文超参数
+        from openhgnn.models.HTGformer import HTGformer
+        ds = self.dataset
         hidden_dim = getattr(self.args, 'hidden_dim', 64)
-        # COVID-19数据集用d=8
         if 'covid' in getattr(self.args, 'dataset_name', '').lower():
             hidden_dim = 8
 
+        if self.task == 'node_classification':
+            out_dim = ds.num_classes
+            num_ts = len(ds.graphs)
+        elif self.task == 'link_prediction':
+            out_dim = hidden_dim
+            num_ts = getattr(self.args, 'time_window', 5)
+        else:
+            out_dim = 1
+            num_ts = getattr(self.args, 'time_window', 7)
+
         return HTGformer(
-            in_dim_dict=in_dim_dict,
+            in_dim_dict=ds.in_dim_dict,
             hidden_dim=hidden_dim,
+            out_dim=out_dim,
             num_heads=getattr(self.args, 'num_heads', 4),
             num_layers=getattr(self.args, 'num_layers', 2),
             dropout=getattr(self.args, 'dropout', 0.1),
-            num_timestamps=len(self.graphs),
-            node_types=list(in_dim_dict.keys()),
+            num_timestamps=num_ts,
+            node_types=list(ds.in_dim_dict.keys()),
             category=self.category,
-            out_dim=out_dim,
             use_llm=getattr(self.args, 'use_llm', False),
             llm_embed_path=getattr(self.args, 'llm_embed_path', None),
         )
 
+    # ══════════════════════════════════════════════════════════════════════
+    # 主入口
+    # ══════════════════════════════════════════════════════════════════════
     def train(self):
-        """
-        完整训练流程
-        论文：max_epochs=500，early_stopping=25，重复5次
-        """
-        max_epochs = getattr(self.args, 'max_epochs', 500)
-        patience = getattr(self.args, 'patience', 25)  # 论文early stopping=25
+        num_repeats = getattr(self.args, 'num_repeats', 5)
+        all_results = []
+        for rep in range(1, num_repeats + 1):
+            torch.manual_seed(rep); np.random.seed(rep)
+            print(f"\n{'='*50}\nRepeat {rep}/{num_repeats}\n{'='*50}")
+            result = self._train_one_run()
+            all_results.append(result)
+        self._print_summary(all_results)
+        return all_results
 
-        best_val_metric = float('inf') if self.task == 'node_regression' \
-            else -float('inf')
-        best_test_metric = None
-        best_epoch = 0
-        patience_counter = 0
-        best_state = None
+    def _train_one_run(self):
+        name = getattr(self.args, 'dataset_name', '').lower()
+        if 'ogbn' in name or 'mag' in name:
+            return self._train_ogbn_mag()
+        elif 'aminer' in name:
+            return self._train_aminer()
+        elif 'yelp' in name:
+            return self._train_yelp()
+        elif 'covid' in name:
+            return self._train_covid()
 
-        for epoch in range(1, max_epochs + 1):
-            # 训练
-            train_loss = self._train_epoch()
+    # ══════════════════════════════════════════════════════════════════════
+    # OGBN-MAG 训练 (对齐 run_mag2.py)
+    # ══════════════════════════════════════════════════════════════════════
+    def _train_ogbn_mag(self):
+        ds = self.dataset
+        device = self.device
+        hidden_dim = getattr(self.args, 'hidden_dim', 64)
+        model = self._build_model().to(device)
+        predictor = LinkPredictor(hidden_dim).to(device)
+        params = list(model.parameters()) + list(predictor.parameters())
+        optimizer = torch.optim.Adam(params, lr=getattr(self.args, 'lr', 5e-3),
+                                      weight_decay=getattr(self.args, 'weight_decay', 5e-4))
+        print(f"# params: {sum(p.numel() for p in params if p.requires_grad)}")
 
-            # 验证
-            val_metric = self._evaluate(self.val_idx)
-            test_metric = self._evaluate(self.test_idx)
+        best_val_auc, best_test_auc, best_test_ap, best_ep = 0, 0, 0, 0
+        patience_cnt = 0
+        patience = getattr(self.args, 'patience', 25)
 
-            # 判断是否改善
-            improved = (
-                val_metric < best_val_metric
-                if self.task == 'node_regression'
-                else val_metric > best_val_metric
-            )
+        for epoch in range(1, getattr(self.args, 'max_epochs', 500) + 1):
+            model.train(); predictor.train()
+            epoch_loss = 0
+            for wg, fds, pos_g, neg_g in ds.train_samples:
+                gd = [g.to(device) for g in wg]
+                fd = [{k: v.to(device) for k, v in d.items()} for d in fds]
+                h = model.link_prediction_forward(gd, fd)
+                ps, ns = predictor(pos_g.to(device), neg_g.to(device), h)
+                loss = _compute_loss(ps, ns, device)
+                optimizer.zero_grad(); loss.backward()
+                nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step(); epoch_loss += loss.item()
 
-            if improved:
-                best_val_metric = val_metric
-                best_test_metric = test_metric
-                best_epoch = epoch
-                patience_counter = 0
-                best_state = {k: v.cpu().clone()
-                              for k, v in self.model.state_dict().items()}
+            val_auc, val_ap = self._eval_link_mag(model, predictor, ds.val_samples, device)
+            test_auc, test_ap = self._eval_link_mag(model, predictor, ds.test_samples, device)
+
+            if val_auc > best_val_auc:
+                best_val_auc = val_auc; best_test_auc = test_auc
+                best_test_ap = test_ap; best_ep = epoch; patience_cnt = 0
             else:
-                patience_counter += 1
+                patience_cnt += 1
 
-            if epoch % 50 == 0 or epoch <= 5:
-                metric_name = {
-                    'node_classification': 'Macro-F1',
-                    'node_regression': 'MAE',
-                    'link_prediction': 'AUC',
-                }.get(self.task, 'metric')
-                print(
-                    f"Epoch {epoch:4d} | Loss: {train_loss:.4f} | "
-                    f"Val {metric_name}: {val_metric:.4f} | "
-                    f"Test {metric_name}: {test_metric:.4f}"
-                )
-
-            # Early stopping（论文patience=25）
-            if patience_counter >= patience:
-                print(f"Early stopping at epoch {epoch} "
-                      f"(best epoch: {best_epoch})")
+            if epoch % 10 == 0 or epoch <= 5:
+                print(f"Epoch {epoch:4d} | Loss:{epoch_loss/len(ds.train_samples):.4f} "
+                      f"| Val AUC:{val_auc*100:.2f}% | Val AP:{val_ap*100:.2f}%")
+            if patience_cnt >= patience:
+                print(f"Early stopping at epoch {epoch}, best Val AUC:{best_val_auc*100:.2f}%")
                 break
 
-        # 恢复最优模型
-        if best_state is not None:
-            self.model.load_state_dict(
-                {k: v.to(self.device) for k, v in best_state.items()}
-            )
-
-        print(f"\n{'='*50}")
-        print(f"训练完成！Best Epoch: {best_epoch}")
-        print(f"Best Val Metric:  {best_val_metric:.4f}")
-        print(f"Best Test Metric: {best_test_metric:.4f}")
-        print(f"{'='*50}")
-
-        return {
-            'val_metric': best_val_metric,
-            'test_metric': best_test_metric,
-            'epoch': best_epoch,
-        }
-
-    def _train_epoch(self):
-        """单轮训练"""
-        self.model.train()
-        self.optimizer.zero_grad()
-
-        if self.task in ('node_classification', 'node_regression'):
-            logits = self.model(self.graphs, self.feat_dicts)
-            train_logits = logits[self.train_idx]
-            train_labels = self.labels[self.train_idx]
-
-            if self.task == 'node_regression':
-                loss = self.criterion(
-                    train_logits.squeeze(), train_labels.float()
-                )
-            else:
-                loss = self.criterion(train_logits, train_labels)
-
-        elif self.task == 'link_prediction':
-            # 公式(8): 二元交叉熵损失
-            loss = self._link_pred_loss()
-
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
-        self.optimizer.step()
-        return loss.item()
-
-    def _link_pred_loss(self):
-        """
-        公式(8): L = -sum log σ(H_i^T H_j) - sum log σ(-H_i'^T H_j')
-        """
-        h = self.model.link_prediction_forward(self.graphs, self.feat_dicts)
-        pos_edges = self.dataset.pos_edges.to(self.device)
-        neg_edges = self.dataset.neg_edges.to(self.device)
-
-        pos_scores = (h[pos_edges[:, 0]] * h[pos_edges[:, 1]]).sum(dim=-1)
-        neg_scores = (h[neg_edges[:, 0]] * h[neg_edges[:, 1]]).sum(dim=-1)
-
-        pos_loss = -torch.log(torch.sigmoid(pos_scores) + 1e-8).mean()
-        neg_loss = -torch.log(1 - torch.sigmoid(neg_scores) + 1e-8).mean()
-        return pos_loss + neg_loss
+        print(f"Test AUC:{best_test_auc*100:.2f}%, Test AP:{best_test_ap*100:.2f}%")
+        return {'AUC': best_test_auc * 100, 'AP': best_test_ap * 100}
 
     @torch.no_grad()
-    def _evaluate(self, idx):
-        """评估，返回论文中对应的指标"""
-        self.model.eval()
-        logits = self.model(self.graphs, self.feat_dicts)
-        node_logits = logits[idx].cpu()
-        node_labels = self.labels[idx].cpu()
+    def _eval_link_mag(self, model, predictor, samples, device):
+        model.eval(); predictor.eval()
+        aucs, aps = [], []
+        for wg, fds, pos_g, neg_g in samples:
+            gd = [g.to(device) for g in wg]
+            fd = [{k: v.to(device) for k, v in d.items()} for d in fds]
+            h = model.link_prediction_forward(gd, fd)
+            ps, ns = predictor(pos_g.to(device), neg_g.to(device), h)
+            auc, ap = _compute_metric(ps, ns)
+            aucs.append(auc); aps.append(ap)
+        return np.mean(aucs), np.mean(aps)
 
-        if self.task == 'node_classification':
-            preds = node_logits.argmax(dim=-1).numpy()
-            labels_np = node_labels.numpy()
-            # 论文指标：Macro-F1（主要）+ Recall
-            macro_f1 = f1_score(labels_np, preds,
-                                average='macro', zero_division=0)
-            return macro_f1
+    # ══════════════════════════════════════════════════════════════════════
+    # Aminer 训练 (对齐 run_aminer_htgformer.py)
+    # ══════════════════════════════════════════════════════════════════════
+    def _train_aminer(self):
+        ds = self.dataset
+        device = self.device
+        hidden_dim = getattr(self.args, 'hidden_dim', 64)
+        tw = getattr(self.args, 'time_window', 5)
+        model = self._build_model().to(device)
+        predictor = LinkPredictor(hidden_dim).to(device)
+        params = list(model.parameters()) + list(predictor.parameters())
+        optimizer = torch.optim.Adam(params, lr=getattr(self.args, 'lr', 1e-3),
+                                      weight_decay=getattr(self.args, 'weight_decay', 5e-4))
+        print(f"# params: {sum(p.numel() for p in params if p.requires_grad)}")
 
+        best_val_auc, best_test_auc, best_test_ap, best_ep = 0, 0, 0, 0
+        patience_cnt = 0
+        patience = getattr(self.args, 'patience', 50)
+
+        for epoch in range(1, getattr(self.args, 'max_epochs', 500) + 1):
+            model.train(); predictor.train()
+            epoch_loss, nb = 0, 0
+            for t in ds.train_ts:
+                pos_src, pos_dst, neg_src, neg_dst = ds.coauthor_samples[t]
+                ws = max(0, t + 1 - tw)
+                gw = [ds.snapshots[i].to(device) for i in range(ws, t + 1)]
+                fw = [{k: v.to(device) for k, v in ds.all_feat_dicts[i].items()} for i in range(ws, t + 1)]
+                h = model.link_prediction_forward(gw, fw)
+                ps = predictor.forward_ids(pos_src.to(device), pos_dst.to(device), h)
+                ns = predictor.forward_ids(neg_src.to(device), neg_dst.to(device), h)
+                loss = _compute_loss(ps, ns, device)
+                optimizer.zero_grad(); loss.backward()
+                nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step(); epoch_loss += loss.item(); nb += 1
+
+            val_auc, val_ap = self._eval_link_aminer(model, predictor, ds, ds.val_ts, tw, device)
+            test_auc, test_ap = self._eval_link_aminer(model, predictor, ds, ds.test_ts, tw, device)
+
+            if val_auc > best_val_auc:
+                best_val_auc = val_auc; best_test_auc = test_auc
+                best_test_ap = test_ap; best_ep = epoch; patience_cnt = 0
+            else:
+                patience_cnt += 1
+
+            if epoch % 10 == 0 or epoch <= 5:
+                print(f"Epoch {epoch:4d} | Loss:{epoch_loss/max(nb,1):.4f} "
+                      f"| Val AUC:{val_auc*100:.2f}% | Test AUC:{test_auc*100:.2f}%")
+            if patience_cnt >= patience:
+                print(f"Early stopping at epoch {epoch}, best Val AUC:{best_val_auc*100:.2f}%")
+                break
+
+        print(f"Test AUC:{best_test_auc*100:.2f}%, Test AP:{best_test_ap*100:.2f}%")
+        return {'AUC': best_test_auc * 100, 'AP': best_test_ap * 100}
+
+    @torch.no_grad()
+    def _eval_link_aminer(self, model, predictor, ds, t_list, tw, device):
+        model.eval(); predictor.eval()
+        aucs, aps = [], []
+        for t in t_list:
+            if t not in ds.coauthor_samples: continue
+            pos_src, pos_dst, neg_src, neg_dst = ds.coauthor_samples[t]
+            ws = max(0, t + 1 - tw)
+            gw = [ds.snapshots[i].to(device) for i in range(ws, t + 1)]
+            fw = [{k: v.to(device) for k, v in ds.all_feat_dicts[i].items()} for i in range(ws, t + 1)]
+            h = model.link_prediction_forward(gw, fw)
+            ps = predictor.forward_ids(pos_src.to(device), pos_dst.to(device), h)
+            ns = predictor.forward_ids(neg_src.to(device), neg_dst.to(device), h)
+            auc, ap = _compute_metric(ps, ns)
+            aucs.append(auc); aps.append(ap)
+        return (np.mean(aucs), np.mean(aps)) if aucs else (0.5, 0.5)
+
+    # ══════════════════════════════════════════════════════════════════════
+    # YELP 训练 (对齐 run_yelp_htgformer.py)
+    # ══════════════════════════════════════════════════════════════════════
+    def _train_yelp(self):
+        ds = self.dataset
+        device = self.device
+        model = self._build_model().to(device)
+        optimizer = torch.optim.Adam(model.parameters(),
+                                      lr=getattr(self.args, 'lr', 1e-3),
+                                      weight_decay=getattr(self.args, 'weight_decay', 5e-4))
+        criterion = nn.CrossEntropyLoss()
+        print(f"# params: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+
+        graphs_w = [g.to(device) for g in ds.graphs]
+        fds_w = [{k: v.to(device) for k, v in fd.items()} for fd in ds.feat_dicts]
+
+        best_val_f1, best_test_f1, best_test_recall, best_ep = 0, 0, 0, 0
+        patience_cnt = 0
+        patience = getattr(self.args, 'patience', 50)
+
+        for epoch in range(1, getattr(self.args, 'max_epochs', 500) + 1):
+            model.train()
+            logits = model(graphs_w, fds_w)
+            loss = criterion(logits[ds.train_idx.to(device)], ds.labels[ds.train_idx].to(device))
+            optimizer.zero_grad(); loss.backward()
+            nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
+
+            val_f1, val_r = self._eval_nclf(model, graphs_w, fds_w, ds, ds.val_idx, device)
+            test_f1, test_r = self._eval_nclf(model, graphs_w, fds_w, ds, ds.test_idx, device)
+
+            if val_f1 > best_val_f1:
+                best_val_f1 = val_f1; best_test_f1 = test_f1
+                best_test_recall = test_r; best_ep = epoch; patience_cnt = 0
+            else:
+                patience_cnt += 1
+
+            if epoch % 10 == 0 or epoch <= 5:
+                print(f"Epoch {epoch:4d} | Loss:{loss.item():.4f} "
+                      f"| Val F1:{val_f1:.2f}% | Test F1:{test_f1:.2f}%")
+            if patience_cnt >= patience:
+                print(f"Early stopping at epoch {epoch}, best Val F1:{best_val_f1:.2f}%")
+                break
+
+        print(f"Test F1:{best_test_f1:.2f}%, Recall:{best_test_recall:.2f}%")
+        return {'Macro-F1': best_test_f1, 'Recall': best_test_recall}
+
+    @torch.no_grad()
+    def _eval_nclf(self, model, graphs_w, fds_w, ds, idx, device):
+        model.eval()
+        logits = model(graphs_w, fds_w)
+        preds = logits[idx].argmax(dim=-1).cpu().numpy()
+        true = ds.labels[idx].cpu().numpy()
+        f1 = f1_score(true, preds, average='macro', zero_division=0) * 100
+        recall = recall_score(true, preds, average='macro', zero_division=0) * 100
+        return f1, recall
+
+    # ══════════════════════════════════════════════════════════════════════
+    # COVID-19 训练 (对齐 run_covid_htgformer.py)
+    # ══════════════════════════════════════════════════════════════════════
+    def _train_covid(self):
+        ds = self.dataset
+        device = self.device
+        model = self._build_model().to(device)
+        optimizer = torch.optim.Adam(model.parameters(),
+                                      lr=getattr(self.args, 'lr', 5e-3),
+                                      weight_decay=getattr(self.args, 'weight_decay', 5e-4))
+        print(f"# params: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+
+        best_val, best_test, best_ep = float('inf'), float('inf'), 0
+        patience_cnt = 0
+        patience = getattr(self.args, 'patience', 25)
+        idx = np.random.permutation(len(ds.train_samples))
+
+        for epoch in range(1, getattr(self.args, 'max_epochs', 500) + 1):
+            model.train()
+            losses = []
+            for i in idx:
+                wg, fd, lg = ds.train_samples[i]
+                gd = [g.to(device) for g in wg]
+                fdd = [{k: v.to(device) for k, v in d.items()} for d in fd]
+                pred = model(gd, fdd)
+                label = lg.nodes['state'].data['feat'].to(device)
+                loss = F.l1_loss(pred, label)
+                optimizer.zero_grad(); loss.backward()
+                nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step(); losses.append(loss.item())
+
+            val_mae = self._eval_covid(model, ds.val_samples, device)
+            test_mae = self._eval_covid(model, ds.test_samples, device)
+
+            if val_mae < best_val:
+                best_val = val_mae; best_test = test_mae; best_ep = epoch; patience_cnt = 0
+            else:
+                patience_cnt += 1
+
+            if epoch % 10 == 0 or epoch <= 5:
+                print(f"Epoch {epoch:4d} | Loss:{np.mean(losses):.2f} "
+                      f"| Val MAE:{val_mae:.2f} | Test MAE:{test_mae:.2f}")
+            if patience_cnt >= patience:
+                print(f"Early stopping at epoch {epoch}, best Val MAE:{best_val:.2f}")
+                break
+
+        print(f"Test MAE: {best_test:.2f}")
+        return {'MAE': best_test}
+
+    @torch.no_grad()
+    def _eval_covid(self, model, samples, device):
+        model.eval()
+        maes = []
+        for wg, fd, lg in samples:
+            gd = [g.to(device) for g in wg]
+            fdd = [{k: v.to(device) for k, v in d.items()} for d in fd]
+            pred = model(gd, fdd)
+            label = lg.nodes['state'].data['feat'].to(device)
+            maes.append(F.l1_loss(pred, label).item())
+        return np.mean(maes)
+
+    # ══════════════════════════════════════════════════════════════════════
+    # 汇总输出
+    # ══════════════════════════════════════════════════════════════════════
+    def _print_summary(self, results):
+        print(f"\n{'='*50}")
+        if self.task == 'link_prediction':
+            aucs = [r['AUC'] for r in results]
+            aps = [r['AP'] for r in results]
+            if len(aucs) > 1:
+                print(f"AUC: {statistics.mean(aucs):.2f} +/- {statistics.stdev(aucs):.2f}%")
+                print(f"AP:  {statistics.mean(aps):.2f} +/- {statistics.stdev(aps):.2f}%")
+            else:
+                print(f"AUC: {aucs[0]:.2f}%, AP: {aps[0]:.2f}%")
+        elif self.task == 'node_classification':
+            f1s = [r['Macro-F1'] for r in results]
+            recalls = [r['Recall'] for r in results]
+            if len(f1s) > 1:
+                print(f"Macro-F1: {statistics.mean(f1s):.2f} +/- {statistics.stdev(f1s):.2f}%")
+                print(f"Recall:   {statistics.mean(recalls):.2f} +/- {statistics.stdev(recalls):.2f}%")
+            else:
+                print(f"Macro-F1: {f1s[0]:.2f}%, Recall: {recalls[0]:.2f}%")
         elif self.task == 'node_regression':
-            # 论文指标：MAE
-            preds = node_logits.squeeze().numpy()
-            labels_np = node_labels.float().numpy()
-            return mean_absolute_error(labels_np, preds)
-
-        elif self.task == 'link_prediction':
-            # 论文指标：AUC + AP
-            scores = torch.sigmoid(node_logits).numpy()
-            labels_np = node_labels.numpy()
-            try:
-                auc = roc_auc_score(labels_np, scores)
-            except Exception:
-                auc = 0.5
-            return auc
-
-        return 0.0
-
-    def get_full_metrics(self, split='test'):
-        """
-        返回论文Table 2中的完整指标
-        节点分类: Macro-F1 + Recall
-        链路预测: AUC + AP
-        节点回归: MAE
-        """
-        idx = {'train': self.train_idx,
-               'val': self.val_idx,
-               'test': self.test_idx}[split]
-
-        self.model.eval()
-        with torch.no_grad():
-            logits = self.model(self.graphs, self.feat_dicts)
-            node_logits = logits[idx].cpu()
-            node_labels = self.labels[idx].cpu()
-
-        results = {}
-        if self.task == 'node_classification':
-            preds = node_logits.argmax(dim=-1).numpy()
-            labels_np = node_labels.numpy()
-            results['Macro-F1'] = f1_score(
-                labels_np, preds, average='macro', zero_division=0
-            ) * 100
-            results['Recall'] = recall_score(
-                labels_np, preds, average='macro', zero_division=0
-            ) * 100
-
-        elif self.task == 'node_regression':
-            preds = node_logits.squeeze().numpy()
-            labels_np = node_labels.float().numpy()
-            results['MAE'] = mean_absolute_error(labels_np, preds)
-
-        elif self.task == 'link_prediction':
-            scores = torch.sigmoid(node_logits).numpy()
-            labels_np = node_labels.numpy()
-            results['AUC'] = roc_auc_score(labels_np, scores) * 100
-            results['AP'] = average_precision_score(
-                labels_np, scores
-            ) * 100
-
-        return results
+            maes = [r['MAE'] for r in results]
+            if len(maes) > 1:
+                print(f"MAE: {statistics.mean(maes):.2f} +/- {statistics.stdev(maes):.2f}")
+            else:
+                print(f"MAE: {maes[0]:.2f}")
+        print(f"{'='*50}")
