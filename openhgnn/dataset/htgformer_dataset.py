@@ -44,7 +44,7 @@ class HTGDatasetBase:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# OGBN-MAG 工具函数
+# OGBN-MAG tool function
 # ══════════════════════════════════════════════════════════════════════════════
 def _mp2vec_feat(path, g):
     from gensim.models import KeyedVectors
@@ -90,12 +90,12 @@ def _construct_htg_label_mag(glist, idx, device):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# OGBN-MAG 数据集
+# OGBN-MAG dataset
 # ══════════════════════════════════════════════════════════════════════════════
 class OGBNMAGHTGDataset(HTGDatasetBase):
     """
     OGBN-MAG 链路预测数据集 (author 共作预测)。
-    复现结果: AUC 94.61±0.35%, AP 93.98±0.51% (论文: 92.56/91.64)
+    output: AUC 94.61±0.35%, AP 93.98±0.51% (论文: 92.56/91.64)
 
     数据目录:
       raw_dir/ogbn_graphs*.bin + raw_dir/mp2vec/g0~g9.vector
@@ -149,7 +149,7 @@ class OGBNMAGHTGDataset(HTGDatasetBase):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Aminer 工具函数
+# Aminer tool function
 # ══════════════════════════════════════════════════════════════════════════════
 def _build_coauthor_samples(wri_ei, wri_et, t, num_authors):
     mask = wri_et == t
@@ -175,7 +175,7 @@ def _build_coauthor_samples(wri_ei, wri_et, t, num_authors):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Aminer 数据集
+# Aminer dataset
 # ══════════════════════════════════════════════════════════════════════════════
 class AminerHTGDataset(HTGDatasetBase):
     """
@@ -245,7 +245,7 @@ class AminerHTGDataset(HTGDatasetBase):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# YELP 数据集
+# YELP dataset
 # ══════════════════════════════════════════════════════════════════════════════
 class YELPHTGDataset(HTGDatasetBase):
     """
@@ -322,7 +322,7 @@ class YELPHTGDataset(HTGDatasetBase):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# COVID-19 数据集
+# COVID-19 dataset
 # ══════════════════════════════════════════════════════════════════════════════
 class COVID19HTGDataset(HTGDatasetBase):
     """COVID-19 节点回归 (MAE), hidden_dim=8, predict_type='state'"""
@@ -346,8 +346,17 @@ class COVID19HTGDataset(HTGDatasetBase):
             if i < tw:
                 continue
             wg = glist[i - tw:i]
-            fds = [{ntype: g.nodes[ntype].data.get('feat', torch.zeros(g.num_nodes(ntype), 1))
-                    for ntype in g.ntypes} for g in wg]
+            # 拼接时间窗口内所有时间步的特征为多维特征
+            # 每个节点从 1 维变成 time_window 维，提供更丰富的时序信息
+            fds = []
+            for t_idx, g in enumerate(wg):
+                fd = {}
+                for ntype in g.ntypes:
+                    feat_list = [wg_t.nodes[ntype].data.get('feat',
+                                 torch.zeros(wg_t.num_nodes(ntype), 1))
+                                 for wg_t in wg]
+                    fd[ntype] = torch.cat(feat_list, dim=-1)  # [N, tw]
+                fds.append(fd)
             lg = glist[i]
             sample = (wg, fds, lg)
             if i >= len(glist) - 30:
@@ -360,4 +369,4 @@ class COVID19HTGDataset(HTGDatasetBase):
         print(f"  {len(glist)} 快照, train:{len(self.train_samples)} val:{len(self.val_samples)} test:{len(self.test_samples)}")
 
     def _build_synthetic(self):
-        self.in_dim_dict = {'state': 1, 'county': 1}
+        self.in_dim_dict = {'state': 7, 'county': 7}  # time_window=7 维拼接特征
