@@ -19,6 +19,10 @@
 
   # YELP node classification
   python main.py -m HTGformer -d yelp -t node_classification -g 0
+  
+  # COVID-19 node regression
+  python main.py -m HTGformer -d COVID-19 -t node_regression -g 0
+  
   ```
 
 ## Dataset
