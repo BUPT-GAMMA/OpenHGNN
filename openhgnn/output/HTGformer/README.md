@@ -50,11 +50,11 @@ Datasets should be downloaded manually and placed in `openhgnn/dataset/data/`:
 |:-------:|:----------------------------------:|:--------------------------------:|
 |  YELP   | paper: 43.24%  OpenHGNN: 35.91%   | paper: 43.86%  OpenHGNN: 40.91% |
 
-### Node Regression (tuning in progress)
+### Node Regression
 
 | Dataset  |              MAE               |
 |:--------:|:------------------------------:|
-| COVID-19 | paper: 532  OpenHGNN: tuning   |
+| COVID-19 | paper: 532  OpenHGNN: 511.59   |
 
 ### Note
 
