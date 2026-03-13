@@ -3,15 +3,13 @@ HTGformer Sampler
 ==================
 Paper: HTGformer: Heterogeneous Temporal Graph Transformer (SIGIR 2025)
 
-采样策略说明：
-  HTGformer 的核心优势之一是避免了现有方法中每个时间步都需要
-  独立进行邻居采样的问题。HTGformer 的采样只需：
-    1. 时间窗口采样 (Temporal Window Sampling)：
-       选取最近 T 个时间切片的子图
-    2. 针对目标节点做 node-id 采样（全图或 mini-batch）
-
-  注：对于小图（如 Aminer），可以全图训练无需采样。
-  对于大图（如 OGBN-MAG），需要使用 mini-batch 采样。
+Sampling Strategy Explanation:
+One of the core advantages of HTGformer is that it avoids the problem in existing methods where neighbor sampling needs to be performed independently for each time step. The sampling of HTGformer only involves:
+1. Temporal Window Sampling:
+Select a subgraph of the most recent T time slices
+2. Node-id sampling for the target node (for the entire graph or mini-batch)
+Note: For small graphs (such as Aminer), the entire graph can be used for training without sampling.
+For large graphs (such as OGBN-MAG), mini-batch sampling is required.
 """
 
 import torch
@@ -25,21 +23,18 @@ from torch.utils.data import DataLoader, Dataset
 # ──────────────────────────────────────────────────────────────────────────────
 class HTGformerNodeSampler:
     """
-    针对目标节点的 mini-batch 采样器。
-
-    对于每个 mini-batch：
-      - 采样一批目标节点 ID
-      - 返回完整的 T 个时间切片图（不对图做子采样，图较小）
-      - 或对图做 k-hop 邻居采样（图较大时）
-
+    A mini-batch sampler for the target node.
+    For each mini-batch:
+    - Sample a batch of target node IDs
+    - Return the complete T time slices of the graph (no sub-sampling of the graph, the graph is small)
+    - Or perform k-hop neighbor sampling on the graph (when the graph is large)
     Args:
-        graphs       (list): List[DGLHeteroGraph], T 个时间切片
-        feat_dicts   (list): List[{ntype: Tensor}]
-        target_ntype (str):  目标节点类型
-        batch_size   (int):  每批目标节点数
-        shuffle      (bool): 是否打乱
-        use_khop     (bool): 是否对每个时间切片做 k-hop 邻居子采样
-        num_neighbors(list): k-hop 采样时每跳的邻居数，如 [10, 5]
+    graphs (list): List[DGLHeteroGraph], T time slices feat_dicts   (list): List[{ntype: Tensor}]
+    target_ntype (str): Type of target node
+    batch_size   (int): Number of target nodes per batch
+    shuffle      (bool): Whether to shuffle
+    use_khop     (bool): Whether to perform k-hop neighbor sub-sampling for each time slice
+    num_neighbors(list): Number of neighbors per hop during k-hop sampling, e.g. [10, 5]
     """
 
     def __init__(self, graphs, feat_dicts, target_ntype,
@@ -72,28 +67,28 @@ class HTGformerNodeSampler:
 
     def _sample_batch(self, target_ids):
         """
-        对给定的目标节点 IDs，构建 mini-batch。
+        For the given target node IDs，build mini-batch。
 
         Returns:
-            batch_graphs   (list): T 个时间切片子图
-            batch_feats    (list): T 个对应的节点特征字典
-            batch_target_ids (Tensor): 目标节点在子图中的 ID
+            batch_graphs   (list): T A time slice screenshot
+            batch_feats    (list): T The corresponding node feature dictionary
+            batch_target_ids (Tensor): The target ID node in the map ID
         """
         if not self.use_khop:
-            # 不做 k-hop 采样：使用完整图（小图场景）
+            # Do not perform k-hop sampling: Use the complete graph (small graph scenario)
             return self.graphs, self.feat_dicts, \
                    {self.target_ntype: target_ids}
         else:
-            # k-hop 邻居采样（大图场景）
+            # k-hop Neighbor Sampling (Large Map Scenario)
             batch_graphs = []
             batch_feats = []
 
             for t, (g, feat) in enumerate(zip(self.graphs, self.feat_dicts)):
-                # 使用 DGL 的 k-hop 采样
+                # Using k-hop sampling with DGL
                 sub_g, induced_nodes = self._khop_sample(
                     g, target_ids, self.num_neighbors
                 )
-                # 提取对应特征
+                # Extract the corresponding features
                 sub_feat = {}
                 for ntype in feat.keys():
                     if ntype in induced_nodes:
@@ -101,15 +96,15 @@ class HTGformerNodeSampler:
                 batch_graphs.append(sub_g)
                 batch_feats.append(sub_feat)
 
-            # 在子图中目标节点的 ID（与 target_ids 对应）
+            # The ID of the target node in the subgraph (corresponding to target_ids)
             new_target_ids = torch.arange(len(target_ids))
             return batch_graphs, batch_feats, \
                    {self.target_ntype: new_target_ids}
 
     def _khop_sample(self, g, seed_nodes, fanouts):
         """
-        简单 k-hop 采样，返回子图和引入的节点集合。
-        实际部署中可使用 dgl.sampling.sample_neighbors。
+        Simple k-hop sampling, returning the subgraph and the set of introduced nodes.
+        In actual deployment, dgl.sampling.sample_neighbors can be used.
         """
         frontier_nodes = {self.target_ntype: seed_nodes}
 
@@ -130,7 +125,7 @@ class HTGformerNodeSampler:
                 else:
                     new_frontier[src_t] = torch.cat(
                         [new_frontier[src_t], src_ids]).unique()
-            # 合并
+            # merge
             for k, v in frontier_nodes.items():
                 if k not in new_frontier:
                     new_frontier[k] = v
@@ -139,7 +134,7 @@ class HTGformerNodeSampler:
                         [new_frontier[k], v]).unique()
             frontier_nodes = new_frontier
 
-        # 构建子图
+        # Construct subgraph
         sub_g = dgl.node_subgraph(g, frontier_nodes)
         return sub_g, frontier_nodes
 
@@ -150,13 +145,12 @@ class HTGformerNodeSampler:
 # ──────────────────────────────────────────────────────────────────────────────
 class TemporalWindowSampler:
     """
-    时间窗口采样器。
-    当时间序列很长时（如 T=304 天），只使用最近 window_size 个切片。
-
+    Time window sampler.
+    When the time series is very long (e.g., T = 304 days), only the last window_size slices are used.
     Args:
-        total_timestamps  (int): 总时间步数
-        window_size       (int): 模型使用的时间窗口大小
-        step              (int): 窗口滑动步长
+    total_timestamps  (int): Total number of time steps
+    window_size       (int): Size of the time window used by the model
+    step              (int): Step size for window sliding
     """
 
     def __init__(self, total_timestamps: int, window_size: int, step: int = 1):
@@ -178,16 +172,16 @@ class TemporalWindowSampler:
 
     def get_window(self, graphs, feat_dicts, start_idx):
         """
-        提取指定窗口的数据。
+        Extract the data from the specified window
 
         Args:
-            graphs:     完整图列表
-            feat_dicts: 完整特征列表
-            start_idx:  窗口起始位置
+            graphs:     Complete list of pictures
+            feat_dicts: Complete list of features
+            start_idx:  Window starting position
 
         Returns:
-            window_graphs (list): 切片后的图列表
-            window_feats  (list): 切片后的特征列表
+            window_graphs (list): List of sliced images
+            window_feats  (list): The list of features after slicing
         """
         end_idx = start_idx + self.window_size
         return graphs[start_idx:end_idx], feat_dicts[start_idx:end_idx]
@@ -198,21 +192,18 @@ class TemporalWindowSampler:
 # ──────────────────────────────────────────────────────────────────────────────
 class HTGformerDataLoader:
     """
-    封装 HTGformer 的训练数据加载流程。
-
-    支持两种模式：
-      1. 全图训练 (full_graph=True)：
-         每次迭代返回完整的 T 个时间切片图（小图适用）
-      2. Mini-batch 训练 (full_graph=False)：
-         使用 HTGformerNodeSampler 进行节点级 mini-batch
-
+    Package the training data loading process of HTGformer.
+    Support two modes:
+    1. Full graph training (full_graph=True):
+    During each iteration, return the complete T time slice graphs (applicable for small graphs)
+    2. Mini-batch training (full_graph=False):
+    Use HTGformerNodeSampler for node-level mini-batch
     Args:
-        dataset:         HTGDatasetBase 子类实例
-        split:           'train' / 'val' / 'test'
-        batch_size:      mini-batch 大小（full_graph=False 时有效）
-        full_graph:      是否全图训练
-        num_workers:     DataLoader 工作线程数
-        shuffle:         训练集是否打乱
+    dataset:         An instance of the subclass HTGDatasetBase split:           'train' / 'val' / 'test'
+    batch_size:      Mini-batch size (applicable when full_graph=False)
+    full_graph:      Whether to train the entire graph
+    num_workers:     Number of worker threads for DataLoader
+    shuffle:         Whether to shuffle the training set
     """
 
     def __init__(self, dataset, split='train', batch_size=256,
@@ -232,7 +223,7 @@ class HTGformerDataLoader:
 
     def __iter__(self):
         if self.full_graph:
-            # 全图模式：一次性返回所有数据
+            # Full-screen mode: Returns all data at once
             yield {
                 'graphs': self.dataset.graphs,
                 'feat_dicts': self.dataset.feat_dicts,
@@ -243,7 +234,7 @@ class HTGformerDataLoader:
                 'mask': self.mask,
             }
         else:
-            # Mini-batch 模式
+            # Mini-batch form
             perm = torch.randperm(len(self.node_ids))
             for start in range(0, len(self.node_ids), self.batch_size):
                 batch_node_ids = self.node_ids[
