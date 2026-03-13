@@ -3,11 +3,11 @@ HTGformer Trainer
 ==================
 Paper: HTGformer: Heterogeneous Temporal Graph Transformer (SIGIR 2025)
 
-统一训练流程，支持四种数据集/任务：
-  - OGBN-MAG:  链路预测 (多样本遍历, LinkPredictor, AUC/AP)
-  - Aminer:    链路预测 (时间步遍历, LinkPredictor, AUC/AP)
-  - YELP:      节点分类 (全图训练, CrossEntropy, Macro-F1/Recall)
-  - COVID-19:  节点回归 (多样本遍历, L1Loss/MAE)
+Unified training process, supporting four types of datasets/tasks:
+  - OGBN-MAG: Link Prediction (Multi-sample Traversal, LinkPredictor, AUC/AP)
+  - Aminer: Link Prediction (Time Step Traversal, LinkPredictor, AUC/AP)
+  - YELP: Node Classification (Full Graph Training, CrossEntropy, Macro-F1/Recall)
+  - COVID-19: Node Regression (Multi-sample Traversal, L1Loss/MAE)
 
 超参数 (论文 Section 4.1.3):
   Adam, lr=5e-3 (Aminer/YELP 用 1e-3), weight_decay=5e-4
@@ -76,8 +76,8 @@ def _compute_metric(pos_score, neg_score):
 @register_flow('htgformer_trainer')
 class HTGformerTrainer(BaseFlow):
     """
-    HTGformer 统一训练器。
-    根据 dataset.task 自动选择训练/评估模式。
+   HTGformer Unified Trainer.
+   It automatically selects the training/evaluation mode based on dataset.task.
     """
 
     def __init__(self, args):
@@ -143,7 +143,7 @@ class HTGformerTrainer(BaseFlow):
         )
 
     # ══════════════════════════════════════════════════════════════════════
-    # 主入口
+    # main entrance
     # ══════════════════════════════════════════════════════════════════════
     def train(self):
         num_repeats = getattr(self.args, 'num_repeats', 5)
@@ -168,7 +168,7 @@ class HTGformerTrainer(BaseFlow):
             return self._train_covid()
 
     # ══════════════════════════════════════════════════════════════════════
-    # OGBN-MAG 训练 (对齐 run_mag2.py)
+    # OGBN-MAG training (align at run_mag2.py)
     # ══════════════════════════════════════════════════════════════════════
     def _train_ogbn_mag(self):
         ds = self.dataset
@@ -231,7 +231,7 @@ class HTGformerTrainer(BaseFlow):
         return np.mean(aucs), np.mean(aps)
 
     # ══════════════════════════════════════════════════════════════════════
-    # Aminer 训练 (对齐 run_aminer_htgformer.py)
+    # Aminer training (align at run_aminer_htgformer.py)
     # ══════════════════════════════════════════════════════════════════════
     def _train_aminer(self):
         ds = self.dataset
@@ -302,7 +302,7 @@ class HTGformerTrainer(BaseFlow):
         return (np.mean(aucs), np.mean(aps)) if aucs else (0.5, 0.5)
 
     # ══════════════════════════════════════════════════════════════════════
-    # YELP 训练 (对齐 run_yelp_htgformer.py)
+    # YELP training (align at run_yelp_htgformer.py)
     # ══════════════════════════════════════════════════════════════════════
     def _train_yelp(self):
         ds = self.dataset
@@ -359,7 +359,7 @@ class HTGformerTrainer(BaseFlow):
         return f1, recall
 
     # ══════════════════════════════════════════════════════════════════════
-    # COVID-19 训练 (对齐 run_covid_htgformer.py)
+    # COVID-19 training (align at run_covid_htgformer.py)
     # ══════════════════════════════════════════════════════════════════════
     def _train_covid(self):
         ds = self.dataset
@@ -420,7 +420,7 @@ class HTGformerTrainer(BaseFlow):
         return np.mean(maes)
 
     # ══════════════════════════════════════════════════════════════════════
-    # 汇总输出
+    # output print
     # ══════════════════════════════════════════════════════════════════════
     def _print_summary(self, results):
         print(f"\n{'='*50}")
