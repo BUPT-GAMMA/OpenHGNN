@@ -1,26 +1,26 @@
 """
-HTGformer 完整模型
-严格对应论文 HTGformer (SIGIR 2025) Section 3
+The complete model of HTGformer
+Strictly corresponds to the paper HTGformer (SIGIR 2025) Section 3
 
-整体流程（对应论文Figure 1(a)）：
-  输入: T个时间切片异质图 + 节点特征
+Overall process (corresponding to Figure 1(a) in the paper):
+  Input: T time slices of heterogeneous graphs + node features
     ↓
   [Graph Embedding Layer] Section 3.1
-    对每个时间步t，对目标节点v：
-    - 公式(1): H^t_{v,r} = A^t_r H^t_{N^t_r(v)}  （各关系邻居聚合）
-    - 收集 {H^t_{v,r}} ∪ {H^t_v} 作为多视角特征
+    For each time step t, for the target node v：
+    - Formula(1): H^t_{v,r} = A^t_r H^t_{N^t_r(v)}  (All neighboring relations aggregation)
+    - 收集 {H^t_{v,r}} ∪ {H^t_v} As a multi-perspective characteristic
     ↓
   [Hetero-Temporal Encoder] Section 3.2
-    - 公式(3): H^LLM_v = LLM(Prompt(v))          （LLM类型编码）
-    - 公式(4): p^t_i = sin/cos(...)               （正弦时序编码）
-    - 公式(5): H^{sp,t}_v = H^LLM_v + p^t        （时空编码）
-    - Z^t_v = concat(H^t_v, H^{sp,t}_v)          （增强表示）
+    - Formula(3): H^LLM_v = LLM(Prompt(v))          (LLM Type Code)
+    - Formula(4): p^t_i = sin/cos(...)               (Sine Wave Time-division Coding)
+    - Formula(5): H^{sp,t}_v = H^LLM_v + p^t        (Space-time encoding)
+    - Z^t_v = concat(H^t_v, H^{sp,t}_v)          (Enhanced expression)
     ↓
   [Spatio-Temporal Attention] Section 3.3
-    - 公式(6)(7): Z'_v = Softmax(QK^T/√d_K)V     （共享参数注意力）
+    - Formula(6)(7): Z'_v = Softmax(QK^T/√d_K)V     （Shared Parameter Attention）
     ↓
   [Optimization] Section 3.4
-    - MLP分类头 -> 损失函数
+    - MLP classification head -> loss function
 """
 
 import torch
@@ -49,10 +49,10 @@ class HTGformer(BaseModel):
     """
     HTGformer: Heterogeneous Temporal Graph Transformer
     
-    论文超参数（Section 4.1.3）：
-      hidden_dim = 64（COVID-19用8）
-      num_heads = 4（推断，论文未明确说明头数）
-      num_layers = 2（推断）
+    Paper hyperparameters（Section 4.1.3）：
+      hidden_dim = 64（COVID-19 use 8）
+      num_heads = 4（It can be inferred that the paper did not explicitly state the number of heads）
+      num_layers = 2（inferred）
       lr = 5e-3
       weight_decay = 5e-4
       max_epochs = 500
@@ -80,17 +80,17 @@ class HTGformer(BaseModel):
 
     def __init__(
         self,
-        in_dim_dict,        # {ntype: int}，各节点类型原始特征维度
-        hidden_dim,         # int，隐层维度d（论文d=64）
-        num_heads,          # int，注意力头数
-        num_layers,         # int，Transformer层数
+        in_dim_dict,        # {ntype: int}，The original feature dimensions of each node type
+        hidden_dim,         # int，Hidden layer dimension d (in the paper, d = 64)
+        num_heads,          # int，Number of attention heads
+        num_layers,         # int， the number of Transformer layers
         dropout,            # float
-        num_timestamps,     # int，时间步数T
+        num_timestamps,     # int，Time step T
         node_types,         # List[str]
-        category,           # str，目标节点类型
-        out_dim,            # int，输出类别数
-        use_llm=False,      # bool，是否使用LLM编码
-        llm_embed_path=None,# str，预计算LLM嵌入路径
+        category,           # str，Target node type
+        out_dim,            # int，Number of output categories
+        use_llm=False,      # bool，Whether to use LLM encoding
+        llm_embed_path=None,# str，Pre-computed LLM embedding path
     ):
         super().__init__()
         self.hidden_dim = hidden_dim
@@ -99,15 +99,15 @@ class HTGformer(BaseModel):
         self.category = category
 
         # embed_dim = 2 * hidden_dim
-        # 因为 Z^t_v = concat(H^t_v, H^{sp,t}_v)，各hidden_dim维
+        # Because Z^t_v = concat(H^t_v, H^{sp,t}_v), where each of the dimensions is hidden_dim.
         self.embed_dim = 2 * hidden_dim
 
         # ── Section 3.1: Graph Embedding Layer ──────────────────────────
-        # 公式(1): 非参数图卷积
+        # Formula(1):Non-parametric graph convolution
         self.graph_emb = GraphEmbeddingLayer()
 
         # ── Section 3.2: Hetero-Temporal Encoder ────────────────────────
-        # 公式(2)(3)(4)(5): LLM类型编码 + 正弦时序编码 + concat
+        # Formula (2)(3)(4)(5): LLM type encoding + sine time sequence encoding + concat
         self.hetero_temporal_enc = HeteroTemporalEncoder(
             node_types=node_types,
             feat_dim_dict=in_dim_dict,
@@ -117,7 +117,7 @@ class HTGformer(BaseModel):
         )
 
         # ── Section 3.3: Spatio-Temporal Attention ──────────────────────
-        # 公式(6)(7): 共享参数的多头自注意力，堆叠num_layers层
+        # Formula (6)(7): Shared parameter multi-head self-attention, with num_layers layers stacked together
         self.encoder_layers = nn.ModuleList([
             HTGformerEncoderLayer(
                 embed_dim=self.embed_dim,
@@ -128,9 +128,9 @@ class HTGformer(BaseModel):
         ])
 
         # ── Section 3.4: Optimization ────────────────────────────────────
-        # 两层MLP（论文原文："two layer multilayer perceptron (MLP)"）
-        # 输入：flatten后的Z'_v（T个时间步的预测表示）
-        # 注意：论文取T+1时刻的表示进行预测：H_v = MLP(Z^{T+1}_v)
+        # Two-layer MLP (Original paper: "two layer multilayer perceptron (MLP)" )
+        # Input: Flattened Z'_v (prediction representation for T time steps)
+        # Note: The paper predicts based on the representation at time step T+1: H_v = MLP(Z^{T+1}_v)
         self.classifier = nn.Sequential(
             nn.Linear(self.embed_dim, hidden_dim),
             nn.ReLU(),
@@ -149,12 +149,12 @@ class HTGformer(BaseModel):
 
     def forward(self, graphs, feat_dicts, target_node_ids=None):
         """
-        完整前向传播
+        Complete forward propagation
 
         Args:
-            graphs: List[DGLGraph]，T个时间步的异质图
-            feat_dicts: List[dict]，T个时间步的节点特征 {ntype: tensor}
-            target_node_ids: Optional tensor，目标节点索引（None则取全部）
+            graphs: List[DGLGraph]，Heterogeneous graph over T time steps
+            feat_dicts: List[dict]，The node features over T time steps: {ntype: tensor}
+            target_node_ids: Optional tensor，Target node index (all will be taken if None is specified)
 
         Returns:
             logits: tensor [N_target, out_dim]
@@ -162,27 +162,27 @@ class HTGformer(BaseModel):
         T = len(graphs)
         device = feat_dicts[0][self.category].device
 
-        # ── Step 1: Graph Embedding Layer (公式1) ──────────────────────
+        # ── Step 1: Graph Embedding Layer (Formula 1) ──────────────────────
         # seq_list[t]: {'self': [N,d], rel1: [N,d], ...}
         seq_list = self.graph_emb(graphs, feat_dicts, self.category)
 
-        # ── Step 2: Hetero-Temporal Encoder (公式3,4,5) ─────────────────
-        # 对每个时间步，对每种视角（自身+各关系）生成Z^t_v
-        # 收集成序列 Z: [N, L, embed_dim]
+        # ── Step 2: Hetero-Temporal Encoder (Formula 3,4,5) ─────────────────
+        # For each time step, generate Z^t_v for each perspective (self + all relationships)
+        # Converge into a sequence Z: [N, L, embed_dim]
         # L = T * (1 + num_relations)
         all_tokens = []
         for t in range(T):
             t_repr = seq_list[t]
-            # 对目标节点自身特征
+            # egarding the characteristics of the target node itself
             self_feat = t_repr['self']  # [N, feat_dim]
-            # 构造临时feat_dict用于hetero_temporal_enc
+            # Construct a temporary feat_dict for the hetero_temporal_enc operation
             t_feat_dict = {self.category: self_feat}
             Z_t_self = self.hetero_temporal_enc(
                 t_feat_dict, t, self.category
             )  # [N, 2*d]
             all_tokens.append(Z_t_self)
 
-            # 对每种关系的邻居聚合
+            # Aggregation of neighbors for each type of relationship
             for rel, h_agg in t_repr.items():
                 if rel == 'self':
                     continue
@@ -195,18 +195,18 @@ class HTGformer(BaseModel):
         # Z: [N, L, embed_dim]
         Z = torch.stack(all_tokens, dim=1)  # [N, L, 2*d]
 
-        # Z_v: 目标节点在各时间步的自身表示（作为Query）
-        # 取前T个token（对应T个时间步的self表示）
+        # Z_v: The self-representation of the target node at each time step (as Query)
+        # # Select the first T tokens (corresponding to the self-representation at T time steps)
         Z_v = Z[:, :T, :]  # [N, T, 2*d]
 
-        # ── Step 3: Spatio-Temporal Attention (公式6,7) ─────────────────
+        # ── Step 3: Spatio-Temporal Attention (Formula 6,7) ─────────────────
         for layer in self.encoder_layers:
             Z_v = layer(Z_v, Z)  # [N, T, 2*d]
 
         # ── Step 4: Optimization (Section 3.4) ──────────────────────────
-        # 取最后一个时间步（T时刻）的表示做预测
-        # 论文："Take the T+1 as an example: H_v = MLP(Z^{T+1}_v)"
-        # 实际上取Z_v的最后一个时间步（对应预测T+1时刻）
+        # Make a prediction based on the representation of the last time step (at time T)
+        # Paper："Take the T+1 as an example: H_v = MLP(Z^{T+1}_v)"
+        # In fact, take the last time step of Z_v (corresponding to the prediction of the (T + 1)th moment)
         h_v = Z_v[:, -1, :]  # [N, 2*d]
 
         if target_node_ids is not None:
@@ -217,8 +217,8 @@ class HTGformer(BaseModel):
 
     def link_prediction_forward(self, graphs, feat_dicts):
         """
-        链路预测任务的前向传播
-        公式(8): L = -sum log σ(H_i^T H_j) - sum log σ(-H_i'^T H_j')
+        Forward propagation of the link prediction task
+        Formula (8): L = -sum log σ(H_i^T H_j) - sum log σ(-H_i'^T H_j')
         """
         T = len(graphs)
         seq_list = self.graph_emb(graphs, feat_dicts, self.category)
@@ -246,6 +246,6 @@ class HTGformer(BaseModel):
             Z_v = layer(Z_v, Z)
 
         h_v = Z_v[:, -1, :]
-        # 通过MLP得到节点嵌入
-        h_v = self.classifier(h_v)  # 完整MLP，对应论文公式(8)
+        # Obtain node embeddings through MLP
+        h_v = self.classifier(h_v)  # Complete MLP, corresponding to formula (8) in the paper
         return h_v
