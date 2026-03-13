@@ -64,6 +64,7 @@ def build_model(model):
 
 SUPPORTED_MODELS = {
 #####       add models here
+    'HGSketch': 'openhgnn.models.HGSketch',
     'MHGCN':'openhgnn.models.MHGCN',
     'BPHGNN' : 'openhgnn.models.BPHGNN',
     "MetaHIN": "openhgnn.models.MetaHIN",
@@ -141,6 +142,7 @@ SUPPORTED_MODELS = {
 }
 
 #####       add model here
+from .HGSketch import HGSketch
 from .BPHGNN import BPHGNN
 from .RHINE import RHINE
 from .FedHGNN import FedHGNN
@@ -253,5 +255,6 @@ __all__ = [
     'ExpressGNN',
     'Ingram',
     'RHINE',
+    'HGSketch',
 ]
 classes = __all__

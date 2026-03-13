@@ -41,6 +41,13 @@ class Config(object):
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
 ##############      add config.py    #################
+        elif self.model_name == 'HGSketch':
+            self.K = conf.getint("HGSketch", "K")
+            self.R = conf.getint("HGSketch", "R")
+            self.D = conf.getint("HGSketch", "D")
+            self.seed = conf.getint("HGSketch", "seed")
+            self.max_epoch = 1  # non-parametric, no iterative training
+
         elif self.model_name == 'MHGCN':
             self.lr = conf.getfloat("MHGCN", "lr")
             self.weight_decay = conf.getfloat("MHGCN", "weight_decay")
