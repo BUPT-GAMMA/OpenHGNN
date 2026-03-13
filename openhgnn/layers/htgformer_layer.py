@@ -1,14 +1,13 @@
 """
-HTGformer Layer 实现
-严格对应论文 HTGformer (SIGIR 2025) 各公式
-
-公式对应关系：
-  公式(1): GCNAggregation.forward()       — 非参数图卷积聚合
-  公式(2): NodeTypePrompt (LLM prompt构造) — 节点类型prompt
-  公式(3): LLMTypeEncoder.encode()         — LLM生成类型编码
-  公式(4): SinusoidalTemporalEncoding      — 正弦时序编码
-  公式(5): HeteroTemporalEncoder.forward() — 时空编码拼接
-  公式(6)(7): SpatioTemporalAttention      — Transformer注意力
+Implementation of HTGformer Layer
+Strictly corresponds to each formula in the paper HTGformer (SIGIR 2025)
+Corresponding formulas:
+Formula (1): GCNAggregation.forward() — Non-parametric Graph Convolution Aggregation
+Formula (2): NodeTypePrompt (LLM prompt construction) — Node Type Prompt
+Formula (3): LLMTypeEncoder.encode() — LLM Generated Type Encoding
+Formula (4): SinusoidalTemporalEncoding — Sine Temporal Encoding
+Formula (5): HeteroTemporalEncoder.forward() — Splicing of Spatio-Temporal Encoding
+Formula (6) (7): SpatioTemporalAttention — Transformer Attention
 """
 
 import math
@@ -20,15 +19,15 @@ import dgl.function as dglfn
 
 
 # ===========================================================================
-# 公式(1): Graph Embedding Layer
+# Formula (1): Graph Embedding Layer
 # H^t_{v,r} = A^t_r * H^t_{N^t_r(v)}
-# 非参数图卷积（无可学习参数），对称归一化邻接矩阵
+# Non-parametric graph convolution (without learnable parameters), symmetric normalized adjacency matrix
 # ===========================================================================
 class GCNAggregation(nn.Module):
     """
-    公式(1): 非参数图卷积
+    Formula (1): Non-parametric Graph Convolution
     H^t_{v,r} = A^t_r * H^t_{N^t_r(v)}
-    对每种关系类型r独立聚合邻居特征，不含可学习参数
+    For each relationship type r, independently aggregate the neighbor features without including learnable parameters
     """
     def __init__(self):
         super().__init__()
@@ -36,11 +35,11 @@ class GCNAggregation(nn.Module):
     def forward(self, graph, feat_dict):
         """
         Args:
-            graph: dgl.DGLGraph，异质图（单个时间步）
-            feat_dict: {ntype: tensor [N, d]}，各节点类型的特征
+            graph: dgl.DGLGraph，Heterogeneous graph (at a single time step)
+            feat_dict: {ntype: tensor [N, d]}，Characteristics of each node type
         Returns:
             agg_dict: {(ntype, etype, dtype): tensor [N_dst, d]}
-                      每种关系下目标节点聚合到的邻居表示
+                      The neighbor representations aggregated by the target node in each relationship context
         """
         agg_dict = {}
         for etype in graph.canonical_etypes:
@@ -51,13 +50,13 @@ class GCNAggregation(nn.Module):
             sub_g = graph[etype]
             src_feat = feat_dict[src_type]  # [N_src, d]
 
-            # 计算对称归一化：D^{-1/2} A D^{-1/2}
-            # 等价于 message = src_feat / sqrt(deg_src), 
-            # 再 sum, 再除以 sqrt(deg_dst)
+            # Calculate symmetric normalization: D^(-1/2) A D^(-1/2)
+            # This is equivalent to message = src_feat / sqrt(deg_src),
+            # Then sum, and finally divide by sqrt(deg_dst)
             src_deg = sub_g.out_degrees().float().clamp(min=1)
             dst_deg = sub_g.in_degrees().float().clamp(min=1)
 
-            # 归一化源节点特征
+            # Normalization of source node features
             norm_src = src_feat / src_deg.unsqueeze(-1).sqrt()
 
             sub_g.srcdata['h'] = norm_src
@@ -67,7 +66,7 @@ class GCNAggregation(nn.Module):
             )
             h_agg = sub_g.dstdata['h_agg']  # [N_dst, d]
 
-            # 归一化目标节点
+            # Normalized target node
             h_agg = h_agg / dst_deg.unsqueeze(-1).sqrt()
             agg_dict[etype] = h_agg
 
@@ -76,14 +75,13 @@ class GCNAggregation(nn.Module):
 
 class GraphEmbeddingLayer(nn.Module):
     """
-    论文 Section 3.1: Graph Embedding Layer
-    
-    对每个时间切片t，对目标节点类型v：
-      1. 对每种关系r，用公式(1)聚合邻居特征 -> H^t_{v,r}
-      2. 收集 {H^t_{v,r} | r∈R(v)} ∪ {H^t_v} 作为序列输入
-    
-    最终输出序列长度从 |V| 压缩到 T * |T_n|（节点类型数）
+    Paper Section 3.1: Graph Embedding Layer
+    For each time slice t and for each target node type v:
+    1. For each relationship r, aggregate the neighbor features using formula (1) -> H^t_{v,r}
+    2. Collect {H^t_{v,r} | r∈R(v)} ∪ {H^t_v} as the sequence input
+    The final output sequence length is compressed from |V| to T * |T_n| (the number of node types).
     """
+
     def __init__(self):
         super().__init__()
         self.gcn = GCNAggregation()
@@ -91,9 +89,9 @@ class GraphEmbeddingLayer(nn.Module):
     def forward(self, graphs, feat_dicts, category):
         """
         Args:
-            graphs: List[DGLGraph]，T个时间步的异质图
-            feat_dicts: List[dict]，T个时间步的节点特征
-            category: str，目标节点类型（如'paper'）
+            graphs: List[DGLGraph], heterogeneous graphs over T time steps
+            feat_dicts: List[dict], node features for T time steps
+            category: str, target node type (e.g. 'paper')
         Returns:
             seq_list: List[dict]，每个时间步下目标节点的各视角表示
                       每个dict: {'self': [N,d], rel1: [N,d], ...}
@@ -102,7 +100,7 @@ class GraphEmbeddingLayer(nn.Module):
         for t, (graph, feat_dict) in enumerate(zip(graphs, feat_dicts)):
             t_repr = {'self': feat_dict[category]}  # H^t_v (自身特征)
 
-            # 公式(1): 对每种以category为目标的关系聚合邻居
+            # Formula (1): Aggregate neighbors for each relationship targeted by category
             agg_dict = self.gcn(graph, feat_dict)
             for (src_type, rel_type, dst_type), h_agg in agg_dict.items():
                 if dst_type == category:
@@ -113,27 +111,29 @@ class GraphEmbeddingLayer(nn.Module):
 
 
 # ===========================================================================
-# 公式(2)(3): LLM节点类型编码
+# Formula (2)(3): LLM Node Type Code
 # Prompt(v) = {Introduction to type v; Instruction.}
 # H^LLM_v = LLM(Prompt(v))
 #
-# 注意：由于实验环境无法调用LLM API，提供两种模式：
-#   - use_llm=True: 调用本地LLM或加载预计算的LLM嵌入
-#   - use_llm=False: 用随机初始化的可学习嵌入替代（消融实验w/o_LLM）
+# Note: Due to the inability to invoke the LLM API in the experimental environment, two modes are provided:
+#   - use_llm=True: Call the local LLM or load pre-computed LLM embeddings
+#   - use_llm=False: Replace with randomly initialized learnable embeddings (ablation experiment without LLM)
 # ===========================================================================
 class LLMTypeEncoder(nn.Module):
     """
-    公式(2)(3): 节点类型的LLM语义编码
-    H^LLM_v = LLM(Prompt(v))
-    
-    论文使用 LLama3 对节点类型的文本描述进行编码
-    输出维度为LLM隐层维度（LLama3为4096），再投影到hidden_dim
-    
-    实用策略：
-      预先用LLM生成各节点类型的嵌入并保存，训练时直接加载（frozen）
-      若无LLM资源，用可学习嵌入替代（对应消融实验 w/o_LLM）
+
+    Formula (2)(3): Semantic encoding of node types using
+    LLM H^LLM_v = LLM(Prompt(v))
+
+    The paper uses LLama3 to encode the textual descriptions of node types.
+    The output dimension is the hidden layer dimension of LLM (4096 for LLama3), and then projected to hidden_dim.
+
+   Practical strategy:
+   Generate the embeddings for each node type in advance using LLM and save them. During training, load them directly (frozen).
+   If there is no LLM resource, use learnable embeddings instead (corresponding to the ablation experiment w/o_LLM)
+
     """
-    # 论文Figure 2中各节点类型的prompt模板
+    # The prompt templates of each node type in Figure 2 of the paper
     NODE_TYPE_PROMPTS = {
         'paper': (
             "Description: Academic paper is a type of node in the academic "
@@ -160,7 +160,7 @@ class LLMTypeEncoder(nn.Module):
             "this node type in the following format: "
             "{Introduction to node type:; Relevant relations analysis:}."
         ),
-        # OGBN-MAG数据集节点类型
+        # OGBN-MAG Dataset node type
         'institution': (
             "Description: Institution is a type of node representing research "
             "institutions in the academic dynamic graph. Connected to Author nodes."
@@ -173,7 +173,7 @@ class LLMTypeEncoder(nn.Module):
             "\nInstruction: Please output a summary in the format: "
             "{Introduction to node type:; Relevant relations analysis:}."
         ),
-        # YELP数据集
+        # YELP Dataset
         'user': (
             "Description: User is a type of node in the review dynamic graph. "
             "Connected to Item nodes through review and tip relations."
@@ -186,7 +186,7 @@ class LLMTypeEncoder(nn.Module):
             "\nInstruction: Please output a summary in the format: "
             "{Introduction to node type:; Relevant relations analysis:}."
         ),
-        # COVID-19数据集
+        # COVID-19 Dataset
         'state': (
             "Description: State is a type of node in the COVID-19 epidemic "
             "dynamic graph. Connected to County nodes and other State nodes."
@@ -205,11 +205,11 @@ class LLMTypeEncoder(nn.Module):
                  use_llm=False, llm_embed_path=None):
         """
         Args:
-            node_types: List[str]，节点类型列表
-            hidden_dim: int，输出维度d（论文中d=64）
-            llm_embed_dim: int，LLM输出维度（LLama3=4096, GPT3.5=1536）
-            use_llm: bool，是否使用预计算LLM嵌入
-            llm_embed_path: str，预计算LLM嵌入的文件路径（.pt文件）
+            node_types: List[str], List of node types
+            hidden_dim: int, Output dimension d (in the paper, d = 64)
+            llm_embed_dim: int, Output dimension of LLM (LLama3 = 4096, GPT3.5 = 1536)
+            use_llm: bool, Whether to use pre-computed LLM embeddings
+            llm_embed_path: str, File path for pre-computed LLM embeddings (.pt file)
         """
         super().__init__()
         self.node_types = node_types
@@ -218,39 +218,39 @@ class LLMTypeEncoder(nn.Module):
         self.type2idx = {t: i for i, t in enumerate(node_types)}
 
         if use_llm and llm_embed_path is not None:
-            # 加载预计算的LLM嵌入（frozen，不参与梯度更新）
+            # Load pre-computed LLM embeddings (frozen, not involved in gradient updates)
             llm_embeds = torch.load(llm_embed_path)  # {ntype: tensor[llm_dim]}
             embed_matrix = torch.stack(
                 [llm_embeds[t] for t in node_types], dim=0
             )  # [num_types, llm_embed_dim]
             self.register_buffer('llm_embeds', embed_matrix)
-            # 投影到hidden_dim
+            # Project onto hidden_dim
             self.proj = nn.Linear(llm_embed_dim, hidden_dim, bias=False)
             self.llm_loaded = True
         else:
-            # 消融实验 w/o_LLM：用可学习嵌入替代
-            # 论文消融实验证明LLM编码有帮助但模型仍可运行
+            # Ablation experiment w/o_LLM: Replacing with learnable embeddings
+            # Ablation experiment w/o_LLM: Replacing with learnable embeddings
             self.type_embedding = nn.Embedding(len(node_types), hidden_dim)
             self.llm_loaded = False
 
     def forward(self, node_type_ids):
         """
         Args:
-            node_type_ids: tensor [N]，节点类型索引
+            node_type_ids: tensor [N]，Node type index
         Returns:
-            H_LLM: tensor [N, hidden_dim]，节点类型编码
+            H_LLM: tensor [N, hidden_dim]，Node type code
         """
         if self.llm_loaded:
-            # 公式(3): H^LLM_v = LLM(Prompt(v))，已预计算
+            # Formula (3): H^LLM_v = LLM(Prompt(v)), which has been pre-calculated
             raw = self.llm_embeds[node_type_ids]  # [N, llm_dim]
             return self.proj(raw)                  # [N, hidden_dim]
         else:
-            # w/o_LLM 替代方案
+            # w/o_LLM
             return self.type_embedding(node_type_ids)  # [N, hidden_dim]
 
     @staticmethod
     def get_prompt(node_type):
-        """返回论文Figure 2格式的节点类型prompt"""
+        """Return the node type prompt in the format of Figure 2 from the paper."""
         return LLMTypeEncoder.NODE_TYPE_PROMPTS.get(
             node_type,
             f"Description: {node_type} is a type of node in the dynamic graph.\n"
@@ -260,13 +260,13 @@ class LLMTypeEncoder(nn.Module):
 
 
 # ===========================================================================
-# 公式(4)(5): 正弦时序编码 + 时空编码
+# Formula (4)(5): Sine time sequence encoding + Spatiotemporal encoding
 # p^t_i = sin/cos(t / 10000^{2i/d})
 # H^{sp,t}_v = ||^d_{i=1} (H^LLM_v + p^t_i)
 # ===========================================================================
 class SinusoidalTemporalEncoding(nn.Module):
     """
-    公式(4): 正弦时序编码（与Transformer原始位置编码相同）
+    Formula (4): Sine time sequence encoding (the same as the original position encoding of Transformer)
     p^t_i = sin(t/10000^{2i/d})  if i=2k
           = cos(t/10000^{2i/d})  if i=2k+1
     """
@@ -286,23 +286,24 @@ class SinusoidalTemporalEncoding(nn.Module):
     def forward(self, t):
         """
         Args:
-            t: int，时间步索引
+            t: int，Time step index
         Returns:
-            p_t: tensor [d]，时间步t的编码
+            p_t: tensor [d]，Encoding at time step t
         """
         return self.pe[t]  # [d]
 
 
 class HeteroTemporalEncoder(nn.Module):
     """
-    论文 Section 3.2: Hetero-Temporal Encoder
+    Paper Section 3.2: Hetero-Temporal Encoder
+
+
+    Formula (5): H^{sp,t}_v = ||^d_{i=1} (H^LLM_v + p^t_i)
+    Note: The formula in the paper uses || (concatenate across dimensions)
+    The actual meaning is: For each dimension i, concatenate H^LLM_v[i] + p^t_i
+    This is equivalent to: H^{sp,t}_v = H^LLM_v + p^t (element-wise addition, with the same dimension d)
     
-    公式(5): H^{sp,t}_v = ||^d_{i=1} (H^LLM_v + p^t_i)
-    注意：论文公式(5)用的是 || (concat across dimensions)
-    实际含义是：对每个维度i，将H^LLM_v[i] + p^t_i 拼接
-    等价于：H^{sp,t}_v = H^LLM_v + p^t（element-wise add，维度d相同）
-    
-    最终将时空编码与节点特征concat：
+    Finally, the time-space encoding will be concatenated with the node features.：
     Z^t_v = concat(H^t_v, H^{sp,t}_v)  — 论文Section 3.2最后一段
     """
     def __init__(self, node_types, feat_dim_dict, hidden_dim,
@@ -310,8 +311,8 @@ class HeteroTemporalEncoder(nn.Module):
         """
         Args:
             node_types: List[str]
-            feat_dim_dict: {ntype: int}，各节点类型原始特征维度
-            hidden_dim: int，d=64（论文超参数）
+            feat_dim_dict: {ntype: int}，The original feature dimensions of each node type
+            hidden_dim: int，d=64（Paper hyperparameters）
             use_llm: bool
             llm_embed_path: str
         """
@@ -320,7 +321,7 @@ class HeteroTemporalEncoder(nn.Module):
         self.hidden_dim = hidden_dim
         self.type2idx = {t: i for i, t in enumerate(node_types)}
 
-        # 公式(3): LLM类型编码
+        # Formula (3): LLM Type Encoding
         self.llm_encoder = LLMTypeEncoder(
             node_types=node_types,
             hidden_dim=hidden_dim,
@@ -328,24 +329,24 @@ class HeteroTemporalEncoder(nn.Module):
             llm_embed_path=llm_embed_path
         )
 
-        # 公式(4): 正弦时序编码
+        # Formula (4): Sine waveform encoding
         self.temporal_enc = SinusoidalTemporalEncoding(hidden_dim)
 
-        # 特征投影：将不同维度的原始特征投影到hidden_dim
-        # 为每种节点类型的原始特征建立投影层
+        # Feature projection: Project the original features of different dimensions to hidden_dim
+        # Establish projection layers for the original features of each node type
         self.feat_proj = nn.ModuleDict({
             ntype: nn.Linear(feat_dim_dict[ntype], hidden_dim, bias=True)
             for ntype in node_types if ntype in feat_dim_dict
         })
-        # 通用投影层：用于处理GCN聚合后维度不同的邻居特征
-        # 聚合后特征维度等于源节点原始特征维度，需动态投影
+        # General Projection Layer: Used to handle neighbor features with different dimensions after GCN aggregation
+        # The dimension of the aggregated features is equal to the original feature dimension of the source node. Dynamic projection is required.
         self._proj_cache = nn.ModuleDict()
         self._feat_dim_dict = dict(feat_dim_dict)
 
     def _get_proj(self, in_dim, device):
         """
-        动态获取或创建对应输入维度的投影层
-        用于处理GCN聚合后维度与原始特征维度不同的情况
+        Dynamically obtain or create projection layers corresponding to the input dimensions
+        Used to handle the situation where the dimensions after GCN aggregation are different from the original feature dimensions
         """
         key = str(in_dim)
         if key not in self._proj_cache:
@@ -357,67 +358,67 @@ class HeteroTemporalEncoder(nn.Module):
 
     def forward(self, feat_dict, timestep, category):
         """
-        对目标节点类型category，生成增强后的节点表示 Z^t_v
+        For the target node type "category", generate the enhanced node representation Z^t_v
 
         Args:
-            feat_dict: {ntype: tensor [N, feat_dim]}，feat_dim可以是任意维度
-            timestep: int，当前时间步t
-            category: str，目标节点类型
+            feat_dict: {ntype: tensor [N, feat_dim]}, where feat_dim can be of any dimension
+            timestep: int, the current time step t
+            category: str, the target node type
         Returns:
             Z_t: tensor [N_cat, 2*hidden_dim]
                  = concat(H^t_v_proj, H^{sp,t}_v)
-                 其中 H^{sp,t}_v = H^LLM_v + p^t（公式5）
+                 H^{sp,t}_v = H^LLM_v + p^t（公式5）
         """
         feat = feat_dict[category]
         N = feat.shape[0]
         in_dim = feat.shape[1]
         device = feat.device
 
-        # 1. 投影原始特征到 hidden_dim -> H^t_v
-        # 如果是目标节点自身特征，用预建的feat_proj
-        # 如果是GCN聚合后的邻居特征（维度可能不同），用动态投影
+        # 1. Project the original features to hidden_dim -> H^t_v
+        # If it is the feature of the target node itself, use the pre-built feat_proj
+        # If it is the neighbor features aggregated by GCN (with a different dimension), use dynamic projection
         if category in self.feat_proj and in_dim == self._feat_dim_dict.get(category, -1):
             H_t = self.feat_proj[category](feat)  # [N, d]
         else:
             H_t = self._get_proj(in_dim, device)(feat)  # [N, d]
 
-        # 2. 公式(3): LLM类型编码 H^LLM_v
+        # 2. Formula (3): LLM type encoding H^LLM_v
         type_idx = self.type2idx[category]
         type_ids = torch.full((N,), type_idx, dtype=torch.long, device=device)
         H_LLM = self.llm_encoder(type_ids)  # [N, d]
 
-        # 3. 公式(4): 正弦时序编码 p^t
+        # 3. Formula (4): Sine time-sequential encoding p^t
         p_t = self.temporal_enc(timestep).to(device)  # [d]
 
-        # 4. 公式(5): H^{sp,t}_v = H^LLM_v + p^t
+        # 4. Formula (5): H^{sp,t}_v = H^LLM_v + p^t
         H_sp_t = H_LLM + p_t.unsqueeze(0)  # [N, d]
 
-        # 5. 论文Section 3.2: Z^t_v = concat(H^t_v, H^{sp,t}_v)
+        # 5. Paper： Section 3.2: Z^t_v = concat(H^t_v, H^{sp,t}_v)
         Z_t = torch.cat([H_t, H_sp_t], dim=-1)  # [N, 2*d]
 
         return Z_t  # [N, 2*d]
 
 
 # ===========================================================================
-# 公式(6)(7): Spatio-Temporal Attention（标准Transformer）
+# Formula (6)(7): Spatio-Temporal Attention（StandardTransformer）
 # Q = W_Q Z_v,  K = W_K Z,  V = W_V Z
 # Z'_v = Softmax(QK^T / sqrt(d_K)) V
-# 关键：W_K, W_Q, W_V 在所有节点类型间共享（论文Figure 1(d)）
+# Key point: W_K, W_Q, W_V are shared among all node types (as shown in Figure 1(d) of the paper)
 # ===========================================================================
 class SpatioTemporalAttention(nn.Module):
     """
-    公式(6)(7): Spatio-Temporal Attention
-    
-    论文关键设计：
-    1. QKV参数在所有节点类型间共享（"Shared across all node type"）
-    2. 输入Z已包含时空编码，因此注意力自然捕获时空关系
-    3. 输出 Z'_v = [Z^{T+1}_v, ..., Z^{2T}_v] 为预测的未来节点表示
+    Formula (6) (7): Spatio-Temporal Attention
+
+    Key design of the paper:
+    1. The QKV parameters are shared across all node types ("Shared across all node type")
+    2. The input Z already contains temporal and spatial encoding, so the attention naturally captures the temporal and spatial relationships
+    3. The output Z'_v = [Z^{T+1}_v, ..., Z^{2T}_v] represents the predicted future node representation
     """
     def __init__(self, embed_dim, num_heads, dropout=0.1):
         """
         Args:
-            embed_dim: int，输入维度（= 2*hidden_dim，因为concat了特征和时空编码）
-            num_heads: int，注意力头数
+            embed_dim: int，Input dimension ( = 2 * hidden_dim, as the features and spatiotemporal encoding are concatenated)
+            num_heads: int，Number of attention points
             dropout: float
         """
         super().__init__()
@@ -428,7 +429,7 @@ class SpatioTemporalAttention(nn.Module):
         self.head_dim = embed_dim // num_heads
         self.scale = math.sqrt(self.head_dim)
 
-        # 公式(6): 共享的QKV线性变换（所有节点类型共享）
+        # Formula (6): Shared QKV linear transformation (shared among all node types)
         self.W_Q = nn.Linear(embed_dim, embed_dim, bias=False)
         self.W_K = nn.Linear(embed_dim, embed_dim, bias=False)
         self.W_V = nn.Linear(embed_dim, embed_dim, bias=False)
@@ -440,28 +441,28 @@ class SpatioTemporalAttention(nn.Module):
     def forward(self, Z_v, Z, mask=None):
         """
         Args:
-            Z_v: tensor [N, T, embed_dim]，目标节点的序列（query）
-            Z: tensor [N, L, embed_dim]，全序列（key/value）
-               L = T*(1 + |relations|)，包含自身+所有关系邻居
-            mask: Optional tensor，注意力mask
+            Z_v: tensor [N, T, embed_dim]，The sequence (query) of the target node
+            Z: tensor [N, L, embed_dim]，The full sequence (key/value)
+               L = T*(1 + |relations|)，Including oneself + all related neighbors
+            mask: Optional tensor，Attention mask
         Returns:
-            Z_prime: tensor [N, T, embed_dim]，预测的节点表示
+            Z_prime: tensor [N, T, embed_dim]，Predicted node representation
         """
         N, T, _ = Z_v.shape
         L = Z.shape[1]
 
-        # 公式(6): Q = W_Q Z_v, K = W_K Z, V = W_V Z
+        # Formula (6): Q = W_Q Z_v, K = W_K Z, V = W_V Z
         Q = self.W_Q(Z_v)  # [N, T, d]
         K = self.W_K(Z)    # [N, L, d]
         V = self.W_V(Z)    # [N, L, d]
 
-        # 多头拆分
+        # Horizontal split
         Q = Q.view(N, T, self.num_heads, self.head_dim).transpose(1, 2)
         K = K.view(N, L, self.num_heads, self.head_dim).transpose(1, 2)
         V = V.view(N, L, self.num_heads, self.head_dim).transpose(1, 2)
-        # 形状: [N, num_heads, seq_len, head_dim]
+        # Shape : [N, num_heads, seq_len, head_dim]
 
-        # 公式(7): Softmax(QK^T / sqrt(d_K)) V
+        # Formula (7): Softmax(QK^T / sqrt(d_K)) V
         attn = torch.matmul(Q, K.transpose(-2, -1)) / self.scale
         if mask is not None:
             attn = attn.masked_fill(mask == 0, float('-inf'))
@@ -477,10 +478,10 @@ class SpatioTemporalAttention(nn.Module):
 
 class HTGformerEncoderLayer(nn.Module):
     """
-    完整的Transformer编码层：
+    The complete Transformer encoding layer:
     Spatio-Temporal Attention + Add&Norm + FFN + Add&Norm
-    （论文Figure 1(a)中的 "Add & Norm" 结构）
-    使用Pre-LayerNorm（训练更稳定）
+    (The "Add & Norm" structure in Figure 1(a) of the paper)
+    Use Pre-LayerNorm (for more stable training)
     """
     def __init__(self, embed_dim, num_heads, ffn_dim=None, dropout=0.1):
         super().__init__()
