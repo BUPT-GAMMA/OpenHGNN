@@ -8,7 +8,7 @@ Overall process (corresponding to Figure 1(a) in the paper):
   [Graph Embedding Layer] Section 3.1
     For each time step t, for the target node v：
     - Formula(1): H^t_{v,r} = A^t_r H^t_{N^t_r(v)}  (All neighboring relations aggregation)
-    - 收集 {H^t_{v,r}} ∪ {H^t_v} As a multi-perspective characteristic
+    - collect {H^t_{v,r}} ∪ {H^t_v} As a multi-perspective characteristic
     ↓
   [Hetero-Temporal Encoder] Section 3.2
     - Formula(3): H^LLM_v = LLM(Prompt(v))          (LLM Type Code)

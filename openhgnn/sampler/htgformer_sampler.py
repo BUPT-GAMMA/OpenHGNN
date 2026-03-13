@@ -141,7 +141,7 @@ class HTGformerNodeSampler:
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Temporal Window Sampler
-# 从整个时序中采样连续 T 个时间切片（用于超长时序）
+# Sample consecutive T time slices from the entire time sequence (for ultra-long time sequences)
 # ──────────────────────────────────────────────────────────────────────────────
 class TemporalWindowSampler:
     """

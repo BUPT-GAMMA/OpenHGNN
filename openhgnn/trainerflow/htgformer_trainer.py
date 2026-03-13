@@ -9,7 +9,7 @@ Unified training process, supporting four types of datasets/tasks:
   - YELP: Node Classification (Full Graph Training, CrossEntropy, Macro-F1/Recall)
   - COVID-19: Node Regression (Multi-sample Traversal, L1Loss/MAE)
 
-超参数 (论文 Section 4.1.3):
+hyper-parameter (paper Section 4.1.3):
   Adam, lr=5e-3 (Aminer/YELP 用 1e-3), weight_decay=5e-4
   hidden_dim=64 (COVID-19 用 8), max_epochs=500, early_stopping=25
 """
@@ -35,14 +35,14 @@ except ImportError:
 
 
 class LinkPredictor(nn.Module):
-    """链路预测头 (对应论文 Section 3.4 MLP)"""
+    """Link Prediction Head (corresponding to Section 3.4 MLP in the paper)"""
     def __init__(self, n_inp):
         super().__init__()
         self.fc1 = nn.Linear(n_inp * 2, n_inp)
         self.fc2 = nn.Linear(n_inp, 1)
 
     def forward(self, pos_g, neg_g, h):
-        """DGL graph 接口 (OGBN-MAG)"""
+        """DGL graph interface (OGBN-MAG)"""
         with pos_g.local_scope(), neg_g.local_scope():
             pos_g.ndata['h'] = h; neg_g.ndata['h'] = h
             pos_g.apply_edges(lambda e: {'s': self.fc2(F.relu(self.fc1(
@@ -52,7 +52,7 @@ class LinkPredictor(nn.Module):
             return pos_g.edata['s'], neg_g.edata['s']
 
     def forward_ids(self, src, dst, h):
-        """ID 索引接口 (Aminer)"""
+        """ID Index Interface (Aminer)"""
         x = torch.cat([h[src], h[dst]], dim=1)
         return self.fc2(F.relu(self.fc1(x)))
 
