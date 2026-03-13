@@ -1,17 +1,17 @@
 """
-HTGformer 数据集
+HTGformer dataset
 ==================
 Paper: HTGformer: Heterogeneous Temporal Graph Transformer (SIGIR 2025)
 
-支持论文 Table 1 中的数据集：
-  1. OGBN-MAG  — 链路预测 (AUC, AP)
-     数据来源: HTGNN (SDM'2022), 需要 ogbn_graphs*.bin + mp2vec/g0~g9.vector
-  2. Aminer    — 链路预测 (AUC, AP)
-     数据来源: DHGAS (AAAI'2023), PyG HeteroData 格式 (processed-False-32.pt)
-  3. YELP      — 节点分类 (Macro-F1, Recall)
-     数据来源: DHGAS (AAAI'2023), PyG HeteroData 格式 (True-32.pt)
-  4. COVID-19  — 节点回归 (MAE)
-     数据来源: HTGNN (SDM'2022), 需要 covid_graphs.bin
+Support the datasets in Table 1 of the paper:
+  1. OGBN-MAG  — Link Prediction (AUC, AP)
+     data sources: HTGNN (SDM'2022), need ogbn_graphs*.bin + mp2vec/g0~g9.vector
+  2. Aminer    — Link Prediction (AUC, AP)
+     data sources: DHGAS (AAAI'2023), PyG HeteroData form (processed-False-32.pt)
+  3. YELP      — Node Classification (Macro-F1, Recall)
+     data sources: DHGAS (AAAI'2023), PyG HeteroData form (True-32.pt)
+  4. COVID-19  — Node Classification (MAE)
+     data sources: HTGNN (SDM'2022), need covid_graphs.bin
 """
 
 import os
@@ -22,7 +22,7 @@ from collections import defaultdict
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 基类
+# base class
 # ══════════════════════════════════════════════════════════════════════════════
 class HTGDatasetBase:
     """HTGformer 数据集基类"""
@@ -37,7 +37,7 @@ class HTGDatasetBase:
         self.task = None
         self.num_classes = None
         self.in_dim_dict = {}
-        # 链路预测多样本模式 (OGBN-MAG, Aminer)
+        # Link prediction multi-sample mode (OGBN-MAG, Aminer)
         self.train_samples = []
         self.val_samples = []
         self.test_samples = []
@@ -94,10 +94,10 @@ def _construct_htg_label_mag(glist, idx, device):
 # ══════════════════════════════════════════════════════════════════════════════
 class OGBNMAGHTGDataset(HTGDatasetBase):
     """
-    OGBN-MAG 链路预测数据集 (author 共作预测)。
-    output: AUC 94.61±0.35%, AP 93.98±0.51% (论文: 92.56/91.64)
+    OGBN-MAG Link prediction dataset: author - Work prediction
+    output: AUC 94.61±0.35%, AP 93.98±0.51% (paper: 92.56/91.64)
 
-    数据目录:
+    data directory：
       raw_dir/ogbn_graphs*.bin + raw_dir/mp2vec/g0~g9.vector
     """
     def __init__(self, raw_dir='./data/ogbn_mag', use_synthetic=False,
@@ -179,10 +179,10 @@ def _build_coauthor_samples(wri_ei, wri_et, t, num_authors):
 # ══════════════════════════════════════════════════════════════════════════════
 class AminerHTGDataset(HTGDatasetBase):
     """
-    Aminer 链路预测数据集 (author 共作预测)。
-    复现结果: AUC 85.98±0.89%, AP 80.83±0.90% (论文: 89.78/88.03)
+    Aminer Link prediction dataset (author 共作预测)。
+    output: AUC 85.98±0.89%, AP 80.83±0.90% (paper: 89.78/88.03)
 
-    数据文件: aminer_processed.pt (DHGAS 仓库 Cross-Domain_data/processed-False-32.pt)
+    data file: aminer_processed.pt (DHGAS 仓库 Cross-Domain_data/processed-False-32.pt)
     """
     NUM_PAPER = 18464
     NUM_AUTHOR = 23035
@@ -249,11 +249,11 @@ class AminerHTGDataset(HTGDatasetBase):
 # ══════════════════════════════════════════════════════════════════════════════
 class YELPHTGDataset(HTGDatasetBase):
     """
-    YELP 节点分类数据集 (item 3 类)。
-    复现结果: F1 35.91±1.59%, Recall 40.91±1.57% (论文: 43.24/43.86, w/o_LLM)
+    YELP node classification dataset (item 3 class)。
+    output: F1 35.91±1.59%, Recall 40.91±1.57% (paper: 43.24/43.86, w/o_LLM)
 
-    数据文件: yelp_processed.pt (DHGAS 仓库 yelp/processed/True-32.pt)
-    节点划分: 随机 80:10:10 (与 DHGAS 一致)
+    data file: yelp_processed.pt (DHGAS repository yelp/processed/True-32.pt)
+    node classification : 随机 80:10:10 (consistent with DHGAS)
     """
     NUM_USER = 55702
     NUM_ITEM = 12524
@@ -325,7 +325,7 @@ class YELPHTGDataset(HTGDatasetBase):
 # COVID-19 dataset
 # ══════════════════════════════════════════════════════════════════════════════
 class COVID19HTGDataset(HTGDatasetBase):
-    """COVID-19 节点回归 (MAE), hidden_dim=8, predict_type='state'"""
+    """COVID-19 node regression (MAE), hidden_dim=8, predict_type='state'"""
     def __init__(self, raw_dir='./data', use_synthetic=False, time_window=7):
         super().__init__()
         self.category = 'state'
@@ -346,8 +346,8 @@ class COVID19HTGDataset(HTGDatasetBase):
             if i < tw:
                 continue
             wg = glist[i - tw:i]
-            # 拼接时间窗口内所有时间步的特征为多维特征
-            # 每个节点从 1 维变成 time_window 维，提供更丰富的时序信息
+            # The features of all time steps within the stitched time window are multi-dimensional features.
+            # Each node transforms from 1-dimensional to time_window-dimensional, providing more comprehensive temporal information.
             fds = []
             for t_idx, g in enumerate(wg):
                 fd = {}
@@ -369,4 +369,4 @@ class COVID19HTGDataset(HTGDatasetBase):
         print(f"  {len(glist)} 快照, train:{len(self.train_samples)} val:{len(self.val_samples)} test:{len(self.test_samples)}")
 
     def _build_synthetic(self):
-        self.in_dim_dict = {'state': 7, 'county': 7}  # time_window=7 维拼接特征
+        self.in_dim_dict = {'state': 7, 'county': 7}  # time_window=7 Vertex joining feature
