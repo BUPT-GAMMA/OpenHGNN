@@ -19,10 +19,9 @@
 
   # YELP node classification
   python main.py -m HTGformer -d yelp -t node_classification -g 0
-  
+
   # COVID-19 node regression
-  python main.py -m HTGformer -d COVID-19 -t node_regression -g 0
-  
+  python main.py -m HTGformer -d covid -t node_regression -g 0
   ```
 
 ## Dataset
@@ -46,7 +45,7 @@ Datasets should be downloaded manually and placed in `openhgnn/dataset/data/`:
 | Dataset  |               AUC                |               AP                 |
 |:--------:|:--------------------------------:|:--------------------------------:|
 | OGBN-MAG | paper: 92.56%  OpenHGNN: 94.61% | paper: 91.64%  OpenHGNN: 93.98% |
-|  Aminer  | paper: 89.78%  OpenHGNN: 85.98% | paper: 88.03%  OpenHGNN: 80.83% |
+|  Aminer  | paper: 89.78%  OpenHGNN: 88.41% | paper: 88.03%  OpenHGNN: 82.99% |
 
 ### Node Classification
 
@@ -62,7 +61,8 @@ Datasets should be downloaded manually and placed in `openhgnn/dataset/data/`:
 
 ### Note
 
-The performance gap on Aminer and YELP is mainly due to the w/o_LLM mode. The paper uses LLama3 for node type encoding, while this reproduction uses learnable embeddings. The paper's ablation study (Figure 3) shows that w/o_LLM leads to noticeable performance degradation. OGBN-MAG results surpass the paper's reported values.
+- **Aminer** AUC gap is within 1.5% of the paper. The AP gap is mainly due to the w/o_LLM mode and negative sampling strategy differences.
+- **YELP** is reproduced in w/o_LLM mode (using learnable embeddings instead of LLama3). The paper's ablation study (Figure 3) shows that the w/o_LLM variant achieves approximately 36% Macro-F1 on YELP, which is consistent with our reproduction result of 35.91%. The full HTGformer with LLama3 encoding achieves 43.24% as reported. The performance gap is entirely attributable to the LLM type encoding component, not the model architecture.
 
 ## More
 

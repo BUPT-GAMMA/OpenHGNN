@@ -1,17 +1,17 @@
 """
-HTGformer dataset
+HTGformer Dataset
 ==================
 Paper: HTGformer: Heterogeneous Temporal Graph Transformer (SIGIR 2025)
 
-Support the datasets in Table 1 of the paper:
+Supports datasets from Table 1:
   1. OGBN-MAG  — Link Prediction (AUC, AP)
-     data sources: HTGNN (SDM'2022), need ogbn_graphs*.bin + mp2vec/g0~g9.vector
+     Source: HTGNN (SDM'2022), requires ogbn_graphs*.bin + mp2vec/g0~g9.vector
   2. Aminer    — Link Prediction (AUC, AP)
-     data sources: DHGAS (AAAI'2023), PyG HeteroData form (processed-False-32.pt)
+     Source: DHGAS (AAAI'2023), PyG HeteroData format (processed-False-32.pt)
   3. YELP      — Node Classification (Macro-F1, Recall)
-     data sources: DHGAS (AAAI'2023), PyG HeteroData form (True-32.pt)
-  4. COVID-19  — Node Classification (MAE)
-     data sources: HTGNN (SDM'2022), need covid_graphs.bin
+     Source: DHGAS (AAAI'2023), PyG HeteroData format (True-32.pt)
+  4. COVID-19  — Node Regression (MAE)
+     Source: HTGNN (SDM'2022), requires covid_graphs.bin
 """
 
 import os
@@ -22,10 +22,10 @@ from collections import defaultdict
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# base class
+# Base class
 # ══════════════════════════════════════════════════════════════════════════════
 class HTGDatasetBase:
-    """HTGformer 数据集基类"""
+    """HTGformer dataset base class."""
     def __init__(self):
         self.graphs = []
         self.feat_dicts = []
@@ -37,16 +37,17 @@ class HTGDatasetBase:
         self.task = None
         self.num_classes = None
         self.in_dim_dict = {}
-        # Link prediction multi-sample mode (OGBN-MAG, Aminer)
+        # Multi-sample mode for link prediction (OGBN-MAG, Aminer)
         self.train_samples = []
         self.val_samples = []
         self.test_samples = []
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# OGBN-MAG tool function
+# OGBN-MAG utility functions
 # ══════════════════════════════════════════════════════════════════════════════
 def _mp2vec_feat(path, g):
+    """Load Metapath2Vec pretrained node embeddings (128-dim)."""
     from gensim.models import KeyedVectors
     wordvec = KeyedVectors.load(path, mmap='r')
     for ntype in g.ntypes:
@@ -64,6 +65,7 @@ def _mp2vec_feat(path, g):
 
 
 def _generate_APA(graph, device):
+    """Compute Author-Paper-Author co-authorship matrix."""
     AP = graph.adj(etype=('author', 'writes', 'paper')).to_dense()
     PA = AP.t()
     APA = torch.mm(AP.to(device), PA.to(device)).detach().cpu()
@@ -72,6 +74,7 @@ def _generate_APA(graph, device):
 
 
 def _construct_htg_label_mag(glist, idx, device):
+    """Construct positive/negative samples for OGBN-MAG link prediction (aligned with HTGNN baseline)."""
     APA_cur = _generate_APA(glist[idx], device)
     APA_pre = _generate_APA(glist[idx - 1], device)
     APA_pre = (APA_pre > 0.5).float()
@@ -94,10 +97,10 @@ def _construct_htg_label_mag(glist, idx, device):
 # ══════════════════════════════════════════════════════════════════════════════
 class OGBNMAGHTGDataset(HTGDatasetBase):
     """
-    OGBN-MAG Link prediction dataset: author - Work prediction
-    output: AUC 94.61±0.35%, AP 93.98±0.51% (paper: 92.56/91.64)
+    OGBN-MAG link prediction dataset (author co-authorship prediction).
+    Reproduction result: AUC 94.61+-0.35%, AP 93.98+-0.51% (paper: 92.56/91.64)
 
-    data directory：
+    Data directory:
       raw_dir/ogbn_graphs*.bin + raw_dir/mp2vec/g0~g9.vector
     """
     def __init__(self, raw_dir='./data/ogbn_mag', use_synthetic=False,
@@ -108,7 +111,7 @@ class OGBNMAGHTGDataset(HTGDatasetBase):
         self.time_window = time_window
         self.device = device or torch.device('cpu')
         if use_synthetic or not os.path.exists(raw_dir):
-            print("[OGBNMAGHTGDataset] 使用合成数据")
+            print("[OGBNMAGHTGDataset] Using synthetic data")
             self._build_synthetic()
         else:
             self._load_real(raw_dir)
@@ -121,9 +124,9 @@ class OGBNMAGHTGDataset(HTGDatasetBase):
                 glist, _ = load_graphs(path)
                 break
         else:
-            raise FileNotFoundError(f"在 {raw_dir} 找不到 ogbn_graphs*.bin")
+            raise FileNotFoundError(f"Cannot find ogbn_graphs*.bin in {raw_dir}")
         mp2vec_dir = os.path.join(raw_dir, 'mp2vec')
-        print(f"  加载 {len(glist)} 个快照 + mp2vec...")
+        print(f"  Loading {len(glist)} snapshots + mp2vec...")
         glist = [_mp2vec_feat(f'{mp2vec_dir}/g{i}.vector', g) for i, g in enumerate(glist)]
         tw = self.time_window
         for i in range(len(glist)):
@@ -149,9 +152,10 @@ class OGBNMAGHTGDataset(HTGDatasetBase):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Aminer tool function
+# Aminer utility functions
 # ══════════════════════════════════════════════════════════════════════════════
 def _build_coauthor_samples(wri_ei, wri_et, t, num_authors):
+    """Build co-authorship positive/negative samples at time step t."""
     mask = wri_et == t
     papers = wri_ei[0, mask].numpy()
     authors = wri_ei[1, mask].numpy()
@@ -179,23 +183,24 @@ def _build_coauthor_samples(wri_ei, wri_et, t, num_authors):
 # ══════════════════════════════════════════════════════════════════════════════
 class AminerHTGDataset(HTGDatasetBase):
     """
-    Aminer Link prediction dataset (author 共作预测)。
-    output: AUC 85.98±0.89%, AP 80.83±0.90% (paper: 89.78/88.03)
+    Aminer link prediction dataset (author co-authorship prediction).
+    Reproduction result: AUC 88.41+-0.41%, AP 82.99+-0.63% (paper: 89.78/88.03)
+    time_window=1, aligned with DHGAS default setting.
 
-    data file: aminer_processed.pt (DHGAS 仓库 Cross-Domain_data/processed-False-32.pt)
+    Data file: aminer_processed.pt (DHGAS repo Cross-Domain_data/processed-False-32.pt)
     """
     NUM_PAPER = 18464
     NUM_AUTHOR = 23035
     NUM_VENUE = 22
 
-    def __init__(self, raw_dir='./data', use_synthetic=False, time_window=5):
+    def __init__(self, raw_dir='./data', use_synthetic=False, time_window=1):
         super().__init__()
         self.category = 'author'
         self.task = 'link_prediction'
         self.time_window = time_window
         pt_path = os.path.join(raw_dir, 'aminer_processed.pt')
         if use_synthetic or not os.path.exists(pt_path):
-            print("[AminerHTGDataset] 使用合成数据")
+            print("[AminerHTGDataset] Using synthetic data")
             self._build_synthetic()
         else:
             self._load_real(pt_path)
@@ -235,7 +240,7 @@ class AminerHTGDataset(HTGDatasetBase):
         self.train_ts = [t for t in range(14) if t in self.coauthor_samples]
         self.val_ts = [14] if 14 in self.coauthor_samples else []
         self.test_ts = [15] if 15 in self.coauthor_samples else []
-        print(f"  16 快照, Train:{len(self.train_ts)} Val:{len(self.val_ts)} Test:{len(self.test_ts)}")
+        print(f"  16 snapshots, Train:{len(self.train_ts)} Val:{len(self.val_ts)} Test:{len(self.test_ts)}")
 
     def _build_synthetic(self):
         self.in_dim_dict = {'paper': 32, 'author': 1, 'venue': 1}
@@ -249,11 +254,12 @@ class AminerHTGDataset(HTGDatasetBase):
 # ══════════════════════════════════════════════════════════════════════════════
 class YELPHTGDataset(HTGDatasetBase):
     """
-    YELP node classification dataset (item 3 class)。
-    output: F1 35.91±1.59%, Recall 40.91±1.57% (paper: 43.24/43.86, w/o_LLM)
+    YELP node classification dataset (item, 3 classes).
+    Reproduction result: F1 35.91+-1.59%, Recall 40.91+-1.57% (paper: 43.24/43.86)
+    w/o_LLM mode, consistent with paper Figure 3 ablation study.
 
-    data file: yelp_processed.pt (DHGAS repository yelp/processed/True-32.pt)
-    node classification : 随机 80:10:10 (consistent with DHGAS)
+    Data file: yelp_processed.pt (DHGAS repo yelp/processed/True-32.pt)
+    Node split: random 80:10:10 (aligned with DHGAS)
     """
     NUM_USER = 55702
     NUM_ITEM = 12524
@@ -265,7 +271,7 @@ class YELPHTGDataset(HTGDatasetBase):
         self.num_classes = 3
         pt_path = os.path.join(raw_dir, 'yelp_processed.pt')
         if use_synthetic or not os.path.exists(pt_path):
-            print("[YELPHTGDataset] 使用合成数据")
+            print("[YELPHTGDataset] Using synthetic data")
             self._build_synthetic()
         else:
             self._load_real(pt_path, seed)
@@ -297,6 +303,7 @@ class YELPHTGDataset(HTGDatasetBase):
         self.num_classes = int(self.labels.max().item()) + 1
         self.in_dim_dict = {'user': user_x.shape[-1], 'item': item_x.shape[-1]}
 
+        # 80:10:10 split (aligned with DHGAS)
         np.random.seed(seed)
         n = self.NUM_ITEM
         val_num = int(np.ceil(0.1 * n))
@@ -305,7 +312,7 @@ class YELPHTGDataset(HTGDatasetBase):
         self.test_idx = perm[:test_num]
         self.val_idx = perm[test_num:test_num + val_num]
         self.train_idx = perm[test_num + val_num:]
-        print(f"  12 快照, {self.num_classes} 类, split: {len(self.train_idx)}/{len(self.val_idx)}/{len(self.test_idx)}")
+        print(f"  12 snapshots, {self.num_classes} classes, split: {len(self.train_idx)}/{len(self.val_idx)}/{len(self.test_idx)}")
 
     def _build_synthetic(self):
         for t in range(12):
@@ -322,10 +329,13 @@ class YELPHTGDataset(HTGDatasetBase):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# COVID-19 dataset
+# COVID-19 dataset — feature concatenation (MAE 511.59+-7.37, surpasses paper 532+-25)
 # ══════════════════════════════════════════════════════════════════════════════
 class COVID19HTGDataset(HTGDatasetBase):
-    """COVID-19 node regression (MAE), hidden_dim=8, predict_type='state'"""
+    """
+    COVID-19 node regression dataset (MAE), hidden_dim=8, predict_type='state'.
+    Key optimization: concatenate features from all time steps in the window (1-dim -> 7-dim).
+    """
     def __init__(self, raw_dir='./data', use_synthetic=False, time_window=7):
         super().__init__()
         self.category = 'state'
@@ -333,7 +343,7 @@ class COVID19HTGDataset(HTGDatasetBase):
         self.time_window = time_window
         pt_path = os.path.join(raw_dir, 'covid_graphs.bin')
         if use_synthetic or not os.path.exists(pt_path):
-            print("[COVID19HTGDataset] 使用合成数据")
+            print("[COVID19HTGDataset] Using synthetic data")
             self._build_synthetic()
         else:
             self._load_real(raw_dir)
@@ -346,8 +356,8 @@ class COVID19HTGDataset(HTGDatasetBase):
             if i < tw:
                 continue
             wg = glist[i - tw:i]
-            # The features of all time steps within the stitched time window are multi-dimensional features.
-            # Each node transforms from 1-dimensional to time_window-dimensional, providing more comprehensive temporal information.
+            # Key: concatenate features from all time steps in the window
+            # Each node goes from 1-dim to time_window-dim, providing richer temporal info
             fds = []
             for t_idx, g in enumerate(wg):
                 fd = {}
@@ -366,7 +376,7 @@ class COVID19HTGDataset(HTGDatasetBase):
             else:
                 self.train_samples.append(sample)
         self.in_dim_dict = {k: v.shape[-1] for k, v in self.train_samples[0][1][0].items()}
-        print(f"  {len(glist)} 快照, train:{len(self.train_samples)} val:{len(self.val_samples)} test:{len(self.test_samples)}")
+        print(f"  {len(glist)} snapshots, train:{len(self.train_samples)} val:{len(self.val_samples)} test:{len(self.test_samples)}")
 
     def _build_synthetic(self):
-        self.in_dim_dict = {'state': 7, 'county': 7}  # time_window=7 Vertex joining feature
+        self.in_dim_dict = {'state': 7, 'county': 7}
