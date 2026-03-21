@@ -1584,6 +1584,16 @@ class Config(object):
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
 
+        elif self.model_name == 'HTGformer':
+            self.lr = conf.getfloat("HTGformer", "lr")
+            self.weight_decay = conf.getfloat("HTGformer", "weight_decay")
+            self.max_epoch = conf.getint("HTGformer", "max_epoch")
+            self.hidden_dim = conf.getint("HTGformer", "hidden_dim")
+            self.num_heads = conf.getint("HTGformer", "num_heads")
+            self.num_layers = conf.getint("HTGformer", "num_layers")
+            self.dropout = conf.getfloat("HTGformer", "dropout")
+            self.patience = conf.getint("HTGformer", "patience")
+            self.num_repeats = conf.getint("HTGformer", "num_repeats")
 
 
         if hasattr(self, "device"):
