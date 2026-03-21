@@ -137,6 +137,7 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
+    'HTGformer': 'openhgnn.models.HTGformer',
 
 }
 
@@ -253,5 +254,6 @@ __all__ = [
     'ExpressGNN',
     'Ingram',
     'RHINE',
+    'HTGformer',
 ]
 classes = __all__

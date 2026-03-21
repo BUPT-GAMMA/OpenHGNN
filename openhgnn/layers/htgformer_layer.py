@@ -307,7 +307,7 @@ class HeteroTemporalEncoder(nn.Module):
     Z^t_v = concat(H^t_v, H^{sp,t}_v)  — 论文Section 3.2最后一段
     """
     def __init__(self, node_types, feat_dim_dict, hidden_dim,
-                 use_llm=False, llm_embed_path=None):
+                 use_llm=False, llm_embed_path=None, llm_embed_dim=4096):
         """
         Args:
             node_types: List[str]
@@ -326,6 +326,7 @@ class HeteroTemporalEncoder(nn.Module):
             node_types=node_types,
             hidden_dim=hidden_dim,
             use_llm=use_llm,
+            llm_embed_dim=llm_embed_dim,
             llm_embed_path=llm_embed_path
         )
 
