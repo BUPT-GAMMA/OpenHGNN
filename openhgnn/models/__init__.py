@@ -137,6 +137,8 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
+    "HERO": "openhgnn.models.HERO",
+    "HERO_homo":"openhgnn.models.HERO_homo",
 
 }
 
@@ -199,6 +201,9 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
+
+from .HERO import HERO
+from .HERO_homo import HEROHomo
 
 
 

@@ -18,6 +18,8 @@ from .NBF_dataset import NBF_Dataset
 from .Ingram_dataset import Ingram_KG_TrainData, Ingram_KG_TestData
 from .MetaHIN_dataset import Meta_DataHelper
 
+
+
 DATASET_REGISTRY = {}
 
 
@@ -84,6 +86,8 @@ def build_dataset_GB(dataset,*args,**kwargs):
         return DATASET_REGISTRY['GraphBolt_Dataset'](dataset, logger=kwargs['logger'],args = kwargs['args'])
     
 
+from .NodeClassificationDataset import *
+from .HERO_dataset import HERODataset
 
 def build_dataset(dataset, task, *args, **kwargs):
     
@@ -117,6 +121,7 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset == "dbook":
         dataload = Meta_DataHelper(args.input_dir, args)
         return dataload
+
 
 #############
 
@@ -210,10 +215,15 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'NBF_' + task  
     elif dataset in ['DisenKGAT_WN18RR','DisenKGAT_FB15k-237']:
         _dataset = 'DisenKGAT_' + task  #  == 'DisenKGAT_link_prediction'
-        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))  
+       
+       
+       
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))
+    elif dataset in ['ACM4HERO', 'Aminer4HERO',"DBLP4HERO","Yelp4HERO"]:
+        _dataset = 'hero_node_classification'  
 
-
-
+    elif dataset in [ "cora4HERO", "citeseer4HERO", "pubmed4HERO","photo4HERO", "computers4HERO", "cs4HERO","physics4HERO", "corafull4HERO", "wikics4HERO", "ogbn-arxiv4HERO"]:
+        _dataset = 'hero_homo_node_classification'
 
     
     if args != None and hasattr(args,'model'):
@@ -222,8 +232,8 @@ def build_dataset(dataset, task, *args, **kwargs):
             return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args=kwargs['args'])
 
     
-    
-    return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
+    return DATASET_REGISTRY[_dataset](dataset,logger=kwargs['logger'],args=args)
+    # return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
 

@@ -107,6 +107,8 @@ SUPPORTED_FLOWS = {
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
+    'hero_trainer': "openhgnn.trainerflow.HERO_trainer",
+    'hero_homo_trainer': "openhgnn.trainerflow.HERO_homo_trainer",
 
 
 
@@ -160,6 +162,9 @@ from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
 from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
+
+from .HERO_trainer import *
+from .HERO_homo_trainer import *
 
 
 
