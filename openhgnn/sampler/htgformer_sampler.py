@@ -48,7 +48,7 @@ class HTGformerNodeSampler:
         self.use_khop = use_khop
         self.num_neighbors = num_neighbors or [10, 5]
 
-        # 目标节点总数（以最后一个时间步为准）
+        # Total number of target nodes (based on the last time step)
         self.num_targets = graphs[-1].num_nodes(target_ntype)
         self.node_ids = torch.arange(self.num_targets)
 

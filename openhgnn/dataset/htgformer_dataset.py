@@ -5,13 +5,11 @@ Paper: HTGformer: Heterogeneous Temporal Graph Transformer (SIGIR 2025)
 
 Supports datasets from Table 1:
   1. OGBN-MAG  — Link Prediction (AUC, AP)
-     Source: HTGNN (SDM'2022), requires ogbn_graphs*.bin + mp2vec/g0~g9.vector
   2. Aminer    — Link Prediction (AUC, AP)
-     Source: DHGAS (AAAI'2023), PyG HeteroData format (processed-False-32.pt)
   3. YELP      — Node Classification (Macro-F1, Recall)
-     Source: DHGAS (AAAI'2023), PyG HeteroData format (True-32.pt)
   4. COVID-19  — Node Regression (MAE)
-     Source: HTGNN (SDM'2022), requires covid_graphs.bin
+
+Data is automatically downloaded from S3 storage on first use.
 """
 
 import os
@@ -19,6 +17,48 @@ import torch
 import numpy as np
 import dgl
 from collections import defaultdict
+from dgl.data.utils import download, extract_archive
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# S3 URLs and data paths
+# ══════════════════════════════════════════════════════════════════════════════
+_S3_PREFIX = 'https://dgl-data.s3.cn-north-1.amazonaws.com.cn/dataset/openhgnn/'
+_S3_URLS = {
+    'aminer': _S3_PREFIX + 'aminer4HGformer.pt',
+    'ogbn_graphs': _S3_PREFIX + 'ogbn4HGformer.bin',
+    'mp2vec': _S3_PREFIX + 'mp2vec.zip',
+    'yelp': _S3_PREFIX + 'yelp4HGformer.pt',
+    'covid': _S3_PREFIX + 'covid4HGformer.bin',
+}
+_DEFAULT_DATA_DIR = './openhgnn/dataset'
+
+
+def _ensure_file(key, filename, data_dir=_DEFAULT_DATA_DIR):
+    """Download file from S3 if not exists locally."""
+    filepath = os.path.join(data_dir, filename)
+    if not os.path.exists(filepath):
+        print(f"  Downloading {filename} from S3...")
+        os.makedirs(data_dir, exist_ok=True)
+        download(_S3_URLS[key], path=data_dir)
+        # Rename downloaded file to expected filename if needed
+        downloaded = os.path.join(data_dir, os.path.basename(_S3_URLS[key]))
+        if downloaded != filepath and os.path.exists(downloaded):
+            os.rename(downloaded, filepath)
+    return filepath
+
+
+def _ensure_mp2vec(data_dir=_DEFAULT_DATA_DIR):
+    """Download and extract mp2vec embeddings."""
+    mp2vec_dir = os.path.join(data_dir, 'mp2vec')
+    if not os.path.exists(mp2vec_dir) or len(os.listdir(mp2vec_dir)) == 0:
+        zip_path = os.path.join(data_dir, 'mp2vec.zip')
+        if not os.path.exists(zip_path):
+            print("  Downloading mp2vec.zip from S3...")
+            os.makedirs(data_dir, exist_ok=True)
+            download(_S3_URLS['mp2vec'], path=data_dir)
+        extract_archive(zip_path, data_dir)
+    return mp2vec_dir
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -74,7 +114,7 @@ def _generate_APA(graph, device):
 
 
 def _construct_htg_label_mag(glist, idx, device):
-    """Construct positive/negative samples for OGBN-MAG link prediction (aligned with HTGNN baseline)."""
+    """Construct positive/negative samples for OGBN-MAG link prediction."""
     APA_cur = _generate_APA(glist[idx], device)
     APA_pre = _generate_APA(glist[idx - 1], device)
     APA_pre = (APA_pre > 0.5).float()
@@ -99,18 +139,15 @@ class OGBNMAGHTGDataset(HTGDatasetBase):
     """
     OGBN-MAG link prediction dataset (author co-authorship prediction).
     Reproduction result: AUC 94.61+-0.35%, AP 93.98+-0.51% (paper: 92.56/91.64)
-
-    Data directory:
-      raw_dir/ogbn_graphs*.bin + raw_dir/mp2vec/g0~g9.vector
     """
-    def __init__(self, raw_dir='./data/ogbn_mag', use_synthetic=False,
+    def __init__(self, raw_dir=_DEFAULT_DATA_DIR, use_synthetic=False,
                  num_timestamps=10, time_window=3, device=None):
         super().__init__()
         self.category = 'author'
         self.task = 'link_prediction'
         self.time_window = time_window
         self.device = device or torch.device('cpu')
-        if use_synthetic or not os.path.exists(raw_dir):
+        if use_synthetic:
             print("[OGBNMAGHTGDataset] Using synthetic data")
             self._build_synthetic()
         else:
@@ -118,14 +155,11 @@ class OGBNMAGHTGDataset(HTGDatasetBase):
 
     def _load_real(self, raw_dir):
         from dgl.data.utils import load_graphs
-        for name in ['ogbn_graphs.bin', 'ogbn_graphs_001.bin']:
-            path = os.path.join(raw_dir, name)
-            if os.path.exists(path):
-                glist, _ = load_graphs(path)
-                break
-        else:
-            raise FileNotFoundError(f"Cannot find ogbn_graphs*.bin in {raw_dir}")
-        mp2vec_dir = os.path.join(raw_dir, 'mp2vec')
+        # Auto-download if needed
+        graph_path = _ensure_file('ogbn_graphs', 'ogbn4HGformer.bin', raw_dir)
+        mp2vec_dir = _ensure_mp2vec(raw_dir)
+
+        glist, _ = load_graphs(graph_path)
         print(f"  Loading {len(glist)} snapshots + mp2vec...")
         glist = [_mp2vec_feat(f'{mp2vec_dir}/g{i}.vector', g) for i, g in enumerate(glist)]
         tw = self.time_window
@@ -186,26 +220,26 @@ class AminerHTGDataset(HTGDatasetBase):
     Aminer link prediction dataset (author co-authorship prediction).
     Reproduction result: AUC 88.41+-0.41%, AP 82.99+-0.63% (paper: 89.78/88.03)
     time_window=1, aligned with DHGAS default setting.
-
-    Data file: aminer_processed.pt (DHGAS repo Cross-Domain_data/processed-False-32.pt)
     """
     NUM_PAPER = 18464
     NUM_AUTHOR = 23035
     NUM_VENUE = 22
 
-    def __init__(self, raw_dir='./data', use_synthetic=False, time_window=1):
+    def __init__(self, raw_dir=_DEFAULT_DATA_DIR, use_synthetic=False, time_window=1):
         super().__init__()
         self.category = 'author'
         self.task = 'link_prediction'
         self.time_window = time_window
-        pt_path = os.path.join(raw_dir, 'aminer_processed.pt')
-        if use_synthetic or not os.path.exists(pt_path):
+        if use_synthetic:
             print("[AminerHTGDataset] Using synthetic data")
             self._build_synthetic()
         else:
-            self._load_real(pt_path)
+            self._load_real(raw_dir)
 
-    def _load_real(self, pt_path):
+    def _load_real(self, raw_dir):
+        # Auto-download if needed
+        pt_path = _ensure_file('aminer', 'aminer4HGformer.pt', raw_dir)
+
         data = torch.load(pt_path, map_location='cpu')
         paper_x = data['paper'].x
         author_x = data['author'].x.float()
@@ -257,26 +291,25 @@ class YELPHTGDataset(HTGDatasetBase):
     YELP node classification dataset (item, 3 classes).
     Reproduction result: F1 35.91+-1.59%, Recall 40.91+-1.57% (paper: 43.24/43.86)
     w/o_LLM mode, consistent with paper Figure 3 ablation study.
-
-    Data file: yelp_processed.pt (DHGAS repo yelp/processed/True-32.pt)
-    Node split: random 80:10:10 (aligned with DHGAS)
     """
     NUM_USER = 55702
     NUM_ITEM = 12524
 
-    def __init__(self, raw_dir='./data', use_synthetic=False, seed=22):
+    def __init__(self, raw_dir=_DEFAULT_DATA_DIR, use_synthetic=False, seed=22):
         super().__init__()
         self.category = 'item'
         self.task = 'node_classification'
         self.num_classes = 3
-        pt_path = os.path.join(raw_dir, 'yelp_processed.pt')
-        if use_synthetic or not os.path.exists(pt_path):
+        if use_synthetic:
             print("[YELPHTGDataset] Using synthetic data")
             self._build_synthetic()
         else:
-            self._load_real(pt_path, seed)
+            self._load_real(raw_dir, seed)
 
-    def _load_real(self, pt_path, seed=22):
+    def _load_real(self, raw_dir, seed=22):
+        # Auto-download if needed
+        pt_path = _ensure_file('yelp', 'yelp4HGformer.pt', raw_dir)
+
         data = torch.load(pt_path, map_location='cpu')
         user_x, item_x = data['user'].x, data['item'].x
         rev_ei = data['user', 'review', 'item'].edge_index
@@ -336,13 +369,12 @@ class COVID19HTGDataset(HTGDatasetBase):
     COVID-19 node regression dataset (MAE), hidden_dim=8, predict_type='state'.
     Key optimization: concatenate features from all time steps in the window (1-dim -> 7-dim).
     """
-    def __init__(self, raw_dir='./data', use_synthetic=False, time_window=7):
+    def __init__(self, raw_dir=_DEFAULT_DATA_DIR, use_synthetic=False, time_window=7):
         super().__init__()
         self.category = 'state'
         self.task = 'node_regression'
         self.time_window = time_window
-        pt_path = os.path.join(raw_dir, 'covid_graphs.bin')
-        if use_synthetic or not os.path.exists(pt_path):
+        if use_synthetic:
             print("[COVID19HTGDataset] Using synthetic data")
             self._build_synthetic()
         else:
@@ -350,7 +382,10 @@ class COVID19HTGDataset(HTGDatasetBase):
 
     def _load_real(self, raw_dir):
         from dgl.data.utils import load_graphs
-        glist, _ = load_graphs(os.path.join(raw_dir, 'covid_graphs.bin'))
+        # Auto-download if needed
+        graph_path = _ensure_file('covid', 'covid4HGformer.bin', raw_dir)
+
+        glist, _ = load_graphs(graph_path)
         tw = self.time_window
         for i in range(len(glist)):
             if i < tw:

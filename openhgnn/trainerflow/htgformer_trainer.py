@@ -97,7 +97,7 @@ class HTGformerTrainer(BaseFlow):
             OGBNMAGHTGDataset, AminerHTGDataset, YELPHTGDataset, COVID19HTGDataset
         )
         name = getattr(self.args, 'dataset_name', '').lower()
-        data_dir = getattr(self.args, 'data_dir', './data')
+        data_dir = getattr(self.args, 'data_dir', './openhgnn/dataset')
         if 'ogbn' in name or 'mag' in name:
             return OGBNMAGHTGDataset(raw_dir=data_dir, device=self.device,
                                      time_window=getattr(self.args, 'time_window', 3))
@@ -169,7 +169,7 @@ class HTGformerTrainer(BaseFlow):
             return self._train_covid()
 
     # ══════════════════════════════════════════════════════════════════════
-    # OGBN-MAG (aligned with run_mag2.py)
+    # OGBN-MAG
     # ══════════════════════════════════════════════════════════════════════
     def _train_ogbn_mag(self):
         ds, device = self.dataset, self.device
@@ -277,7 +277,7 @@ class HTGformerTrainer(BaseFlow):
         return (np.mean(aucs), np.mean(aps)) if aucs else (0.5, 0.5)
 
     # ══════════════════════════════════════════════════════════════════════
-    # YELP (aligned with run_yelp_htgformer.py)
+    # YELP
     # ══════════════════════════════════════════════════════════════════════
     def _train_yelp(self):
         ds, device = self.dataset, self.device
@@ -320,7 +320,7 @@ class HTGformerTrainer(BaseFlow):
                 recall_score(true, preds, average='macro', zero_division=0) * 100)
 
     # ══════════════════════════════════════════════════════════════════════
-    # COVID-19 (aligned with run_covid_htgformer.py)
+    # COVID-19
     # ══════════════════════════════════════════════════════════════════════
     def _train_covid(self):
         ds, device = self.dataset, self.device
