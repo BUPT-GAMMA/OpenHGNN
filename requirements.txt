@@ -1,11 +1,11 @@
+-f https://data.dgl.ai/wheels/torch-2.4/cu121/repo.html
 ogb>=1.3.1
-optuna
+optuna>=3.0
 rdflib
 colorama
 igraph
-torch<=2.2.1
--f https://data.dgl.ai/wheels/repo.html
-dgl<=2.2.1
+torch>=2.3,<2.6
+dgl>=2.2,<2.6
 TensorBoard>=2.0.0
 lmdb
 ordered_set

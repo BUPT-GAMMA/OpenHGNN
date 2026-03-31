@@ -1,0 +1,12 @@
+name: openhgnn-v0.8
+channels:
+  - pytorch
+  - dglteam
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pytorch=2.4.1
+  - pip:
+      - -c constraints.txt
+      - -r requirements.txt

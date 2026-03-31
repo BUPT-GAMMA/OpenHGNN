@@ -51,7 +51,7 @@ def try_import_task(task):
 
 SUPPORTED_TASKS = {
     "coldstart_recommendation": "openhgnn.tasks.coldstart_recommendation",
-    "KTN_trainer": "openhgnn.tasks.KTN",
+    "KTN_trainer": "openhgnn.tasks.ktn",
     'demo': 'openhgnn.tasks.demo',
     'node_classification': 'openhgnn.tasks.node_classification',
     'link_prediction': 'openhgnn.tasks.link_prediction',
@@ -62,9 +62,9 @@ SUPPORTED_TASKS = {
     'meirec': 'openhgnn.tasks.meirec',
     'pretrain': 'openhgnn.tasks.pretrain',
     'abnorm_event_detection': 'openhgnn.tasks.AbnormEventDetection',
-    'DSSL_trainer': 'openhgnn.tasks.DSSL_task',
+    'DSSL_trainer': 'openhgnn.tasks.node_classification',
     'NBF_link_prediction':'openhgnn.tasks.link_prediction',
-    'Ingram': 'openhgnn.tasks.Ingram',
+    'Ingram': 'openhgnn.tasks.Ingram_task',
     'DisenKGAT_link_prediction':'openhgnn.tasks.link_prediction',
 
 }

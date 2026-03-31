@@ -1,21 +1,41 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
+from pathlib import Path
 
-install_requires = ['numpy>=1.16.5', 'pandas>=1.0.0', 'ogb>=1.1.0',
-                    'torch>=2.2.1', 'optuna', 'colorama', 'TensorBoard>=2.0.0']
-setup_requires = []
-tests_require = []
+from setuptools import find_packages, setup
+
+
+ROOT = Path(__file__).parent
+version_ns = {}
+exec((ROOT / "openhgnn" / "_version.py").read_text(encoding="utf-8"), version_ns)
+
+install_requires = [
+    "numpy>=1.16.5",
+    "pandas>=1.0.0",
+    "ogb>=1.3.1",
+    "torch>=2.3,<2.6",
+    "dgl>=2.2,<2.6",
+    "optuna>=3.0",
+    "colorama",
+    "TensorBoard>=2.0.0",
+    "lmdb",
+    "ordered_set",
+    "rdflib",
+    "igraph",
+]
 
 classifiers = [
-    'Development Status :: 3 - Alpha',
-    'License :: OSI Approved :: Apache Software License',
-    'Programming Language :: Python :: 3',
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 setup(
     name="openhgnn",
-    version="0.7.0",
+    version=version_ns["__version__"],
     author="BUPT-GAMMA LAB",
     author_email="tyzhao@bupt.edu.cn",
     maintainer="Tianyu Zhao",
@@ -23,9 +43,10 @@ setup(
     description="An open-source toolkit for Heterogeneous Graph Neural Network",
     url="https://github.com/BUPT-GAMMA/OpenHGNN",
     download_url="https://github.com/BUPT-GAMMA/OpenHGNN",
-    python_requires='>=3.6',
+    python_requires=">=3.10",
     packages=find_packages(),
     install_requires=install_requires,
     include_package_data=True,
-    classifiers=classifiers
+    classifiers=classifiers,
+    entry_points={"console_scripts": ["openhgnn=openhgnn.cli:main"]},
 )

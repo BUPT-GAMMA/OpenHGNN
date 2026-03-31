@@ -6,7 +6,6 @@ import torch as th
 from scipy.sparse import coo_matrix
 import numpy as np
 import random
-from . import load_HIN, load_KG, load_OGB
 from .best_config import BEST_CONFIGS
 from typing import Optional, Tuple
 
@@ -195,6 +194,8 @@ def extract_embed(node_embed, input_nodes):
 
 def build_dataset(model_name, dataset_name):
     # load the graph(HIN or KG)
+    from .dgl_graph import load_HIN, load_KG, load_OGB
+
     if dataset_name in ['mag']:
         dataset = load_OGB(dataset_name)
         return dataset

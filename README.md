@@ -146,31 +146,38 @@ OpenHGNN荣获启智社区优秀孵化项⽬奖！详细链接：https://mp.weix
 
 #### 环境要求
 
-- Python  >= 3.6
+- Python 3.10-3.12
 
-- [PyTorch](https://pytorch.org/get-started/)  >= 2.3.0
+- [PyTorch](https://pytorch.org/get-started/)  2.3.x-2.4.x
 
-- [DGL](https://github.com/dmlc/dgl) >= 2.2.1
+- [DGL](https://github.com/dmlc/dgl) 2.2.x-2.4.x
 
 - CPU 或者 NVIDIA GPU, Linux, Python3
 
 **1. Python 环境 (可选):** 推荐使用 Conda 包管理
 
+官方推荐环境：
+
+- 首选：`Python 3.11 + PyTorch 2.4.1 + DGL 2.4.0+cu121`
+- 兼容：`Python 3.10 + PyTorch 2.3.1 + DGL 2.2.1`
+
+仓库中的 `environment.yml` 和 `constraints.txt` 已经按首选环境固定。
+
 ```bash
-conda create -n openhgnn python=3.6
-source activate openhgnn
+conda create -n openhgnn python=3.11
+conda activate openhgnn
 ```
 
 **2. 安装Pytorch:** 参考 [PyTorch安装文档](https://pytorch.org/get-started/) 根据你的操作系统和CUDA版本选择合适的安装命令。例如：
 
 ```bash
-pip install torch torchvision torchaudio
+pip install torch==2.4.1 torchvision torchaudio
 ```
 
 **3. 安装DGL:** 参考 [DGL安装文档](https://www.dgl.ai/pages/start.html) 根据你的操作系统和CUDA版本选择合适的安装命令。例如：
 
 ```bash
-pip install dgl -f https://data.dgl.ai/wheels/repo.html
+pip install dgl==2.4.0+cu121 -f https://data.dgl.ai/wheels/torch-2.4/cu121/repo.html
 ```
 
 **4. 安装 openhgnn:** 
@@ -186,7 +193,15 @@ git clone https://github.com/BUPT-GAMMA/OpenHGNN
 # If you encounter a network error, try git clone from openi as following.
 # git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
 cd OpenHGNN
-pip install .
+pip install -e .
+```
+
+也可以直接使用 CLI 查看当前支持能力和环境状态：
+
+```bash
+openhgnn list models
+openhgnn list tasks
+openhgnn env --format json
 ```
 
 

@@ -86,6 +86,7 @@ SUPPORTED_MODELS = {
     'HGT': 'openhgnn.models.HGT',
     'GTN': 'openhgnn.models.GTN_sparse',
     'fastGTN': 'openhgnn.models.fastGTN',
+    'DMGI': 'openhgnn.models.DMGI',
     'MHNF': 'openhgnn.models.MHNF',
     'MAGNN': 'openhgnn.models.MAGNN',
     'HeGAN': 'openhgnn.models.HeGAN',
@@ -113,7 +114,7 @@ SUPPORTED_MODELS = {
     'GIE':'openhgnn.models.GIE',
     'GIN':'openhgnn.models.GIN',
     'Rsage': 'openhgnn.models.Rsage',
-    'Mg2vec': 'openhgnn.models.MG2vec',
+    'Mg2vec': 'openhgnn.models.Mg2vec',
     'DHNE': 'openhgnn.models.DHNE',
     'DiffMG': 'openhgnn.models.DiffMG',
     'MeiREC': 'openhgnn.models.MeiREC',
@@ -159,6 +160,7 @@ from .HeCo import HeCo
 from .HGT import HGT
 from .GTN_sparse import GTN
 from .fastGTN import fastGTN
+from .DMGI import DMGI
 from .MHNF import MHNF
 from .MAGNN import MAGNN
 from .HeGAN import HeGAN
@@ -217,6 +219,7 @@ __all__ = [
     'HGT',
     'GTN',
     'fastGTN',
+    'DMGI',
     'MHNF',
     'MAGNN',
     'HeGAN',

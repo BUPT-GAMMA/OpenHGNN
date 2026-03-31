@@ -144,33 +144,40 @@ We release the latest version v0.2.
 
 #### Requirements and Installation
 
-- Python  >= 3.6
+- Python 3.10-3.12
 
-- [PyTorch](https://pytorch.org/get-started/)  >= 2.3.0
+- [PyTorch](https://pytorch.org/get-started/)  2.3.x-2.4.x
 
-- [DGL](https://github.com/dmlc/dgl) >= 2.2.1
+- [DGL](https://github.com/dmlc/dgl) 2.2.x-2.4.x
 
 - CPU or NVIDIA GPU, Linux, Python3
 
 **1. Python environment (Optional):** We recommend using Conda package manager
 
+Officially recommended environments:
+
+- Primary: `Python 3.11 + PyTorch 2.4.1 + DGL 2.4.0+cu121`
+- Compatibility: `Python 3.10 + PyTorch 2.3.1 + DGL 2.2.1`
+
+The repository files `environment.yml` and `constraints.txt` are pinned to the primary setup.
+
 ```bash
-conda create -n openhgnn python=3.6
-source activate openhgnn
+conda create -n openhgnn python=3.11
+conda activate openhgnn
 ```
 
 **2. Install Pytorch:** Follow their [tutorial](https://pytorch.org/get-started) to run the proper command according to
 your OS and CUDA version. For example:
 
 ```bash
-pip install torch torchvision torchaudio
+pip install torch==2.4.1 torchvision torchaudio
 ```
 
 **3. Install DGL:** Follow their [tutorial](https://www.dgl.ai/pages/start.html) to run the proper command according to
 your OS and CUDA version. For example:
 
 ```bash
-pip install dgl -f https://data.dgl.ai/wheels/repo.html
+pip install dgl==2.4.0+cu121 -f https://data.dgl.ai/wheels/torch-2.4/cu121/repo.html
 ```
 
 **4. Install openhgnn:** 
@@ -186,7 +193,15 @@ git clone https://github.com/BUPT-GAMMA/OpenHGNN
 # If you encounter a network error, try git clone from openi as following.
 # git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
 cd OpenHGNN
-pip install .
+pip install -e .
+```
+
+You can also use the packaged CLI to inspect the supported registry and current environment:
+
+```bash
+openhgnn list models
+openhgnn list tasks
+openhgnn env --format json
 ```
 
 
