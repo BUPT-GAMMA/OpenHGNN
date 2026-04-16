@@ -285,6 +285,8 @@ class NodeClassification(BaseFlow):
         self.hg = self.hg.to(self.device)
         logits = self.model(self.hg, h_dict)[self.category]
         loss = self.loss_fn(logits[self.train_idx], self.labels[self.train_idx])
+        if hasattr(self.model, 'extra_loss') and callable(self.model.extra_loss):
+            loss = loss + self.model.extra_loss()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
