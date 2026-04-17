@@ -39,7 +39,7 @@ class HGEN(BaseModel):
     dropout : float
         Dropout probability.
     lambda_cov : float
-        Regularization coefficient for the Gram matrix (default: 0.01).
+        Regularization coefficient for the Gram matrix (default: 0).
     """
 
     @classmethod
@@ -131,7 +131,7 @@ class HGEN(BaseModel):
             return torch.tensor(0.0, device=next(self.parameters()).device)
         H_tilde = self._saved_path_embeds
         S = H_tilde @ H_tilde.T
-        return self.lambda_cov * torch.norm(S, p=1)
+        return self.lambda_cov * (torch.norm(S, p=1) ** 2)
 
 
 class _PathEncoder(nn.Module):
@@ -158,7 +158,7 @@ class GCN_embed(nn.Module):
         super(GCN_embed, self).__init__()
         self.enc = nn.Linear(in_dim, hidden_dim)
         self.layers = nn.ModuleList([
-            dgl.nn.pytorch.conv.GraphConv(hidden_dim, hidden_dim, activation=F.leaky_relu)
+            dgl.nn.pytorch.conv.GraphConv(hidden_dim, hidden_dim)  # no activation, matching official GCNConv
             for _ in range(layer_s)
         ])
         self.dropout = dropout
@@ -188,8 +188,9 @@ class AttentionH(nn.Module):
         self.agg = nn.Linear(num_gcn * attention_dim, num_gcn)
 
     def forward(self, embed_list):
+        # Official model.py: no activation on attention projections
         gcn_attention = [
-            torch.tanh(self.attention_list[i](embed_list[i]))
+            self.attention_list[i](embed_list[i])
             for i in range(self.num_gcn)
         ]
         attention = self.agg(torch.cat(gcn_attention, dim=1))
@@ -198,8 +199,8 @@ class AttentionH(nn.Module):
         atten_max = attention.max(dim=1, keepdim=True).values
         attention = (attention - atten_min) / (atten_max - atten_min + 1e-8)
 
-        residual = 1.0 / self.num_gcn
-        final_embed = (attention[:, 0].unsqueeze(1) + residual) * embed_list[0]
+        # Official model.py: first GCN has NO residual, others have 1/k residual
+        final_embed = attention[:, 0].unsqueeze(1) * embed_list[0]
         for i in range(1, self.num_gcn):
-            final_embed += (attention[:, i].unsqueeze(1) + residual) * embed_list[i]
+            final_embed += (attention[:, i].unsqueeze(1) + (1.0 / self.num_gcn)) * embed_list[i]
         return final_embed, attention

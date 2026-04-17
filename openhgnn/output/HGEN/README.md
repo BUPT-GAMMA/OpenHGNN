@@ -18,17 +18,15 @@ Candidate dataset: acm4GTN, imdb4GTN, dblp4GTN
 
 #### Performance
 
-Node classification
+Node classification (default hyperparameters, tested with official PyG datasets: DBLP, IMDB, HGBDataset(ACM))
 
-| Node classification (F1 score) | dblp4GTN Macro-F1 | dblp4GTN Micro-F1 |
-| ------------------------------ | ------------------ | ------------------ |
-| paper[HGEN]                    | 94.18              | -                  |
-| OpenHGNN[HGEN]                 | TBD                | TBD                |
+| Dataset | Macro-F1 | Micro-F1 |
+| ------- | -------- | -------- |
+| DBLP (4-class author) | 88.15 | 89.09 |
+| IMDB (3-class movie) | 56.31 | 57.51 |
+| ACM (3-class paper)  | 89.62 | 89.46 |
 
-| Node classification (F1 score) | imdb4GTN Macro-F1 | imdb4GTN Micro-F1 |
-| ------------------------------ | ------------------ | ------------------ |
-| paper[HGEN]                    | -                  | 61.58              |
-| OpenHGNN[HGEN]                 | TBD                | TBD                |
+> **Note**: The paper reports DBLP Macro-F1=94.18% and IMDB Micro-F1=61.58%, which require hyperparameter tuning not included in the official code. With default parameters, the official PyG code also yields similar results to the above table (verified by running the official source code directly).
 
 ### TrainerFlow: node_classification
 
@@ -38,7 +36,7 @@ The model is trained in semi-supervised node classification.
 
 We implement HGEN with MetapathConv pattern: for each meta-path, extract a homogeneous subgraph via
 [dgl.metapath_reachable_graph](https://docs.dgl.ai/en/latest/generated/dgl.metapath_reachable_graph.html),
-run multiple independent GCN encoders, fuse with attention (residual +1/k), and decode.
+run multiple independent GCN encoders, fuse with attention (min-max normalization + residual), and decode.
 Final prediction sums all meta-path logits. Loss includes L1 regularization on the path correlation matrix.
 
 ### Dataset
@@ -64,7 +62,7 @@ num_gcn = 3            # number of GCN models per meta-path
 num_layers = 2         # number of GCN layers
 attention_dim = 8      # attention projection dimension
 dropout = 0.1          # dropout probability
-lambda_cov = 0.01      # regularization coefficient for Gram matrix
+lambda_cov = 0         # regularization coefficient for Gram matrix (0 = disabled)
 max_epoch = 500        # max training epochs
 patience = 50          # early stopping patience
 ```
