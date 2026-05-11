@@ -67,7 +67,7 @@ class BaseFlow(ABC):
         self.optimizer = None
 
         if self.model_name in ["SIAN", "MeiREC", "ExpressGNN", "Ingram", "RedGNN","RedGNNT",  "AdapropI", "AdapropT",
-                               "RedGNNT", "Grail", "ComPILE","DisenKGAT","MetaHIN"]:
+                               "RedGNNT", "Grail", "ComPILE","DisenKGAT","MetaHIN", "RelGT"]:
             return
         if self.model_name == "Ingram":
             return

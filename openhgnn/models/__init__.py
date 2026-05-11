@@ -64,6 +64,7 @@ def build_model(model):
 
 SUPPORTED_MODELS = {
 #####       add models here
+    'RelGT': 'openhgnn.models.RelGT',
     'MHGCN':'openhgnn.models.MHGCN',
     'BPHGNN' : 'openhgnn.models.BPHGNN',
     "MetaHIN": "openhgnn.models.MetaHIN",
@@ -203,6 +204,7 @@ from .RedGNNT import RedGNNT
 
 
 __all__ = [
+    'RelGT',
     'BPHGNN',
     "HMPNN",
     'BaseModel',
