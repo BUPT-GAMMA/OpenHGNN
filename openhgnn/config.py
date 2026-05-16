@@ -41,6 +41,19 @@ class Config(object):
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
 ##############      add config.py    #################
+        elif self.model_name == 'HGDL':
+            self.seed = conf.getint('HGDL', 'seed')
+            self.lr = conf.getfloat('HGDL', 'lr')
+            self.weight_decay = conf.getfloat('HGDL', 'weight_decay')
+            self.max_epoch = conf.getint('HGDL', 'max_epoch')
+            self.patience = conf.getint('HGDL', 'patience')
+            self.hidden_dim = conf.getint('HGDL', 'hidden_dim')
+            self.dropout = conf.getfloat('HGDL', 'dropout')
+            self.attention_dim = conf.getint('HGDL', 'attention_dim')
+            self.num_heads = conf.getint('HGDL', 'num_heads')
+            self.gamma = conf.getfloat('HGDL', 'gamma')
+            self.mini_batch_flag = conf.getboolean('HGDL', 'mini_batch_flag')
+            self.evaluate_interval = conf.getint('HGDL', 'evaluate_interval')
         elif self.model_name == 'MHGCN':
             self.lr = conf.getfloat("MHGCN", "lr")
             self.weight_decay = conf.getfloat("MHGCN", "weight_decay")
