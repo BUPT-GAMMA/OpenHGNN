@@ -142,6 +142,7 @@ SUPPORTED_MODELS = {
 }
 
 #####       add model here
+from .RelGT import RelGT
 from .BPHGNN import BPHGNN
 from .RHINE import RHINE
 from .FedHGNN import FedHGNN
