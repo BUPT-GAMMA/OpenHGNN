@@ -117,6 +117,8 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset == "dbook":
         dataload = Meta_DataHelper(args.input_dir, args)
         return dataload
+    elif dataset in ['ogbn_mag4HGformer', 'aminer4HGformer', 'yelp4HGformer', 'covid4HGformer']:
+        return DATASET_REGISTRY['htgformer_dataset'](dataset, logger=kwargs.get('logger'), args=kwargs.get('args'))
 
 #############
 
@@ -244,6 +246,7 @@ from .RecommendationDataset import RecommendationDataset
 from .EdgeClassificationDataset import EdgeClassificationDataset
 from .HypergraphDataset import HGraphDataset
 from .oag_dataset import OAGDataset
+from .htgformer_dataset import HTGformerDataset
 
 
 
@@ -300,6 +303,7 @@ __all__ = [
     "AbnormEventDetectionDataset",
     "mag_dataset",
     "OAGDataset",
+    "HTGformerDataset",
 ]
 
 classes = __all__

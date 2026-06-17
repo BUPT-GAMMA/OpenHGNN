@@ -3,13 +3,18 @@ HTGformer Dataset
 ==================
 Paper: HTGformer: Heterogeneous Temporal Graph Transformer (SIGIR 2025)
 
+Registered as an OpenHGNN dataset via @register_dataset('htgformer_dataset').
+Entry point: build_dataset(dataset, task) in openhgnn/dataset/__init__.py
+
 Supports datasets from Table 1:
-  1. OGBN-MAG  — Link Prediction (AUC, AP)
-  2. Aminer    — Link Prediction (AUC, AP)
-  3. YELP      — Node Classification (Macro-F1, Recall)
-  4. COVID-19  — Node Regression (MAE)
+  1. ogbn_mag4HGformer  - Link Prediction (AUC, AP)
+  2. aminer4HGformer    - Link Prediction (AUC, AP)
+  3. yelp4HGformer      - Node Classification (Macro-F1, Recall)
+  4. covid4HGformer     - Node Regression (MAE)
 
 Data is automatically downloaded from S3 storage on first use.
+The `use_synthetic` flag is ONLY for unit-test fixtures, never the default
+training path.
 """
 
 import os
@@ -19,10 +24,10 @@ import dgl
 from collections import defaultdict
 from dgl.data.utils import download, extract_archive
 
+from openhgnn.dataset import register_dataset, BaseDataset
 
-# ══════════════════════════════════════════════════════════════════════════════
-# S3 URLs and data paths
-# ══════════════════════════════════════════════════════════════════════════════
+
+# S3 URLs
 _S3_PREFIX = 'https://dgl-data.s3.cn-north-1.amazonaws.com.cn/dataset/openhgnn/'
 _S3_URLS = {
     'aminer': _S3_PREFIX + 'aminer4HGformer.pt',
@@ -33,15 +38,22 @@ _S3_URLS = {
 }
 _DEFAULT_DATA_DIR = './openhgnn/dataset'
 
+# Mapping from OpenHGNN dataset name -> internal key + task
+_DATASET_INFO = {
+    'ogbn_mag4HGformer': ('ogbn_mag', 'link_prediction'),
+    'aminer4HGformer':   ('aminer',   'link_prediction'),
+    'yelp4HGformer':     ('yelp',     'node_classification'),
+    'covid4HGformer':    ('covid',    'node_regression'),
+}
+
 
 def _ensure_file(key, filename, data_dir=_DEFAULT_DATA_DIR):
-    """Download file from S3 if not exists locally."""
+    """Download a single file from S3 if it does not exist locally."""
     filepath = os.path.join(data_dir, filename)
     if not os.path.exists(filepath):
         print(f"  Downloading {filename} from S3...")
         os.makedirs(data_dir, exist_ok=True)
         download(_S3_URLS[key], path=data_dir)
-        # Rename downloaded file to expected filename if needed
         downloaded = os.path.join(data_dir, os.path.basename(_S3_URLS[key]))
         if downloaded != filepath and os.path.exists(downloaded):
             os.rename(downloaded, filepath)
@@ -49,7 +61,7 @@ def _ensure_file(key, filename, data_dir=_DEFAULT_DATA_DIR):
 
 
 def _ensure_mp2vec(data_dir=_DEFAULT_DATA_DIR):
-    """Download and extract mp2vec embeddings."""
+    """Download and extract mp2vec embeddings (OGBN-MAG)."""
     mp2vec_dir = os.path.join(data_dir, 'mp2vec')
     if not os.path.exists(mp2vec_dir) or len(os.listdir(mp2vec_dir)) == 0:
         zip_path = os.path.join(data_dir, 'mp2vec.zip')
@@ -61,33 +73,8 @@ def _ensure_mp2vec(data_dir=_DEFAULT_DATA_DIR):
     return mp2vec_dir
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Base class
-# ══════════════════════════════════════════════════════════════════════════════
-class HTGDatasetBase:
-    """HTGformer dataset base class."""
-    def __init__(self):
-        self.graphs = []
-        self.feat_dicts = []
-        self.labels = None
-        self.train_idx = None
-        self.val_idx = None
-        self.test_idx = None
-        self.category = None
-        self.task = None
-        self.num_classes = None
-        self.in_dim_dict = {}
-        # Multi-sample mode for link prediction (OGBN-MAG, Aminer)
-        self.train_samples = []
-        self.val_samples = []
-        self.test_samples = []
-
-
-# ══════════════════════════════════════════════════════════════════════════════
 # OGBN-MAG utility functions
-# ══════════════════════════════════════════════════════════════════════════════
 def _mp2vec_feat(path, g):
-    """Load Metapath2Vec pretrained node embeddings (128-dim)."""
     from gensim.models import KeyedVectors
     wordvec = KeyedVectors.load(path, mmap='r')
     for ntype in g.ntypes:
@@ -105,7 +92,6 @@ def _mp2vec_feat(path, g):
 
 
 def _generate_APA(graph, device):
-    """Compute Author-Paper-Author co-authorship matrix."""
     AP = graph.adj(etype=('author', 'writes', 'paper')).to_dense()
     PA = AP.t()
     APA = torch.mm(AP.to(device), PA.to(device)).detach().cpu()
@@ -114,7 +100,6 @@ def _generate_APA(graph, device):
 
 
 def _construct_htg_label_mag(glist, idx, device):
-    """Construct positive/negative samples for OGBN-MAG link prediction."""
     APA_cur = _generate_APA(glist[idx], device)
     APA_pre = _generate_APA(glist[idx - 1], device)
     APA_pre = (APA_pre > 0.5).float()
@@ -132,64 +117,7 @@ def _construct_htg_label_mag(glist, idx, device):
             dgl.graph((neg_src[neg_idx], neg_dst[neg_idx]), num_nodes=n))
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# OGBN-MAG dataset
-# ══════════════════════════════════════════════════════════════════════════════
-class OGBNMAGHTGDataset(HTGDatasetBase):
-    """
-    OGBN-MAG link prediction dataset (author co-authorship prediction).
-    Reproduction result: AUC 94.61+-0.35%, AP 93.98+-0.51% (paper: 92.56/91.64)
-    """
-    def __init__(self, raw_dir=_DEFAULT_DATA_DIR, use_synthetic=False,
-                 num_timestamps=10, time_window=3, device=None):
-        super().__init__()
-        self.category = 'author'
-        self.task = 'link_prediction'
-        self.time_window = time_window
-        self.device = device or torch.device('cpu')
-        if use_synthetic:
-            print("[OGBNMAGHTGDataset] Using synthetic data")
-            self._build_synthetic()
-        else:
-            self._load_real(raw_dir)
-
-    def _load_real(self, raw_dir):
-        from dgl.data.utils import load_graphs
-        # Auto-download if needed
-        graph_path = _ensure_file('ogbn_graphs', 'ogbn4HGformer.bin', raw_dir)
-        mp2vec_dir = _ensure_mp2vec(raw_dir)
-
-        glist, _ = load_graphs(graph_path)
-        print(f"  Loading {len(glist)} snapshots + mp2vec...")
-        glist = [_mp2vec_feat(f'{mp2vec_dir}/g{i}.vector', g) for i, g in enumerate(glist)]
-        tw = self.time_window
-        for i in range(len(glist)):
-            if i < tw:
-                continue
-            wg = glist[i - tw:i]
-            fds = [{ntype: g.nodes[ntype].data.get('feat',
-                    torch.zeros(g.num_nodes(ntype), 128)).to(self.device)
-                    for ntype in g.ntypes} for g in wg]
-            pos_g, neg_g = _construct_htg_label_mag(glist, i, self.device)
-            sample = (wg, fds, pos_g, neg_g)
-            if i == len(glist) - 1:
-                self.test_samples.append(sample)
-            elif i == len(glist) - 2:
-                self.val_samples.append(sample)
-            else:
-                self.train_samples.append(sample)
-        self.in_dim_dict = {k: v.shape[-1] for k, v in self.train_samples[0][1][0].items()}
-        print(f"  train:{len(self.train_samples)} val:{len(self.val_samples)} test:{len(self.test_samples)}")
-
-    def _build_synthetic(self):
-        self.in_dim_dict = {'author': 128, 'paper': 128, 'field_of_study': 128, 'institution': 128}
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# Aminer utility functions
-# ══════════════════════════════════════════════════════════════════════════════
 def _build_coauthor_samples(wri_ei, wri_et, t, num_authors):
-    """Build co-authorship positive/negative samples at time step t."""
     mask = wri_et == t
     papers = wri_ei[0, mask].numpy()
     authors = wri_ei[1, mask].numpy()
@@ -212,34 +140,125 @@ def _build_coauthor_samples(wri_ei, wri_et, t, num_authors):
     return pos_src, pos_dst, pos_src.clone(), neg_dst
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Aminer dataset
-# ══════════════════════════════════════════════════════════════════════════════
-class AminerHTGDataset(HTGDatasetBase):
+# Registered HTGformer dataset
+@register_dataset('htgformer_dataset')
+class HTGformerDataset(BaseDataset):
     """
-    Aminer link prediction dataset (author co-authorship prediction).
-    Reproduction result: AUC 88.41+-0.41%, AP 82.99+-0.63% (paper: 89.78/88.03)
-    time_window=1, aligned with DHGAS default setting.
-    """
-    NUM_PAPER = 18464
-    NUM_AUTHOR = 23035
-    NUM_VENUE = 22
+    Unified HTGformer dataset for OpenHGNN.
 
-    def __init__(self, raw_dir=_DEFAULT_DATA_DIR, use_synthetic=False, time_window=1):
-        super().__init__()
-        self.category = 'author'
-        self.task = 'link_prediction'
-        self.time_window = time_window
+    Loads heterogeneous temporal graph (HTG) data for one of four sub-datasets,
+    each corresponding to a different task:
+      - ogbn_mag4HGformer / aminer4HGformer -> link_prediction
+      - yelp4HGformer                       -> node_classification
+      - covid4HGformer                      -> node_regression
+
+    The loaded object exposes time-step snapshots and per-task training
+    structures consumed by HTGformerTrainer.
+    """
+
+    NUM = {
+        'aminer': dict(paper=18464, author=23035, venue=22),
+        'yelp':   dict(user=55702, item=12524),
+    }
+
+    def __init__(self, dataset_name, logger=None, args=None, use_synthetic=False):
+        # BaseDataset expects a logger kwarg
+        super().__init__(logger=logger)
+        self.dataset_name = dataset_name
+        self.args = args
+        key, task = _DATASET_INFO.get(dataset_name, (None, None))
+        if key is None:
+            raise ValueError(f"Unknown HTGformer dataset: {dataset_name}")
+        self.key = key
+        self.task = task
+
+        # data_dir resolution: args.data_dir overrides default
+        self.data_dir = getattr(args, 'data_dir', _DEFAULT_DATA_DIR) if args else _DEFAULT_DATA_DIR
+
+        # containers
+        self.graphs = []
+        self.feat_dicts = []
+        self.labels = None
+        self.train_idx = self.val_idx = self.test_idx = None
+        self.category = None
+        self.num_classes = None
+        self.in_dim_dict = {}
+        self.train_samples = []
+        self.val_samples = []
+        self.test_samples = []
+        self.snapshots = []
+        self.all_feat_dicts = []
+        self.coauthor_samples = {}
+        self.train_ts = self.val_ts = self.test_ts = []
+
+        # `use_synthetic` is a TEST-ONLY fixture, never the default training path
         if use_synthetic:
-            print("[AminerHTGDataset] Using synthetic data")
             self._build_synthetic()
         else:
-            self._load_real(raw_dir)
+            self._load_real()
 
-    def _load_real(self, raw_dir):
-        # Auto-download if needed
-        pt_path = _ensure_file('aminer', 'aminer4HGformer.pt', raw_dir)
+    # Dispatch
+    def _load_real(self):
+        if self.key == 'ogbn_mag':
+            self._load_ogbn_mag()
+        elif self.key == 'aminer':
+            self._load_aminer()
+        elif self.key == 'yelp':
+            self._load_yelp()
+        elif self.key == 'covid':
+            self._load_covid()
 
+    def _build_synthetic(self):
+        # Minimal fixtures for unit tests only
+        if self.key == 'ogbn_mag':
+            self.category = 'author'
+            self.in_dim_dict = {'author': 128, 'paper': 128, 'field_of_study': 128, 'institution': 128}
+        elif self.key == 'aminer':
+            self.category = 'author'
+            self.in_dim_dict = {'paper': 32, 'author': 1, 'venue': 1}
+        elif self.key == 'yelp':
+            self.category = 'item'
+            self.num_classes = 3
+            self.in_dim_dict = {'user': 32, 'item': 32}
+        elif self.key == 'covid':
+            self.category = 'state'
+            self.in_dim_dict = {'state': 7, 'county': 7}
+
+    # OGBN-MAG (link prediction)
+    def _load_ogbn_mag(self):
+        from dgl.data.utils import load_graphs
+        self.category = 'author'
+        time_window = getattr(self.args, 'time_window', 3) if self.args else 3
+        device = torch.device(getattr(self.args, 'device', 'cpu')) if self.args else torch.device('cpu')
+
+        graph_path = _ensure_file('ogbn_graphs', 'ogbn4HGformer.bin', self.data_dir)
+        mp2vec_dir = _ensure_mp2vec(self.data_dir)
+
+        glist, _ = load_graphs(graph_path)
+        glist = [_mp2vec_feat(f'{mp2vec_dir}/g{i}.vector', g) for i, g in enumerate(glist)]
+        tw = time_window
+        for i in range(len(glist)):
+            if i < tw:
+                continue
+            wg = glist[i - tw:i]
+            fds = [{ntype: g.nodes[ntype].data.get('feat',
+                    torch.zeros(g.num_nodes(ntype), 128)).to(device)
+                    for ntype in g.ntypes} for g in wg]
+            pos_g, neg_g = _construct_htg_label_mag(glist, i, device)
+            sample = (wg, fds, pos_g, neg_g)
+            if i == len(glist) - 1:
+                self.test_samples.append(sample)
+            elif i == len(glist) - 2:
+                self.val_samples.append(sample)
+            else:
+                self.train_samples.append(sample)
+        self.in_dim_dict = {k: v.shape[-1] for k, v in self.train_samples[0][1][0].items()}
+
+    # Aminer (link prediction)
+    def _load_aminer(self):
+        self.category = 'author'
+        num = self.NUM['aminer']
+        pt_path = _ensure_file('aminer', 'aminer4HGformer.pt', self.data_dir)
         data = torch.load(pt_path, map_location='cpu')
         paper_x = data['paper'].x
         author_x = data['author'].x.float()
@@ -249,7 +268,6 @@ class AminerHTGDataset(HTGDatasetBase):
         wri_ei = data['paper', 'written', 'author'].edge_index
         wri_et = data['paper', 'written', 'author'].edge_time.squeeze()
 
-        self.snapshots, self.all_feat_dicts = [], []
         for t in range(16):
             pm, wm = pub_et == t, wri_et == t
             ps, pd = pub_ei[0, pm], pub_ei[1, pm]
@@ -261,55 +279,25 @@ class AminerHTGDataset(HTGDatasetBase):
                 ('venue', 'published_by', 'paper'): (pd, ps),
                 ('paper', 'written', 'author'): (ws, wd),
                 ('author', 'writes', 'paper'): (wd, ws),
-            }, num_nodes_dict={'paper': self.NUM_PAPER, 'author': self.NUM_AUTHOR, 'venue': self.NUM_VENUE})
+            }, num_nodes_dict={'paper': num['paper'], 'author': num['author'], 'venue': num['venue']})
             self.snapshots.append(g)
             self.all_feat_dicts.append({'paper': paper_x, 'author': author_x, 'venue': venue_x})
 
         self.in_dim_dict = {'paper': 32, 'author': 1, 'venue': 1}
-        self.coauthor_samples = {}
         for t in range(16):
-            result = _build_coauthor_samples(wri_ei, wri_et, t, self.NUM_AUTHOR)
+            result = _build_coauthor_samples(wri_ei, wri_et, t, num['author'])
             if result:
                 self.coauthor_samples[t] = result
         self.train_ts = [t for t in range(14) if t in self.coauthor_samples]
         self.val_ts = [14] if 14 in self.coauthor_samples else []
         self.test_ts = [15] if 15 in self.coauthor_samples else []
-        print(f"  16 snapshots, Train:{len(self.train_ts)} Val:{len(self.val_ts)} Test:{len(self.test_ts)}")
 
-    def _build_synthetic(self):
-        self.in_dim_dict = {'paper': 32, 'author': 1, 'venue': 1}
-        self.snapshots, self.all_feat_dicts = [], []
-        self.coauthor_samples = {}
-        self.train_ts = self.val_ts = self.test_ts = []
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# YELP dataset
-# ══════════════════════════════════════════════════════════════════════════════
-class YELPHTGDataset(HTGDatasetBase):
-    """
-    YELP node classification dataset (item, 3 classes).
-    Reproduction result: F1 35.91+-1.59%, Recall 40.91+-1.57% (paper: 43.24/43.86)
-    w/o_LLM mode, consistent with paper Figure 3 ablation study.
-    """
-    NUM_USER = 55702
-    NUM_ITEM = 12524
-
-    def __init__(self, raw_dir=_DEFAULT_DATA_DIR, use_synthetic=False, seed=22):
-        super().__init__()
+    # YELP (node classification)
+    def _load_yelp(self):
         self.category = 'item'
-        self.task = 'node_classification'
-        self.num_classes = 3
-        if use_synthetic:
-            print("[YELPHTGDataset] Using synthetic data")
-            self._build_synthetic()
-        else:
-            self._load_real(raw_dir, seed)
-
-    def _load_real(self, raw_dir, seed=22):
-        # Auto-download if needed
-        pt_path = _ensure_file('yelp', 'yelp4HGformer.pt', raw_dir)
-
+        num = self.NUM['yelp']
+        seed = getattr(self.args, 'seed', 22) if self.args else 22
+        pt_path = _ensure_file('yelp', 'yelp4HGformer.pt', self.data_dir)
         data = torch.load(pt_path, map_location='cpu')
         user_x, item_x = data['user'].x, data['item'].x
         rev_ei = data['user', 'review', 'item'].edge_index
@@ -328,7 +316,7 @@ class YELPHTGDataset(HTGDatasetBase):
                 ('item', 'reviewed_by', 'user'): (rd, rs),
                 ('user', 'tip', 'item'): (ts, td),
                 ('item', 'tipped_by', 'user'): (td, ts),
-            }, num_nodes_dict={'user': self.NUM_USER, 'item': self.NUM_ITEM})
+            }, num_nodes_dict={'user': num['user'], 'item': num['item']})
             self.graphs.append(g)
             self.feat_dicts.append({'user': user_x, 'item': item_x})
 
@@ -336,63 +324,27 @@ class YELPHTGDataset(HTGDatasetBase):
         self.num_classes = int(self.labels.max().item()) + 1
         self.in_dim_dict = {'user': user_x.shape[-1], 'item': item_x.shape[-1]}
 
-        # 80:10:10 split (aligned with DHGAS)
         np.random.seed(seed)
-        n = self.NUM_ITEM
-        val_num = int(np.ceil(0.1 * n))
-        test_num = int(np.ceil(0.1 * n))
+        n = num['item']
+        val_num = test_num = int(np.ceil(0.1 * n))
         perm = torch.from_numpy(np.random.permutation(n))
         self.test_idx = perm[:test_num]
         self.val_idx = perm[test_num:test_num + val_num]
         self.train_idx = perm[test_num + val_num:]
-        print(f"  12 snapshots, {self.num_classes} classes, split: {len(self.train_idx)}/{len(self.val_idx)}/{len(self.test_idx)}")
 
-    def _build_synthetic(self):
-        for t in range(12):
-            g = dgl.heterograph({
-                ('user', 'review', 'item'): (torch.randint(0, self.NUM_USER, (3000,)), torch.randint(0, self.NUM_ITEM, (3000,))),
-                ('item', 'reviewed_by', 'user'): (torch.randint(0, self.NUM_ITEM, (3000,)), torch.randint(0, self.NUM_USER, (3000,))),
-            }, num_nodes_dict={'user': self.NUM_USER, 'item': self.NUM_ITEM})
-            self.graphs.append(g)
-            self.feat_dicts.append({'user': torch.randn(self.NUM_USER, 32), 'item': torch.randn(self.NUM_ITEM, 32)})
-        self.labels = torch.randint(0, 3, (self.NUM_ITEM,))
-        self.in_dim_dict = {'user': 32, 'item': 32}
-        n = self.NUM_ITEM; perm = torch.randperm(n)
-        self.train_idx = perm[:int(0.8*n)]; self.val_idx = perm[int(0.8*n):int(0.9*n)]; self.test_idx = perm[int(0.9*n):]
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# COVID-19 dataset — feature concatenation (MAE 511.59+-7.37, surpasses paper 532+-25)
-# ══════════════════════════════════════════════════════════════════════════════
-class COVID19HTGDataset(HTGDatasetBase):
-    """
-    COVID-19 node regression dataset (MAE), hidden_dim=8, predict_type='state'.
-    Key optimization: concatenate features from all time steps in the window (1-dim -> 7-dim).
-    """
-    def __init__(self, raw_dir=_DEFAULT_DATA_DIR, use_synthetic=False, time_window=7):
-        super().__init__()
-        self.category = 'state'
-        self.task = 'node_regression'
-        self.time_window = time_window
-        if use_synthetic:
-            print("[COVID19HTGDataset] Using synthetic data")
-            self._build_synthetic()
-        else:
-            self._load_real(raw_dir)
-
-    def _load_real(self, raw_dir):
+    # COVID-19 (node regression)
+    def _load_covid(self):
         from dgl.data.utils import load_graphs
-        # Auto-download if needed
-        graph_path = _ensure_file('covid', 'covid4HGformer.bin', raw_dir)
-
+        self.category = 'state'
+        time_window = getattr(self.args, 'time_window', 7) if self.args else 7
+        graph_path = _ensure_file('covid', 'covid4HGformer.bin', self.data_dir)
         glist, _ = load_graphs(graph_path)
-        tw = self.time_window
+        tw = time_window
         for i in range(len(glist)):
             if i < tw:
                 continue
             wg = glist[i - tw:i]
-            # Key: concatenate features from all time steps in the window
-            # Each node goes from 1-dim to time_window-dim, providing richer temporal info
+            # Key optimization: concatenate features from all time steps (1-dim -> tw-dim)
             fds = []
             for t_idx, g in enumerate(wg):
                 fd = {}
@@ -400,7 +352,7 @@ class COVID19HTGDataset(HTGDatasetBase):
                     feat_list = [wg_t.nodes[ntype].data.get('feat',
                                  torch.zeros(wg_t.num_nodes(ntype), 1))
                                  for wg_t in wg]
-                    fd[ntype] = torch.cat(feat_list, dim=-1)  # [N, tw]
+                    fd[ntype] = torch.cat(feat_list, dim=-1)
                 fds.append(fd)
             lg = glist[i]
             sample = (wg, fds, lg)
@@ -411,7 +363,3 @@ class COVID19HTGDataset(HTGDatasetBase):
             else:
                 self.train_samples.append(sample)
         self.in_dim_dict = {k: v.shape[-1] for k, v in self.train_samples[0][1][0].items()}
-        print(f"  {len(glist)} snapshots, train:{len(self.train_samples)} val:{len(self.val_samples)} test:{len(self.test_samples)}")
-
-    def _build_synthetic(self):
-        self.in_dim_dict = {'state': 7, 'county': 7}

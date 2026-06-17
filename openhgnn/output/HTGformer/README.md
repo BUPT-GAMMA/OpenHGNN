@@ -12,28 +12,31 @@
 
   ```bash
   # OGBN-MAG link prediction
-  python main.py -m HTGformer -d ogbn_mag -t link_prediction -g 0
+  python main.py -m HTGformer -d ogbn_mag4HGformer -t link_prediction -g 0
 
   # Aminer link prediction
-  python main.py -m HTGformer -d aminer -t link_prediction -g 0
+  python main.py -m HTGformer -d aminer4HGformer -t link_prediction -g 0
 
   # YELP node classification
-  python main.py -m HTGformer -d yelp -t node_classification -g 0
+  python main.py -m HTGformer -d yelp4HGformer -t node_classification -g 0
 
   # COVID-19 node regression
-  python main.py -m HTGformer -d covid -t node_regression -g 0
+  python main.py -m HTGformer -d covid4HGformer -t node_regression -g 0
   ```
+
+  The trainer also accepts the short aliases `ogbn_mag`, `aminer`, `yelp`, and `covid`.
 
 ## Dataset
 
-Datasets should be downloaded manually and placed in `openhgnn/dataset/data/`:
+Datasets are registered in OpenHGNN and are loaded through `build_dataset`.
+The required files are downloaded automatically to `openhgnn/dataset/` on first use:
 
-| Dataset  | File                                    | Source                                                       |
-|----------|-----------------------------------------|--------------------------------------------------------------|
-| OGBN-MAG | ogbn_graphs.bin + mp2vec/g0~g9.vector   | [HTGNN](https://github.com/yeslab-code/HTGNN)               |
-| Aminer   | aminer_processed.pt                     | [DHGAS](https://github.com/wondergo2017/DHGAS) Google Drive  |
-| YELP     | yelp_processed.pt                       | [DHGAS](https://github.com/wondergo2017/DHGAS) Google Drive  |
-| COVID-19 | covid_graphs.bin                        | [HTGNN](https://github.com/yeslab-code/HTGNN)               |
+| Dataset name       | Task                | Downloaded files                          |
+|--------------------|---------------------|-------------------------------------------|
+| ogbn_mag4HGformer  | link_prediction     | ogbn4HGformer.bin, mp2vec.zip             |
+| aminer4HGformer    | link_prediction     | aminer4HGformer.pt                        |
+| yelp4HGformer      | node_classification | yelp4HGformer.pt                          |
+| covid4HGformer     | node_regression     | covid4HGformer.bin                        |
 
 ## Performance
 

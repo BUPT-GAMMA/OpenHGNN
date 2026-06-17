@@ -11,7 +11,7 @@ Unified training flow for four datasets/tasks:
 
 Hyperparameters (paper Section 4.1.3):
   Adam, lr=5e-3 (Aminer/YELP: 1e-3), weight_decay=5e-4
-  hidden_dim=64 (COVID-19: 8), max_epochs=500, early_stopping=25
+  hidden_dim=64 (COVID-19: 8), max_epoch=500, early_stopping=25
 """
 
 import torch
@@ -71,7 +71,7 @@ def _compute_metric(pos_score, neg_score):
     label = np.concatenate([np.ones(pos_score.shape[0]), np.zeros(neg_score.shape[0])])
     try:
         return roc_auc_score(label, pred), average_precision_score(label, pred)
-    except:
+    except ValueError:
         return 0.5, 0.5
 
 
@@ -80,36 +80,31 @@ class HTGformerTrainer(BaseFlow):
     """HTGformer unified trainer. Automatically selects training/evaluation mode based on dataset.task."""
 
     def __init__(self, args):
-        if HAS_OPENHGNN:
-            try:
-                super().__init__(args)
-            except:
-                pass
         self.args = args
+        # Compatible with both main.py (-d sets args.dataset) and script (args.dataset_name)
+        if not getattr(args, 'dataset_name', None):
+            args.dataset_name = getattr(args, 'dataset', '')
         self.device = torch.device(getattr(args, 'device', 'cpu'))
         self.dataset = self._load_dataset()
         self.task = self.dataset.task
         self.category = self.dataset.category
 
     def _load_dataset(self):
-        """Load dataset based on args.dataset_name."""
-        from openhgnn.dataset.htgformer_dataset import (
-            OGBNMAGHTGDataset, AminerHTGDataset, YELPHTGDataset, COVID19HTGDataset
-        )
+        """Load dataset via OpenHGNN build_dataset entry point."""
+        from openhgnn.dataset import build_dataset
         name = getattr(self.args, 'dataset_name', '').lower()
-        data_dir = getattr(self.args, 'data_dir', './openhgnn/dataset')
         if 'ogbn' in name or 'mag' in name:
-            return OGBNMAGHTGDataset(raw_dir=data_dir, device=self.device,
-                                     time_window=getattr(self.args, 'time_window', 3))
+            ds_name, task = 'ogbn_mag4HGformer', 'link_prediction'
         elif 'aminer' in name:
-            return AminerHTGDataset(raw_dir=data_dir,
-                                    time_window=getattr(self.args, 'time_window', 1))
+            ds_name, task = 'aminer4HGformer', 'link_prediction'
         elif 'yelp' in name:
-            return YELPHTGDataset(raw_dir=data_dir)
+            ds_name, task = 'yelp4HGformer', 'node_classification'
         elif 'covid' in name:
-            return COVID19HTGDataset(raw_dir=data_dir)
+            ds_name, task = 'covid4HGformer', 'node_regression'
         else:
             raise ValueError(f"Unknown dataset: {name}")
+        logger = getattr(self.args, 'logger', None)
+        return build_dataset(ds_name, task, logger=logger, args=self.args)
 
     def _build_model(self):
         """Build HTGformer model with dataset-specific config."""
@@ -141,9 +136,11 @@ class HTGformerTrainer(BaseFlow):
             llm_embed_path=getattr(self.args, 'llm_embed_path', None),
         )
 
-    # ══════════════════════════════════════════════════════════════════════
+    def _max_epoch(self):
+        """Use OpenHGNN's standard max_epoch while accepting older max_epochs args."""
+        return getattr(self.args, 'max_epoch', getattr(self.args, 'max_epochs', 500))
+
     # Main entry
-    # ══════════════════════════════════════════════════════════════════════
     def train(self):
         """Run training with multiple repeats (default 5, paper Section 4.1.3)."""
         num_repeats = getattr(self.args, 'num_repeats', 5)
@@ -168,9 +165,7 @@ class HTGformerTrainer(BaseFlow):
         elif 'covid' in name:
             return self._train_covid()
 
-    # ══════════════════════════════════════════════════════════════════════
     # OGBN-MAG
-    # ══════════════════════════════════════════════════════════════════════
     def _train_ogbn_mag(self):
         ds, device = self.dataset, self.device
         hidden_dim = getattr(self.args, 'hidden_dim', 64)
@@ -182,7 +177,7 @@ class HTGformerTrainer(BaseFlow):
         print(f"# params: {sum(p.numel() for p in params if p.requires_grad)}")
         best_val_auc, best_test_auc, best_test_ap, best_ep = 0, 0, 0, 0
         patience_cnt, patience = 0, getattr(self.args, 'patience', 25)
-        for epoch in range(1, getattr(self.args, 'max_epochs', 500) + 1):
+        for epoch in range(1, self._max_epoch() + 1):
             model.train(); predictor.train(); epoch_loss = 0
             for wg, fds, pos_g, neg_g in ds.train_samples:
                 gd = [g.to(device) for g in wg]
@@ -218,9 +213,7 @@ class HTGformerTrainer(BaseFlow):
             auc, ap = _compute_metric(ps, ns); aucs.append(auc); aps.append(ap)
         return np.mean(aucs), np.mean(aps)
 
-    # ══════════════════════════════════════════════════════════════════════
     # Aminer (time_window=1, aligned with DHGAS default)
-    # ══════════════════════════════════════════════════════════════════════
     def _train_aminer(self):
         ds, device = self.dataset, self.device
         hidden_dim = getattr(self.args, 'hidden_dim', 64)
@@ -233,7 +226,7 @@ class HTGformerTrainer(BaseFlow):
         print(f"# params: {sum(p.numel() for p in params if p.requires_grad)}")
         best_val_auc, best_test_auc, best_test_ap, best_ep = 0, 0, 0, 0
         patience_cnt, patience = 0, getattr(self.args, 'patience', 50)
-        for epoch in range(1, getattr(self.args, 'max_epochs', 500) + 1):
+        for epoch in range(1, self._max_epoch() + 1):
             model.train(); predictor.train(); epoch_loss, nb = 0, 0
             for t in ds.train_ts:
                 pos_src, pos_dst, neg_src, neg_dst = ds.coauthor_samples[t]
@@ -276,9 +269,7 @@ class HTGformerTrainer(BaseFlow):
             auc, ap = _compute_metric(ps, ns); aucs.append(auc); aps.append(ap)
         return (np.mean(aucs), np.mean(aps)) if aucs else (0.5, 0.5)
 
-    # ══════════════════════════════════════════════════════════════════════
     # YELP
-    # ══════════════════════════════════════════════════════════════════════
     def _train_yelp(self):
         ds, device = self.dataset, self.device
         model = self._build_model().to(device)
@@ -290,7 +281,7 @@ class HTGformerTrainer(BaseFlow):
         fds_w = [{k: v.to(device) for k, v in fd.items()} for fd in ds.feat_dicts]
         best_val_f1, best_test_f1, best_test_recall, best_ep = 0, 0, 0, 0
         patience_cnt, patience = 0, getattr(self.args, 'patience', 50)
-        for epoch in range(1, getattr(self.args, 'max_epochs', 500) + 1):
+        for epoch in range(1, self._max_epoch() + 1):
             model.train()
             logits = model(graphs_w, fds_w)
             loss = criterion(logits[ds.train_idx.to(device)], ds.labels[ds.train_idx].to(device))
@@ -319,9 +310,7 @@ class HTGformerTrainer(BaseFlow):
         return (f1_score(true, preds, average='macro', zero_division=0) * 100,
                 recall_score(true, preds, average='macro', zero_division=0) * 100)
 
-    # ══════════════════════════════════════════════════════════════════════
     # COVID-19
-    # ══════════════════════════════════════════════════════════════════════
     def _train_covid(self):
         ds, device = self.dataset, self.device
         model = self._build_model().to(device)
@@ -331,7 +320,7 @@ class HTGformerTrainer(BaseFlow):
         best_val, best_test, best_ep = float('inf'), float('inf'), 0
         patience_cnt, patience = 0, getattr(self.args, 'patience', 25)
         idx = np.random.permutation(len(ds.train_samples))
-        for epoch in range(1, getattr(self.args, 'max_epochs', 500) + 1):
+        for epoch in range(1, self._max_epoch() + 1):
             model.train(); losses = []
             for i in idx:
                 wg, fd, lg = ds.train_samples[i]
@@ -367,9 +356,7 @@ class HTGformerTrainer(BaseFlow):
             maes.append(F.l1_loss(pred, label).item())
         return np.mean(maes)
 
-    # ══════════════════════════════════════════════════════════════════════
     # Summary
-    # ══════════════════════════════════════════════════════════════════════
     def _print_summary(self, results):
         """Print aggregated results across all repeats."""
         print(f"\n{'='*50}")

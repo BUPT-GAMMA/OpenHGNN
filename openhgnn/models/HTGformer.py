@@ -1,26 +1,18 @@
 """
-The complete model of HTGformer
-Strictly corresponds to the paper HTGformer (SIGIR 2025) Section 3
+The complete model of HTGformer.
+Strictly corresponds to the paper HTGformer (SIGIR 2025) Section 3.
 
-Overall process (corresponding to Figure 1(a) in the paper):
+Overall process (Figure 1(a) in the paper):
   Input: T time slices of heterogeneous graphs + node features
-    ↓
-  [Graph Embedding Layer] Section 3.1
-    For each time step t, for the target node v：
-    - Formula(1): H^t_{v,r} = A^t_r H^t_{N^t_r(v)}  (All neighboring relations aggregation)
-    - collect {H^t_{v,r}} ∪ {H^t_v} As a multi-perspective characteristic
-    ↓
-  [Hetero-Temporal Encoder] Section 3.2
-    - Formula(3): H^LLM_v = LLM(Prompt(v))          (LLM Type Code)
-    - Formula(4): p^t_i = sin/cos(...)               (Sine Wave Time-division Coding)
-    - Formula(5): H^{sp,t}_v = H^LLM_v + p^t        (Space-time encoding)
-    - Z^t_v = concat(H^t_v, H^{sp,t}_v)          (Enhanced expression)
-    ↓
-  [Spatio-Temporal Attention] Section 3.3
-    - Formula(6)(7): Z'_v = Softmax(QK^T/√d_K)V     （Shared Parameter Attention）
-    ↓
-  [Optimization] Section 3.4
-    - MLP classification head -> loss function
+    -> Graph Embedding Layer (Section 3.1)
+       Formula (1): H^t_{v,r} = A^t_r H^t_{N^t_r(v)}
+       Collect {H^t_{v,r}} union {H^t_v} as multi-perspective features
+    -> Hetero-Temporal Encoder (Section 3.2)
+       LLM type encoding + sine temporal encoding + concat
+    -> Spatio-Temporal Attention (Section 3.3)
+       Formula (6)(7): Z'_v = Softmax(QK^T/sqrt(d_K))V
+    -> Optimization (Section 3.4)
+       MLP classification head and task loss
 """
 
 import torch
@@ -47,15 +39,15 @@ except ImportError:
 @register_model('HTGformer')
 class HTGformer(BaseModel):
     """
-    HTGformer: Heterogeneous Temporal Graph Transformer
-    
-    Paper hyperparameters（Section 4.1.3）：
-      hidden_dim = 64（COVID-19 use 8）
-      num_heads = 4（It can be inferred that the paper did not explicitly state the number of heads）
-      num_layers = 2（inferred）
+    HTGformer: Heterogeneous Temporal Graph Transformer.
+
+    Paper hyperparameters (Section 4.1.3):
+      hidden_dim = 64 (COVID-19 uses 8)
+      num_heads = 4 (inferred)
+      num_layers = 2 (inferred)
       lr = 5e-3
       weight_decay = 5e-4
-      max_epochs = 500
+      max_epoch = 500
       early_stopping = 25
       spatio-temporal encoding dim = 64
     """
@@ -80,17 +72,17 @@ class HTGformer(BaseModel):
 
     def __init__(
         self,
-        in_dim_dict,        # {ntype: int}，The original feature dimensions of each node type
-        hidden_dim,         # int，Hidden layer dimension d (in the paper, d = 64)
-        num_heads,          # int，Number of attention heads
-        num_layers,         # int， the number of Transformer layers
+        in_dim_dict,        # {ntype: int}, original feature dimensions of each node type
+        hidden_dim,         # int, hidden layer dimension d (paper uses d = 64)
+        num_heads,          # int, number of attention heads
+        num_layers,         # int, number of Transformer layers
         dropout,            # float
-        num_timestamps,     # int，Time step T
+        num_timestamps,     # int, time step T
         node_types,         # List[str]
-        category,           # str，Target node type
-        out_dim,            # int，Number of output categories
-        use_llm=False,      # bool，Whether to use LLM encoding
-        llm_embed_path=None,# str，Pre-computed LLM embedding path
+        category,           # str, target node type
+        out_dim,            # int, number of output categories
+        use_llm=False,      # bool, whether to use LLM encoding
+        llm_embed_path=None,# str, pre-computed LLM embedding path
     ):
         super().__init__()
         self.hidden_dim = hidden_dim
@@ -102,11 +94,11 @@ class HTGformer(BaseModel):
         # Because Z^t_v = concat(H^t_v, H^{sp,t}_v), where each of the dimensions is hidden_dim.
         self.embed_dim = 2 * hidden_dim
 
-        # ── Section 3.1: Graph Embedding Layer ──────────────────────────
+        # -- Section 3.1: Graph Embedding Layer --------------------------
         # Formula(1):Non-parametric graph convolution
         self.graph_emb = GraphEmbeddingLayer()
 
-        # ── Section 3.2: Hetero-Temporal Encoder ────────────────────────
+        # -- Section 3.2: Hetero-Temporal Encoder ------------------------
         # Formula (2)(3)(4)(5): LLM type encoding + sine time sequence encoding + concat
         self.hetero_temporal_enc = HeteroTemporalEncoder(
             node_types=node_types,
@@ -116,7 +108,7 @@ class HTGformer(BaseModel):
             llm_embed_path=llm_embed_path,
         )
 
-        # ── Section 3.3: Spatio-Temporal Attention ──────────────────────
+        # -- Section 3.3: Spatio-Temporal Attention ----------------------
         # Formula (6)(7): Shared parameter multi-head self-attention, with num_layers layers stacked together
         self.encoder_layers = nn.ModuleList([
             HTGformerEncoderLayer(
@@ -127,7 +119,7 @@ class HTGformer(BaseModel):
             for _ in range(num_layers)
         ])
 
-        # ── Section 3.4: Optimization ────────────────────────────────────
+        # -- Section 3.4: Optimization ------------------------------------
         # Two-layer MLP (Original paper: "two layer multilayer perceptron (MLP)" )
         # Input: Flattened Z'_v (prediction representation for T time steps)
         # Note: The paper predicts based on the representation at time step T+1: H_v = MLP(Z^{T+1}_v)
@@ -152,9 +144,9 @@ class HTGformer(BaseModel):
         Complete forward propagation
 
         Args:
-            graphs: List[DGLGraph]，Heterogeneous graph over T time steps
-            feat_dicts: List[dict]，The node features over T time steps: {ntype: tensor}
-            target_node_ids: Optional tensor，Target node index (all will be taken if None is specified)
+            graphs: List[DGLGraph], heterogeneous graph over T time steps
+            feat_dicts: List[dict], node features over T time steps: {ntype: tensor}
+            target_node_ids: Optional tensor, target node index (all nodes if None)
 
         Returns:
             logits: tensor [N_target, out_dim]
@@ -162,18 +154,18 @@ class HTGformer(BaseModel):
         T = len(graphs)
         device = feat_dicts[0][self.category].device
 
-        # ── Step 1: Graph Embedding Layer (Formula 1) ──────────────────────
+        # -- Step 1: Graph Embedding Layer (Formula 1) ----------------------
         # seq_list[t]: {'self': [N,d], rel1: [N,d], ...}
         seq_list = self.graph_emb(graphs, feat_dicts, self.category)
 
-        # ── Step 2: Hetero-Temporal Encoder (Formula 3,4,5) ─────────────────
+        # -- Step 2: Hetero-Temporal Encoder (Formula 3,4,5) -----------------
         # For each time step, generate Z^t_v for each perspective (self + all relationships)
         # Converge into a sequence Z: [N, L, embed_dim]
         # L = T * (1 + num_relations)
         all_tokens = []
         for t in range(T):
             t_repr = seq_list[t]
-            # egarding the characteristics of the target node itself
+            # Target node self features.
             self_feat = t_repr['self']  # [N, feat_dim]
             # Construct a temporary feat_dict for the hetero_temporal_enc operation
             t_feat_dict = {self.category: self_feat}
@@ -199,13 +191,13 @@ class HTGformer(BaseModel):
         # # Select the first T tokens (corresponding to the self-representation at T time steps)
         Z_v = Z[:, :T, :]  # [N, T, 2*d]
 
-        # ── Step 3: Spatio-Temporal Attention (Formula 6,7) ─────────────────
+        # -- Step 3: Spatio-Temporal Attention (Formula 6,7) -----------------
         for layer in self.encoder_layers:
             Z_v = layer(Z_v, Z)  # [N, T, 2*d]
 
-        # ── Step 4: Optimization (Section 3.4) ──────────────────────────
+        # -- Step 4: Optimization (Section 3.4) --------------------------
         # Make a prediction based on the representation of the last time step (at time T)
-        # Paper："Take the T+1 as an example: H_v = MLP(Z^{T+1}_v)"
+        # Paper example: H_v = MLP(Z^{T+1}_v)
         # In fact, take the last time step of Z_v (corresponding to the prediction of the (T + 1)th moment)
         h_v = Z_v[:, -1, :]  # [N, 2*d]
 
@@ -218,7 +210,7 @@ class HTGformer(BaseModel):
     def link_prediction_forward(self, graphs, feat_dicts):
         """
         Forward propagation of the link prediction task
-        Formula (8): L = -sum log σ(H_i^T H_j) - sum log σ(-H_i'^T H_j')
+        Formula (8): L = -sum log sigmoid(H_i^T H_j) - sum log sigmoid(-H_i'^T H_j')
         """
         T = len(graphs)
         seq_list = self.graph_emb(graphs, feat_dicts, self.category)
