@@ -28,7 +28,7 @@ Node classification (default hyperparameters, tested with official PyG datasets:
 
 > **Note**: The paper reports DBLP Macro-F1=94.18% and IMDB Micro-F1=61.58%, which require hyperparameter tuning not included in the official code. With default parameters, the official PyG code also yields similar results to the above table (verified by running the official source code directly).
 
-### TrainerFlow: node_classification
+### TrainerFlow: HGEN_trainer
 
 The model is trained in semi-supervised node classification.
 
