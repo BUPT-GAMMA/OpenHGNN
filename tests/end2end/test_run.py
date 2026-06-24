@@ -26,6 +26,7 @@ experiments = {
         'FB15k': ['TransD', 'TransE', 'TransH', 'TransR', ]
     },
     'recommendation': {  # 1
+        'GMD4HCMGNN': ['HCMGNN'],
         'LastFM4KGCN': ['KGCN', ],
     },
     'hypergraph': {  # 1
