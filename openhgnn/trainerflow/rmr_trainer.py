@@ -19,12 +19,6 @@ import time
 import argparse
 
 
-if torch.cuda.is_available():
-    device = torch.device("cuda:0")
-else:
-    device = torch.device("cpu")
-
-
 def acm_params():
     parser = argparse.ArgumentParser()
     parser.add_argument('--save_emb', action="store_true")
@@ -172,7 +166,7 @@ class RMR_trainer(BaseFlow):
                     self.g.nodes[self.main_node].data[f'{ratio}_val_mask'],
                     self.g.nodes[self.main_node].data[f'{ratio}_test_mask'],
                     self.g.nodes[self.main_node].data['y'].long(),
-                    device,
+                    self.device,
                     self.g,
                     0.01,
                     0,
@@ -187,7 +181,7 @@ class RMR_trainer(BaseFlow):
                     self.g.graph_data[f'{ratio}_val_mask'],
                     self.g.graph_data[f'{ratio}_test_mask'],
                     self.g.nodes[self.main_node].data['y'][:127202].long(),
-                    device,
+                    self.device,
                     self.g,
                     0.03,
                     0,
@@ -219,7 +213,7 @@ class RMR_trainer(BaseFlow):
                     self.g.nodes[self.main_node].data[f'{ratio}_val_mask'],
                     self.g.nodes[self.main_node].data[f'{ratio}_test_mask'],
                     self.g.nodes[self.main_node].data['y'].long(),
-                    device,
+                    self.device,
                     self.g,
                     0.01,
                     0,
@@ -234,7 +228,7 @@ class RMR_trainer(BaseFlow):
                     self.g.graph_data[f'{ratio}_val_mask'],
                     self.g.graph_data[f'{ratio}_test_mask'],
                     self.g.nodes[self.main_node].data['y'][:127202].long(),
-                    device,
+                    self.device,
                     self.g,
                     0.03,
                     0,
