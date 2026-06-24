@@ -21,6 +21,7 @@ experiments = {
     },
     'link_prediction': {  # 8
         'HGBl-amazon': ['GATNE-T', 'RGCN', ],
+        'ogbn_mag4HGformer': ['HTGformer'],
         'wn18': ['GIE', ],
         'HGBl-IMDB': ['HDE', ],     # 'HGBl-IMDB' slow to run, alternative datasets ['HGBl-DBLP', 'HGBl-ACM']
         'FB15k': ['TransD', 'TransE', 'TransH', 'TransR', ]
