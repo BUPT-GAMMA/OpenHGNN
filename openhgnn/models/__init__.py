@@ -64,6 +64,8 @@ def build_model(model):
 
 SUPPORTED_MODELS = {
 #####       add models here
+    'HGSketch': 'openhgnn.models.HGSketch',
+    'HGDL':'openhgnn.models.HGDL',
     'MHGCN':'openhgnn.models.MHGCN',
     'BPHGNN' : 'openhgnn.models.BPHGNN',
     "MetaHIN": "openhgnn.models.MetaHIN",
@@ -138,13 +140,17 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
-
+    'RMR':'openhgnn.models.RMR',
+    'HGOT': 'openhgnn.models.HGOT',
+    'HGEN': 'openhgnn.models.HGEN',
 }
 
 #####       add model here
+from .HGSketch import HGSketch
 from .BPHGNN import BPHGNN
 from .RHINE import RHINE
 from .FedHGNN import FedHGNN
+from .HGEN import HGEN
 #####
 from .SIAN import SIAN
 from .HGCL import HGCL
@@ -200,7 +206,8 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
-
+from .RMR import RMR
+from .HGOT import HGOT
 
 
 __all__ = [
@@ -254,5 +261,10 @@ __all__ = [
     'ExpressGNN',
     'Ingram',
     'RHINE',
+    'HGSketch',
+    'HGDL',
+    'HGEN',
+    'HGOT',
+    'RMR',
 ]
 classes = __all__

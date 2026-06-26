@@ -1193,3 +1193,321 @@ class Common_NodeClassification(NodeClassificationDataset):
 
         return g,category,num_classes
 
+@register_dataset('rmr_node_classification')
+class RMR_NodeClassification(NodeClassificationDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(RMR_NodeClassification, self).__init__(*args, **kwargs)
+        self.dataset_name = dataset_name
+        assert self.dataset_name in ['acm4RMR','aminer4RMR','imdb4RMR']
+        self.load_rmr_data()
+
+    def sample_per_class(self,random_state, labels, num_examples_per_class, forbidden_indices=None):
+        num_samples = labels.shape[0]
+        num_classes = labels.max() + 1
+        sample_indices_per_class = {index: [] for index in range(num_classes)}
+
+        # get indices sorted by class
+        for class_index in range(num_classes):
+            for sample_index in range(num_samples):
+                if labels[sample_index] == class_index:
+                    if forbidden_indices is None or sample_index not in forbidden_indices:
+                        sample_indices_per_class[class_index].append(sample_index)
+
+        # get specified number of indices for each class
+        return np.concatenate(
+            [random_state.choice(sample_indices_per_class[class_index], num_examples_per_class, replace=False)
+             for class_index in range(len(sample_indices_per_class))
+             ])
+
+    def get_train_val_test_split(self,random_state,
+                                 labels,
+                                 train_examples_per_class=None, val_examples_per_class=None,
+                                 test_examples_per_class=None,
+                                 train_size=None, val_size=None, test_size=None):
+        num_samples = labels.shape[0]
+        num_classes = labels.max() + 1
+        remaining_indices = list(range(num_samples))
+
+        if train_examples_per_class is not None:
+            train_indices = self.sample_per_class(
+                random_state, labels, train_examples_per_class)
+        else:
+            # select train examples with no respect to class distribution
+            train_indices = random_state.choice(
+                remaining_indices, train_size, replace=False)
+
+        if val_examples_per_class is not None:
+            val_indices = self.sample_per_class(
+                random_state, labels, val_examples_per_class, forbidden_indices=train_indices)
+        else:
+            remaining_indices = np.setdiff1d(remaining_indices, train_indices)
+            val_indices = random_state.choice(
+                remaining_indices, val_size, replace=False)
+
+        forbidden_indices = np.concatenate((train_indices, val_indices))
+        if test_examples_per_class is not None:
+            test_indices = self.sample_per_class(random_state, labels, test_examples_per_class,
+                                            forbidden_indices=forbidden_indices)
+        elif test_size is not None:
+            remaining_indices = np.setdiff1d(remaining_indices, forbidden_indices)
+            test_indices = random_state.choice(
+                remaining_indices, test_size, replace=False)
+        else:
+            test_indices = np.setdiff1d(remaining_indices, forbidden_indices)
+
+        # assert that there are no duplicates in sets
+        assert len(set(train_indices)) == len(train_indices)
+        assert len(set(val_indices)) == len(val_indices)
+        assert len(set(test_indices)) == len(test_indices)
+        # assert sets are mutually exclusive
+        assert len(set(train_indices) - set(val_indices)
+                   ) == len(set(train_indices))
+        assert len(set(train_indices) - set(test_indices)
+                   ) == len(set(train_indices))
+        assert len(set(val_indices) - set(test_indices)) == len(set(val_indices))
+        if test_size is None and test_examples_per_class is None:
+            # all indices must be part of the split
+            assert len(np.concatenate(
+                (train_indices, val_indices, test_indices))) == num_samples
+
+        if train_examples_per_class is not None:
+            train_labels = labels[train_indices]
+            train_sum = np.sum(train_labels, axis=0)
+            # assert all classes have equal cardinality
+            assert np.unique(train_sum).size == 1
+
+        if val_examples_per_class is not None:
+            val_labels = labels[val_indices]
+            val_sum = np.sum(val_labels, axis=0)
+            # assert all classes have equal cardinality
+            assert np.unique(val_sum).size == 1
+
+        if test_examples_per_class is not None:
+            test_labels = labels[test_indices]
+            test_sum = np.sum(test_labels, axis=0)
+            # assert all classes have equal cardinality
+            assert np.unique(test_sum).size == 1
+
+        return train_indices, val_indices, test_indices
+
+    def train_test_split(self, labels, seed, train_examples_per_class=None, val_examples_per_class=None,
+                         test_examples_per_class=None, train_size=None, val_size=None, test_size=None):
+        random_state = np.random.RandomState(seed=0)
+        train_indices, val_indices, test_indices = self.get_train_val_test_split(
+            random_state, labels, train_examples_per_class, val_examples_per_class, test_examples_per_class, train_size,
+            val_size, test_size)
+
+        # print('number of training: {}'.format(len(train_indices)))
+        # print('number of validation: {}'.format(len(val_indices)))
+        # print('number of testing: {}'.format(len(test_indices)))
+
+        train_mask = np.zeros((labels.shape[0], 1), dtype=int)
+        train_mask[train_indices, 0] = 1
+        train_mask = np.squeeze(train_mask, 1)
+        val_mask = np.zeros((labels.shape[0], 1), dtype=int)
+        val_mask[val_indices, 0] = 1
+        val_mask = np.squeeze(val_mask, 1)
+        test_mask = np.zeros((labels.shape[0], 1), dtype=int)
+        test_mask[test_indices, 0] = 1
+        test_mask = np.squeeze(test_mask, 1)
+        mask = {}
+        mask['train'] = train_mask
+        mask['val'] = val_mask
+        mask['test'] = test_mask
+        return mask
+
+    def get_split(self, validation=True):
+        return self.train_idx, self.valid_idx, self.test_idx
+
+    def get_labels(self):
+        return self.label
+
+    def make_sparse_eye(self,N):
+        e = torch.arange(N, dtype=torch.long)
+        e = torch.stack([e, e])
+        o = torch.ones(N, dtype=torch.float32)
+        return torch.sparse_coo_tensor(e, o, size=(N, N))
+
+    def load_rmr_data(self):
+        if self.dataset_name == 'acm4RMR':
+            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{self.dataset_name}.zip'
+            self.base_dir = './openhgnn/dataset/Common_Dataset/' + self.dataset_name + '_dir'
+            self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{self.dataset_name}.zip'
+            if os.path.exists(self.zip_file):
+                pass
+            else:
+                os.makedirs(os.path.join('./openhgnn/dataset/Common_Dataset/'), exist_ok=True)
+                download(self.url,
+                         path=os.path.join('./openhgnn/dataset/Common_Dataset/')
+                         )
+            if os.path.exists(self.base_dir):
+                pass
+            else:
+                os.makedirs(os.path.join(self.base_dir), exist_ok=True)
+                extract_archive(self.zip_file, self.base_dir)
+            #bin_path = 'openhgnn/dataset/RMR/acm4RMR.bin'
+            self.g = dgl.load_graphs( os.path.join(self.base_dir,f'{self.dataset_name}.bin') )[0][0].long()
+            self.train_idx = None
+            self.valid_idx = None
+            self.test_idx = None
+            self.label = self. g.nodes['p'].data['y']
+            self.g.graph_data = {
+                'metapath_dict': {
+                    ('p', 'a', 'p'): None,
+                    ('p', 's', 'p'): None
+                },
+                'schema_dict': {
+                    ('a', 'ap', 'p'): None,
+                    ('s', 'sp', 'p'): None
+                },
+                'schema_dict1': {
+                    ('s', 'sp', 'p'): None
+                },
+                'schema_dict2': {
+                    ('a', 'ap', 'p'): None
+                },
+                'main_node': 'p',
+                'use_nodes': ('p', 'a', 's'),
+                'mp': {
+                    ('p', 'pa', 'a'): None,
+                    ('p', 'ps', 's'): None
+                }
+
+            }
+            return self.g
+        elif self.dataset_name == 'imdb4RMR' :
+            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{self.dataset_name}.zip'
+            self.base_dir = './openhgnn/dataset/Common_Dataset/' + self.dataset_name + '_dir'
+            self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{self.dataset_name}.zip'
+            if os.path.exists(self.zip_file):
+                pass
+            else:
+                os.makedirs(os.path.join('./openhgnn/dataset/Common_Dataset/'), exist_ok=True)
+                download(self.url,
+                         path=os.path.join('./openhgnn/dataset/Common_Dataset/')
+                         )
+            if os.path.exists(self.base_dir):
+                pass
+            else:
+                os.makedirs(os.path.join(self.base_dir), exist_ok=True)
+                extract_archive(self.zip_file, self.base_dir)
+            # bin_path = 'openhgnn/dataset/RMR/acm4RMR.bin'
+            self.g = dgl.load_graphs(os.path.join(self.base_dir, f'{self.dataset_name}.bin'))[0][0].long()
+            self.train_idx = None
+            self.valid_idx = None
+            self.test_idx = None
+            self.label = self.g.nodes['movie'].data['y']
+            self.g.graph_data = {
+                'schema_dict': {
+                    ('actor', 'am', 'movie'): None,
+                    ('director', 'dm', 'movie'): None
+                },
+                'schema_dict1': {
+                    ('director', 'dm', 'movie'): None
+                },
+                'schema_dict2': {
+                    ('actor', 'am', 'movie'): None
+                },
+                'main_node': 'movie',
+                'use_nodes': ('movie', 'actor', 'director'),
+                'mp': {
+                    ('movie', 'ma', 'actor'): None,
+                    ('movie', 'md', 'director'): None
+                }
+            }
+            return self.g
+        elif self.dataset_name == 'aminer4RMR':
+            self.zip_file = f'./openhgnn/dataset/Common_Dataset/{self.dataset_name}.zip'
+            self.base_dir = './openhgnn/dataset/Common_Dataset/' + self.dataset_name + '_dir'
+            self.url = f'https://s3.cn-north-1.amazonaws.com.cn/dgl-data/dataset/openhgnn/{self.dataset_name}.zip'
+            if os.path.exists(self.zip_file):
+                pass
+            else:
+                os.makedirs(os.path.join('./openhgnn/dataset/Common_Dataset/'), exist_ok=True)
+                download(self.url,
+                         path=os.path.join('./openhgnn/dataset/Common_Dataset/')
+                         )
+            if os.path.exists(self.base_dir):
+                pass
+            else:
+                os.makedirs(os.path.join(self.base_dir), exist_ok=True)
+                extract_archive(self.zip_file, self.base_dir)
+            # bin_path = 'openhgnn/dataset/RMR/acm4RMR.bin'
+            self.g = dgl.load_graphs(os.path.join(self.base_dir, f'{self.dataset_name}.bin'))[0][0].long()
+            ratio = [1, 5, 10, 20]
+            self.train_idx = None
+            self.valid_idx = None
+            self.test_idx = None
+            self.label = self.g.nodes['P'].data['y']
+            self.idx = self.g.nodes['P'].data['idx']
+            self.g.nodes['P'].data['x'] = self.make_sparse_eye(127623)
+            self.g.nodes['A'].data['x'] = self.make_sparse_eye(164473)
+            self.g.nodes['C'].data['x'] = self.make_sparse_eye(101)
+            self.g.nodes['R'].data['x'] = self.make_sparse_eye(147251)
+            self.g.label = self.label
+            # mask_r0 = self.train_test_split(
+            #     self.g.nodes['P'].data['y'][:127202].detach().cpu().numpy(),
+            #     seed=np.random.randint(0, 35456, size=1),
+            #     train_examples_per_class=ratio[0],
+            #     val_size=1000, test_size=None)
+            # mask_r1 = self.train_test_split(
+            #     self.g.nodes['P'].data['y'][:127202].detach().cpu().numpy(),
+            #     seed=np.random.randint(0, 35456, size=1),
+            #     train_examples_per_class=ratio[1],
+            #     val_size=1000, test_size=None)
+            # mask_r2 = self.train_test_split(
+            #     self.g.nodes['P'].data['y'][:127202].detach().cpu().numpy(),
+            #     seed=np.random.randint(0, 35456, size=1),
+            #     train_examples_per_class=ratio[2],
+            #     val_size=1000, test_size=None)
+            # mask_r3 = self.train_test_split(
+            #     self.g.nodes['P'].data['y'][:127202].detach().cpu().numpy(),
+            #     seed=np.random.randint(0, 35456, size=1),
+            #     train_examples_per_class=ratio[3],
+            #     val_size=1000, test_size=None)
+            self.g.graph_data = {
+                'schema_dict': {
+                    ('A', 'AP', 'P'): None,
+                    ('R', 'RP', 'P'): None,
+                    ('C', 'CP', 'P'): None
+                },
+                'schema_dict1': {
+                    ('A', 'AP', 'P'): None,
+                    ('R', 'RP', 'P'): None
+                },
+                'schema_dict2': {
+                    ('A', 'AP', 'P'): None,
+                    ('C', 'CP', 'P'): None
+                },
+                'schema_dict3': {
+                    ('R', 'RP', 'P'): None,
+                    ('C', 'CP', 'P'): None
+                },
+                'main_node': 'P',
+                'use_nodes': ('P', 'A', 'R', 'C'),
+                'mp': {
+                    ('P', 'PA', 'A'): None,
+                    ('P', 'PR', 'R'): None,
+                    ('P', 'PC', 'C'): None
+                },
+                'label': self.label,
+                'idx': self.idx,
+                # '1_train_mask' : torch.BoolTensor(mask_r0['train']),
+                # '1_val_mask' : torch.BoolTensor(mask_r0['val']),
+                # '1_test_mask' : torch.BoolTensor(mask_r0['test']),
+
+
+            }
+            for r in ratio:
+                mask = self.train_test_split(
+                    self.g.nodes['P'].data['y'][:127202].detach().cpu().numpy(),
+                    seed=np.random.randint(0, 35456, size=1),
+                    train_examples_per_class=r,
+                    val_size=1000, test_size=None)
+
+                self.g.graph_data[f'{r}_train_mask'] = torch.BoolTensor(mask['train'])
+                self.g.graph_data[f'{r}_val_mask'] = torch.BoolTensor(mask['val'])
+                self.g.graph_data[f'{r}_test_mask'] = torch.BoolTensor(mask['test'])
+
+
+            return self.g

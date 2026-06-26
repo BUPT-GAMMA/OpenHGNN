@@ -41,6 +41,26 @@ class Config(object):
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
 ##############      add config.py    #################
+        elif self.model_name == 'HGSketch':
+            self.K = conf.getint("HGSketch", "K")
+            self.R = conf.getint("HGSketch", "R")
+            self.D = conf.getint("HGSketch", "D")
+            self.seed = conf.getint("HGSketch", "seed")
+            self.max_epoch = 1  # non-parametric, no iterative training
+
+        elif self.model_name == 'HGDL':
+            self.seed = conf.getint('HGDL', 'seed')
+            self.lr = conf.getfloat('HGDL', 'lr')
+            self.weight_decay = conf.getfloat('HGDL', 'weight_decay')
+            self.max_epoch = conf.getint('HGDL', 'max_epoch')
+            self.patience = conf.getint('HGDL', 'patience')
+            self.hidden_dim = conf.getint('HGDL', 'hidden_dim')
+            self.dropout = conf.getfloat('HGDL', 'dropout')
+            self.attention_dim = conf.getint('HGDL', 'attention_dim')
+            self.num_heads = conf.getint('HGDL', 'num_heads')
+            self.gamma = conf.getfloat('HGDL', 'gamma')
+            self.mini_batch_flag = conf.getboolean('HGDL', 'mini_batch_flag')
+            self.evaluate_interval = conf.getint('HGDL', 'evaluate_interval')
         elif self.model_name == 'MHGCN':
             self.lr = conf.getfloat("MHGCN", "lr")
             self.weight_decay = conf.getfloat("MHGCN", "weight_decay")
@@ -529,6 +549,37 @@ class Config(object):
             self.patience = conf.getint("HAN", "patience")
             self.max_epoch = conf.getint("HAN", "max_epoch")
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")
+        elif self.model_name == "HGOT":
+            self.lr = conf.getfloat("HGOT", "learning_rate")
+            self.weight_decay = conf.getfloat("HGOT", "weight_decay")
+            self.seed = conf.getint("HGOT", "seed")
+            self.dropout = conf.getfloat("HGOT", "dropout")
+
+            self.hidden_dim = conf.getint("HGOT", "hidden_dim")
+            self.out_dim = conf.getint("HGOT", "out_dim")
+            num_heads = conf.get("HGOT", "num_heads").split("-")
+            self.num_heads = [int(i) for i in num_heads]
+            self.patience = conf.getint("HGOT", "patience")
+            self.max_epoch = conf.getint("HGOT", "max_epoch")
+            self.mini_batch_flag = conf.getboolean("HGOT", "mini_batch_flag")
+
+            self.sigma = conf.getfloat("HGOT", "sigma")
+            self.rho = conf.getfloat("HGOT", "rho")
+
+        elif self.model_name == "HGEN":
+            self.lr = conf.getfloat("HGEN", "learning_rate")
+            self.weight_decay = conf.getfloat("HGEN", "weight_decay")
+            self.seed = conf.getint("HGEN", "seed")
+            self.dropout = conf.getfloat("HGEN", "dropout")
+            self.hidden_dim = conf.getint("HGEN", "hidden_dim")
+            self.out_dim = conf.getint("HGEN", "out_dim")
+            self.num_gcn = conf.getint("HGEN", "num_gcn")
+            self.num_layers = conf.getint("HGEN", "num_layers")
+            self.attention_dim = conf.getint("HGEN", "attention_dim")
+            self.lambda_cov = conf.getfloat("HGEN", "lambda_cov")
+            self.max_epoch = conf.getint("HGEN", "max_epoch")
+            self.patience = conf.getint("HGEN", "patience")
+            self.mini_batch_flag = conf.getboolean("HGEN", "mini_batch_flag")
 
         elif self.model_name == "RoHe":
             self.lr = conf.getfloat("RoHe", "learning_rate")
@@ -1583,6 +1634,79 @@ class Config(object):
             self.hid_dim = conf.getint("HMPNN", "hid_dim")
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
+
+        elif self.model_name == "RMR":
+            if self.dataset_name == 'acm4RMR':
+                self.save_emb = conf.getboolean("acm4RMR", "save_emb", fallback=False)
+                self.turn = conf.getint("acm4RMR", "turn")
+                self.dataset = conf.get("acm4RMR", "dataset")
+                self.ratio = list(map(int, conf.get("acm4RMR", "ratio").split(',')))
+                self.use_cuda = conf.getboolean("acm4RMR", "use_cuda", fallback=True)
+                self.seed = conf.getint("acm4RMR", "seed")
+                self.hidden_dim = conf.getint("acm4RMR", "hidden_dim")
+                self.nb_epochs = conf.getint("acm4RMR", "nb_epochs")
+
+                # eval params
+                self.eva_lr = conf.getfloat("acm4RMR", "eva_lr")
+                self.eva_wd = conf.getfloat("acm4RMR", "eva_wd")
+
+                # learning params
+                self.lr = conf.getfloat("acm4RMR", "lr")
+                self.w = conf.getfloat("acm4RMR", "w")
+                self.epoch = conf.getint("acm4RMR", "epoch")
+
+                # model-specific
+                self.attr1 = conf.getfloat("acm4RMR", "attr1")
+                self.attr2 = conf.getfloat("acm4RMR", "attr2")
+                self.feat = conf.getfloat("acm4RMR", "feat")
+                self.r1 = conf.getfloat("acm4RMR", "r1")
+                self.r2 = conf.getfloat("acm4RMR", "r2")
+                self.r3 = conf.getfloat("acm4RMR", "r3")
+            elif self.dataset_name == 'aminer4RMR':
+                self.save_emb = conf.getboolean("aminer4RMR", "save_emb", fallback=False)
+                self.turn = conf.getint("aminer4RMR", "turn")
+                self.dataset = conf.get("aminer4RMR", "dataset")
+                self.ratio = list(map(int, conf.get("aminer4RMR", "ratio").split(',')))
+                self.hidden_dim = conf.getint("aminer4RMR", "hidden_dim")
+                self.nb_epochs = conf.getint("aminer4RMR", "nb_epochs")
+
+                self.eva_lr = conf.getfloat("aminer4RMR", "eva_lr")
+                self.eva_wd = conf.getfloat("aminer4RMR", "eva_wd")
+
+                self.lr = conf.getfloat("aminer4RMR", "lr")
+                self.w = conf.getfloat("aminer4RMR", "w")
+                self.epoch = conf.getint("aminer4RMR", "epoch")
+
+                self.attr1 = conf.getfloat("aminer4RMR", "attr1")
+                self.attr2 = conf.getfloat("aminer4RMR", "attr2")
+                self.feat = conf.getfloat("aminer4RMR", "feat")
+                self.r1 = conf.getfloat("aminer4RMR", "r1")
+                self.r2 = conf.getfloat("aminer4RMR", "r2")
+                self.r3 = conf.getfloat("aminer4RMR", "r3")
+
+            elif self.dataset_name == 'imdb4RMR':
+                self.save_emb = conf.getboolean("imdb4RMR", "save_emb", fallback=False)
+                self.turn = conf.getint("imdb4RMR", "turn")
+                self.dataset = conf.get("imdb4RMR", "dataset")
+                self.ratio = list(map(int, conf.get("imdb4RMR", "ratio").split(',')))
+                self.use_cuda = conf.getboolean("imdb4RMR", "use_cuda", fallback=True)
+                self.seed = conf.getint("imdb4RMR", "seed")
+                self.hidden_dim = conf.getint("imdb4RMR", "hidden_dim")
+                self.nb_epochs = conf.getint("imdb4RMR", "nb_epochs")
+
+                self.eva_lr = conf.getfloat("imdb4RMR", "eva_lr")
+                self.eva_wd = conf.getfloat("imdb4RMR", "eva_wd")
+
+                self.lr = conf.getfloat("imdb4RMR", "lr")
+                self.w = conf.getfloat("imdb4RMR", "w")
+                self.epoch = conf.getint("imdb4RMR", "epoch")
+
+                self.attr1 = conf.getfloat("imdb4RMR", "attr1")
+                self.attr2 = conf.getfloat("imdb4RMR", "attr2")
+                self.feat = conf.getfloat("imdb4RMR", "feat")
+                self.r1 = conf.getfloat("imdb4RMR", "r1")
+                self.r2 = conf.getfloat("imdb4RMR", "r2")
+                self.r3 = conf.getfloat("imdb4RMR", "r3")
 
 
         elif self.model_name == "HCMGNN":
