@@ -50,12 +50,14 @@ def build_flow(args, flow_name):
 SUPPORTED_FLOWS = {
 ###########     add trainer_flow here. 【register name】 ： 【class name】
 
+    'HGSketch_trainer': 'openhgnn.trainerflow.HGSketch_trainer',
     'MHGCN_trainer':'openhgnn.trainerflow.MHGCN_trainer',
     'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',    
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
     'hga_trainer':'openhgnn.trainerflow.HGATrainer',
     'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
     'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation',
+    'HGDL_trainer':'openhgnn.trainerflow.HGDL_trainer',
 ##########
     "coldstart_recommmendation": "openhgnn.trainerflow.coldstart_recommendation",
     'SIAN_trainer': 'openhgnn.trainerflow.SIAN_trainer',
@@ -108,12 +110,18 @@ SUPPORTED_FLOWS = {
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
     'htgformer_trainer': 'openhgnn.trainerflow.htgformer_trainer',
+    'hero_trainer': "openhgnn.trainerflow.HERO_trainer",
+    'hero_homo_trainer': "openhgnn.trainerflow.HERO_homo_trainer",
 
 
 
+    'HCMGNN_trainer':'openhgnn.trainerflow.HCMGNN_trainer',
+    'rmr_trainer':'openhgnn.trainerflow.RMR_trainer',
+    'HGEN_trainer': 'openhgnn.trainerflow.HGEN_trainer',
 }
 
 ######      add trainer_flow here
+from .HGSketch_trainer import HGSketchTrainer
 from .BPHGNN_trainer import BPHGNN_trainer
 from .HGMAE_trainer import HGMAE_trainer
 from .hga_trainer import HGATrainer
@@ -163,6 +171,11 @@ from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
 from .htgformer_trainer import HTGformerTrainer
 
+from .HERO_trainer import *
+from .HERO_homo_trainer import *
+
+from .rmr_trainer import RMR_trainer
+from .HGEN_trainer import HGENTrainer
 
 
 #   don't add here
@@ -207,5 +220,10 @@ __all__ = [
     'RHINETrainer',
     'HTGformerTrainer',
 
+    'HGENTrainer',
+    'RMR_trainer',
+    'HCMGNN_trainer',
+    'HEROTrainer',
+    'HEROHomoTrainer',
 ]
 classes = __all__

@@ -9,6 +9,12 @@ from .AdapropT import *
 from .AdapropI import *
 from .rgcn_layer import *
 
+from .FullyConnect import FullyConnect, FullyConnect2
+from .Discriminator import Discriminator
+from .Linear_layer import Linear_layer
+from .Attention import SemanticAttention
+
+
 __all__ = [
     'HeteroEmbedLayer',
     'GeneralLinear',
@@ -24,7 +30,13 @@ __all__ = [
     'AttConv',
     'LSTMConv',
     'AdapropT',
-    'AdapropI'
+    'AdapropI',
+
+    "FullyConnect",
+    "FullyConnect2",
+    "Discriminator",
+    "Linear_layer",
+    "SemanticAttention",
 ]
 
 classes = __all__

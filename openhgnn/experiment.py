@@ -81,16 +81,25 @@ class Experiment(object):
         'HTGformer': 'htgformer_trainer',
         'DisenKGAT': 'DisenKGAT_trainer',
 ######################          add trainer_flow  here。 【model name】：【register name】
+        'HGSketch': 'HGSketch_trainer',
+        'HGDL':'HGDL_trainer',
         'BPHGNN':'BPHGNN_trainer',        
         'HGPrompt':'HGPrompt_trainer',
         'HGMAE':'HGMAE_trainer',
         'HGA':'hga_trainer',
         'RHINE':'rhine_trainer',
         'FedHGNN':'FED_REC_trainer',
+        'HGEN': 'HGEN_trainer',
         "MHGCN":{
             "node_classification":"MHGCN_NC_Trainer",
             "link_prediction":"MHGCN_LP_Trainer"
         },
+
+
+        'HERO': 'hero_trainer',
+        'HERO_homo':'hero_homo_trainer',
+        "HCMGNN":'HCMGNN_trainer',
+        'RMR': 'rmr_trainer',
 ##########################
 
 
@@ -240,6 +249,7 @@ class Experiment(object):
         self.config.logger = Logger(self.config)
 
         set_random_seed(self.config.seed)
+        ## 如果specific_trainerflow内存在就返回对应key，否则默认为self.config.task
         trainerflow = self.specific_trainerflow.get(self.config.model, self.config.task)
         if type(trainerflow) is not str:
             trainerflow = trainerflow.get(self.config.task)
