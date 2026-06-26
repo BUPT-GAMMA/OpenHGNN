@@ -109,10 +109,8 @@ SUPPORTED_FLOWS = {
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
+    'rmr_trainer':'openhgnn.trainerflow.RMR_trainer',
     'HGEN_trainer': 'openhgnn.trainerflow.HGEN_trainer',
-
-
-
 }
 
 ######      add trainer_flow here
@@ -164,8 +162,8 @@ from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
 from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
+from .rmr_trainer import RMR_trainer
 from .HGEN_trainer import HGENTrainer
-
 
 
 #   don't add here
@@ -209,6 +207,6 @@ __all__ = [
     'Ingram_trainer',
     'RHINETrainer',
     'HGENTrainer',
-
+    'RMR_trainer',
 ]
 classes = __all__
