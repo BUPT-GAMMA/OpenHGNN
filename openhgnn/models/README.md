@@ -46,6 +46,7 @@ Output: A dict of embedding.
 | [HAN](./openhgnn/output/HAN)[WWW 2019]       |                    | :heavy_check_mark: |                    |
 | [HetGNN](./openhgnn/output/HetGNN)[KDD 2019] | :heavy_check_mark: | :heavy_check_mark: |                    |
 | [GTN](./openhgnn/output/GTN)[NeurIPS 2019]   |                    | :heavy_check_mark: |                    |
+| [HGEN](./openhgnn/output/HGEN)[IJCAI 2025]  |                    | :heavy_check_mark: |                    |
 | [RSHN](./openhgnn/output/RSHN)[ICDM 2019]    |                    |                    | :heavy_check_mark: |
 | [MAGNN](./openhgnn/output/MAGNN)[WWW 2020]   | :heavy_check_mark: | :heavy_check_mark: |                    |
 | [NSHE](./openhgnn/output/NSHE)[IJCAI 2020]   | :heavy_check_mark: | :heavy_check_mark: |                    |

@@ -33,6 +33,7 @@ Contribution is always welcomed. Please feel free to open an issue or email to t
   Advisor
   
   - [Chuan Shi](http://shichuan.org/)
+  - Hai Huang
   - Cheng Yang
   - Xiao Wang
 

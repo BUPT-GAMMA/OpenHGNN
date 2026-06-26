@@ -41,6 +41,26 @@ class Config(object):
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
 ##############      add config.py    #################
+        elif self.model_name == 'HGSketch':
+            self.K = conf.getint("HGSketch", "K")
+            self.R = conf.getint("HGSketch", "R")
+            self.D = conf.getint("HGSketch", "D")
+            self.seed = conf.getint("HGSketch", "seed")
+            self.max_epoch = 1  # non-parametric, no iterative training
+
+        elif self.model_name == 'HGDL':
+            self.seed = conf.getint('HGDL', 'seed')
+            self.lr = conf.getfloat('HGDL', 'lr')
+            self.weight_decay = conf.getfloat('HGDL', 'weight_decay')
+            self.max_epoch = conf.getint('HGDL', 'max_epoch')
+            self.patience = conf.getint('HGDL', 'patience')
+            self.hidden_dim = conf.getint('HGDL', 'hidden_dim')
+            self.dropout = conf.getfloat('HGDL', 'dropout')
+            self.attention_dim = conf.getint('HGDL', 'attention_dim')
+            self.num_heads = conf.getint('HGDL', 'num_heads')
+            self.gamma = conf.getfloat('HGDL', 'gamma')
+            self.mini_batch_flag = conf.getboolean('HGDL', 'mini_batch_flag')
+            self.evaluate_interval = conf.getint('HGDL', 'evaluate_interval')
         elif self.model_name == 'MHGCN':
             self.lr = conf.getfloat("MHGCN", "lr")
             self.weight_decay = conf.getfloat("MHGCN", "weight_decay")
@@ -529,6 +549,37 @@ class Config(object):
             self.patience = conf.getint("HAN", "patience")
             self.max_epoch = conf.getint("HAN", "max_epoch")
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")
+        elif self.model_name == "HGOT":
+            self.lr = conf.getfloat("HGOT", "learning_rate")
+            self.weight_decay = conf.getfloat("HGOT", "weight_decay")
+            self.seed = conf.getint("HGOT", "seed")
+            self.dropout = conf.getfloat("HGOT", "dropout")
+
+            self.hidden_dim = conf.getint("HGOT", "hidden_dim")
+            self.out_dim = conf.getint("HGOT", "out_dim")
+            num_heads = conf.get("HGOT", "num_heads").split("-")
+            self.num_heads = [int(i) for i in num_heads]
+            self.patience = conf.getint("HGOT", "patience")
+            self.max_epoch = conf.getint("HGOT", "max_epoch")
+            self.mini_batch_flag = conf.getboolean("HGOT", "mini_batch_flag")
+
+            self.sigma = conf.getfloat("HGOT", "sigma")
+            self.rho = conf.getfloat("HGOT", "rho")
+
+        elif self.model_name == "HGEN":
+            self.lr = conf.getfloat("HGEN", "learning_rate")
+            self.weight_decay = conf.getfloat("HGEN", "weight_decay")
+            self.seed = conf.getint("HGEN", "seed")
+            self.dropout = conf.getfloat("HGEN", "dropout")
+            self.hidden_dim = conf.getint("HGEN", "hidden_dim")
+            self.out_dim = conf.getint("HGEN", "out_dim")
+            self.num_gcn = conf.getint("HGEN", "num_gcn")
+            self.num_layers = conf.getint("HGEN", "num_layers")
+            self.attention_dim = conf.getint("HGEN", "attention_dim")
+            self.lambda_cov = conf.getfloat("HGEN", "lambda_cov")
+            self.max_epoch = conf.getint("HGEN", "max_epoch")
+            self.patience = conf.getint("HGEN", "patience")
+            self.mini_batch_flag = conf.getboolean("HGEN", "mini_batch_flag")
 
         elif self.model_name == "RoHe":
             self.lr = conf.getfloat("RoHe", "learning_rate")

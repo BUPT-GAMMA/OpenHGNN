@@ -80,12 +80,15 @@ class Experiment(object):
         'Ingram': 'Ingram_trainer',
         'DisenKGAT': 'DisenKGAT_trainer',
 ######################          add trainer_flow  here。 【model name】：【register name】
+        'HGSketch': 'HGSketch_trainer',
+        'HGDL':'HGDL_trainer',
         'BPHGNN':'BPHGNN_trainer',        
         'HGPrompt':'HGPrompt_trainer',
         'HGMAE':'HGMAE_trainer',
         'HGA':'hga_trainer',
         'RHINE':'rhine_trainer',
         'FedHGNN':'FED_REC_trainer',
+        'HGEN': 'HGEN_trainer',
         "MHGCN":{
             "node_classification":"MHGCN_NC_Trainer",
             "link_prediction":"MHGCN_LP_Trainer"
