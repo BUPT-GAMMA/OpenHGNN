@@ -108,7 +108,7 @@ class Config(object):
             self.num_epoch = conf.getint("MetaHIN", "num_epoch")
             self.input_dir = conf.get("MetaHIN", "input_dir")
             self.output_dir = conf.get("MetaHIN", "output_dir")
-            self.seed = conf.getint("MetaHIN", "seed")                 
+            self.seed = conf.getint("MetaHIN", "seed")
 
 
         elif self.model_name =='FedHGNN':
@@ -146,9 +146,9 @@ class Config(object):
             self.p2 = conf.getint("FedHGNN","p2")
             self.seed = conf.getint("FedHGNN","seed")
             self.hidden_size = conf.getint("FedHGNN","hidden_size")
-            self.out_size = conf.getint("FedHGNN","out_size")       
+            self.out_size = conf.getint("FedHGNN","out_size")
 
-            
+
         elif self.model_name == 'HGA':
             self.lr = conf.getfloat("HGA", "lr")
             self.weight_decay = conf.getfloat("HGA", "weight_decay")
@@ -308,7 +308,7 @@ class Config(object):
             self.score_order = conf.get("DisenKGAT","score_order")
             self.gamma_method = conf.get("DisenKGAT","gamma_method")
 
-            self.k_w= conf.getint("DisenKGAT", "k_w") 
+            self.k_w= conf.getint("DisenKGAT", "k_w")
             self.batch = conf.getint("DisenKGAT", "batch")
             self.test_batch = conf.getint("DisenKGAT", "test_batch")
             self.epoch = conf.getint("DisenKGAT", "epoch")
@@ -358,7 +358,7 @@ class Config(object):
         elif self.model_name == "NBF" and self.dataset_name =="NBF_WN18RR":
 
             self.input_dim = conf.getint("NBF", "input_dim")
-            self.hidden_dims = [32, 32, 32, 32, 32, 32]  
+            self.hidden_dims = [32, 32, 32, 32, 32, 32]
             self.message_func = conf.get("NBF", "message_func")
             self.aggregate_func = conf.get("NBF", "aggregate_func")
             self.short_cut = conf.getboolean("NBF","short_cut")
@@ -371,7 +371,7 @@ class Config(object):
             self.metric = ['mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@10_50']
 
             self.lr = conf.getfloat("NBF","lr")
-            self.gpus = [0]       
+            self.gpus = [0]
             self.batch_size = conf.getint("NBF","batch_size")
             self.num_epoch = conf.getint("NBF","num_epoch")
             self.log_interval = conf.getint("NBF","log_interval")
@@ -398,9 +398,9 @@ class Config(object):
             self.num_heads = conf.getint('NSHE', 'num_heads')
             self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
             self.mini_batch_flag = conf.getboolean("NSHE", "mini_batch_flag")
-            
-            
-            
+
+
+
 
         elif self.model_name in ["GTN", "fastGTN"]:
             self.lr = conf.getfloat("GTN", "learning_rate")
@@ -617,7 +617,7 @@ class Config(object):
 
 
         elif self.model_name == 'MAGNN':
-          
+
             self.graph_address = ''
             self.user_name = ''
             self.password = ''
@@ -1427,7 +1427,7 @@ class Config(object):
             self.noltr=conf.getboolean("LTE", "noltr")
             self.encoder=conf.get("LTE", "encoder")
             self.max_epochs=conf.getint("LTE", "max_epochs")
-            
+
         elif self.model_name == 'SACN':
             self.seed=conf.getint("SACN","seed")
             self.init_emb_size=conf.getint("SACN","init_emb_size")
@@ -1635,7 +1635,17 @@ class Config(object):
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
 
-        
+        elif self.model_name == 'HTGformer':
+            self.lr = conf.getfloat("HTGformer", "lr")
+            self.weight_decay = conf.getfloat("HTGformer", "weight_decay")
+            self.max_epoch = conf.getint("HTGformer", "max_epoch")
+            self.hidden_dim = conf.getint("HTGformer", "hidden_dim")
+            self.num_heads = conf.getint("HTGformer", "num_heads")
+            self.num_layers = conf.getint("HTGformer", "num_layers")
+            self.dropout = conf.getfloat("HTGformer", "dropout")
+            self.patience = conf.getint("HTGformer", "patience")
+            self.num_repeats = conf.getint("HTGformer", "num_repeats")
+
 
 
         elif self.model_name == "HERO":

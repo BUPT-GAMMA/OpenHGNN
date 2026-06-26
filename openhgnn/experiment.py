@@ -78,6 +78,7 @@ class Experiment(object):
         'ExpressGNN': 'ExpressGNN_trainer',
         'NBF':'NBF_trainer',
         'Ingram': 'Ingram_trainer',
+        'HTGformer': 'htgformer_trainer',
         'DisenKGAT': 'DisenKGAT_trainer',
 ######################          add trainer_flow  here。 【model name】：【register name】
         'HGSketch': 'HGSketch_trainer',

@@ -140,6 +140,7 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
+    'HTGformer': 'openhgnn.models.HTGformer',
     "HERO": "openhgnn.models.HERO",
     "HERO_homo":"openhgnn.models.HERO_homo",
 
@@ -268,6 +269,7 @@ __all__ = [
     'ExpressGNN',
     'Ingram',
     'RHINE',
+    'HTGformer',
     'HGSketch',
     'HGDL',
     'HGEN',
