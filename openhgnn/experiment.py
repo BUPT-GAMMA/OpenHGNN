@@ -80,6 +80,7 @@ class Experiment(object):
         'Ingram': 'Ingram_trainer',
         'DisenKGAT': 'DisenKGAT_trainer',
 ######################          add trainer_flow  here。 【model name】：【register name】
+        'HGSketch': 'HGSketch_trainer',
         'HGDL':'HGDL_trainer',
         'BPHGNN':'BPHGNN_trainer',        
         'HGPrompt':'HGPrompt_trainer',
