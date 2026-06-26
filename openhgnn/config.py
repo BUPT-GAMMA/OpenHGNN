@@ -1635,6 +1635,109 @@ class Config(object):
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
 
+        
+
+
+        elif self.model_name == "HERO":
+            base_sec = "HERO"
+            data_sec = f"HERO_{self.dataset}"
+
+            sec = data_sec if conf.has_section(data_sec) else base_sec
+
+            def get_str(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.get(sec, key)
+                return conf.get(base_sec, key, fallback=fallback)
+
+            def get_int(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.getint(sec, key)
+                return conf.getint(base_sec, key, fallback=fallback)
+
+            def get_float(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.getfloat(sec, key)
+                return conf.getfloat(base_sec, key, fallback=fallback)
+
+            self.lr = get_float("lr")
+            self.weight_decay = get_float("weight_decay", fallback=0.0)
+            self.max_epoch = get_int("max_epoch", fallback=500)
+            self.patience = get_int("patience", fallback=30)
+
+            self.category = get_str("category")
+
+            self.out_ft = get_int("out_ft")
+            self.hid_units = get_int("hid_units")
+            self.hid_units2 = get_int("hid_units2")
+
+            self.beta = get_float("beta")
+            self.alpha = get_float("alpha")
+
+            self.g_dim = get_int("g_dim")
+            self.g_equidim = get_int("g_equidim")
+            self.p_equidim = get_int("p_equidim")
+
+            self.gamma = get_float("gamma")
+            self.eta = get_float("eta")
+            self.lambbda = get_float("lambbda")
+
+            self.edge_rate = get_float("edge_rate")
+
+            print(f"[Config Info] HERO config section used: {sec}")
+
+
+        elif self.model_name == "HERO_homo":
+            base_sec = "HERO_homo"
+            data_sec = f"HERO_homo_{self.dataset}"
+
+            # 如果数据集专属 section 不存在，就退回默认 section
+            sec = data_sec if conf.has_section(data_sec) else base_sec
+
+            # 先读默认 section，再用数据集 section 覆盖
+            def get_str(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.get(sec, key)
+                return conf.get(base_sec, key, fallback=fallback)
+
+            def get_int(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.getint(sec, key)
+                return conf.getint(base_sec, key, fallback=fallback)
+
+            def get_float(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.getfloat(sec, key)
+                return conf.getfloat(base_sec, key, fallback=fallback)
+
+            self.lr = get_float("lr")
+            self.weight_decay = get_float("weight_decay", fallback=0.0)
+            self.max_epoch = get_int("max_epoch", fallback=1000)
+            self.patience = get_int("patience", fallback=30)
+
+            # 同构图没有异构节点类型 category，这里统一写 node 仅作占位
+            self.category = get_str("category", fallback="node")
+
+            self.out_ft = get_int("out_ft")
+            self.hid_units = get_int("hid_units")
+
+            self.beta = get_float("beta")
+            self.alpha = get_float("alpha")
+
+            self.g_dim = get_int("g_dim")
+            self.g_equidim = get_int("g_equidim")
+            self.p_equidim = get_int("p_equidim")
+
+            self.gamma = get_float("gamma")
+            self.eta = get_float("eta")
+            self.lambbda = get_float("lambbda")
+
+            self.edge_rate = get_float("edge_rate")
+
+            # 原论文同构图增强参数
+            self.dfr = get_float("dfr", fallback=0.0)
+
+            print(f"[Config Info] HERO_homo config section used: {sec}")
+
         elif self.model_name == "RMR":
             if self.dataset_name == 'acm4RMR':
                 self.save_emb = conf.getboolean("acm4RMR", "save_emb", fallback=False)

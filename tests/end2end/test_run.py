@@ -5,6 +5,8 @@ experiments = {
     'node_classification': {  # 25
         'aifb': ['CompGCN', 'RGCN', 'RSHN', ],
         'acm_han_raw': ['DMGI', 'HAN', 'HPN', ],
+        'Yelp4HERO': ['HERO'],
+        'photo4HERO': ['HERO_homo'],
         'acm4RMR': ['RMR'],
         'dblp4HGDL': ['HGDL'],
         'dblp4GTN': ['HGEN'],

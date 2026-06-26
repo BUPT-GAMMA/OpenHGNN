@@ -93,6 +93,10 @@ class Experiment(object):
             "node_classification":"MHGCN_NC_Trainer",
             "link_prediction":"MHGCN_LP_Trainer"
         },
+
+
+        'HERO': 'hero_trainer',
+        'HERO_homo':'hero_homo_trainer',
         "HCMGNN":'HCMGNN_trainer',
         'RMR': 'rmr_trainer',
 ##########################

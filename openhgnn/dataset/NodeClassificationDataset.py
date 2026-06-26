@@ -20,6 +20,9 @@ import os
 from dgl.data.utils import download, extract_archive
 from abc import ABC
 
+from .HERO_dataset import HERODataset
+from .HERO_homo_dataset import HEROHomoDataset
+
 from collections import defaultdict
 
 import torch
@@ -27,7 +30,6 @@ import torch
 
 
 ########################        add dataset here
-
 
 @register_dataset('common_dataset')
 class Common_Dataset(BaseDataset):
@@ -1193,6 +1195,101 @@ class Common_NodeClassification(NodeClassificationDataset):
 
         return g,category,num_classes
 
+
+    
+@register_dataset('hero_node_classification')
+class HERO_NodeClassification(NodeClassificationDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(HERO_NodeClassification, self).__init__(*args, **kwargs)
+
+        assert dataset_name in ['ACM4HERO', 'Aminer4HERO','DBLP4HERO','Yelp4HERO']
+        cfg = kwargs.get("args", None)
+        dataset = HERODataset(name=dataset_name,edge_rate=cfg.edge_rate)
+
+        # dataset = HERODataset(name=dataset_name)
+        self.g = dataset[0]
+        self.category = dataset.target_ntype
+        self.num_classes = dataset.num_classes
+        self.has_feature = True
+        self.multi_label = False
+
+        if dataset_name == 'ACM4HERO':
+            self.meta_paths_dict = {
+                'PAP': [
+                    ('paper', 'paper-author', 'author'),
+                    ('author', 'author-paper', 'paper')
+                ],
+                'PSP': [
+                    ('paper', 'paper-subject', 'subject'),
+                    ('subject', 'subject-paper', 'paper')
+                ]
+            }
+
+        elif dataset_name == 'Aminer4HERO':
+            self.meta_paths_dict = {
+                'PAP': [
+                    ('paper', 'paper-author', 'author'),
+                    ('author', 'author-paper', 'paper')
+                ],
+                'PRP': [
+                    ('paper', 'paper-ref', 'reference'),
+                    ('reference', 'ref-paper', 'paper')
+                ]
+            }
+
+        # 可选：记录输入维度
+        if 'feat' in self.g.nodes[self.category].data:
+            self.in_dim = self.g.nodes[self.category].data['feat'].shape[1]
+
+
+@register_dataset('hero_homo_node_classification')
+class HERO_HomoNodeClassification(NodeClassificationDataset):
+    def __init__(self, dataset_name, *args, **kwargs):
+        super(HERO_HomoNodeClassification, self).__init__(*args, **kwargs)
+
+        assert dataset_name in [
+            "cora4HERO", "citeseer4HERO", "pubmed4HERO",
+            "photo4HERO", "computers4HERO", "cs4HERO",
+            "physics4HERO", "corafull4HERO", "wikics4HERO", "ogbn-arxiv4HERO"
+        ]
+
+        cfg = kwargs.get("args", None)
+        dfr = getattr(cfg, "dfr", 0.0)
+
+        dataset = HEROHomoDataset(
+            name=dataset_name,
+            edge_rate=cfg.edge_rate,
+            dfr=dfr
+        )
+
+        # 底层数据集对象
+        self.dataset = dataset
+
+        # 同构图本体
+        self.g = dataset.graph
+        self.category = "node"
+        self.num_classes = dataset.num_classes
+        self.has_feature = True
+        self.multi_label = False
+        self.in_dim = dataset.features[0].shape[1]
+        self.meta_paths_dict = {}
+
+        # 直接缓存同构图字段
+        self.features = dataset.features
+        self.feature_distance = dataset.feature_distance
+        self.labels = dataset.labels
+        self.train_idx = dataset.train_idx
+        self.val_idx = dataset.val_idx
+        self.test_idx = dataset.test_idx
+
+    def get_graph(self):
+        return self.g
+
+    def get_labels(self):
+        return self.labels
+
+    def get_split(self):
+        return self.train_idx, self.val_idx, self.test_idx
 @register_dataset('rmr_node_classification')
 class RMR_NodeClassification(NodeClassificationDataset):
     def __init__(self, dataset_name, *args, **kwargs):
