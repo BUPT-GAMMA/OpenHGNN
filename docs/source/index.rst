@@ -16,14 +16,6 @@ Welcome to OpenHGNN's documentation!
    get_started/quick_start
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Models
-   :hidden:
-   :glob:
-
-   models/index
-
-.. toctree::
    :maxdepth: 2
    :caption: Advanced Materials
    :hidden:
