@@ -107,6 +107,7 @@ SUPPORTED_FLOWS = {
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
+    'HGEN_trainer': 'openhgnn.trainerflow.HGEN_trainer',
 
 
 
@@ -160,6 +161,7 @@ from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
 from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
+from .HGEN_trainer import HGENTrainer
 
 
 
@@ -203,6 +205,7 @@ __all__ = [
     'ExpressGNNTrainer',
     'Ingram_trainer',
     'RHINETrainer',
+    'HGENTrainer',
 
 ]
 classes = __all__
