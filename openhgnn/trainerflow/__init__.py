@@ -50,12 +50,14 @@ def build_flow(args, flow_name):
 SUPPORTED_FLOWS = {
 ###########     add trainer_flow here. 【register name】 ： 【class name】
 
+    'HGSketch_trainer': 'openhgnn.trainerflow.HGSketch_trainer',
     'MHGCN_trainer':'openhgnn.trainerflow.MHGCN_trainer',
     'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',    
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
     'hga_trainer':'openhgnn.trainerflow.HGATrainer',
     'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
     'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation',
+    'HGDL_trainer':'openhgnn.trainerflow.HGDL_trainer',
 ##########
     "coldstart_recommmendation": "openhgnn.trainerflow.coldstart_recommendation",
     'SIAN_trainer': 'openhgnn.trainerflow.SIAN_trainer',
@@ -107,12 +109,14 @@ SUPPORTED_FLOWS = {
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
+    'HGEN_trainer': 'openhgnn.trainerflow.HGEN_trainer',
 
 
 
 }
 
 ######      add trainer_flow here
+from .HGSketch_trainer import HGSketchTrainer
 from .BPHGNN_trainer import BPHGNN_trainer
 from .HGMAE_trainer import HGMAE_trainer
 from .hga_trainer import HGATrainer
@@ -160,6 +164,7 @@ from .Ingram_trainer import Ingram_Trainer
 from .DisenKGAT_trainer import *
 from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
+from .HGEN_trainer import HGENTrainer
 
 
 
@@ -203,6 +208,7 @@ __all__ = [
     'ExpressGNNTrainer',
     'Ingram_trainer',
     'RHINETrainer',
+    'HGENTrainer',
 
 ]
 classes = __all__
