@@ -50,6 +50,7 @@ def build_flow(args, flow_name):
 SUPPORTED_FLOWS = {
 ###########     add trainer_flow here. 【register name】 ： 【class name】
 
+    'RelGT_trainer': 'openhgnn.trainerflow.relgt_trainer',
     'HGSketch_trainer': 'openhgnn.trainerflow.HGSketch_trainer',
     'MHGCN_trainer':'openhgnn.trainerflow.MHGCN_trainer',
     'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',    
@@ -122,6 +123,7 @@ SUPPORTED_FLOWS = {
 }
 
 ######      add trainer_flow here
+from .relgt_trainer import RelGTTrainer
 from .HGSketch_trainer import HGSketchTrainer
 from .BPHGNN_trainer import BPHGNN_trainer
 from .HGMAE_trainer import HGMAE_trainer
@@ -182,6 +184,7 @@ from .HGEN_trainer import HGENTrainer
 
 #   don't add here
 __all__ = [
+    'RelGTTrainer',
     'MHGCN_trainer',
     'BaseFlow',
     'NodeClassification',

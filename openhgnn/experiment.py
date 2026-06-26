@@ -81,6 +81,7 @@ class Experiment(object):
         'HTGformer': 'htgformer_trainer',
         'DisenKGAT': 'DisenKGAT_trainer',
 ######################          add trainer_flow  here。 【model name】：【register name】
+        'RelGT': 'RelGT_trainer',
         'HGSketch': 'HGSketch_trainer',
         'HGDL':'HGDL_trainer',
         'BPHGNN':'BPHGNN_trainer',        

@@ -64,6 +64,7 @@ def build_model(model):
 
 SUPPORTED_MODELS = {
 #####       add models here
+    'RelGT': 'openhgnn.models.RelGT',
     'HGSketch': 'openhgnn.models.HGSketch',
     'HGDL':'openhgnn.models.HGDL',
     'MHGCN':'openhgnn.models.MHGCN',
@@ -151,6 +152,7 @@ SUPPORTED_MODELS = {
 }
 
 #####       add model here
+from .RelGT import RelGT
 from .HGSketch import HGSketch
 from .BPHGNN import BPHGNN
 from .RHINE import RHINE
@@ -221,6 +223,7 @@ from .HGOT import HGOT
 
 
 __all__ = [
+    'RelGT',
     'BPHGNN',
     "HMPNN",
     'BaseModel',
