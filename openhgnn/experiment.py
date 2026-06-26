@@ -101,8 +101,7 @@ class Experiment(object):
         "HCMGNN":'HCMGNN_trainer',
         'RMR': 'rmr_trainer',
 ##########################
-
-
+        'SEHTGNN': 'sehtgnn_trainer',
     }
     
     immutable_params = ['model', 'dataset', 'task']

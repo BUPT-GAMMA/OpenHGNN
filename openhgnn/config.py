@@ -1634,7 +1634,31 @@ class Config(object):
             self.hid_dim = conf.getint("HMPNN", "hid_dim")
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
+        
+        elif self.model_name == 'SEHTGNN':
+            self.lr = conf.getfloat("SEHTGNN", "lr")
+            self.weight_decay = conf.getfloat("SEHTGNN", "weight_decay")
+            self.dropout = conf.getfloat("SEHTGNN", "dropout")
+            self.hidden_dim = conf.getint("SEHTGNN", "hidden_dim")
+            self.num_layers = conf.getint("SEHTGNN", "num_layers")
+            self.time_window = conf.getint("SEHTGNN", "time_window")
+            self.max_epoch = conf.getint("SEHTGNN", "max_epoch")
+            self.patience = conf.getint("SEHTGNN", "patience")
 
+            if conf.has_option("SEHTGNN", "use_uva"):
+                self.use_uva = conf.getboolean("SEHTGNN", "use_uva")
+            else:
+                self.use_uva = True
+
+            if conf.has_option("SEHTGNN", "num_classes"):
+                self.num_classes = conf.getint("SEHTGNN", "num_classes")
+            else:
+                self.num_classes = 1
+            
+            if conf.has_option("SEHTGNN", "norm"):
+                self.norm = conf.getboolean("SEHTGNN", "norm")
+            else:
+                self.norm = True
         elif self.model_name == 'HTGformer':
             self.lr = conf.getfloat("HTGformer", "lr")
             self.weight_decay = conf.getfloat("HTGformer", "weight_decay")
@@ -1845,7 +1869,7 @@ class Config(object):
             else:
                 self.device = th.device("cuda", int(gpu))
 
-        if getattr(self, "use_uva", None):  # use_uva is set True
+        if getattr(self, "use_uva", False) and self.device.type != 'cuda':
             self.use_uva = False
             warnings.warn(
                 "'use_uva' is only available when using cuda. please set 'use_uva' to False."
