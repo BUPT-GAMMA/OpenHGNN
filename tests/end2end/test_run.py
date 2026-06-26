@@ -6,10 +6,15 @@ experiments = {
         'aifb': ['CompGCN', 'RGCN', 'RSHN', ],
         'acm_han_raw': ['DMGI', 'HAN', 'HPN', ],
         'sehtgnn_yelp': ['SEHTGNN'],
+        'Yelp4HERO': ['HERO'],
+        'photo4HERO': ['HERO_homo'],
+        'acm4RMR': ['RMR'],
+        'dblp4HGDL': ['HGDL'],
+        'dblp4GTN': ['HGEN'],
         'imdb4GTN': ['GIN', 'RHGNN', ],
         'acm4GTN': ['GTN', 'fastGTN', 'HGSL', 'MHNF', ],
         'dblp4MAGNN': ['HERec', 'Metapath2vec', ],
-        'imdb4MAGNN': ['HGNN_AC', 'HGT', 'SimpleHGN', 'HetSANN', 'ieHGCN', 'MAGNN'],
+        'imdb4MAGNN': ['HGNN_AC', 'HGOT', 'HGT', 'SimpleHGN', 'HetSANN', 'ieHGCN', 'MAGNN'],
         'acm4HeCo': ['HeCo', ],
         'yelp4HeGAN': ['HeGAN', ],
         'academic4HetGNN': ['HetGNN', ],
@@ -23,11 +28,13 @@ experiments = {
     'link_prediction': {  # 8
         'HGBl-amazon': ['GATNE-T', 'RGCN', ],
         'sehtgnn_ogbn': ['SEHTGNN'],
+        'ogbn_mag4HGformer': ['HTGformer'],
         'wn18': ['GIE', ],
         'HGBl-IMDB': ['HDE', ],     # 'HGBl-IMDB' slow to run, alternative datasets ['HGBl-DBLP', 'HGBl-ACM']
         'FB15k': ['TransD', 'TransE', 'TransH', 'TransR', ]
     },
     'recommendation': {  # 1
+        'GMD4HCMGNN': ['HCMGNN'],
         'LastFM4KGCN': ['KGCN', ],
     },
     'node_regression': {
