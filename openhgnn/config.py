@@ -48,6 +48,19 @@ class Config(object):
             self.seed = conf.getint("HGSketch", "seed")
             self.max_epoch = 1  # non-parametric, no iterative training
 
+        elif self.model_name == 'HGDL':
+            self.seed = conf.getint('HGDL', 'seed')
+            self.lr = conf.getfloat('HGDL', 'lr')
+            self.weight_decay = conf.getfloat('HGDL', 'weight_decay')
+            self.max_epoch = conf.getint('HGDL', 'max_epoch')
+            self.patience = conf.getint('HGDL', 'patience')
+            self.hidden_dim = conf.getint('HGDL', 'hidden_dim')
+            self.dropout = conf.getfloat('HGDL', 'dropout')
+            self.attention_dim = conf.getint('HGDL', 'attention_dim')
+            self.num_heads = conf.getint('HGDL', 'num_heads')
+            self.gamma = conf.getfloat('HGDL', 'gamma')
+            self.mini_batch_flag = conf.getboolean('HGDL', 'mini_batch_flag')
+            self.evaluate_interval = conf.getint('HGDL', 'evaluate_interval')
         elif self.model_name == 'MHGCN':
             self.lr = conf.getfloat("MHGCN", "lr")
             self.weight_decay = conf.getfloat("MHGCN", "weight_decay")
@@ -536,6 +549,21 @@ class Config(object):
             self.patience = conf.getint("HAN", "patience")
             self.max_epoch = conf.getint("HAN", "max_epoch")
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")
+
+        elif self.model_name == "HGEN":
+            self.lr = conf.getfloat("HGEN", "learning_rate")
+            self.weight_decay = conf.getfloat("HGEN", "weight_decay")
+            self.seed = conf.getint("HGEN", "seed")
+            self.dropout = conf.getfloat("HGEN", "dropout")
+            self.hidden_dim = conf.getint("HGEN", "hidden_dim")
+            self.out_dim = conf.getint("HGEN", "out_dim")
+            self.num_gcn = conf.getint("HGEN", "num_gcn")
+            self.num_layers = conf.getint("HGEN", "num_layers")
+            self.attention_dim = conf.getint("HGEN", "attention_dim")
+            self.lambda_cov = conf.getfloat("HGEN", "lambda_cov")
+            self.max_epoch = conf.getint("HGEN", "max_epoch")
+            self.patience = conf.getint("HGEN", "patience")
+            self.mini_batch_flag = conf.getboolean("HGEN", "mini_batch_flag")
 
         elif self.model_name == "RoHe":
             self.lr = conf.getfloat("RoHe", "learning_rate")
