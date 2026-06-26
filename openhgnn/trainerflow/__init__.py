@@ -109,6 +109,7 @@ SUPPORTED_FLOWS = {
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
+    'HCMGNN_trainer':'openhgnn.trainerflow.HCMGNN_trainer',
     'rmr_trainer':'openhgnn.trainerflow.RMR_trainer',
     'HGEN_trainer': 'openhgnn.trainerflow.HGEN_trainer',
 }
