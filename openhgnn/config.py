@@ -543,6 +543,21 @@ class Config(object):
             self.max_epoch = conf.getint("HAN", "max_epoch")
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")
 
+        elif self.model_name == "HGEN":
+            self.lr = conf.getfloat("HGEN", "learning_rate")
+            self.weight_decay = conf.getfloat("HGEN", "weight_decay")
+            self.seed = conf.getint("HGEN", "seed")
+            self.dropout = conf.getfloat("HGEN", "dropout")
+            self.hidden_dim = conf.getint("HGEN", "hidden_dim")
+            self.out_dim = conf.getint("HGEN", "out_dim")
+            self.num_gcn = conf.getint("HGEN", "num_gcn")
+            self.num_layers = conf.getint("HGEN", "num_layers")
+            self.attention_dim = conf.getint("HGEN", "attention_dim")
+            self.lambda_cov = conf.getfloat("HGEN", "lambda_cov")
+            self.max_epoch = conf.getint("HGEN", "max_epoch")
+            self.patience = conf.getint("HGEN", "patience")
+            self.mini_batch_flag = conf.getboolean("HGEN", "mini_batch_flag")
+
         elif self.model_name == "RoHe":
             self.lr = conf.getfloat("RoHe", "learning_rate")
             self.weight_decay = conf.getfloat("RoHe", "weight_decay")
