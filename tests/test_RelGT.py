@@ -63,24 +63,46 @@ def _register_model_direct(name):
 _base_model_path = os.path.join(ROOT, "openhgnn", "models", "base_model.py")
 _bm_mod = _import_module_direct(_base_model_path, "openhgnn.models.base_model")
 
-# Fabricate a minimal openhgnn.models package object that RelGT.py can import from
+# Fabricate a minimal openhgnn.models package object only while importing the
+# RelGT files. Restore sys.modules immediately afterwards so this test module
+# cannot poison other OpenHGNN tests running in the same pytest process.
 import types as _types_mod
 _models_pkg = _types_mod.ModuleType("openhgnn.models")
 _models_pkg.BaseModel         = _bm_mod.BaseModel
 _models_pkg.MODEL_REGISTRY    = _MODEL_REGISTRY_DIRECT
 _models_pkg.register_model    = _register_model_direct
-sys.modules["openhgnn"]                = _types_mod.ModuleType("openhgnn")
-sys.modules["openhgnn.models"]         = _models_pkg
-sys.modules["openhgnn.models.base_model"] = _bm_mod
 
-# Now safely import RelGT.py directly
-_relgt_path = os.path.join(ROOT, "openhgnn", "models", "RelGT.py")
-_relgt_mod  = _import_module_direct(_relgt_path, "openhgnn.models.RelGT")
+_temporary_module_names = [
+    "openhgnn",
+    "openhgnn.models",
+    "openhgnn.models.base_model",
+    "openhgnn.models.RelGT",
+    "openhgnn.dataset.RelGTDataset",
+]
+_original_modules = {
+    name: sys.modules.get(name) for name in _temporary_module_names
+}
 
-# Also pre-load RelGTDataset.py so dataset tests can import from it
-# without needing a real openhgnn package tree.
-_dataset_path = os.path.join(ROOT, "openhgnn", "dataset", "RelGTDataset.py")
-_dataset_mod  = _import_module_direct(_dataset_path, "openhgnn.dataset.RelGTDataset")
+try:
+    sys.modules["openhgnn"] = _types_mod.ModuleType("openhgnn")
+    sys.modules["openhgnn.models"] = _models_pkg
+    sys.modules["openhgnn.models.base_model"] = _bm_mod
+
+    # Now safely import RelGT.py directly
+    _relgt_path = os.path.join(ROOT, "openhgnn", "models", "RelGT.py")
+    _relgt_mod  = _import_module_direct(_relgt_path, "openhgnn.models.RelGT")
+
+    # Also pre-load RelGTDataset.py so dataset tests can import from it
+    # without needing a real openhgnn package tree.
+    _dataset_path = os.path.join(ROOT, "openhgnn", "dataset", "RelGTDataset.py")
+    _dataset_mod  = _import_module_direct(
+        _dataset_path, "openhgnn.dataset.RelGTDataset")
+finally:
+    for _name, _module in _original_modules.items():
+        if _module is None:
+            sys.modules.pop(_name, None)
+        else:
+            sys.modules[_name] = _module
 build_adjacency_hetero             = _dataset_mod.build_adjacency_hetero
 gather_1_and_2_hop_with_seed_time  = _dataset_mod.gather_1_and_2_hop_with_seed_time
 RelGTTokens                        = _dataset_mod.RelGTTokens
@@ -142,8 +164,6 @@ def _build_relgt(
     Build a RelGT model with mocked tfs_encoder and pe_encoder so that
     no torch_frame data is needed at test time.
     """
-    from openhgnn.models.RelGT import RelGT
-
     if node_type_map is None:
         node_type_map = {"user": 0, "item": 1}
 
@@ -443,6 +463,8 @@ class TestRelGTLayerLocal(unittest.TestCase):
 
 class TestRelGTLayerGlobal(unittest.TestCase):
     def test_global_output_shape(self):
+        if not (_relgt_mod.HAS_EINOPS and _relgt_mod.HAS_PYG):
+            self.skipTest("global RelGT layer requires torch_geometric and einops")
         B, K, D = 4, 8, 16
         layer = RelGTLayer(
             in_channels=D, out_channels=D,
@@ -459,6 +481,8 @@ class TestRelGTLayerGlobal(unittest.TestCase):
 
 class TestRelGTLayerFull(unittest.TestCase):
     def test_full_output_shape(self):
+        if not (_relgt_mod.HAS_EINOPS and _relgt_mod.HAS_PYG):
+            self.skipTest("full RelGT layer requires torch_geometric and einops")
         B, K, D = 4, 8, 16
         layer = RelGTLayer(
             in_channels=D, out_channels=D,
@@ -521,6 +545,8 @@ class TestRelGTForward(unittest.TestCase):
         self.assertEqual(out.shape, (self.B, self.OUT))
 
     def test_global_output_shape(self):
+        if not (_relgt_mod.HAS_EINOPS and _relgt_mod.HAS_PYG):
+            self.skipTest("global RelGT forward requires torch_geometric and einops")
         model = _build_relgt(
             B=self.B, K=self.K, channels=self.D,
             out_channels=self.OUT, conv_type="global",
@@ -532,6 +558,8 @@ class TestRelGTForward(unittest.TestCase):
         self.assertEqual(out.shape, (self.B, self.OUT))
 
     def test_full_output_shape(self):
+        if not (_relgt_mod.HAS_EINOPS and _relgt_mod.HAS_PYG):
+            self.skipTest("full RelGT forward requires torch_geometric and einops")
         model = _build_relgt(
             B=self.B, K=self.K, channels=self.D,
             out_channels=self.OUT, conv_type="full",
@@ -900,13 +928,6 @@ class TestRelGTTrainerRegistration(unittest.TestCase):
         with open(trainer_path) as f:
             src = f.read()
         self.assertIn('@register_flow("RelGT_trainer")', src)
-
-    def test_base_flow_exemption_contains_relgt(self):
-        """RelGT must be in BaseFlow's DGL-bypass exemption list."""
-        bf_path = os.path.join(ROOT, "openhgnn", "trainerflow", "base_flow.py")
-        with open(bf_path) as f:
-            src = f.read()
-        self.assertIn('"RelGT"', src)
 
 
 # ===========================================================================

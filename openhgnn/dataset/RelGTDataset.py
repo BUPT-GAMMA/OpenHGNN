@@ -28,7 +28,8 @@ except ImportError:
 try:
     from sentence_transformers import SentenceTransformer
     HAS_ST = True
-except ImportError:
+except Exception:
+    SentenceTransformer = None
     HAS_ST = False
 
 try:

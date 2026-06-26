@@ -5,10 +5,16 @@ experiments = {
     'node_classification': {  # 25
         'aifb': ['CompGCN', 'RGCN', 'RSHN', ],
         'acm_han_raw': ['DMGI', 'HAN', 'HPN', ],
+        'sehtgnn_yelp': ['SEHTGNN'],
+        'Yelp4HERO': ['HERO'],
+        'photo4HERO': ['HERO_homo'],
+        'acm4RMR': ['RMR'],
+        'dblp4HGDL': ['HGDL'],
+        'dblp4GTN': ['HGEN'],
         'imdb4GTN': ['GIN', 'RHGNN', ],
         'acm4GTN': ['GTN', 'fastGTN', 'HGSL', 'MHNF', ],
         'dblp4MAGNN': ['HERec', 'Metapath2vec', ],
-        'imdb4MAGNN': ['HGNN_AC', 'HGT', 'SimpleHGN', 'HetSANN', 'ieHGCN', 'MAGNN'],
+        'imdb4MAGNN': ['HGNN_AC', 'HGOT', 'HGT', 'SimpleHGN', 'HetSANN', 'ieHGCN', 'MAGNN'],
         'acm4HeCo': ['HeCo', ],
         'yelp4HeGAN': ['HeGAN', ],
         'academic4HetGNN': ['HetGNN', ],
@@ -21,12 +27,18 @@ experiments = {
     },
     'link_prediction': {  # 8
         'HGBl-amazon': ['GATNE-T', 'RGCN', ],
+        'sehtgnn_ogbn': ['SEHTGNN'],
+        'ogbn_mag4HGformer': ['HTGformer'],
         'wn18': ['GIE', ],
         'HGBl-IMDB': ['HDE', ],     # 'HGBl-IMDB' slow to run, alternative datasets ['HGBl-DBLP', 'HGBl-ACM']
         'FB15k': ['TransD', 'TransE', 'TransH', 'TransR', ]
     },
     'recommendation': {  # 1
+        'GMD4HCMGNN': ['HCMGNN'],
         'LastFM4KGCN': ['KGCN', ],
+    },
+    'node_regression': {
+        'sehtgnn_covid': ['SEHTGNN'],
     },
     'hypergraph': {  # 1
         'drug': ['DHNE', ]
@@ -59,6 +71,12 @@ class TestExperiment:
                               in models])
     def test_link_prediction(self, dataset, model):
         Experiment(model=model, dataset=dataset, task='link_prediction', gpu=self.gpu, epoch=1, max_epoch=1).run()
+
+    @pytest.mark.parametrize("dataset,model",
+                             [(dataset, model) for dataset, models in experiments['node_regression'].items() for model
+                              in models])
+    def test_node_regression(self, dataset, model):
+        Experiment(model=model, dataset=dataset, task='node_regression', gpu=self.gpu, epoch=1, max_epoch=1).run()
 
     @pytest.mark.parametrize("dataset,model",
                              [(dataset, model) for dataset, models in experiments['recommendation'].items() for model in

@@ -41,6 +41,26 @@ class Config(object):
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
 ##############      add config.py    #################
+        elif self.model_name == 'HGSketch':
+            self.K = conf.getint("HGSketch", "K")
+            self.R = conf.getint("HGSketch", "R")
+            self.D = conf.getint("HGSketch", "D")
+            self.seed = conf.getint("HGSketch", "seed")
+            self.max_epoch = 1  # non-parametric, no iterative training
+
+        elif self.model_name == 'HGDL':
+            self.seed = conf.getint('HGDL', 'seed')
+            self.lr = conf.getfloat('HGDL', 'lr')
+            self.weight_decay = conf.getfloat('HGDL', 'weight_decay')
+            self.max_epoch = conf.getint('HGDL', 'max_epoch')
+            self.patience = conf.getint('HGDL', 'patience')
+            self.hidden_dim = conf.getint('HGDL', 'hidden_dim')
+            self.dropout = conf.getfloat('HGDL', 'dropout')
+            self.attention_dim = conf.getint('HGDL', 'attention_dim')
+            self.num_heads = conf.getint('HGDL', 'num_heads')
+            self.gamma = conf.getfloat('HGDL', 'gamma')
+            self.mini_batch_flag = conf.getboolean('HGDL', 'mini_batch_flag')
+            self.evaluate_interval = conf.getint('HGDL', 'evaluate_interval')
         elif self.model_name == 'MHGCN':
             self.lr = conf.getfloat("MHGCN", "lr")
             self.weight_decay = conf.getfloat("MHGCN", "weight_decay")
@@ -88,7 +108,7 @@ class Config(object):
             self.num_epoch = conf.getint("MetaHIN", "num_epoch")
             self.input_dir = conf.get("MetaHIN", "input_dir")
             self.output_dir = conf.get("MetaHIN", "output_dir")
-            self.seed = conf.getint("MetaHIN", "seed")                 
+            self.seed = conf.getint("MetaHIN", "seed")
 
 
         elif self.model_name =='FedHGNN':
@@ -126,9 +146,9 @@ class Config(object):
             self.p2 = conf.getint("FedHGNN","p2")
             self.seed = conf.getint("FedHGNN","seed")
             self.hidden_size = conf.getint("FedHGNN","hidden_size")
-            self.out_size = conf.getint("FedHGNN","out_size")       
+            self.out_size = conf.getint("FedHGNN","out_size")
 
-            
+
         elif self.model_name == 'HGA':
             self.lr = conf.getfloat("HGA", "lr")
             self.weight_decay = conf.getfloat("HGA", "weight_decay")
@@ -288,7 +308,7 @@ class Config(object):
             self.score_order = conf.get("DisenKGAT","score_order")
             self.gamma_method = conf.get("DisenKGAT","gamma_method")
 
-            self.k_w= conf.getint("DisenKGAT", "k_w") 
+            self.k_w= conf.getint("DisenKGAT", "k_w")
             self.batch = conf.getint("DisenKGAT", "batch")
             self.test_batch = conf.getint("DisenKGAT", "test_batch")
             self.epoch = conf.getint("DisenKGAT", "epoch")
@@ -338,7 +358,7 @@ class Config(object):
         elif self.model_name == "NBF" and self.dataset_name =="NBF_WN18RR":
 
             self.input_dim = conf.getint("NBF", "input_dim")
-            self.hidden_dims = [32, 32, 32, 32, 32, 32]  
+            self.hidden_dims = [32, 32, 32, 32, 32, 32]
             self.message_func = conf.get("NBF", "message_func")
             self.aggregate_func = conf.get("NBF", "aggregate_func")
             self.short_cut = conf.getboolean("NBF","short_cut")
@@ -351,7 +371,7 @@ class Config(object):
             self.metric = ['mr', 'mrr', 'hits@1', 'hits@3', 'hits@10', 'hits@10_50']
 
             self.lr = conf.getfloat("NBF","lr")
-            self.gpus = [0]       
+            self.gpus = [0]
             self.batch_size = conf.getint("NBF","batch_size")
             self.num_epoch = conf.getint("NBF","num_epoch")
             self.log_interval = conf.getint("NBF","log_interval")
@@ -378,9 +398,9 @@ class Config(object):
             self.num_heads = conf.getint('NSHE', 'num_heads')
             self.norm_emd_flag = conf.get("NSHE", "norm_emd_flag")
             self.mini_batch_flag = conf.getboolean("NSHE", "mini_batch_flag")
-            
-            
-            
+
+
+
 
         elif self.model_name in ["GTN", "fastGTN"]:
             self.lr = conf.getfloat("GTN", "learning_rate")
@@ -529,6 +549,37 @@ class Config(object):
             self.patience = conf.getint("HAN", "patience")
             self.max_epoch = conf.getint("HAN", "max_epoch")
             self.mini_batch_flag = conf.getboolean("HAN", "mini_batch_flag")
+        elif self.model_name == "HGOT":
+            self.lr = conf.getfloat("HGOT", "learning_rate")
+            self.weight_decay = conf.getfloat("HGOT", "weight_decay")
+            self.seed = conf.getint("HGOT", "seed")
+            self.dropout = conf.getfloat("HGOT", "dropout")
+
+            self.hidden_dim = conf.getint("HGOT", "hidden_dim")
+            self.out_dim = conf.getint("HGOT", "out_dim")
+            num_heads = conf.get("HGOT", "num_heads").split("-")
+            self.num_heads = [int(i) for i in num_heads]
+            self.patience = conf.getint("HGOT", "patience")
+            self.max_epoch = conf.getint("HGOT", "max_epoch")
+            self.mini_batch_flag = conf.getboolean("HGOT", "mini_batch_flag")
+
+            self.sigma = conf.getfloat("HGOT", "sigma")
+            self.rho = conf.getfloat("HGOT", "rho")
+
+        elif self.model_name == "HGEN":
+            self.lr = conf.getfloat("HGEN", "learning_rate")
+            self.weight_decay = conf.getfloat("HGEN", "weight_decay")
+            self.seed = conf.getint("HGEN", "seed")
+            self.dropout = conf.getfloat("HGEN", "dropout")
+            self.hidden_dim = conf.getint("HGEN", "hidden_dim")
+            self.out_dim = conf.getint("HGEN", "out_dim")
+            self.num_gcn = conf.getint("HGEN", "num_gcn")
+            self.num_layers = conf.getint("HGEN", "num_layers")
+            self.attention_dim = conf.getint("HGEN", "attention_dim")
+            self.lambda_cov = conf.getfloat("HGEN", "lambda_cov")
+            self.max_epoch = conf.getint("HGEN", "max_epoch")
+            self.patience = conf.getint("HGEN", "patience")
+            self.mini_batch_flag = conf.getboolean("HGEN", "mini_batch_flag")
 
         elif self.model_name == "RoHe":
             self.lr = conf.getfloat("RoHe", "learning_rate")
@@ -566,7 +617,7 @@ class Config(object):
 
 
         elif self.model_name == 'MAGNN':
-          
+
             self.graph_address = ''
             self.user_name = ''
             self.password = ''
@@ -1376,7 +1427,7 @@ class Config(object):
             self.noltr=conf.getboolean("LTE", "noltr")
             self.encoder=conf.get("LTE", "encoder")
             self.max_epochs=conf.getint("LTE", "max_epochs")
-            
+
         elif self.model_name == 'SACN':
             self.seed=conf.getint("SACN","seed")
             self.init_emb_size=conf.getint("SACN","init_emb_size")
@@ -1583,8 +1634,228 @@ class Config(object):
             self.hid_dim = conf.getint("HMPNN", "hid_dim")
             self.max_epoch = conf.getint("HMPNN", "max_epoch")
             self.batch_size= conf.getint("HMPNN", "batch_size")
+        
+        elif self.model_name == 'SEHTGNN':
+            self.lr = conf.getfloat("SEHTGNN", "lr")
+            self.weight_decay = conf.getfloat("SEHTGNN", "weight_decay")
+            self.dropout = conf.getfloat("SEHTGNN", "dropout")
+            self.hidden_dim = conf.getint("SEHTGNN", "hidden_dim")
+            self.num_layers = conf.getint("SEHTGNN", "num_layers")
+            self.time_window = conf.getint("SEHTGNN", "time_window")
+            self.max_epoch = conf.getint("SEHTGNN", "max_epoch")
+            self.patience = conf.getint("SEHTGNN", "patience")
+
+            if conf.has_option("SEHTGNN", "use_uva"):
+                self.use_uva = conf.getboolean("SEHTGNN", "use_uva")
+            else:
+                self.use_uva = True
+
+            if conf.has_option("SEHTGNN", "num_classes"):
+                self.num_classes = conf.getint("SEHTGNN", "num_classes")
+            else:
+                self.num_classes = 1
+            
+            if conf.has_option("SEHTGNN", "norm"):
+                self.norm = conf.getboolean("SEHTGNN", "norm")
+            else:
+                self.norm = True
+        elif self.model_name == 'HTGformer':
+            self.lr = conf.getfloat("HTGformer", "lr")
+            self.weight_decay = conf.getfloat("HTGformer", "weight_decay")
+            self.max_epoch = conf.getint("HTGformer", "max_epoch")
+            self.hidden_dim = conf.getint("HTGformer", "hidden_dim")
+            self.num_heads = conf.getint("HTGformer", "num_heads")
+            self.num_layers = conf.getint("HTGformer", "num_layers")
+            self.dropout = conf.getfloat("HTGformer", "dropout")
+            self.patience = conf.getint("HTGformer", "patience")
+            self.num_repeats = conf.getint("HTGformer", "num_repeats")
 
 
+
+        elif self.model_name == "HERO":
+            base_sec = "HERO"
+            data_sec = f"HERO_{self.dataset}"
+
+            sec = data_sec if conf.has_section(data_sec) else base_sec
+
+            def get_str(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.get(sec, key)
+                return conf.get(base_sec, key, fallback=fallback)
+
+            def get_int(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.getint(sec, key)
+                return conf.getint(base_sec, key, fallback=fallback)
+
+            def get_float(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.getfloat(sec, key)
+                return conf.getfloat(base_sec, key, fallback=fallback)
+
+            self.lr = get_float("lr")
+            self.weight_decay = get_float("weight_decay", fallback=0.0)
+            self.max_epoch = get_int("max_epoch", fallback=500)
+            self.patience = get_int("patience", fallback=30)
+
+            self.category = get_str("category")
+
+            self.out_ft = get_int("out_ft")
+            self.hid_units = get_int("hid_units")
+            self.hid_units2 = get_int("hid_units2")
+
+            self.beta = get_float("beta")
+            self.alpha = get_float("alpha")
+
+            self.g_dim = get_int("g_dim")
+            self.g_equidim = get_int("g_equidim")
+            self.p_equidim = get_int("p_equidim")
+
+            self.gamma = get_float("gamma")
+            self.eta = get_float("eta")
+            self.lambbda = get_float("lambbda")
+
+            self.edge_rate = get_float("edge_rate")
+
+            print(f"[Config Info] HERO config section used: {sec}")
+
+
+        elif self.model_name == "HERO_homo":
+            base_sec = "HERO_homo"
+            data_sec = f"HERO_homo_{self.dataset}"
+
+            # 如果数据集专属 section 不存在，就退回默认 section
+            sec = data_sec if conf.has_section(data_sec) else base_sec
+
+            # 先读默认 section，再用数据集 section 覆盖
+            def get_str(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.get(sec, key)
+                return conf.get(base_sec, key, fallback=fallback)
+
+            def get_int(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.getint(sec, key)
+                return conf.getint(base_sec, key, fallback=fallback)
+
+            def get_float(key, fallback=None):
+                if conf.has_option(sec, key):
+                    return conf.getfloat(sec, key)
+                return conf.getfloat(base_sec, key, fallback=fallback)
+
+            self.lr = get_float("lr")
+            self.weight_decay = get_float("weight_decay", fallback=0.0)
+            self.max_epoch = get_int("max_epoch", fallback=1000)
+            self.patience = get_int("patience", fallback=30)
+
+            # 同构图没有异构节点类型 category，这里统一写 node 仅作占位
+            self.category = get_str("category", fallback="node")
+
+            self.out_ft = get_int("out_ft")
+            self.hid_units = get_int("hid_units")
+
+            self.beta = get_float("beta")
+            self.alpha = get_float("alpha")
+
+            self.g_dim = get_int("g_dim")
+            self.g_equidim = get_int("g_equidim")
+            self.p_equidim = get_int("p_equidim")
+
+            self.gamma = get_float("gamma")
+            self.eta = get_float("eta")
+            self.lambbda = get_float("lambbda")
+
+            self.edge_rate = get_float("edge_rate")
+
+            # 原论文同构图增强参数
+            self.dfr = get_float("dfr", fallback=0.0)
+
+            print(f"[Config Info] HERO_homo config section used: {sec}")
+
+        elif self.model_name == "RMR":
+            if self.dataset_name == 'acm4RMR':
+                self.save_emb = conf.getboolean("acm4RMR", "save_emb", fallback=False)
+                self.turn = conf.getint("acm4RMR", "turn")
+                self.dataset = conf.get("acm4RMR", "dataset")
+                self.ratio = list(map(int, conf.get("acm4RMR", "ratio").split(',')))
+                self.use_cuda = conf.getboolean("acm4RMR", "use_cuda", fallback=True)
+                self.seed = conf.getint("acm4RMR", "seed")
+                self.hidden_dim = conf.getint("acm4RMR", "hidden_dim")
+                self.nb_epochs = conf.getint("acm4RMR", "nb_epochs")
+
+                # eval params
+                self.eva_lr = conf.getfloat("acm4RMR", "eva_lr")
+                self.eva_wd = conf.getfloat("acm4RMR", "eva_wd")
+
+                # learning params
+                self.lr = conf.getfloat("acm4RMR", "lr")
+                self.w = conf.getfloat("acm4RMR", "w")
+                self.epoch = conf.getint("acm4RMR", "epoch")
+
+                # model-specific
+                self.attr1 = conf.getfloat("acm4RMR", "attr1")
+                self.attr2 = conf.getfloat("acm4RMR", "attr2")
+                self.feat = conf.getfloat("acm4RMR", "feat")
+                self.r1 = conf.getfloat("acm4RMR", "r1")
+                self.r2 = conf.getfloat("acm4RMR", "r2")
+                self.r3 = conf.getfloat("acm4RMR", "r3")
+            elif self.dataset_name == 'aminer4RMR':
+                self.save_emb = conf.getboolean("aminer4RMR", "save_emb", fallback=False)
+                self.turn = conf.getint("aminer4RMR", "turn")
+                self.dataset = conf.get("aminer4RMR", "dataset")
+                self.ratio = list(map(int, conf.get("aminer4RMR", "ratio").split(',')))
+                self.hidden_dim = conf.getint("aminer4RMR", "hidden_dim")
+                self.nb_epochs = conf.getint("aminer4RMR", "nb_epochs")
+
+                self.eva_lr = conf.getfloat("aminer4RMR", "eva_lr")
+                self.eva_wd = conf.getfloat("aminer4RMR", "eva_wd")
+
+                self.lr = conf.getfloat("aminer4RMR", "lr")
+                self.w = conf.getfloat("aminer4RMR", "w")
+                self.epoch = conf.getint("aminer4RMR", "epoch")
+
+                self.attr1 = conf.getfloat("aminer4RMR", "attr1")
+                self.attr2 = conf.getfloat("aminer4RMR", "attr2")
+                self.feat = conf.getfloat("aminer4RMR", "feat")
+                self.r1 = conf.getfloat("aminer4RMR", "r1")
+                self.r2 = conf.getfloat("aminer4RMR", "r2")
+                self.r3 = conf.getfloat("aminer4RMR", "r3")
+
+            elif self.dataset_name == 'imdb4RMR':
+                self.save_emb = conf.getboolean("imdb4RMR", "save_emb", fallback=False)
+                self.turn = conf.getint("imdb4RMR", "turn")
+                self.dataset = conf.get("imdb4RMR", "dataset")
+                self.ratio = list(map(int, conf.get("imdb4RMR", "ratio").split(',')))
+                self.use_cuda = conf.getboolean("imdb4RMR", "use_cuda", fallback=True)
+                self.seed = conf.getint("imdb4RMR", "seed")
+                self.hidden_dim = conf.getint("imdb4RMR", "hidden_dim")
+                self.nb_epochs = conf.getint("imdb4RMR", "nb_epochs")
+
+                self.eva_lr = conf.getfloat("imdb4RMR", "eva_lr")
+                self.eva_wd = conf.getfloat("imdb4RMR", "eva_wd")
+
+                self.lr = conf.getfloat("imdb4RMR", "lr")
+                self.w = conf.getfloat("imdb4RMR", "w")
+                self.epoch = conf.getint("imdb4RMR", "epoch")
+
+                self.attr1 = conf.getfloat("imdb4RMR", "attr1")
+                self.attr2 = conf.getfloat("imdb4RMR", "attr2")
+                self.feat = conf.getfloat("imdb4RMR", "feat")
+                self.r1 = conf.getfloat("imdb4RMR", "r1")
+                self.r2 = conf.getfloat("imdb4RMR", "r2")
+                self.r3 = conf.getfloat("imdb4RMR", "r3")
+
+
+        elif self.model_name == "HCMGNN":
+            self.seed = conf.getint("HCMGNN", "seed")
+            self.lr = conf.getfloat("HCMGNN", "lr")
+            self.weight_decay = conf.getfloat("HCMGNN", "weight_decay")
+            self.num_epochs = conf.getint("HCMGNN", "num_epochs")
+            self.dropout = conf.getfloat("HCMGNN", "dropout")
+            self.loss_gamma = conf.getfloat("HCMGNN", "loss_gamma")
+            self.hidden_size = conf.getint("HCMGNN", "hidden_size")
+            self.num_heads = conf.getint("HCMGNN", "num_heads")
+            self.patience = conf.getint("HCMGNN", "patience")
 
         if hasattr(self, "device"):
             self.device = th.device(self.device)
@@ -1598,7 +1869,7 @@ class Config(object):
             else:
                 self.device = th.device("cuda", int(gpu))
 
-        if getattr(self, "use_uva", None):  # use_uva is set True
+        if getattr(self, "use_uva", False) and self.device.type != 'cuda':
             self.use_uva = False
             warnings.warn(
                 "'use_uva' is only available when using cuda. please set 'use_uva' to False."

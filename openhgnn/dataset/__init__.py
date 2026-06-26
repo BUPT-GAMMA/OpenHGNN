@@ -14,9 +14,11 @@ from .AdapropT_dataset import AdapropTDataLoader
 from .AdapropI_dataset import AdapropIDataLoader
 from .LTE_dataset import *
 from .SACN_dataset import *
-from .NBF_dataset import NBF_Dataset 
+from .NBF_dataset import NBF_Dataset
 from .Ingram_dataset import Ingram_KG_TrainData, Ingram_KG_TestData
 from .MetaHIN_dataset import Meta_DataHelper
+
+
 
 DATASET_REGISTRY = {}
 
@@ -75,23 +77,26 @@ kg_subT_datasets = ['family']
 ohgbl_datasets = ['ohgbl-MTWM', 'ohgbl-yelp1', 'ohgbl-yelp2', 'ohgbl-Freebase']
 ohgbn_datasets = ['ohgbn-Freebase', 'ohgbn-yelp2', 'ohgbn-acm', 'ohgbn-imdb']
 hypergraph_datasets = ['GPS', 'drug', 'MovieLens', 'wordnet', 'aminer4AEHCL']
-
+SEHTGNN_DATASETS = ['sehtgnn_aminer', 'sehtgnn_ogbn', 'sehtgnn_covid', 'sehtgnn_yelp']
+hcmgnn_datasets = ['GMD4HCMGNN']
 
 
 def build_dataset_GB(dataset,*args,**kwargs):
     #   dataset："imdb4GTN","HGBl-amazon"
     if dataset in ['imdb4GTN','HGBl-amazon']:
-        return DATASET_REGISTRY['GraphBolt_Dataset'](dataset, logger=kwargs['logger'],args = kwargs['args'])
-    
+        return DATASET_REGISTRY['GraphBolt_Dataset'](dataset, logger=kwargs['logger'], args = kwargs['args'])
 
+
+from .NodeClassificationDataset import *
+from .HERO_dataset import HERODataset
 
 def build_dataset(dataset, task, *args, **kwargs):
-    
+
     args = kwargs.get('args', None)
-    
+
     if hasattr(args,'model'):
         model = args.model
-        
+
     if isinstance(dataset, DGLDataset):
         return dataset
 
@@ -117,6 +122,9 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset == "dbook":
         dataload = Meta_DataHelper(args.input_dir, args)
         return dataload
+    elif dataset in ['ogbn_mag4HGformer', 'aminer4HGformer', 'yelp4HGformer', 'covid4HGformer']:
+        return DATASET_REGISTRY['htgformer_dataset'](dataset, logger=kwargs.get('logger'), args=kwargs.get('args'))
+
 
 #############
 
@@ -130,9 +138,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'rdf_' + task
 
 ###########    add dataset here
-    elif dataset in ['acm4HGMAE','hgprompt_acm_dblp','acm4FedHGNN']:      
+    elif dataset in ['acm4HGMAE','hgprompt_acm_dblp','acm4FedHGNN']:
         return DATASET_REGISTRY['common_dataset'](dataset, logger=kwargs['logger'],args = kwargs['args'])
-
     elif dataset in ['acm4HGA','dblp4HGA']:
         _dataset = 'hga_'+ task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
@@ -140,8 +147,22 @@ def build_dataset(dataset, task, *args, **kwargs):
         _dataset = 'rhine_'+task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
     elif dataset in ['dblp4MHGCN','imdb4MHGCN','alibaba4MHGCN']:
-        _dataset = 'mhgcn_' + task   
-        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args']) 
+        _dataset = 'mhgcn_' + task
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
+    elif dataset in SEHTGNN_DATASETS:
+        _dataset = dataset
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
+    elif dataset in ['dblp4HGDL']:
+        import importlib
+        importlib.import_module('openhgnn.dataset.HGDL_dataset')
+        return DATASET_REGISTRY['hgdl_node_classification'](
+            dataset_name=dataset, logger=kwargs['logger'], args=kwargs['args'])
+    elif dataset in ['acm4HGDL']:
+        import importlib
+        importlib.import_module('openhgnn.dataset.HGDL_dataset')
+        return DATASET_REGISTRY['hgdl_acm'](
+            dataset_name=dataset, logger=kwargs['logger'], args=kwargs['args'])
 ##########
 
     elif dataset in ['acm4NSHE', 'acm4GTN', 'academic4HetGNN', 'acm_han', 'acm_han_raw', 'acm4HeCo', 'dblp',
@@ -207,23 +228,32 @@ def build_dataset(dataset, task, *args, **kwargs):
         else:
             _dataset = 'common_' + task
     elif dataset in ['NBF_WN18RR','NBF_FB15k-237']:
-        _dataset = 'NBF_' + task  
+        _dataset = 'NBF_' + task
     elif dataset in ['DisenKGAT_WN18RR','DisenKGAT_FB15k-237']:
         _dataset = 'DisenKGAT_' + task  #  == 'DisenKGAT_link_prediction'
-        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))  
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))
+    elif dataset in ['ACM4HERO', 'Aminer4HERO',"DBLP4HERO","Yelp4HERO"]:
+        _dataset = 'hero_node_classification'
+    elif dataset in hcmgnn_datasets:
+        _dataset = 'hcm_recommendation'
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args=kwargs['args'])
+
+    elif dataset in ['acm4RMR','aminer4RMR','imdb4RMR']:
+        _dataset = 'rmr_' + task
+        return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs.get('args'))
+
+    elif dataset in [ "cora4HERO", "citeseer4HERO", "pubmed4HERO","photo4HERO", "computers4HERO", "cs4HERO","physics4HERO", "corafull4HERO", "wikics4HERO", "ogbn-arxiv4HERO"]:
+        _dataset = 'hero_homo_node_classification'
 
 
-
-
-    
     if args != None and hasattr(args,'model'):
         if args.model=='Grail' or args.model=='ComPILE':
             _dataset = 'grail_'+ task
             return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args=kwargs['args'])
 
-    
-    
-    return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
+
+    return DATASET_REGISTRY[_dataset](dataset,logger=kwargs['logger'],args=args)
+    # return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'])
 
 
 
@@ -235,6 +265,9 @@ SUPPORTED_DATASETS = {
     "hypergraph": "openhgnn.dataset.HypergraphDataset",
     "pretrain": "openhgnn.dataset.mag_dataset",
     "ktn": "openhgnn.dataset.oag_dataset",
+    "node_regression": "openhgnn.dataset.sehtgnn_dataset",
+    "hgdl_node_classification": "openhgnn.dataset.HGDL_dataset",
+    "hgdl_acm": "openhgnn.dataset.HGDL_dataset",
 
 }
 
@@ -244,6 +277,8 @@ from .RecommendationDataset import RecommendationDataset
 from .EdgeClassificationDataset import EdgeClassificationDataset
 from .HypergraphDataset import HGraphDataset
 from .oag_dataset import OAGDataset
+from .sehtgnn_dataset import *
+from .htgformer_dataset import HTGformerDataset
 
 
 
@@ -281,7 +316,6 @@ CLASS_DATASETS = {
     "ohgbn-alircd_session2": "openhgnn.dataset.AliRCDSession2Dataset",
     "pretrain": "openhgnn.dataset.mag_dataset",
     "ktn": "openhgnn.dataset.oag_dataset",
-
 }
 
 __all__ = [
@@ -300,6 +334,7 @@ __all__ = [
     "AbnormEventDetectionDataset",
     "mag_dataset",
     "OAGDataset",
+    "HTGformerDataset",
 ]
 
 classes = __all__

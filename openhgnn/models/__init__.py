@@ -65,12 +65,15 @@ def build_model(model):
 SUPPORTED_MODELS = {
 #####       add models here
     'RelGT': 'openhgnn.models.RelGT',
+    'HGSketch': 'openhgnn.models.HGSketch',
+    'HGDL':'openhgnn.models.HGDL',
     'MHGCN':'openhgnn.models.MHGCN',
     'BPHGNN' : 'openhgnn.models.BPHGNN',
     "MetaHIN": "openhgnn.models.MetaHIN",
     'HGA':'openhgnn.models.HGA',
     'RHINE': 'openhgnn.models.RHINE',
     'FedHGNN':'openhgnn.models.FedHGNN',
+    'HCMGNN':'openhgnn.models.HCMGNN',
 ####################################
     "SIAN": "openhgnn.models.SIAN",
     "CompGCN": "openhgnn.models.CompGCN",
@@ -138,14 +141,23 @@ SUPPORTED_MODELS = {
     'Ingram': 'openhgnn.models.Ingram',
     'RedGNN': 'openhgnn.models.RedGNN',
     'RedGNNT': 'openhgnn.models.RedGNNT',
+    'SEHTGNN': 'openhgnn.models.SEHTGNN',
+    'HTGformer': 'openhgnn.models.HTGformer',
+    "HERO": "openhgnn.models.HERO",
+    "HERO_homo":"openhgnn.models.HERO_homo",
 
+    'RMR':'openhgnn.models.RMR',
+    'HGOT': 'openhgnn.models.HGOT',
+    'HGEN': 'openhgnn.models.HGEN',
 }
 
 #####       add model here
 from .RelGT import RelGT
+from .HGSketch import HGSketch
 from .BPHGNN import BPHGNN
 from .RHINE import RHINE
 from .FedHGNN import FedHGNN
+from .HGEN import HGEN
 #####
 from .SIAN import SIAN
 from .HGCL import HGCL
@@ -201,7 +213,13 @@ from .ExpressGNN import ExpressGNN
 from .Ingram import Ingram
 from .RedGNN import RedGNN
 from .RedGNNT import RedGNNT
+from .SEHTGNN import SEHTGNN
 
+from .HERO import HERO
+from .HERO_homo import HEROHomo
+
+from .RMR import RMR
+from .HGOT import HGOT
 
 
 __all__ = [
@@ -256,5 +274,15 @@ __all__ = [
     'ExpressGNN',
     'Ingram',
     'RHINE',
+    'SEHTGNN',
+    'HTGformer',
+    'HGSketch',
+    'HGDL',
+    'HGEN',
+    'HGOT',
+    'RMR',
+    'HCMGNN',
+    'HERO',
+    'HEROHomo',
 ]
 classes = __all__

@@ -1,10 +1,11 @@
+import torch
+import numpy as np
 import torch.nn.functional as F
 import torch.nn as nn
 from . import BaseTask, register_task
 from ..dataset import build_dataset,build_dataset_GB
 from ..utils import Evaluator
-import torch
-import numpy as np
+from sklearn.metrics import f1_score, recall_score
 
 
 @register_task("node_classification")
@@ -31,6 +32,7 @@ class NodeClassification(BaseTask):
     def __init__(self, args):
         super(NodeClassification, self).__init__()
         self.logger = args.logger
+        self.args = args
         self.dataset = build_dataset(args.dataset, 'node_classification', 
                                      logger=self.logger,args = args)
         if args.graphbolt:
@@ -40,6 +42,7 @@ class NodeClassification(BaseTask):
                                         args = args)  
         # self.evaluator = Evaluator()
         self.logger = args.logger
+
         if hasattr(args, 'validation'):
             self.train_idx, self.val_idx, self.test_idx = self.dataset.get_split(args.validation)
         else:
@@ -47,6 +50,10 @@ class NodeClassification(BaseTask):
         self.evaluator = Evaluator(args.seed)
         self.labels = self.dataset.get_labels()
         self.multi_label = self.dataset.multi_label
+
+        self.train_hg = self.train_idx
+        self.val_hg = self.val_idx
+        self.test_hg = self.test_idx
         
         if hasattr(args, 'evaluation_metric'):
             self.evaluation_metric = args.evaluation_metric
@@ -73,6 +80,39 @@ class NodeClassification(BaseTask):
             return self.evaluator.f1_node_classification
 
     def evaluate(self, logits, mode='test', info=True):
+
+        if hasattr(self.args, 'model') and self.args.model == 'SEHTGNN':
+            if mode == 'test':
+                label_g = self.dataset.test_set[0][1]
+            elif mode == 'valid':
+                label_g = self.dataset.val_set[0][1]
+            elif mode == 'train':
+                label_g = self.dataset.train_set[0][1]
+            else:
+                raise ValueError(f"Unknown mode: {mode}")
+
+            y_true_all = label_g.nodes['item'].data['y']
+            mask = label_g.nodes['item'].data['mask'].bool()
+            
+            y_pred_score = logits[mask]
+            y_true = y_true_all[mask]
+
+            y_true_np = y_true.cpu().numpy()
+            y_pred_score_np = y_pred_score.detach().cpu().numpy()
+            
+            y_pred = (y_pred_score_np > 0).astype(int)
+
+            macro_f1 = f1_score(y_true_np, y_pred, average='macro')
+            recall = recall_score(y_true_np, y_pred, average='macro')
+            
+            if info:
+                self.logger.info(f"[{mode.upper()}] Macro-F1: {macro_f1:.4f}, Recall: {recall:.4f}")
+
+            return {
+                'Macro-F1': macro_f1,
+                'Recall': recall
+            }
+
         if mode == 'test':
             mask = self.test_idx
         elif mode == 'valid':

@@ -2,8 +2,9 @@ import dgl
 import torch as th
 import torch.nn.functional as F
 from dgl.dataloading.negative_sampler import Uniform
+from sklearn.metrics import average_precision_score
 from . import BaseTask, register_task
-from ..dataset import build_dataset,build_dataset_GB
+from ..dataset import build_dataset, build_dataset_GB
 from ..utils import Evaluator
 
 
@@ -61,8 +62,10 @@ class LinkPrediction(BaseTask):
         if self.val_hg is None and self.test_hg is None:
             pass
         else:
-            self.val_hg = self.val_hg.to(args.device)
-            self.test_hg = self.test_hg.to(args.device)
+            if not isinstance(self.val_hg, list):
+                self.val_hg = self.val_hg.to(args.device)
+            if not isinstance(self.test_hg, list):
+                self.test_hg = self.test_hg.to(args.device)
         self.evaluator = Evaluator(args.seed)
         if not hasattr(args, 'score_fn'):
             self.ScorePredictor = HeteroDistMultPredictor( )
