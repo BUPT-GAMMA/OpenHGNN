@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-label="OpenHGNN v0.9 model contributions">
+  <defs>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="45%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="#f8fafc"/>
+  <rect width="1200" height="18" fill="url(#top)"/>
+  <text x="64" y="74" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#0f172a">OpenHGNN v0.9 Model Contributions</text>
+  <text x="64" y="112" font-family="Inter, Arial, sans-serif" font-size="18" fill="#475569">10 model contributions, 11 registered names, covering node classification, link prediction, recommendation, graph-level representation, and node regression.</text>
+
+  <g font-family="Inter, Arial, sans-serif">
+    <g transform="translate(64 160)">
+      <rect width="208" height="118" rx="14" fill="#ecfeff" stroke="#0891b2"/>
+      <text x="20" y="38" font-size="24" font-weight="800" fill="#0f172a">HGDL</text>
+      <text x="20" y="68" font-size="16" fill="#334155">NeurIPS 2024</text>
+      <text x="20" y="96" font-size="14" fill="#64748b">Label distribution learning</text>
+    </g>
+    <g transform="translate(296 160)">
+      <rect width="208" height="118" rx="14" fill="#f0fdf4" stroke="#16a34a"/>
+      <text x="20" y="38" font-size="24" font-weight="800" fill="#0f172a">HGEN</text>
+      <text x="20" y="68" font-size="16" fill="#334155">IJCAI 2025</text>
+      <text x="20" y="96" font-size="14" fill="#64748b">Heterogeneous ensembles</text>
+    </g>
+    <g transform="translate(528 160)">
+      <rect width="208" height="118" rx="14" fill="#fff7ed" stroke="#ea580c"/>
+      <text x="20" y="38" font-size="24" font-weight="800" fill="#0f172a">HGSketch</text>
+      <text x="20" y="68" font-size="16" fill="#334155">SIGIR 2025</text>
+      <text x="20" y="96" font-size="14" fill="#64748b">Graph-level representation</text>
+    </g>
+    <g transform="translate(760 160)">
+      <rect width="208" height="118" rx="14" fill="#eef2ff" stroke="#4f46e5"/>
+      <text x="20" y="38" font-size="24" font-weight="800" fill="#0f172a">HGOT</text>
+      <text x="20" y="68" font-size="16" fill="#334155">ICML 2025</text>
+      <text x="20" y="96" font-size="14" fill="#64748b">Optimal transport SSL</text>
+    </g>
+    <g transform="translate(992 160)">
+      <rect width="144" height="118" rx="14" fill="#fef2f2" stroke="#ef4444"/>
+      <text x="20" y="38" font-size="24" font-weight="800" fill="#0f172a">RMR</text>
+      <text x="20" y="68" font-size="16" fill="#334155">KDD 2024</text>
+      <text x="20" y="96" font-size="14" fill="#64748b">Self-supervised</text>
+    </g>
+
+    <g transform="translate(64 318)">
+      <rect width="208" height="118" rx="14" fill="#f5f3ff" stroke="#8b5cf6"/>
+      <text x="20" y="38" font-size="24" font-weight="800" fill="#0f172a">HERO family</text>
+      <text x="20" y="68" font-size="16" fill="#334155">ICLR 2024</text>
+      <text x="20" y="96" font-size="14" fill="#64748b">HERO / HERO_homo</text>
+    </g>
+    <g transform="translate(296 318)">
+      <rect width="208" height="118" rx="14" fill="#ecfdf5" stroke="#059669"/>
+      <text x="20" y="38" font-size="24" font-weight="800" fill="#0f172a">SEHTGNN</text>
+      <text x="20" y="68" font-size="16" fill="#334155">NeurIPS 2025</text>
+      <text x="20" y="96" font-size="14" fill="#64748b">Temporal + regression</text>
+    </g>
+    <g transform="translate(528 318)">
+      <rect width="208" height="118" rx="14" fill="#eff6ff" stroke="#2563eb"/>
+      <text x="20" y="38" font-size="24" font-weight="800" fill="#0f172a">HTGformer</text>
+      <text x="20" y="68" font-size="16" fill="#334155">SIGIR 2025</text>
+      <text x="20" y="96" font-size="14" fill="#64748b">Temporal transformer</text>
+    </g>
+    <g transform="translate(760 318)">
+      <rect width="208" height="118" rx="14" fill="#fffbeb" stroke="#d97706"/>
+      <text x="20" y="38" font-size="24" font-weight="800" fill="#0f172a">HCMGNN</text>
+      <text x="20" y="68" font-size="16" fill="#334155">IJCAI 2024</text>
+      <text x="20" y="96" font-size="14" fill="#64748b">Recommendation</text>
+    </g>
+    <g transform="translate(992 318)">
+      <rect width="144" height="118" rx="14" fill="#f1f5f9" stroke="#64748b"/>
+      <text x="20" y="38" font-size="24" font-weight="800" fill="#0f172a">RelGT</text>
+      <text x="20" y="68" font-size="16" fill="#334155">arXiv 2025</text>
+      <text x="20" y="96" font-size="14" fill="#64748b">RelBench</text>
+    </g>
+  </g>
+
+  <g transform="translate(64 520)">
+    <rect width="1072" height="104" rx="18" fill="#0f172a"/>
+    <text x="30" y="42" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" fill="#f8fafc">Release theme</text>
+    <text x="30" y="74" font-family="Inter, Arial, sans-serif" font-size="18" fill="#cbd5e1">The v0.9 model batch is not only larger. It is documented, registered, validated, and easier to reproduce.</text>
+  </g>
+</svg>
