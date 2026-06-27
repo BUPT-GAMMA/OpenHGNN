@@ -1,0 +1,143 @@
+name: model-regression
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  model-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate PR hygiene
+        run: python scripts/validate_pr_hygiene.py
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -c constraints.txt -r requirements.txt
+          python -m pip install -r docs/requirements.txt
+          python -m pip install -e .
+          python -m pip install pytest
+      - name: Validate registries
+        run: openhgnn validate-registry --format json
+      - name: Build documentation
+        run: python -m sphinx -W -b html docs/source /tmp/openhgnn-docs-build
+      - name: Select covered changed models
+        id: select-models
+        run: |
+          python - <<'PY'
+          import ast
+          import json
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          base = os.environ.get("GITHUB_BASE_SHA") or os.environ.get("GITHUB_SHA")
+          head = os.environ.get("GITHUB_SHA")
+          if not base or not head:
+              raise SystemExit("Missing GITHUB_BASE_SHA/GITHUB_SHA for model regression selection")
+
+          diff = subprocess.run(
+              ["git", "diff", "--name-only", f"{base}...{head}"],
+              text=True,
+              capture_output=True,
+              check=False,
+          )
+          if diff.returncode != 0:
+              sys.stderr.write(diff.stderr)
+              raise SystemExit(diff.returncode)
+
+          changed_files = [line.strip() for line in diff.stdout.splitlines() if line.strip()]
+
+          models_init = Path("openhgnn/models/__init__.py").read_text(encoding="utf-8")
+          module = ast.parse(models_init)
+          supported = None
+          for node in module.body:
+              if isinstance(node, ast.Assign):
+                  for target in node.targets:
+                      if isinstance(target, ast.Name) and target.id == "SUPPORTED_MODELS":
+                          supported = ast.literal_eval(node.value)
+                          break
+          if supported is None:
+              raise SystemExit("SUPPORTED_MODELS not found")
+
+          file_to_models = {}
+          for model_name, module_path in supported.items():
+              if module_path.startswith("openhgnn.models."):
+                  relpath = str(Path(*module_path.split(".")).with_suffix(".py"))
+                  file_to_models.setdefault(relpath, set()).add(model_name)
+
+          test_run = Path("tests/end2end/test_run.py").read_text(encoding="utf-8")
+          module = ast.parse(test_run)
+          experiments = None
+          for node in module.body:
+              if isinstance(node, ast.Assign):
+                  for target in node.targets:
+                      if isinstance(target, ast.Name) and target.id == "experiments":
+                          experiments = ast.literal_eval(node.value)
+                          break
+          if experiments is None:
+              raise SystemExit("experiments not found in tests/end2end/test_run.py")
+
+          func_map = {
+              "node_classification": "test_node_classification",
+              "edge_classification": "test_edge_classification",
+              "link_prediction": "test_link_prediction",
+              "recommendation": "test_recommendation",
+              "node_regression": "test_node_regression",
+              "hypergraph": "test_hypergraph",
+              "meirec": "test_meirec",
+          }
+
+          nodeids_by_model = {}
+          for task, groups in experiments.items():
+              func_name = func_map[task]
+              for dataset, models in groups.items():
+                  for model_name in models:
+                      nodeid = f"tests/end2end/test_run.py::TestExperiment::{func_name}[{dataset}-{model_name}]"
+                      nodeids_by_model.setdefault(model_name, []).append(nodeid)
+
+          changed_models = sorted({
+              model_name
+              for changed_file in changed_files
+              for model_name in file_to_models.get(changed_file, set())
+          })
+          missing_models = [model_name for model_name in changed_models if model_name not in nodeids_by_model]
+          selected_nodeids = [nodeid for model_name in changed_models for nodeid in nodeids_by_model.get(model_name, [])]
+
+          payload = {
+              "changed_files": changed_files,
+              "changed_models": changed_models,
+              "missing_models": missing_models,
+              "selected_nodeids": selected_nodeids,
+          }
+          print(json.dumps(payload, indent=2, sort_keys=True))
+
+          if missing_models:
+              raise SystemExit(f"Changed models are not covered by tests/end2end/test_run.py: {missing_models}")
+
+          github_output = Path(os.environ["GITHUB_OUTPUT"])
+          with github_output.open("a", encoding="utf-8") as fh:
+              fh.write(f"has_models={'true' if bool(selected_nodeids) else 'false'}\n")
+              fh.write("selected_nodeids<<EOF\n")
+              fh.write("\n".join(selected_nodeids))
+              fh.write("\nEOF\n")
+          PY
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      - name: Run existing end-to-end cases for changed models
+        if: steps.select-models.outputs.has_models == 'true'
+        run: |
+          printf '%s\n' "${{ steps.select-models.outputs.selected_nodeids }}" > .selected-nodeids
+          xargs -a .selected-nodeids pytest -c /dev/null -q
+      - name: Skip when no covered model changed
+        if: steps.select-models.outputs.has_models != 'true'
+        run: echo "No model file changes detected in this PR."

@@ -1,0 +1,79 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check tag matches package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          package_version="$(python - <<'PY'
+          ns = {}
+          with open("openhgnn/_version.py", "r", encoding="utf-8") as fh:
+              exec(fh.read(), ns)
+          print(ns["__version__"])
+          PY
+          )"
+          echo "tag=${tag_version}"
+          echo "package=${package_version}"
+          test "${tag_version}" = "${package_version}"
+
+      - name: Install release environment
+        run: |
+          python -m pip install --upgrade pip setuptools wheel build
+          python -m pip install torch==2.4.0 torchvision torchaudio
+          python -m pip install dgl==2.4.0+cu121 -f https://data.dgl.ai/wheels/torch-2.4/cu121/repo.html
+          python -m pip install -e .
+
+      - name: Run release checks
+        run: |
+          openhgnn env --format json
+          openhgnn list models --format json
+          openhgnn list tasks --format json
+          openhgnn validate-registry --format json
+
+      - name: Build source and wheel distributions
+        run: python -m build
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openhgnn-dist
+          path: dist/*
+          if-no-files-found: error
+
+  github-release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: openhgnn-dist
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

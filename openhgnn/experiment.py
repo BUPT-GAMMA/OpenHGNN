@@ -126,8 +126,7 @@ class Experiment(object):
         self.config.task = task
 
 
-        self.config.use_distributed = kwargs['use_distributed']
-        kwargs.pop('use_distributed')
+        self.config.use_distributed = kwargs.pop('use_distributed', False)
         if self.config.use_distributed:
             self.config.gpu = [i for i in range(torch.cuda.device_count())]
         else:

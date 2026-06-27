@@ -10,15 +10,15 @@ Dataset
     :toctree: ../generated
     :template: _templates/class.rst
 
-    openhgnn.dataset.BaseDataset
-    openhgnn.dataset.NodeClassificationDataset
-    openhgnn.dataset.LinkPredictionDataset
-    openhgnn.dataset.RecommendationDataset
-    openhgnn.dataset.AcademicDataset
-    openhgnn.dataset.HGBDataset
-    openhgnn.dataset.OHGBDataset
-    openhgnn.dataset.GTNDataset
-    openhgnn.dataset.AsLinkPredictionDataset
-    openhgnn.dataset.AsNodeClassificationDataset
-    openhgnn.dataset.EdgeClassificationDataset
-    openhgnn.dataset.OAGDataset
+    BaseDataset
+    NodeClassificationDataset
+    LinkPredictionDataset
+    RecommendationDataset
+    AcademicDataset
+    HGBDataset
+    OHGBDataset
+    GTNDataset
+    AsLinkPredictionDataset
+    AsNodeClassificationDataset
+    EdgeClassificationDataset
+    OAGDataset

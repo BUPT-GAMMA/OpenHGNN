@@ -55,17 +55,15 @@ SUPPORTED_FLOWS = {
     'MHGCN_trainer':'openhgnn.trainerflow.MHGCN_trainer',
     'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',    
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
-    'hga_trainer':'openhgnn.trainerflow.HGATrainer',
-    'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
-    'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation',
+    'hga_trainer':'openhgnn.trainerflow.hga_trainer',
+    'rhine_trainer':'openhgnn.trainerflow.RHINE_trainer',
+    'FED_REC_trainer':'openhgnn.trainerflow.FED_REC_trainer',
     'HGDL_trainer':'openhgnn.trainerflow.HGDL_trainer',
 ##########
     "coldstart_recommmendation": "openhgnn.trainerflow.coldstart_recommendation",
-    'SIAN_trainer': 'openhgnn.trainerflow.SIAN_trainer',
-    'entity_classification': 'openhgnn.trainerflow.entity_classification',
+    'SIAN_trainer': 'openhgnn.trainerflow.sian_trainer',
     'node_classification': 'openhgnn.trainerflow.node_classification',
-    'node_classification_ac': 'openhgnn.trainerflow.node_classfication_ac',
-    'distmult': 'openhgnn.trainerflow.dist_mult',
+    'node_classification_ac': 'openhgnn.trainerflow.node_classification_ac',
     'link_prediction': 'openhgnn.trainerflow.link_prediction',
     'recommendation': 'openhgnn.trainerflow.recommendation',
     'hetgnntrainer': 'openhgnn.trainerflow.hetgnn_trainer',
@@ -82,8 +80,8 @@ SUPPORTED_FLOWS = {
     'hde_trainer': 'openhgnn.trainerflow.hde_trainer',
     'GATNE_trainer': 'openhgnn.trainerflow.GATNE_trainer',
     'TransX_trainer': 'openhgnn.trainerflow.TransX_trainer',
-    'han_nc_trainer': 'openhgnn.trainerflow.HANNodeClassification',
-    'han_lp_trainer': 'openhgnn.trainerflow.HANLinkPrediction',
+    'han_nc_trainer': 'openhgnn.trainerflow.han_trainer',
+    'han_lp_trainer': 'openhgnn.trainerflow.han_trainer',
     'RoHe_trainer': 'openhgnn.trainerflow.RoHe_trainer',
     'mg2vec_trainer': 'openhgnn.trainerflow.mg2vec_trainer',
     'DHNE_trainer': 'openhgnn.trainerflow.DHNE_trainer',
@@ -91,7 +89,7 @@ SUPPORTED_FLOWS = {
     'MeiREC_trainer': 'openhgnn.trainerflow.MeiRec_trainer',
     'abnorm_event_detection': 'openhgnn.trainerflow.AbnormEventDetection',
     'SHGP_trainer': 'openhgnn.trainerflow.SHGP_trainer',
-    'KGAT_trainer': 'openhgnn.trainerflow.KGAT_trainer',
+    'KGAT_trainer': 'openhgnn.trainerflow.kgat_trainer',
     'DSSL_trainer': 'openhgnn.trainerflow.DSSL_trainer',
     'hgcltrainer': 'openhgnn.trainerflow.hgcl_trainer',
     'lightGCN_trainer': 'openhgnn.trainerflow.lightGCN_trainer',
@@ -109,7 +107,7 @@ SUPPORTED_FLOWS = {
     'DisenKGAT_trainer':'openhgnn.trainerflow.DisenKGAT_trainer',
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
-    'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
+    'HGPrompt':'openhgnn.trainerflow.HGPrompt',
     'sehtgnn_trainer': 'openhgnn.trainerflow.sehtgnn_trainer',
     'htgformer_trainer': 'openhgnn.trainerflow.htgformer_trainer',
     'hero_trainer': "openhgnn.trainerflow.HERO_trainer",
@@ -118,118 +116,58 @@ SUPPORTED_FLOWS = {
 
 
     'HCMGNN_trainer':'openhgnn.trainerflow.HCMGNN_trainer',
-    'rmr_trainer':'openhgnn.trainerflow.RMR_trainer',
+    'rmr_trainer':'openhgnn.trainerflow.rmr_trainer',
     'HGEN_trainer': 'openhgnn.trainerflow.HGEN_trainer',
 }
 
-######      add trainer_flow here
-from .relgt_trainer import RelGTTrainer
-from .HGSketch_trainer import HGSketchTrainer
-from .BPHGNN_trainer import BPHGNN_trainer
-from .HGMAE_trainer import HGMAE_trainer
-from .hga_trainer import HGATrainer
-from .RHINE_trainer import RHINETrainer
-from .FED_REC_trainer import *
-##########
-from .sian_trainer import SIAN_Trainer
-from .hgcl_trainer import HGCLtrainer
-from .node_classification import NodeClassification
-from .link_prediction import LinkPrediction
-from .recommendation import Recommendation
-from .hetgnn_trainer import HetGNNTrainer
-from .hgt_trainer import HGTTrainer
-from .kgcn_trainer import KGCNTrainer
-from .HeGAN_trainer import HeGANTrainer
-from .mp2vec_trainer import Metapath2VecTrainer
-from .herec_trainer import HERecTrainer
-from .HeCo_trainer import HeCoTrainer
-from .DMGI_trainer import DMGI_trainer
-from .slice_trainer import SLiCETrainer
-from .hde_trainer import hde_trainer
-from .GATNE_trainer import GATNE
-from .han_trainer import HANNodeClassification
-from .han_trainer import HANLinkPrediction
-from .RoHe_trainer import RoHeTrainer
-from .mg2vec_trainer import Mg2vecTrainer
-from .DHNE_trainer import DHNE_trainer
-from .DiffMG_trainer import DiffMG_trainer
-from .MeiRec_trainer import MeiRECTrainer
-from .kgat_trainer import KGAT_Trainer
-from .node_classification_ac import NodeClassificationAC
-from .DSSL_trainer import DSSL_trainer
-from .lightGCN_trainer import lightGCNTrainer
-from .KTN_trainer import KTN_NodeClassification
-from .SeHGNN_trainer import SeHGNNtrainer
-from .Grail_trainer import GrailTrainer
-from .ComPILE_trainer import ComPILETrainer
-from .AdapropT_trainer import AdapropTTrainer
-from .AdapropI_trainer import AdapropITrainer
-from .LTE_trainer import LTETrainer
-from .SACN_trainer import SACNTrainer
-from .ExpressGNN_trainer import ExpressGNNTrainer
-from .NBF_trainer import * 
-from .Ingram_trainer import Ingram_Trainer
-from .DisenKGAT_trainer import *
-from .RedGNNT_trainer import RedGNNTTrainer
-from .HGPrompt import HGPrompt_trainer
-from .sehtgnn_trainer import SEHTGNNTrainer
-from .htgformer_trainer import HTGformerTrainer
 
-from .HERO_trainer import *
-from .HERO_homo_trainer import *
-
-from .rmr_trainer import RMR_trainer
-from .HGEN_trainer import HGENTrainer
+_FLOW_CLASS_MODULES = {
+    "NodeClassification": "openhgnn.trainerflow.node_classification",
+    "LinkPrediction": "openhgnn.trainerflow.link_prediction",
+    "Recommendation": "openhgnn.trainerflow.recommendation",
+    "HetGNNTrainer": "openhgnn.trainerflow.hetgnn_trainer",
+    "HGTTrainer": "openhgnn.trainerflow.hgt_trainer",
+    "KGCNTrainer": "openhgnn.trainerflow.kgcn_trainer",
+    "HeGANTrainer": "openhgnn.trainerflow.HeGAN_trainer",
+    "Metapath2VecTrainer": "openhgnn.trainerflow.mp2vec_trainer",
+    "HERecTrainer": "openhgnn.trainerflow.herec_trainer",
+    "HeCoTrainer": "openhgnn.trainerflow.HeCo_trainer",
+    "DMGI_trainer": "openhgnn.trainerflow.DMGI_trainer",
+    "SLiCETrainer": "openhgnn.trainerflow.slice_trainer",
+    "hde_trainer": "openhgnn.trainerflow.hde_trainer",
+    "SIAN_Trainer": "openhgnn.trainerflow.sian_trainer",
+    "GATNE": "openhgnn.trainerflow.GATNE_trainer",
+    "HANNodeClassification": "openhgnn.trainerflow.han_trainer",
+    "HANLinkPrediction": "openhgnn.trainerflow.han_trainer",
+    "Mg2vecTrainer": "openhgnn.trainerflow.mg2vec_trainer",
+    "DHNE_trainer": "openhgnn.trainerflow.DHNE_trainer",
+    "DiffMG_trainer": "openhgnn.trainerflow.DiffMG_trainer",
+    "MeiRECTrainer": "openhgnn.trainerflow.MeiRec_trainer",
+    "KTN_NodeClassification": "openhgnn.trainerflow.KTN_trainer",
+    "SeHGNNtrainer": "openhgnn.trainerflow.SeHGNN_trainer",
+    "RelGTTrainer": "openhgnn.trainerflow.relgt_trainer",
+    "HGSketchTrainer": "openhgnn.trainerflow.HGSketch_trainer",
+    "SEHTGNNTrainer": "openhgnn.trainerflow.sehtgnn_trainer",
+    "HTGformerTrainer": "openhgnn.trainerflow.htgformer_trainer",
+    "HGENTrainer": "openhgnn.trainerflow.HGEN_trainer",
+    "RMR_trainer": "openhgnn.trainerflow.rmr_trainer",
+}
 
 
-#   don't add here
+def __getattr__(name):
+    if name in _FLOW_CLASS_MODULES:
+        module = importlib.import_module(_FLOW_CLASS_MODULES[name])
+        value = getattr(module, name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 __all__ = [
-    'RelGTTrainer',
-    'MHGCN_trainer',
-    'BaseFlow',
-    'NodeClassification',
-    'LinkPrediction',
-    'Recommendation',
-    'HetGNNTrainer',
-    'HGTTrainer',
-    'KGCNTrainer',
-    'HeGANTrainer',
-    'Metapath2VecTrainer',
-    'HERecTrainer',
-    'HeCoTrainer',
-    'DMGI_trainer',
-    'SLiCETrainer',
-    'hde_trainer',
-    'SIAN_Trainer',
-    'GATNE',
-    'HANNodeClassification',
-    'HANLinkPrediction',
-    'Mg2vecTrainer',
-    'DHNE_trainer',
-    'DiffMG_trainer',
-    'MeiRECTrainer',
-    'KGAT_Trainer',
-    'DSSL_trainer',
-    'HGCLtrainer',
-    'lightGCNTrainer',
-    'KTN_NodeClassification',
-    'SeHGNNtrainer',
-    'GrailTrainer',
-    'ComPILETrainer',
-    'AdapropTTrainer',
-    'AdapropITrainer',
-    'LTETrainer',
-    'SACNTrainer',
-    'ExpressGNNTrainer',
-    'Ingram_trainer',
-    'RHINETrainer',
-    'SEHTGNNTrainer',
-    'HTGformerTrainer',
-
-    'HGENTrainer',
-    'RMR_trainer',
-    'HCMGNN_trainer',
-    'HEROTrainer',
-    'HEROHomoTrainer',
+    "BaseFlow",
+    "FLOW_REGISTRY",
+    "SUPPORTED_FLOWS",
+    "build_flow",
+    "register_flow",
+    "try_import_flow",
 ]
-classes = __all__
+classes = list(SUPPORTED_FLOWS.keys())

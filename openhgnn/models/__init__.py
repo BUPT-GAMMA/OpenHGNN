@@ -62,6 +62,18 @@ def build_model(model):
     return MODEL_REGISTRY[model]
 
 
+_MODEL_CLASS_NAMES = {
+    "Metapath2vec": "SkipGram",
+    "HERec": "SkipGram",
+    "GTN": "GTN",
+    "fastGTN": "fastGTN",
+    "homo_GNN": "homo_GNN",
+    "general_HGNN": "general_HGNN",
+    "HERO_homo": "HEROHomo",
+    "SHGP": "ATT_HGCN",
+}
+
+
 SUPPORTED_MODELS = {
 #####       add models here
     'RelGT': 'openhgnn.models.RelGT',
@@ -117,7 +129,7 @@ SUPPORTED_MODELS = {
     'GIE':'openhgnn.models.GIE',
     'GIN':'openhgnn.models.GIN',
     'Rsage': 'openhgnn.models.Rsage',
-    'Mg2vec': 'openhgnn.models.MG2vec',
+    'Mg2vec': 'openhgnn.models.Mg2vec',
     'DHNE': 'openhgnn.models.DHNE',
     'DiffMG': 'openhgnn.models.DiffMG',
     'MeiREC': 'openhgnn.models.MeiREC',
@@ -151,138 +163,28 @@ SUPPORTED_MODELS = {
     'HGEN': 'openhgnn.models.HGEN',
 }
 
-#####       add model here
-from .RelGT import RelGT
-from .HGSketch import HGSketch
-from .BPHGNN import BPHGNN
-from .RHINE import RHINE
-from .FedHGNN import FedHGNN
-from .HGEN import HGEN
-#####
-from .SIAN import SIAN
-from .HGCL import HGCL
-from .CompGCN import CompGCN
-from .HetGNN import HetGNN
-from .RGCN import RGCN
-from .RGAT import RGAT
-from .RSHN import RSHN
-from .SkipGram import SkipGram
-from .HAN import HAN
-from .RoHe import RoHe
-from .HeCo import HeCo
-from .HGT import HGT
-from .GTN_sparse import GTN
-from .fastGTN import fastGTN
-from .MHNF import MHNF
-from .MAGNN import MAGNN
-from .HeGAN import HeGAN
-from .NSHE import NSHE
-from .NARS import NARS
-from .RHGNN import RHGNN
-from .HPN import HPN
-from .KGCN import KGCN
-from .SLiCE import SLiCE
-from .HGSL import HGSL
-from .homo_GNN import homo_GNN
-from .general_HGNN import general_HGNN
-from .HDE import HDE
-from .SimpleHGN import SimpleHGN
-from .HetSANN import HetSANN
-from .ieHGCN import ieHGCN
-from .HGAT import HGAT
-from .GATNE import GATNE
-from .Rsage import Rsage
-from .Mg2vec import Mg2vec
-from .DHNE import DHNE
-from .DiffMG import DiffMG
-from .MeiREC import MeiREC
-from .HGNN_AC import HGNN_AC
-from .KGAT import KGAT
-from .DSSL import DSSL
-from .lightGCN import lightGCN
-from .HMPNN import HMPNN
-from .SeHGNN import SeHGNN
-from .Grail import Grail
-from .ComPILE import ComPILE
-from .AdapropT import AdapropT
-from .AdapropI import AdapropI
-from .LTE import LTE
-from .LTE_Transe import LTE_Transe
-from .SACN import SACN
-from .ExpressGNN import ExpressGNN
-from .Ingram import Ingram
-from .RedGNN import RedGNN
-from .RedGNNT import RedGNNT
-from .SEHTGNN import SEHTGNN
 
-from .HERO import HERO
-from .HERO_homo import HEROHomo
-
-from .RMR import RMR
-from .HGOT import HGOT
-
+def __getattr__(name):
+    if name in SUPPORTED_MODELS:
+        module = importlib.import_module(SUPPORTED_MODELS[name])
+        value = getattr(module, _MODEL_CLASS_NAMES.get(name, name))
+        globals()[name] = value
+        return value
+    if name in _MODEL_CLASS_NAMES:
+        model_name = name
+        module = importlib.import_module(SUPPORTED_MODELS[model_name])
+        value = getattr(module, _MODEL_CLASS_NAMES[model_name])
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
-    'RelGT',
-    'BPHGNN',
-    "HMPNN",
-    'BaseModel',
-    'CompGCN',
-    'HetGNN',
-    'RGCN',
-    'RGAT',
-    'RSHN',
-    'SkipGram',
-    'HAN',
-    'HeCo',
-    'HGT',
-    'GTN',
-    'fastGTN',
-    'MHNF',
-    'MAGNN',
-    'HeGAN',
-    'NSHE',
-    'NARS',
-    'RHGNN',
-    'HPN',
-    'KGCN',
-    'SLiCE',
-    'HGSL',
-    'homo_GNN',
-    'general_HGNN',
-    'HDE',
-    'SimpleHGN',
-    'GATNE',
-    'Rsage',
-    'Mg2vec',
-    'DHNE',
-    'DiffMG',
-    'MeiREC',
-    'KGAT',
-    'ATT_HGCN',
-    'KGAT',
-    'DSSL',
-    'lightGCN',
-    'SeHGNN',
-    'Grail',
-    'ComPILE',
-    'AdapropT',
-    'AdapropI',
-    'LTE',
-    'LTE_Transe',
-    'SACN',
-    'ExpressGNN',
-    'Ingram',
-    'RHINE',
-    'SEHTGNN',
-    'HTGformer',
-    'HGSketch',
-    'HGDL',
-    'HGEN',
-    'HGOT',
-    'RMR',
-    'HCMGNN',
-    'HERO',
-    'HEROHomo',
+    "BaseModel",
+    "MLP_follow_model",
+    "MODEL_REGISTRY",
+    "SUPPORTED_MODELS",
+    "build_model",
+    "register_model",
+    "try_import_model",
 ]
-classes = __all__
+classes = list(SUPPORTED_MODELS.keys())

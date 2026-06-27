@@ -10,12 +10,12 @@ from . import BaseModel, register_model
 class Mg2vec(BaseModel):
     r"""
     This is a model mg2vec from `mg2vec: Learning Relationship-Preserving Heterogeneous Graph Representations via
-    Metagraph Embedding<https://ieeexplore.ieee.org/document/9089251>`__
+    Metagraph Embedding <https://ieeexplore.ieee.org/document/9089251>`__
 
     It contains following parts:
 
     Achieve the metagraph and metagraph instances by mining the raw graph. Please go to
-    `DataMaker-For-Mg2vec<https://github.com/null-xyj/DataMaker-For-Mg2vec>`__ for more details.
+    `DataMaker-For-Mg2vec <https://github.com/null-xyj/DataMaker-For-Mg2vec>`__ for more details.
 
     Initialize the embedding for every node and metagraph and adopt an unsupervised method to train the node embeddings
     and metagraph embeddings. In detail, for every node, we keep its embedding close to the metagraph it belongs to and
@@ -30,13 +30,18 @@ class Mg2vec(BaseModel):
     Second-Order Loss consider two core nodes in every meta-graph. First, we cancat the two node's embedding, what is a
     2n-dim vector. Then we use a 2n*n matrix and an n-dim vector to map the 2n-dim vector to an n-dim vector. The map
     function is showed below:
+
     .. math::
+
         f(u,v) = RELU([u||v]W + b)
+
     u and v means the origin embedding of the two nodes, || is the concatenation operator. W is the 2n*n matrix and b is
     the n-dim vector. RELU is the an activation function. f(u,v) means the n-dim vector after transforming.
     Then, the computation of second-order loss is the same as the first-order loss.
     Finally, we use a parameter alpha to balance the first-order loss and second-order loss.
+
     .. math::
+
         L=(1-alpha)*L_1 + alpha*L_2
 
     After we train the node embeddings, we use the embeddings to complete the relation prediction task.

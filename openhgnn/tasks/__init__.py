@@ -51,7 +51,7 @@ def try_import_task(task):
 
 SUPPORTED_TASKS = {
     "coldstart_recommendation": "openhgnn.tasks.coldstart_recommendation",
-    "KTN_trainer": "openhgnn.tasks.KTN",
+    "KTN_trainer": "openhgnn.tasks.ktn",
     'demo': 'openhgnn.tasks.demo',
     'node_classification': 'openhgnn.tasks.node_classification',
     'link_prediction': 'openhgnn.tasks.link_prediction',
@@ -62,34 +62,41 @@ SUPPORTED_TASKS = {
     'meirec': 'openhgnn.tasks.meirec',
     'pretrain': 'openhgnn.tasks.pretrain',
     'abnorm_event_detection': 'openhgnn.tasks.AbnormEventDetection',
-    'DSSL_trainer': 'openhgnn.tasks.DSSL_task',
+    'DSSL_trainer': 'openhgnn.tasks.node_classification',
     'NBF_link_prediction':'openhgnn.tasks.link_prediction',
-    'Ingram': 'openhgnn.tasks.Ingram',
+    'Ingram': 'openhgnn.tasks.Ingram_task',
     'DisenKGAT_link_prediction':'openhgnn.tasks.link_prediction',
     "node_regression": "openhgnn.tasks.node_regression",
 }
 
-from .node_classification import NodeClassification
-from .link_prediction import LinkPrediction
-from .recommendation import Recommendation
-from .edge_classification import EdgeClassification
-from .hypergraph import hypergraph
-from .node_classification import DSSL_task
-from .ktn import KTN4MultiLabelNodeClassification
-from .Ingram_task import Ingram
-from .node_regression import NodeRegression
 
+_TASK_CLASS_MODULES = {
+    "NodeClassification": "openhgnn.tasks.node_classification",
+    "LinkPrediction": "openhgnn.tasks.link_prediction",
+    "Recommendation": "openhgnn.tasks.recommendation",
+    "EdgeClassification": "openhgnn.tasks.edge_classification",
+    "hypergraph": "openhgnn.tasks.hypergraph",
+    "KTN4MultiLabelNodeClassification": "openhgnn.tasks.ktn",
+    "Ingram": "openhgnn.tasks.Ingram_task",
+    "NodeRegression": "openhgnn.tasks.node_regression",
+}
+
+
+def __getattr__(name):
+    if name in _TASK_CLASS_MODULES:
+        module = importlib.import_module(_TASK_CLASS_MODULES[name])
+        value = getattr(module, name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     "BaseTask",
-    "NodeClassification",
-    "LinkPrediction",
-    "Recommendation",
-    "EdgeClassification",
-    "hypergraph",
-    "pretrain",
-    "ktn",
-    "NodeRegression",
+    "TASK_REGISTRY",
+    "SUPPORTED_TASKS",
+    "build_task",
+    "register_task",
+    "try_import_task",
 ]
 
-classes = __all__
+classes = list(SUPPORTED_TASKS.keys())

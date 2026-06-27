@@ -1,0 +1,16 @@
+name: openhgnn-v0.9
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pytorch=2.4.0
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=12.1
+  - pip:
+      - -f https://data.dgl.ai/wheels/torch-2.4/cu121/repo.html
+      - -c constraints.txt
+      - -r requirements.txt

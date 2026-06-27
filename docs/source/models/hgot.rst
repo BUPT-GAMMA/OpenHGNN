@@ -1,80 +1,45 @@
 HGOT
 ====
 
-HGOT (Self-supervised Heterogeneous Graph Neural Network with Optimal
-Transport) is an ICML 2025 model for heterogeneous node representation
-learning.
-
-Paper and Code
---------------
-
-* Paper: https://arxiv.org/abs/2506.02619
+* Paper: Self-supervised Heterogeneous Graph Neural Network with Optimal
+  Transport, ICML 2025
+* Registered model name: ``HGOT``
+* Task: ``node_classification``
 * Upstream code: https://github.com/yanbeiliu/HGOT-ICML2025
 
-How to Run
-----------
-
-Run HGOT through the OpenHGNN node classification entry point:
-
-.. code-block:: bash
-
-   python main.py -m HGOT -t node_classification -d imdb4MAGNN -g 0
-
-Use CPU by setting ``-g -1``.
-
-Supported dataset:
-
-* ``imdb4MAGNN``
-
-Reproduction Result
--------------------
-
-Node classification on IMDB:
+Reproduction
+------------
 
 .. list-table::
    :header-rows: 1
 
-   * - Method
-     - Macro-F1
-     - Micro-F1
-   * - MAGNN
-     - 58.65
-     - 59.20
-   * - Paper
-     - 60.75
-     - 60.98
-   * - OpenHGNN
-     - 60.54
-     - 60.70
-
-The paper setting uses SVM classification, so the semi-supervised OpenHGNN
-trainer may differ slightly from the reported evaluation protocol.
+   * - Field
+     - Value
+   * - Data source
+     - ``imdb4MAGNN`` from the OpenHGNN dataset mirror.
+   * - Preprocessing
+     - Builds metapath reachable graphs for IMDB and projects heterogeneous
+       node features into a shared latent space before optimal transport
+       alignment.
+   * - Command
+     - ``python main.py -m HGOT -t node_classification -d imdb4MAGNN -g 0``
+   * - Metric
+     - Macro-F1 and Micro-F1 on IMDB node classification.
+   * - Expected result
+     - OpenHGNN: Macro-F1 60.54, Micro-F1 60.70. Paper reference:
+       Macro-F1 60.75, Micro-F1 60.98. MAGNN baseline: Macro-F1 58.65,
+       Micro-F1 59.20.
+   * - Hardware/runtime
+     - GPU is recommended. CPU smoke uses ``-g -1``; full runtime was not
+       recorded in merged materials.
+   * - Seed
+     - ``seed = 0`` in ``config.ini``.
 
 Implementation Notes
 --------------------
 
-HGOT first projects heterogeneous node features into a unified latent space,
-then aggregates multiple metapath-based views into a central view. The model
-uses DGL metapath reachable graphs and DGL GATConv components.
-
-Key hyperparameters are configured in ``openhgnn/config.ini``:
-
-.. code-block:: ini
-
-   feats_drop_rate = 0.3
-   attn_vec_dim = 64
-   feats_opt = 110
-   loss_lambda = 0.2
-   src_node_type = 2
-   dropout = 0.1
-   num_heads = 8
-   HIN = MAGNN
-
-Smoke Test
-----------
-
-The release smoke should cover:
-
-.. code-block:: bash
-
-   python main.py -m HGOT -t node_classification -d imdb4MAGNN -g -1
+HGOT exposes optimal transport hyperparameters in ``config.ini`` including
+``feats_drop_rate``, ``attn_vec_dim``, ``feats_opt``, ``loss_lambda``,
+``src_node_type``, ``dropout``, ``num_heads``, and ``HIN``. The paper setting
+uses SVM classification, so the semi-supervised OpenHGNN trainer may differ
+slightly from the reported evaluation protocol.

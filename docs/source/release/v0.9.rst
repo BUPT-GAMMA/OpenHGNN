@@ -1,0 +1,171 @@
+OpenHGNN v0.9 Release Notes
+===========================
+
+OpenHGNN v0.9 focuses on model coverage, reproducibility, and documentation
+standardization. The release adds 10 model contributions, introduces
+``node_regression``, updates the recommended environment, and documents the
+minimum reproduction standard for model results.
+
+Release Highlights
+------------------
+
+.. list-table::
+   :header-rows: 1
+
+   * - Area
+     - Update
+     - User impact
+   * - Models
+     - 10 new model contributions and 11 registered model names
+     - More recent heterogeneous graph methods are available through the
+       OpenHGNN registry.
+   * - Tasks
+     - New ``node_regression`` task
+     - Continuous node-label prediction can use the same public
+       ``main.py`` and ``Experiment(...)`` entry points as classification and
+       link prediction.
+   * - Environment
+     - v0.9 pinned environment with Python 3.11, PyTorch 2.4.0, DGL
+       2.4.0+cu121, and CUDA 12.1
+     - Reproduction and CI can use the same dependency files.
+   * - Documentation
+     - New model overview, task overview, reproduction guide, and model PR
+       checklist
+     - Users and contributors have a clearer path from installation to model
+       reproduction and review.
+   * - Validation
+     - Registry validation, PR hygiene checks, and changed-model smoke-test
+       selection
+     - Release candidates are checked against OpenHGNN integration and
+       repository hygiene requirements.
+
+v0.9 Model Contributions
+------------------------
+
+``HERO`` and ``HERO_homo`` are registered separately but counted as one model
+contribution because they belong to the same HERO paper family.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Contribution
+     - Registered name
+     - Venue
+     - Main task
+     - Data / preprocessing
+     - Command
+     - Metric / expected result
+     - Hardware / seed
+   * - HGDL
+     - ``HGDL``
+     - NeurIPS 2024
+     - ``node_classification``
+     - DBLP/ACM label-distribution datasets, seeded 40/10/50 split
+     - ``python main.py -m HGDL -d dblp4HGDL -t node_classification -g 0 --use_best_config``
+     - LDL metrics. ``dblp4HGDL`` KL 0.0704, Intersection 0.9356
+     - GPU recommended, seed 0
+   * - HGEN
+     - ``HGEN``
+     - IJCAI 2025
+     - ``node_classification``
+     - ``dblp4GTN``, ``acm4GTN``, ``imdb4GTN`` with DGL metapath graphs
+     - ``python main.py -m HGEN -d dblp4GTN -t node_classification -g 0``
+     - Macro-F1/Micro-F1. DBLP 88.15/89.09
+     - GPU recommended, seed 0
+   * - HGSketch
+     - ``HGSketch``
+     - SIGIR 2025
+     - Graph-level representation
+     - Model-specific graph datasets, DGL-to-NetworkX simplex extraction
+     - ``python main.py -m HGSketch -t graph_classification -d <graph_dataset> -g -1``
+     - Component-level validation through ``tests/test_hgsketch.py``; full
+       graph-classification metric pending task support
+     - CPU-capable component pipeline, seed 0
+   * - HGOT
+     - ``HGOT``
+     - ICML 2025
+     - ``node_classification``
+     - ``imdb4MAGNN`` with metapath reachable graph preprocessing
+     - ``python main.py -m HGOT -d imdb4MAGNN -t node_classification -g 0``
+     - Macro-F1/Micro-F1. OpenHGNN 60.54/60.70; paper 60.75/60.98
+     - GPU recommended; CPU smoke with ``-g -1``; seed 0
+   * - RMR
+     - ``RMR``
+     - KDD 2024
+     - ``node_classification``
+     - ``acm4RMR``, ``imdb4RMR``, ``aminer4RMR`` with split ratios 1/5/10/20
+     - ``python main.py -m RMR -d acm4RMR -t node_classification -g 0``
+     - Macro-F1/Micro-F1/AUC. ``acm4RMR`` split 20: 87.48/87.50/94.24
+     - GPU recommended, seed 0
+   * - HERO
+     - ``HERO``, ``HERO_homo``
+     - ICLR 2024
+     - ``node_classification``
+     - Heterogeneous HERO datasets and DGL/OGB homogeneous datasets
+     - ``python main.py -m HERO -d Yelp4HERO -t node_classification -g 0``
+     - Micro-F1/Macro-F1. Yelp 0.92354/0.92677; Photo 0.93343/0.92021
+     - GPU recommended, dataset-specific config
+   * - SEHTGNN
+     - ``SEHTGNN``
+     - NeurIPS 2025
+     - ``node_classification``, ``link_prediction``, ``node_regression``
+     - Temporal graph snapshots for OGBN-MAG, Aminer, YELP, COVID-19
+     - ``python main.py -m SEHTGNN -d sehtgnn_covid -t node_regression -g 0 --use_best_config``
+     - MAE/RMSE. COVID MAE 499, RMSE 1064
+     - RTX 3090, record seed per run
+   * - HTGformer
+     - ``HTGformer``
+     - SIGIR 2025
+     - ``link_prediction``, ``node_classification``, ``node_regression``
+     - Auto-downloaded temporal datasets, w/o_LLM mode
+     - ``python main.py -m HTGformer -d covid4HGformer -t node_regression -g 0``
+     - MAE. COVID MAE 511.59
+     - RTX 4090, ``num_repeats = 5``
+   * - HCMGNN
+     - ``HCMGNN``
+     - IJCAI 2024
+     - ``recommendation``
+     - Gene-microbe-disease association data, CV plus independent testing
+     - ``python main.py -m HCMGNN -d GMD4HCMGNN -t recommendation -g 0 --use_best_config``
+     - Hits@K/NDCG@K/MRR. Indep MRR 0.8899
+     - RTX 2080, seed 0
+   * - RelGT
+     - ``RelGT``
+     - arXiv 2025
+     - RelBench supervised prediction
+     - RelBench ``rel-f1`` and ``driver-top3`` with token-cache preprocessing
+     - ``python main.py -m RelGT -t link_prediction -d rel-f1 -g 0 --use_best_config``
+     - RelBench task metric; full benchmark result pending optional-dependency
+       CI fixture
+     - Optional dependencies required, seed 42
+
+What Still Needs Attention
+--------------------------
+
+The v0.9 model batch is merged for release coverage, but several pieces should
+continue to improve after release:
+
+* The ten v0.9 model reproduction notes have been moved into
+  :doc:`../models/index`; historical model-specific READMEs under legacy
+  ``openhgnn/output/<MODEL>/README.md`` paths should be migrated in later
+  cleanup passes.
+* Some model reproduction entries still depend on model-specific datasets or
+  external preprocessing steps that should be converted into stable scripts.
+* HGSketch currently has component-level validation only because OpenHGNN does
+  not yet expose a general ``graph_classification`` task registry entry.
+* RelGT depends on RelBench, PyG, TorchFrame, sentence-transformers, and cached
+  table features; keep its full benchmark outside default CI until a small
+  fixture is available.
+* Full paper-level reproduction should report hardware, seed count, mean/std,
+  command line, and log path using the standard
+  :doc:`../get_started/reproduce_model` format.
+
+Related Documentation
+---------------------
+
+* :doc:`../get_started/index`
+* :doc:`../get_started/model_overview`
+* :doc:`../get_started/task_overview`
+* :doc:`../get_started/reproduce_model`
+* :doc:`../advanced_materials/model_pr_checklist`
+* :doc:`../models/index`

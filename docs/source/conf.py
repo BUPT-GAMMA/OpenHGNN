@@ -1,7 +1,7 @@
 import datetime
 import doctest
-import sphinx_rtd_theme
 import openhgnn     # build docs may error here
+from openhgnn._version import __version__
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -24,10 +24,9 @@ author = 'BUPT-GAMMA LAB'
 project = 'OpenHGNN'
 copyright = f'{datetime.datetime.now().year}, {author}'
 
-version = 'v0.8.0'
+version = __version__
 
 html_theme = 'sphinx_rtd_theme'
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 doctest_default_flags = doctest.NORMALIZE_WHITESPACE
 autodoc_member_order = 'bysource'
@@ -41,7 +40,6 @@ intersphinx_mapping = {
 
 html_theme_options = {
     'collapse_navigation': False,
-    'display_version': True,
     'logo_only': True,
     'navigation_depth': 2,
 }

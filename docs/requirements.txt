@@ -1,6 +1,2 @@
-sphinx
-sphinx_rtd_theme
-sphinx-markdown-tables
-recommonmark
-sphinx_copybutton==0.4.0
-pydantic
+sphinx>=7,<9
+sphinx-rtd-theme>=2,<4

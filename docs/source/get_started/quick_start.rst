@@ -1,12 +1,57 @@
 Quick Start
 ==========================
 
+Choose a workflow
+-----------------
+
+Most users only need one of the following entry points:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Goal
+     - Recommended entry point
+     - Example
+   * - Run a released model
+     - ``main.py``
+     - ``python main.py -m RGCN -d acm4GTN -t node_classification -g -1``
+   * - Reproduce a model result
+     - Reproduction guide
+     - :doc:`reproduce_model`
+   * - Run from Python
+     - ``Experiment(...)``
+     - ``Experiment(model='RGCN', dataset='acm4GTN', task='node_classification')``
+   * - Discover supported names
+     - OpenHGNN CLI
+     - ``openhgnn list models``
+   * - Contribute a model
+     - Model PR checklist
+     - :doc:`../advanced_materials/model_pr_checklist`
+
+Inspect the installed package
+-----------------------------
+
+Before running an experiment, verify that your environment is within the
+supported matrix and that OpenHGNN can discover its registered components.
+
+.. code:: bash
+
+    openhgnn env
+    openhgnn list models
+    openhgnn list tasks
+    openhgnn list datasets
+
+For machine-readable output, use ``--format json``.
+
+.. code:: bash
+
+    openhgnn env --format json
+    openhgnn validate-registry --format json
+
 Quick Start From API
 --------------------
 
-Run experiments:
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-Running an existing baseline model on an existing benchmark
+Run an existing baseline model on an existing benchmark:
 
 .. code-block:: python
 
@@ -16,7 +61,8 @@ Running an existing baseline model on an existing benchmark
     experiment.run()
 
 Hyper-parameter optimization
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Run an experiment with optuna
 
 .. code-block:: python
@@ -47,16 +93,16 @@ Besides using API, you can also directly run the source code of OpenHGNN.
 
 .. code:: bash
 
-    >>> python main.py -m model_name -d dataset_name -t task_name -g 0 --use_best_config
+    >>> python main.py -m model_name -d dataset_name -t task_name -g -1 --use_best_config
     usage: main.py [-h] [--model MODEL] [--task TASK] [--dataset DATASET]
                [--gpu GPU] [--use_best_config]
 
 Optional arguments are as follows:
 
     - ``--model MODEL``, ``-m MODEL`` name of models.  Please refer to the `model list <https://github.com/BUPT-GAMMA/OpenHGNN#models>`_ for supported models and their names.
-    - ``--task TASK``, ``-t TASK`` name of task.  Please refer to `tasks <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/tasks#Supported task>`_  for the list of tasks.
-    - ``--dataset DATASET``, ``-d DATASET`` name of datasets.  Please refer to `datasets <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/dataset#Dataset>`_ for the list of datasets.
-    - ``--gpu GPU``, ``-g GPU``	controls which GPU you will use. If you do not have GPU, set ``-g -1``.
+    - ``--task TASK``, ``-t TASK`` name of task.  Please refer to `tasks <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/tasks#supported-task>`_ for the list of tasks.
+    - ``--dataset DATASET``, ``-d DATASET`` name of datasets.  Please refer to `datasets <https://github.com/BUPT-GAMMA/OpenHGNN/tree/main/openhgnn/dataset#dataset>`_ for the list of datasets.
+    - ``--gpu GPU``, ``-g GPU`` controls which GPU you will use. If you do not have GPU, set ``-g -1``.
     - ``--use_best_config`` use the best config OpenHGNN has found in the dataset with the model. If you want to set the different hyper-parameter, modify the `config.ini <https://github.com/BUPT-GAMMA/OpenHGNN/blob/main/openhgnn/config.ini>`_ file manually.
     - ``--load_from_pretrained`` will load the model from a default checkpoint.
 
@@ -64,4 +110,20 @@ e.g.:
 
 .. code:: bash
 
-    python main.py -m GTN -d imdb4GTN -t node_classification -g 0 --use_best_config
+    python main.py -m GTN -d imdb4GTN -t node_classification -g -1 --use_best_config
+
+Additional v0.9 task example:
+
+.. code:: bash
+
+    python main.py -m SEHTGNN -d sehtgnn_covid -t node_regression -g -1 --use_best_config
+
+When contributing a new model, the minimum release-quality smoke command should
+use the same public entry point:
+
+.. code:: bash
+
+    python main.py -m MODEL_NAME -d DATASET_NAME -t TASK_NAME -g -1 --use_best_config
+
+For full result reproduction, including environment capture, configuration
+source, seeds, logs, and result reporting, see :doc:`reproduce_model`.

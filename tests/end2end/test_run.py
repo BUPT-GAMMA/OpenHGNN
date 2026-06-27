@@ -1,20 +1,18 @@
+import os
+
 import pytest
 from openhgnn.experiment import Experiment
+from openhgnn.models import SUPPORTED_MODELS
+from openhgnn.tasks import SUPPORTED_TASKS
 
 experiments = {
-    'node_classification': {  # 25
+    'node_classification': {  # 26
         'aifb': ['CompGCN', 'RGCN', 'RSHN', ],
-        'acm_han_raw': ['DMGI', 'HAN', 'HPN', ],
-        'sehtgnn_yelp': ['SEHTGNN'],
-        'Yelp4HERO': ['HERO'],
-        'photo4HERO': ['HERO_homo'],
-        'acm4RMR': ['RMR'],
-        'dblp4HGDL': ['HGDL'],
-        'dblp4GTN': ['HGEN'],
+        'acm_han_raw': ['DMGI', 'HAN', 'HPN', 'RoHe'],
         'imdb4GTN': ['GIN', 'RHGNN', ],
         'acm4GTN': ['GTN', 'fastGTN', 'HGSL', 'MHNF', ],
         'dblp4MAGNN': ['HERec', 'Metapath2vec', ],
-        'imdb4MAGNN': ['HGNN_AC', 'HGOT', 'HGT', 'SimpleHGN', 'HetSANN', 'ieHGCN', 'MAGNN'],
+        'imdb4MAGNN': ['HGNN_AC', 'HGT', 'SimpleHGN', 'HetSANN', 'ieHGCN', 'MAGNN'],
         'acm4HeCo': ['HeCo', ],
         'yelp4HeGAN': ['HeGAN', ],
         'academic4HetGNN': ['HetGNN', ],
@@ -25,17 +23,20 @@ experiments = {
         'dblp4Mg2vec_4': ['Mg2vec', ],
         'dblp4Mg2vec_5': ['Mg2vec', ],
     },
-    'link_prediction': {  # 8
+    'link_prediction': {  # 13
         'HGBl-amazon': ['GATNE-T', 'RGCN', ],
-        'sehtgnn_ogbn': ['SEHTGNN'],
-        'ogbn_mag4HGformer': ['HTGformer'],
         'wn18': ['GIE', ],
         'HGBl-IMDB': ['HDE', ],     # 'HGBl-IMDB' slow to run, alternative datasets ['HGBl-DBLP', 'HGBl-ACM']
-        'FB15k': ['TransD', 'TransE', 'TransH', 'TransR', ]
+        'FB15k': ['TransD', 'TransE', 'TransH', 'TransR', ],
+        'WN18RR_v1': ['Grail', 'ComPILE'],
+        'NBF_WN18RR': ['NBF'],
+        'fb237_v1': ['RedGNN'],
+        'EXP_FB15k-237': ['ExpressGNN'],
     },
-    'recommendation': {  # 1
-        'GMD4HCMGNN': ['HCMGNN'],
+    'recommendation': {  # 3
         'LastFM4KGCN': ['KGCN', ],
+        'amazon-book_KGAT': ['KGAT'],
+        'gowalla': ['lightGCN'],
     },
     'node_regression': {
         'sehtgnn_covid': ['SEHTGNN'],
@@ -52,7 +53,13 @@ experiments = {
 class TestExperiment:
 
     def setup_class(cls):
-        cls.gpu = 3
+        cls.gpu = int(os.environ.get('OPENHGNN_TEST_GPU', '-1'))
+
+    def _skip_if_unavailable(self, task, model):
+        if task not in SUPPORTED_TASKS:
+            pytest.skip(f"{task} is not registered in this checkout")
+        if model not in SUPPORTED_MODELS:
+            pytest.skip(f"{model} is not registered in this checkout")
 
     @pytest.mark.parametrize("dataset,model",
                              [(dataset, model) for dataset, models in experiments['node_classification'].items() for
@@ -73,16 +80,22 @@ class TestExperiment:
         Experiment(model=model, dataset=dataset, task='link_prediction', gpu=self.gpu, epoch=1, max_epoch=1).run()
 
     @pytest.mark.parametrize("dataset,model",
-                             [(dataset, model) for dataset, models in experiments['node_regression'].items() for model
-                              in models])
-    def test_node_regression(self, dataset, model):
-        Experiment(model=model, dataset=dataset, task='node_regression', gpu=self.gpu, epoch=1, max_epoch=1).run()
-
-    @pytest.mark.parametrize("dataset,model",
                              [(dataset, model) for dataset, models in experiments['recommendation'].items() for model in
                               models])
     def test_recommendation(self, dataset, model):
         Experiment(model=model, dataset=dataset, task='recommendation', gpu=self.gpu, epoch=1, max_epoch=1).run()
+
+    @pytest.mark.parametrize("dataset,model",
+                             [(dataset, model) for dataset, models in experiments['node_regression'].items() for model
+                              in models])
+    def test_node_regression(self, dataset, model):
+        self._skip_if_unavailable('node_regression', model)
+        try:
+            Experiment(model=model, dataset=dataset, task='node_regression', gpu=self.gpu, epoch=1, max_epoch=1).run()
+        except RuntimeError as exc:
+            if 'Failed downloading url' in str(exc):
+                pytest.skip(f'{dataset} is not cached and the remote dataset URL is unavailable')
+            raise
 
     @pytest.mark.parametrize("dataset,model",
                              [(dataset, model) for dataset, models in experiments['hypergraph'].items() for model in

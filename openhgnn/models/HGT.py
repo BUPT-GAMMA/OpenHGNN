@@ -15,8 +15,8 @@ class HGT(BaseModel):
     r"""Heterogeneous graph transformer convolution from `Heterogeneous Graph Transformer
     <https://arxiv.org/abs/2003.01332>`__
 
-    For more details, you may refer to `HGT<https://docs.dgl.ai/en/0.8.x/generated/dgl.nn.pytorch.conv.HGTConv.html>`__
-    
+    For more details, refer to `DGL HGTConv <https://docs.dgl.ai/en/0.8.x/generated/dgl.nn.pytorch.conv.HGTConv.html>`__.
+
     Parameters
     ----------
     in_dim: int

@@ -10,10 +10,10 @@ Task
     :toctree: ../generated
     :template: _templates/class.rst
 
-    openhgnn.tasks.BaseTask
-    openhgnn.tasks.NodeClassification
-    openhgnn.tasks.LinkPrediction
-    openhgnn.tasks.Recommendation
-    openhgnn.tasks.EdgeClassification
-    openhgnn.tasks.hypergraph
-    openhgnn.tasks.KTN
+    BaseTask
+    NodeClassification
+    LinkPrediction
+    Recommendation
+    EdgeClassification
+    hypergraph
+    KTN4MultiLabelNodeClassification

@@ -74,6 +74,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/source/generated/
 
 # PyBuilder
 .pybuilder/
@@ -161,9 +162,6 @@ cython_debug/
 *.bin
 *.pt
 *.mat
-*.tar.gz
-*.csv.gz
-openhgnn/dataset/data/*
 
 # numpy files
 *.npy
@@ -174,6 +172,8 @@ openhgnn/dataset/data/*
 
 .DS_Store
 *.txt
+!constraints.txt
+!docs/requirements.txt
 
 # visualization figure files
 *.jpg
@@ -183,3 +183,18 @@ openhgnn/dataset/data/*
 # history
 .history
 
+# OpenHGNN runtime artifacts
+runs/
+wandb/
+checkpoints/
+checkpoint/
+saved_models/
+.selected-nodeids
+*.ckpt
+*.pth
+events.out.tfevents.*
+openhgnn/output/**/events.out.tfevents.*
+openhgnn/output/**/checkpoint*
+openhgnn/output/**/model*
+openhgnn/dataset/Common_Dataset/
+openhgnn/dataset/GraphBolt_Dataset/

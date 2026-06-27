@@ -63,7 +63,7 @@ The next step is to specify information in the `NodeClassificationDataset.py <ht
 
 For example, we should set the *category*, *num_classes* and *multi_label* (if necessary) with ``"paper"``, ``3``, ``True``, representing the node type to predict classes for,
 the number of classes, and whether the task is multi-label classification respectively.
-Please refer to :ref:`Base Node Classification Dataset <api-base-node-dataset>` for more details.
+Please refer to :class:`openhgnn.dataset.NodeClassificationDataset` for more details.
 
 .. code:: python
 

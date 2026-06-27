@@ -1,0 +1,7 @@
+interface:
+  display_name: "OpenHGNN Algorithm Developer"
+  short_description: "Guide OpenHGNN model use and integration"
+  default_prompt: "Use $openhgnn-algorithm-developer to run an OpenHGNN model, reproduce a result, or integrate a new algorithm."
+
+policy:
+  allow_implicit_invocation: true

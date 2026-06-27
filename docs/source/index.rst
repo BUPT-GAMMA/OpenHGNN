@@ -14,6 +14,17 @@ Welcome to OpenHGNN's documentation!
 
    get_started/index
    get_started/quick_start
+   get_started/model_overview
+   get_started/task_overview
+   get_started/reproduce_model
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Release Notes
+   :hidden:
+   :glob:
+
+   release/index
 
 .. toctree::
    :maxdepth: 1
@@ -45,16 +56,36 @@ Welcome to OpenHGNN's documentation!
    api/trainerflow
 
 
-This is an open-source toolkit for Heterogeneous Graph Neural Network(OpenHGNN) based on `DGL [Deep Graph Library] <https://github.com/dmlc/dgl>`_ and `PyTorch <https://pytorch.org/>`_.
-We integrate SOTA models of heterogeneous graph.
+OpenHGNN is an open-source toolkit for heterogeneous graph neural networks
+based on `DGL [Deep Graph Library] <https://github.com/dmlc/dgl>`_ and
+`PyTorch <https://pytorch.org/>`_. It provides reusable models, datasets,
+tasks, trainer flows, and experiment entry points for heterogeneous graph
+research and applications.
 
 Key Features
 --------------
 
-* Easy-to-Use: OpenHGNN provides easy-to-use interfaces for running experiments with the given models and datasets using `optuna <https://optuna.org/>`_ which is a hyperparameter optimization framework.
-* Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
-* Efficiency: The backend dgl provides efficient APIs.
+* Easy-to-use experiment entry points through ``Experiment(...)`` and
+  ``main.py``.
+* Extensible model, dataset, task, and trainerflow registries for new research
+  contributions.
+* DGL-first graph construction, sampling, and message passing for heterogeneous
+  graph workloads.
+* OpenHGNN v0.9 adds 10 model contributions and expands task coverage with
+  ``node_regression``.
+* Registered models, tasks, datasets, and trainer flows can be inspected from
+  the command line.
 
-Contract Us
+Quick checks
+--------------
+
+.. code:: bash
+
+   openhgnn env
+   openhgnn list models
+   openhgnn list tasks
+   openhgnn validate-registry
+
+Contact Us
 -------------
 If you have any question, please submit issues or contact us: tyzhao@bupt.edu.cn
