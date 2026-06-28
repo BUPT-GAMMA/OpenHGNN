@@ -40,12 +40,11 @@ RelGT requires dependencies that are not part of the core OpenHGNN environment:
 
 .. code:: bash
 
-   pip install relbench pytorch-frame torch-geometric sentence-transformers h5py einops
+   pip install relbench sentence-transformers h5py einops
 
 Release Limitation
 ------------------
 
-RelGT follows the RelBench/PyG/TorchFrame data pipeline rather than the
-standard DGL heterogeneous graph path. Keep it out of the default CI smoke
-matrix until the optional dependencies and cached RelBench fixture are
-available in CI.
+RelGT requires RelBench data preparation and cached table features before the
+full benchmark can run. Keep it out of the default CI smoke matrix until a
+small cached RelBench fixture is available in CI.

@@ -153,7 +153,7 @@ continue to improve after release:
   external preprocessing steps that should be converted into stable scripts.
 * HGSketch currently has component-level validation only because OpenHGNN does
   not yet expose a general ``graph_classification`` task registry entry.
-* RelGT depends on RelBench, PyG, TorchFrame, sentence-transformers, and cached
+* RelGT depends on RelBench data preparation, sentence-transformers, and cached
   table features; keep its full benchmark outside default CI until a small
   fixture is available.
 * Full paper-level reproduction should report hardware, seed count, mean/std,
