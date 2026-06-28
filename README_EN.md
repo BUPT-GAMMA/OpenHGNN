@@ -196,8 +196,8 @@ Officially recommended environments:
 The repository files `environment.yml` and `constraints.txt` are pinned to the primary setup.
 
 ```bash
-conda create -n openhgnn-v0.9 python=3.11
-conda activate openhgnn-v0.9
+conda create -n openhgnn python=3.11
+conda activate openhgnn
 ```
 
 **2. Install Pytorch:** Follow their [tutorial](https://pytorch.org/get-started) to run the proper command according to
@@ -228,7 +228,7 @@ git clone https://github.com/BUPT-GAMMA/OpenHGNN
 # git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
 cd OpenHGNN
 # To create the full pinned source environment directly, you can also use:
-# conda env create -f environment.yml && conda activate openhgnn-v0.9
+# conda env create -f environment.yml && conda activate openhgnn
 pip install -c constraints.txt -r requirements.txt
 pip install -e .
 ```

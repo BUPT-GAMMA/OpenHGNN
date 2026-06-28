@@ -1,4 +1,4 @@
-name: openhgnn-v0.9
+name: openhgnn
 channels:
   - pytorch
   - nvidia

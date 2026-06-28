@@ -197,8 +197,8 @@ OpenHGNN荣获启智社区优秀孵化项⽬奖！详细链接：https://mp.weix
 仓库中的 `environment.yml` 和 `constraints.txt` 已经按首选环境固定。
 
 ```bash
-conda create -n openhgnn-v0.9 python=3.11
-conda activate openhgnn-v0.9
+conda create -n openhgnn python=3.11
+conda activate openhgnn
 ```
 
 **2. 安装Pytorch:** 参考 [PyTorch安装文档](https://pytorch.org/get-started/) 根据你的操作系统和CUDA版本选择合适的安装命令。例如：
@@ -227,7 +227,7 @@ git clone https://github.com/BUPT-GAMMA/OpenHGNN
 # git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
 cd OpenHGNN
 # 如果希望直接创建完整的固定环境，也可以使用：
-# conda env create -f environment.yml && conda activate openhgnn-v0.9
+# conda env create -f environment.yml && conda activate openhgnn
 pip install -c constraints.txt -r requirements.txt
 pip install -e .
 ```

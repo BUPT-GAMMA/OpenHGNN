@@ -15,8 +15,8 @@ machines:
 
    git clone https://github.com/BUPT-GAMMA/OpenHGNN
    cd OpenHGNN
-   conda create -n openhgnn-v0.9 python=3.11
-   conda activate openhgnn-v0.9
+   conda create -n openhgnn python=3.11
+   conda activate openhgnn
    pip install -c constraints.txt -r requirements.txt
    pip install -e .
 

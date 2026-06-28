@@ -47,8 +47,8 @@ environment.
 
 .. code:: bash
 
-    conda create -n openhgnn-v0.9 python=3.11
-    conda activate openhgnn-v0.9
+    conda create -n openhgnn python=3.11
+    conda activate openhgnn
 
 **2. PyTorch:** Follow the `PyTorch installation guide <https://pytorch.org/get-started/>`_ to run the proper command according to
 your OS and CUDA version. For example:
@@ -81,7 +81,7 @@ your OS and CUDA version. For example:
     # git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
     cd OpenHGNN
     # To create the full pinned source environment directly, you can also use:
-    # conda env create -f environment.yml && conda activate openhgnn-v0.9
+    # conda env create -f environment.yml && conda activate openhgnn
     pip install -c constraints.txt -r requirements.txt
     pip install -e .
 
