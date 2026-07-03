@@ -17,7 +17,6 @@ from .SACN_dataset import *
 from .NBF_dataset import NBF_Dataset 
 from .Ingram_dataset import Ingram_KG_TrainData, Ingram_KG_TestData
 from .MetaHIN_dataset import Meta_DataHelper
-from .SlotGAT_dataset import SlotGATDataLoader
 
 DATASET_REGISTRY = {}
 
@@ -89,7 +88,7 @@ def build_dataset_GB(dataset,*args,**kwargs):
 def build_dataset(dataset, task, *args, **kwargs):
     
     args = kwargs.get('args', None)
-    
+    model = None
     if hasattr(args,'model'):
         model = args.model
         
@@ -118,11 +117,21 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset == "dbook":
         dataload = Meta_DataHelper(args.input_dir, args)
         return dataload
-    elif dataset == 'acmSlotGAT':
-        dataload = SlotGATDataLoader(args)
-        return dataload
+    elif model == 'SlotGAT' and task == 'node_classification':
+        importlib.import_module(SUPPORTED_DATASETS['slotgat'])
+        return DATASET_REGISTRY['slotgat'](dataset, logger=kwargs['logger'], args=args)
+    elif model == 'SlotGAT' and task == 'link_prediction':
+        importlib.import_module(SUPPORTED_DATASETS['slotgat_lp'])
+        return DATASET_REGISTRY['slotgat_lp'](dataset, logger=kwargs['logger'], args=args)
 
 #############
+
+    if dataset in DATASET_REGISTRY:
+        return DATASET_REGISTRY[dataset](dataset, logger=kwargs['logger'], args=kwargs.get('args'))
+    if dataset in SUPPORTED_DATASETS:
+        importlib.import_module(SUPPORTED_DATASETS[dataset])
+        if dataset in DATASET_REGISTRY:
+            return DATASET_REGISTRY[dataset](dataset, logger=kwargs['logger'], args=kwargs.get('args'))
 
     if dataset in CLASS_DATASETS:
         return build_dataset_v2(dataset, task)
@@ -233,6 +242,10 @@ def build_dataset(dataset, task, *args, **kwargs):
 
 SUPPORTED_DATASETS = {
     "node_classification": "openhgnn.dataset.NodeClassificationDataset",
+    "acmSlotGAT": "openhgnn.dataset.SlotGAT_nc_dataset",
+    "slotgat": "openhgnn.dataset.SlotGAT_nc_dataset",
+    "slotgat_lp": "openhgnn.dataset.SlotGAT_lp_dataset",
+    "SlotGAT_LP": "openhgnn.dataset.SlotGAT_lp_dataset",
     "link_prediction": "openhgnn.dataset.LinkPredictionDataset",
     "recommendation": "openhgnn.dataset.RecommendationDataset",
     "edge_classification": "openhgnn.dataset.EdgeClassificationDataset",
@@ -248,6 +261,9 @@ from .RecommendationDataset import RecommendationDataset
 from .EdgeClassificationDataset import EdgeClassificationDataset
 from .HypergraphDataset import HGraphDataset
 from .oag_dataset import OAGDataset
+
+from .SlotGAT_nc_dataset import SlotGATDataset
+from .SlotGAT_lp_dataset import SlotGATLPDataset
 
 
 

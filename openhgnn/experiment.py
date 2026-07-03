@@ -86,6 +86,12 @@ class Experiment(object):
         'HGA':'hga_trainer',
         'RHINE':'rhine_trainer',
         'FedHGNN':'FED_REC_trainer',
+        'SlotGAT': {
+            'node_classification': 'slotgat_node_classification',
+            'link_prediction': 'slotgat_link_prediction',
+            'slotgat_node_classification': 'slotgat_node_classification',
+            'slotgat_link_prediction': 'slotgat_link_prediction',
+        },
         "MHGCN":{
             "node_classification":"MHGCN_NC_Trainer",
             "link_prediction":"MHGCN_LP_Trainer"

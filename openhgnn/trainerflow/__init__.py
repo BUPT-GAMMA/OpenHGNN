@@ -64,6 +64,8 @@ SUPPORTED_FLOWS = {
     'node_classification_ac': 'openhgnn.trainerflow.node_classfication_ac',
     'distmult': 'openhgnn.trainerflow.dist_mult',
     'link_prediction': 'openhgnn.trainerflow.link_prediction',
+    'slotgat_node_classification': 'openhgnn.trainerflow.slotgat_node_classification',
+    'slotgat_link_prediction': 'openhgnn.trainerflow.slotgat_link_prediction',
     'recommendation': 'openhgnn.trainerflow.recommendation',
     'hetgnntrainer': 'openhgnn.trainerflow.hetgnn_trainer',
     'hgttrainer': 'openhgnn.trainerflow.hgt_trainer',
@@ -107,7 +109,7 @@ SUPPORTED_FLOWS = {
     'RedGNN_trainer': 'openhgnn.trainerflow.RedGNN_trainer',
     'RedGNNT_trainer': 'openhgnn.trainerflow.RedGNNT_trainer',
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
-    'SlotGAT_trainer':'openhgnn.trainerflow.SlotGAT_trainer'
+    'slotgat_node_classification': 'openhgnn.trainerflow.slotgat_node_classification'
 
 
 
@@ -124,6 +126,8 @@ from .sian_trainer import SIAN_Trainer
 from .hgcl_trainer import HGCLtrainer
 from .node_classification import NodeClassification
 from .link_prediction import LinkPrediction
+from .slotgat_node_classification import SlotGATNodeClassification
+from .slotgat_link_prediction import SlotGATLinkPrediction
 from .recommendation import Recommendation
 from .hetgnn_trainer import HetGNNTrainer
 from .hgt_trainer import HGTTrainer
@@ -169,6 +173,8 @@ __all__ = [
     'MHGCN_trainer',
     'BaseFlow',
     'NodeClassification',
+    'SlotGATNodeClassification',
+    'SlotGATLinkPrediction',
     'LinkPrediction',
     'Recommendation',
     'HetGNNTrainer',

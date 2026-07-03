@@ -3,19 +3,50 @@ import torch.nn.functional as F
 from . import BaseModel, register_model
 import torch
 import math
-from collections.abc import Mapping
 from dgl import function as fn
 from dgl.nn.pytorch import edge_softmax
+
+
+class SlotGATDistMult(nn.Module):
+    def __init__(self, num_rel, dim):
+        super(SlotGATDistMult, self).__init__()
+        self.W = nn.Parameter(torch.FloatTensor(size=(num_rel, dim, dim)))
+        nn.init.xavier_normal_(self.W, gain=1.414)
+
+    def forward(self, left_emb, right_emb, r_id):
+        if not isinstance(r_id, torch.Tensor):
+            r_id = torch.LongTensor(r_id).to(left_emb.device)
+        else:
+            r_id = r_id.long().to(left_emb.device)
+        scores = torch.zeros(right_emb.shape[0], device=right_emb.device)
+        for rel_id in torch.unique(r_id):
+            mask = r_id == rel_id
+            left = left_emb[mask].unsqueeze(1)
+            right = right_emb[mask].unsqueeze(2)
+            scores[mask] = torch.bmm(torch.matmul(left, self.W[rel_id]), right).squeeze()
+        return scores
+
+
+class SlotGATDot(nn.Module):
+    def forward(self, left_emb, right_emb, r_id=None):
+        return torch.bmm(left_emb.unsqueeze(1), right_emb.unsqueeze(2)).squeeze()
 
 @register_model('SlotGAT')
 class SlotGAT(BaseModel):
     @classmethod
     def build_model_from_args(cls, args, hg):
-        return cls(args.edge_dim,
-                   args.num_etypes,
-                   args.in_dim,
+        edge_dim = getattr(args, 'edge_dim', None)
+        num_etypes = getattr(args, 'num_etypes', None)
+        in_dim = getattr(args, 'in_dim', None)
+        num_ntype = getattr(args, 'num_ntype', None)
+        if edge_dim is None:
+            edge_dim = 64
+        num_classes = getattr(args, 'num_classes', getattr(args, 'hid_dim', getattr(args, 'hidden_dim', 64)))
+        return cls(edge_dim,
+                   num_etypes,
+                   in_dim,
                    args.hid_dim,
-                   args.num_classes,
+                   num_classes,
                    args.num_layers,
                    args.num_heads,
                    args.feat_drop,
@@ -23,7 +54,14 @@ class SlotGAT(BaseModel):
                    args.negative_slope,
                    args.residual,
                    args.alpha,
-                   args.num_ntype
+                   num_ntype,
+                   SAattDim=getattr(args, 'SAattDim', 32),
+                   aggregator=getattr(args, 'slot_aggregator', 'SA'),
+                   decoder=getattr(args, 'decoder', getattr(args, 'score_fn', 'distmult')),
+                   in_process_emb=getattr(args, 'inProcessEmb', 'True'),
+                   l2_by_slot=getattr(args, 'l2BySlot', 'False'),
+                   l2use=getattr(args, 'l2use', 'True'),
+                   sigmoid=getattr(args, 'slotgat_sigmoid', 'after')
                    )
     def __init__(self,
                  edge_dim,
@@ -39,7 +77,8 @@ class SlotGAT(BaseModel):
                  residual,
                  alpha,
                  num_ntype,
-                 eindexer = None, aggregator="SA",  SAattDim=32):
+                 eindexer = None, aggregator="SA",  SAattDim=32,
+                 decoder='distmult', in_process_emb='True', l2_by_slot='False', l2use='True', sigmoid='after'):
         super(SlotGAT, self).__init__()
         self.num_layers = num_layers
         self.gat_layers = nn.ModuleList()
@@ -49,6 +88,10 @@ class SlotGAT(BaseModel):
         self.num_classes=num_classes
         self.leaky_relu = nn.LeakyReLU(negative_slope)
         self.SAattDim=SAattDim
+        self.inProcessEmb = in_process_emb
+        self.l2BySlot = l2_by_slot
+        self.l2use = l2use
+        self.sigmoid = sigmoid
         self.e_feat = None
         # SlotAttention
         
@@ -76,8 +119,18 @@ class SlotGAT(BaseModel):
             hid_dim* heads[-2] , num_classes, heads[-1],
             feat_drop, attn_drop, negative_slope, residual, None, alpha=alpha,num_ntype=num_ntype, eindexer=eindexer))
         self.aggregator=aggregator
+        lp_dim = num_classes * (num_layers + 2) if self.inProcessEmb == 'True' else num_classes
+        self.lp_macroLinear = nn.Linear(lp_dim, self.SAattDim, bias=True)
+        nn.init.xavier_normal_(self.lp_macroLinear.weight, gain=1.414)
+        nn.init.normal_(self.lp_macroLinear.bias, std=1.414 * math.sqrt(1 / self.lp_macroLinear.bias.flatten().shape[0]))
+        self.lp_macroSemanticVec = nn.Parameter(torch.FloatTensor(self.SAattDim, 1))
+        nn.init.normal_(self.lp_macroSemanticVec, std=1)
+        if decoder == 'dot' or decoder == 'dot-product':
+            self.decoder = SlotGATDot()
+        else:
+            self.decoder = SlotGATDistMult(num_etypes, lp_dim)
         self.by_slot=[f"by_slot_{nt}" for nt in range(num_ntype)]
-        self.epsilon = torch.FloatTensor([1e-12]).cuda()
+        self.register_buffer('epsilon', torch.tensor([1e-12], dtype=torch.float32))
         
     def forward(self, g,features_list,e_feat, get_out="False"):
         encoded_embeddings=None
@@ -121,19 +174,94 @@ class SlotGAT(BaseModel):
         return logits, encoded_embeddings    #hidden_logits
 
         
+    def encode_lp(self, g, features_list, e_feat, get_out="False"):
+        h = []
+        for nt_id, (fc, feature) in enumerate(zip(self.fc_list, features_list)):
+            nt_ft = fc(feature)
+            emsen_ft = torch.zeros([nt_ft.shape[0], nt_ft.shape[1] * self.num_ntype], device=feature.device)
+            emsen_ft[:, nt_ft.shape[1] * nt_id:nt_ft.shape[1] * (nt_id + 1)] = nt_ft
+            h.append(emsen_ft)
+        h = torch.cat(h, 0)
+
+        emb = [self.lp_aggr_func(self.lp_l2_norm(h))]
+        res_attn = None
+        for layer in range(self.num_layers):
+            h, res_attn = self.gat_layers[layer](g, h, e_feat, get_out=get_out, res_attn=res_attn)
+            emb.append(self.lp_aggr_func(self.lp_l2_norm(h.mean(1))))
+            h = h.flatten(1)
+
+        logits, _ = self.gat_layers[-1](g, h, e_feat, get_out=get_out, res_attn=res_attn)
+        logits = self.lp_aggr_func(self.lp_l2_norm(logits.mean(1)))
+        if self.inProcessEmb == 'True':
+            emb.append(logits)
+        else:
+            emb = [logits]
+
+        if self.aggregator == "None" and self.inProcessEmb == 'True':
+            emb = [x.view(-1, self.num_ntype, int(x.shape[1] / self.num_ntype)) for x in emb]
+            output = torch.cat(emb, 2).flatten(1)
+        else:
+            output = torch.cat(emb, 1)
+
+        if self.aggregator == "SA":
+            output = output.view(-1, self.num_ntype, int(output.shape[1] / self.num_ntype))
+            slot_scores = (F.tanh(self.lp_macroLinear(output)) @ self.lp_macroSemanticVec).mean(0, keepdim=True)
+            self.slot_scores = F.softmax(slot_scores, dim=1)
+            output = (output * self.slot_scores).sum(1)
+        return output
+
+    def forward_lp(self, g, features_list, e_feat, left, right, mid, get_out="False"):
+        embeddings = self.encode_lp(g, features_list, e_feat, get_out=get_out)
+        if not isinstance(left, torch.Tensor):
+            left = torch.LongTensor(left).to(embeddings.device)
+        else:
+            left = left.long().to(embeddings.device)
+        if not isinstance(right, torch.Tensor):
+            right = torch.LongTensor(right).to(embeddings.device)
+        else:
+            right = right.long().to(embeddings.device)
+        left_emb = embeddings[left]
+        right_emb = embeddings[right]
+        scores = self.decoder(left_emb, right_emb, mid)
+        if self.sigmoid == 'after':
+            scores = torch.sigmoid(scores)
+        elif self.sigmoid == 'None':
+            pass
+        elif self.sigmoid != 'before':
+            raise ValueError(f'Unsupported SlotGAT sigmoid mode: {self.sigmoid}')
+        return scores
+
+    def lp_l2_norm(self, x):
+        if self.l2use == 'False':
+            return x
+        if self.l2BySlot == 'True':
+            x = x.view(-1, self.num_ntype, int(x.shape[1] / self.num_ntype))
+            x = x / torch.max(torch.norm(x, dim=2, keepdim=True), self.epsilon)
+            return x.flatten(1)
+        return x / torch.max(torch.norm(x, dim=1, keepdim=True), self.epsilon)
+
+    def lp_aggr_func(self, logits):
+        if self.aggregator == "average":
+            logits = logits.view(-1, self.num_ntype, self.num_classes).mean(1)
+        elif self.aggregator == "last_fc":
+            logits = logits.view(-1, self.num_ntype, self.num_classes).flatten(1).matmul(self.last_fc).unsqueeze(1)
+        elif self.aggregator == "max":
+            logits = logits.view(-1, self.num_ntype, self.num_classes).max(1)[0]
+        elif self.aggregator == "None" or self.aggregator == "SA":
+            logits = logits.view(-1, self.num_ntype, self.num_classes).flatten(1)
+        elif self.aggregator in self.by_slot:
+            slot_id = int(self.aggregator.replace('by_slot_', ''))
+            logits = logits.view(-1, self.num_ntype, self.num_classes)[:, slot_id, :]
+        else:
+            raise NotImplementedError()
+        return logits
+
     def l2byslot(self,x):
         
         x=x.view(-1, self.num_ntype,int(x.shape[1]/self.num_ntype))
         x=x / (torch.max(torch.norm(x, dim=2, keepdim=True), self.epsilon))
         x=x.flatten(1)
         return x
-
-
-            
-        
-        
-        
-        
         
 class slotGATConv(nn.Module):
 
@@ -213,65 +341,67 @@ class slotGATConv(nn.Module):
         self._allow_zero_in_degree = set_value
 
     def forward(self, graph, feat, e_feat,get_out=[""], res_attn=None):
-        #feature transformation first
-        h_src = h_dst = self.feat_drop(feat)   #num_nodes*(num_ntype*input_dim)
+        with graph.local_scope():
+            #feature transformation first
+            h_src = h_dst = self.feat_drop(feat)   #num_nodes*(num_ntype*input_dim)
 
-        if self.inputhead:
-            h_src=h_src.view(-1,1,self.num_ntype,self._in_src_feats) # num_nodes*1*(num_ntype*input_dim)
-        else:
-            h_src=h_src.view(-1,self._num_heads,self.num_ntype,int(self._in_src_feats/self._num_heads))
-        h_dst=h_src=h_src.permute(2,0,1,3).flatten(2)  #num_ntype*num_nodes*(in_feat_dim)
-        if "getEmb" in get_out:
-            self.emb=h_dst.cpu().detach()
-        #self.fc with num_ntype*(in_feat_dim)*(out_feats * num_heads)
-        feat_dst = torch.bmm(h_src,self.fc)  #num_ntype*num_nodes*(out_feats * num_heads)
-        feat_src = feat_dst =feat_dst.permute(1,0,2).view(                 #num_nodes*num_heads*(num_ntype*hidden_dim)
-                -1,self.num_ntype ,self._num_heads, self._out_feats).permute(0,2,1,3).flatten(2)
-        if graph.is_block:
-            feat_dst = feat_src[:graph.number_of_dst_nodes()]
-        e_feat = self.edge_emb(e_feat) if self._edge_feats else None
-        e_feat = self.fc_e(e_feat).view(-1, self._num_heads, self._edge_feats)  if self._edge_feats else None
-        ee = (e_feat * self.attn_e).sum(dim=-1).unsqueeze(-1) if self._edge_feats else 0  #(-1, self._num_heads, 1) 
-        el = (feat_src * self.attn_l).sum(dim=-1).unsqueeze(-1)
-        er = (feat_dst * self.attn_r).sum(dim=-1).unsqueeze(-1)
-        graph.srcdata.update({'ft': feat_src, 'el': el})
-        graph.dstdata.update({'er': er})
-        graph.edata.update({'ee': ee}) if self._edge_feats else None
-        graph.apply_edges(fn.u_add_v('el', 'er', 'e'))
-        e_=graph.edata.pop('e')
-        ee=graph.edata.pop('ee') if self._edge_feats else 0
-        e=e_+ee
-        
-        e = self.leaky_relu(e)
-        # compute softmax
-        a=self.attn_drop(edge_softmax(graph, e))
-        if res_attn is not None:
-            a=a * (1-self.alpha) + res_attn * self.alpha 
-        graph.edata['a'] = a
-        # then message passing
-        graph.update_all(fn.u_mul_e('ft', 'a', 'm'),
-                            fn.sum('m', 'ft'))
-                            
-        rst = graph.dstdata['ft'] 
-        # residual
-        if self.res_fc is not None:
-            
-            if self._in_dst_feats != self._out_feats:
-                resval =torch.bmm(h_src,self.res_fc)
-                resval =resval.permute(1,0,2).view(                 #num_nodes*num_heads*(num_ntype*hidden_dim)
-                    -1,self.num_ntype ,self._num_heads, self._out_feats).permute(0,2,1,3).flatten(2)
+            if self.inputhead:
+                h_src=h_src.view(-1,1,self.num_ntype,self._in_src_feats) # num_nodes*1*(num_ntype*input_dim)
             else:
-                resval = self.res_fc(h_src).view(h_dst.shape[0], -1, self._out_feats*self.num_ntype)  #Identity
-            rst = rst + resval
-        # bias
-        if self.bias:
-            rst = rst + self.bias_param
-        # activation
-        if self.activation:
-            rst = self.activation(rst)
-        self.attentions=graph.edata.pop('a').detach()
-        torch.cuda.empty_cache()
-        return rst, self.attentions
+                h_src=h_src.view(-1,self._num_heads,self.num_ntype,int(self._in_src_feats/self._num_heads))
+            h_dst=h_src=h_src.permute(2,0,1,3).flatten(2)  #num_ntype*num_nodes*(in_feat_dim)
+            if "getEmb" in get_out:
+                self.emb=h_dst.cpu().detach()
+            #self.fc with num_ntype*(in_feat_dim)*(out_feats * num_heads)
+            feat_dst = torch.bmm(h_src,self.fc)  #num_ntype*num_nodes*(out_feats * num_heads)
+            feat_src = feat_dst =feat_dst.permute(1,0,2).view(                 #num_nodes*num_heads*(num_ntype*hidden_dim)
+                    -1,self.num_ntype ,self._num_heads, self._out_feats).permute(0,2,1,3).flatten(2)
+            if graph.is_block:
+                feat_dst = feat_src[:graph.number_of_dst_nodes()]
+            e_feat = self.edge_emb(e_feat) if self._edge_feats else None
+            e_feat = self.fc_e(e_feat).view(-1, self._num_heads, self._edge_feats)  if self._edge_feats else None
+            ee = (e_feat * self.attn_e).sum(dim=-1).unsqueeze(-1) if self._edge_feats else 0  #(-1, self._num_heads, 1) 
+            el = (feat_src * self.attn_l).sum(dim=-1).unsqueeze(-1)
+            er = (feat_dst * self.attn_r).sum(dim=-1).unsqueeze(-1)
+            graph.srcdata.update({'ft': feat_src, 'el': el})
+            graph.dstdata.update({'er': er})
+            graph.edata.update({'ee': ee}) if self._edge_feats else None
+            graph.apply_edges(fn.u_add_v('el', 'er', 'e'))
+            e_=graph.edata.pop('e')
+            ee=graph.edata.pop('ee') if self._edge_feats else 0
+            e=e_+ee
+            
+            e = self.leaky_relu(e)
+            # compute softmax
+            a=self.attn_drop(edge_softmax(graph, e))
+            if res_attn is not None:
+                a=a * (1-self.alpha) + res_attn * self.alpha 
+            graph.edata['a'] = a
+            # then message passing
+            graph.update_all(fn.u_mul_e('ft', 'a', 'm'),
+                                fn.sum('m', 'ft'))
+                                
+            rst = graph.dstdata['ft'] 
+            # residual
+            if self.res_fc is not None:
+                
+                if self._in_dst_feats != self._out_feats:
+                    resval =torch.bmm(h_src,self.res_fc)
+                    resval =resval.permute(1,0,2).view(                 #num_nodes*num_heads*(num_ntype*hidden_dim)
+                        -1,self.num_ntype ,self._num_heads, self._out_feats).permute(0,2,1,3).flatten(2)
+                else:
+                    resval = self.res_fc(h_src).view(h_dst.shape[0], -1, self._out_feats*self.num_ntype)  #Identity
+                rst = rst + resval
+            # bias
+            if self.bias:
+                rst = rst + self.bias_param
+            # activation
+            if self.activation:
+                rst = self.activation(rst)
+            self.attentions=graph.edata.pop('a').detach()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            return rst, self.attentions
         
         
 # pylint: disable=W0235

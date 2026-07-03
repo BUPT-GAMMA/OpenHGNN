@@ -1585,7 +1585,7 @@ class Config(object):
             self.batch_size= conf.getint("HMPNN", "batch_size")
         elif self.model_name == "SlotGAT":
             self.edge_dim = conf.getint("SlotGAT", "edge_dim")
-            in_dim_str = conf.get("SlotGAT", "in_dim")  
+            in_dim_str = conf.get("SlotGAT", "in_dim")
             self.in_dim = [int(x) for x in in_dim_str.split(',')]
             self.num_etypes = conf.getint("SlotGAT", "num_etypes")
             self.hid_dim = conf.getint("SlotGAT", "hid_dim")
@@ -1601,20 +1601,30 @@ class Config(object):
             self.lr = conf.getfloat("SlotGAT", "lr")
             self.weight_decay = conf.getfloat("SlotGAT", "weight_decay")
             self.feats_type = conf.getint("SlotGAT", "feats_type")
-            self.epoch = conf.getint("SlotGAT", "epoch")
             self.SAattDim = conf.getint("SlotGAT", "SAattDim")
             self.multi_label = conf.getboolean("SlotGAT", "multi_label")
             self.max_epoch = conf.getint("SlotGAT", "max_epoch")
+            self.epoch = self.max_epoch
             self.patience = conf.getint("SlotGAT", "patience")
             self.test_flag = conf.getboolean("SlotGAT", "test_flag")
-            
-            
-            
-            
-
-
-
-
+            self.mini_batch_flag = conf.getboolean("SlotGAT", "mini_batch_flag")
+            if conf.has_option("SlotGAT", "slotgat_url"):
+                self.slotgat_url = conf.get("SlotGAT", "slotgat_url")
+            if conf.has_option("SlotGAT", "slotgat_raw_dir"):
+                self.slotgat_raw_dir = conf.get("SlotGAT", "slotgat_raw_dir")
+            if conf.has_option("SlotGAT", "slotgat_data_root"):
+                self.slotgat_data_root = conf.get("SlotGAT", "slotgat_data_root")
+            if conf.has_option("SlotGAT", "slotgat_data_path"):
+                self.slotgat_data_path = conf.get("SlotGAT", "slotgat_data_path")
+            self.slotgat_lp_data_root = conf.get("SlotGAT", "slotgat_lp_data_root", fallback="./openhgnn/dataset/SlotGAT/LP")
+            self.decoder = conf.get("SlotGAT", "decoder", fallback="distmult")
+            self.score_fn = self.decoder
+            self.slot_aggregator = conf.get("SlotGAT", "slot_aggregator", fallback="SA")
+            self.inProcessEmb = conf.get("SlotGAT", "inProcessEmb", fallback="True")
+            self.l2BySlot = conf.get("SlotGAT", "l2BySlot", fallback="True")
+            self.l2use = conf.get("SlotGAT", "l2use", fallback="True")
+            self.slotgat_sigmoid = conf.get("SlotGAT", "slotgat_sigmoid", fallback="after")
+            self.batch_size = conf.getint("SlotGAT", "batch_size", fallback=8192)
 
         if hasattr(self, "device"):
             self.device = th.device(self.device)
