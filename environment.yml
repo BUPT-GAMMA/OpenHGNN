@@ -1,0 +1,11 @@
+name: openhgnn
+channels:
+  - pytorch
+  - dglteam
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pytorch=2.4.0
+  - pip:
+      - -r requirements.txt

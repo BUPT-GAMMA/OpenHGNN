@@ -12,14 +12,33 @@ This is an open-source toolkit for Heterogeneous Graph Neural Network based
 on [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) and [PyTorch](https://pytorch.org/). We integrate SOTA models
 of heterogeneous graph.
 
+**Latest version: OpenHGNN v0.9.0.** v0.9 adds 10 model contributions, the `node_regression` task, model reproduction documentation, and clearer DGL-based model integration guidance.
+
 ## News
+
+<details>
+<summary>
+2026-06-26 release v0.9
+</summary>
+<br/>
+
+We release OpenHGNN v0.9.
+
+- Added 10 model contributions, corresponding to 11 registered model names: HGDL, HGEN, HGSketch, HGOT, RMR, HERO/HERO_homo, SEHTGNN, HTGformer, HCMGNN, and RelGT.
+- The current version registers 83 model names and 17 task/flow entries.
+- Added the `node_regression` task for continuous node-label prediction.
+- Updated documentation entry points, quick start, model overview, task overview, and model PR checklist.
+- Strengthened model contribution standards around DGL implementation, trainerflow, dataset, README, and smoke-test requirements.
+
+</details>
+
 <details>
 <summary>
 2024-07-23 release v0.7
 </summary>
 <br/>
 
-We release the latest version v0.7.0
+We released OpenHGNN v0.7.0.
 - New models and datasets.
 - Graph Prompt pipeline
 - Data process frame: dgl.graphBolt
@@ -36,7 +55,7 @@ We release the latest version v0.7.0
 </summary>
 <br/>
 
-We release the latest version v0.5.0
+We released OpenHGNN v0.5.0.
 - New models and datasets.
 - 4 New tasks: pretrain, recommendation, graph attacks and defenses, abnorm_event detection.
 - TensorBoard visualization.
@@ -72,7 +91,7 @@ The algorithm library supports the project of "Intelligent Analysis Technology a
 </summary>
 <br/>
 
-We release the latest version v0.4.
+We released OpenHGNN v0.4.
 
 - New models
 - Provide pipelines for applications
@@ -95,7 +114,7 @@ Our paper [<i> OpenHGNN: An Open Source Toolkit for Heterogeneous Graph Neural N
 </summary>
 <br/>
 
-We release the latest version v0.3.
+We released OpenHGNN v0.3.
 
 - New models
 - API Usage
@@ -110,7 +129,7 @@ We release the latest version v0.3.
 </summary>
 <br/>
 
-We release the latest version v0.2.
+We released OpenHGNN v0.2.
 
 - New Models
 - [Space4HGNN [SIGIR2022]](../space4hgnn)
@@ -139,38 +158,62 @@ We release the latest version v0.2.
   Besides, we also integrate [optuna](https://optuna.org/) to get hyperparameter optimization.
 - Extensibility: User can define customized task/model/dataset to apply new models to new scenarios.
 - Efficiency: The backend dgl provides efficient APIs.
+- Discoverability: CLI commands can inspect the environment, registered models, registered tasks, and datasets.
+
+Current version statistics:
+
+- Registered model names: 83.
+- Registered task/flow entries: 17.
+- v0.9 model contributions: 10. `HERO` and `HERO_homo` are two registered names for one model contribution.
+- v0.9 task addition: `node_regression`.
+
+Common documentation entry points:
+
+- [v0.9 release notes](./docs/source/release/v0.9.rst)
+- [Quick start](./docs/source/get_started/quick_start.rst)
+- [Model overview](./docs/source/get_started/model_overview.rst)
+- [Model reproduction guide](./docs/source/get_started/reproduce_model.rst)
+- [Task overview and node_regression](./docs/source/get_started/task_overview.rst)
+- [Model PR checklist](./docs/source/advanced_materials/model_pr_checklist.rst)
 
 ## Get Started
 
 #### Requirements and Installation
 
-- Python  >= 3.6
+- Python 3.10-3.12
 
-- [PyTorch](https://pytorch.org/get-started/)  >= 2.3.0
+- [PyTorch](https://pytorch.org/get-started/) 2.3.x-2.4.x
 
-- [DGL](https://github.com/dmlc/dgl) >= 2.2.1
+- [DGL](https://github.com/dmlc/dgl) 2.2.x-2.4.x
 
 - CPU or NVIDIA GPU, Linux, Python3
 
 **1. Python environment (Optional):** We recommend using Conda package manager
 
+Officially recommended environments:
+
+- Primary: `Python 3.11 + PyTorch 2.4.0 + DGL 2.4.0+cu121`
+- Compatibility: `Python 3.10 + PyTorch 2.3.1 + DGL 2.2.1`
+
+The repository file `environment.yml` is pinned to the primary setup.
+
 ```bash
-conda create -n openhgnn python=3.6
-source activate openhgnn
+conda create -n openhgnn python=3.11
+conda activate openhgnn
 ```
 
 **2. Install Pytorch:** Follow their [tutorial](https://pytorch.org/get-started) to run the proper command according to
 your OS and CUDA version. For example:
 
 ```bash
-pip install torch torchvision torchaudio
+pip install torch==2.4.0 torchvision torchaudio
 ```
 
 **3. Install DGL:** Follow their [tutorial](https://www.dgl.ai/pages/start.html) to run the proper command according to
 your OS and CUDA version. For example:
 
 ```bash
-pip install dgl -f https://data.dgl.ai/wheels/repo.html
+pip install dgl==2.4.0+cu121 -f https://data.dgl.ai/wheels/torch-2.4/cu121/repo.html
 ```
 
 **4. Install openhgnn:** 
@@ -186,7 +229,18 @@ git clone https://github.com/BUPT-GAMMA/OpenHGNN
 # If you encounter a network error, try git clone from openi as following.
 # git clone https://git.openi.org.cn/GAMMALab/OpenHGNN.git
 cd OpenHGNN
-pip install .
+# To create the full pinned source environment directly, you can also use:
+# conda env create -f environment.yml && conda activate openhgnn
+pip install -r requirements.txt
+pip install -e .
+```
+
+You can also use the packaged CLI to inspect the supported registry and current environment:
+
+```bash
+openhgnn list models
+openhgnn list tasks
+openhgnn env --format json
 ```
 
 
@@ -293,42 +347,68 @@ python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_con
 
 ### Supported Models with specific task
 
-The link will give some basic usage.
+The current version registers 83 model names. The table below tracks the main model-task coverage maintained in README. Use `openhgnn list models` for the complete registered model list.
 
-| Model                                                     | Node classification | Link prediction    | Recommendation     |
-|-----------------------------------------------------------|---------------------|--------------------|--------------------|
-| [TransE](../openhgnn/output/TransE)[NIPS 2013]            |                     | :heavy_check_mark: |                    |
-| [TransH](../openhgnn/output/TransH)[AAAI 2014]            |                     | :heavy_check_mark: |                    |
-| [TransR](../openhgnn/output/TransR)[AAAI 2015]            |                     | :heavy_check_mark: |                    |
-| [TransD](../openhgnn/output/TransD)[ACL 2015]             |                     | :heavy_check_mark: |                    |
-| [Metapath2vec](../openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark:  |                    |                    |
-| [RGCN](../openhgnn/output/RGCN)[ESWC 2018]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [HERec](../openhgnn/output/HERec)[TKDE 2018]              | :heavy_check_mark:  |                    |                    |
-| [HAN](../openhgnn/output/HAN)[WWW 2019]                   | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [KGCN](../openhgnn/output/KGCN)[WWW 2019]                 |                     |                    | :heavy_check_mark: |
-| [HetGNN](../openhgnn/output/HetGNN)[KDD 2019]             | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [HeGAN](../openhgnn/output/HeGAN)[KDD 2019]               | :heavy_check_mark:  |                    |                    |
-| HGAT[EMNLP 2019]                                          |                     |                    |                    |
-| [GTN](../openhgnn/output/GTN)[NeurIPS 2019] & fastGTN     | :heavy_check_mark:  |                    |                    |
-| [RSHN](../openhgnn/output/RSHN)[ICDM 2019]                | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [GATNE-T](../openhgnn/output/GATNE-T)[KDD 2019]           |                     | :heavy_check_mark: |                    |
-| [DMGI](../openhgnn/output/DMGI)[AAAI 2020]                | :heavy_check_mark:  |                    |                    |
-| [MAGNN](../openhgnn/output/MAGNN)[WWW 2020]               | :heavy_check_mark:  |                    |                    |
-| [HGT](../openhgnn/output/HGT)[WWW 2020]                   | :heavy_check_mark:  |                    |                    |
-| [CompGCN](../openhgnn/output/CompGCN)[ICLR 2020]          | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [NSHE](../openhgnn/output/NSHE)[IJCAI 2020]               | :heavy_check_mark:  |                    |                    |
-| [NARS](../openhgnn/output/NARS)[arxiv]                    | :heavy_check_mark:  |                    |                    |
-| [MHNF](../openhgnn/output/MHNF)[arxiv]                    | :heavy_check_mark:  |                    |                    |
-| [HGSL](../openhgnn/output/HGSL)[AAAI 2021]                | :heavy_check_mark:  |                    |                    |
-| [HGNN-AC](../openhgnn/output/HGNN_AC)[WWW 2021]           | :heavy_check_mark:  |                    |                    |
-| [HeCo](../openhgnn/output/HeCo)[KDD 2021]                 | :heavy_check_mark:  |                    |                    |
-| [SimpleHGN](../openhgnn/output/SimpleHGN)[KDD 2021]       | :heavy_check_mark:  |                    |                    |
-| [HPN](../openhgnn/output/HPN)[TKDE 2021]                  | :heavy_check_mark:  | :heavy_check_mark: |                    |
-| [RHGNN](../openhgnn/output/RHGNN)[arxiv]                  | :heavy_check_mark:  |                    |                    |
-| [HDE](../openhgnn/output/HDE)[ICDM 2021]                  |                     | :heavy_check_mark: |                    |
-| [HetSANN](../openhgnn/output/HGT)[AAAI 2020]               | :heavy_check_mark:  |                    |                    |
-| [ieHGCN](../openhgnn/output/HGT)[TKDE 2021]                | :heavy_check_mark:  |                    |                    |
-| [KTN](../openhgnn/output/KTN)[NIPS 2022]                  | :heavy_check_mark: |                    |                    |
+| Model | Node classification | Link prediction | Recommendation | Node regression | Notes |
+| --- | --- | --- | --- | --- | --- |
+| [TransE](../openhgnn/output/TransE)[NIPS 2013] |  | :heavy_check_mark: |  |  | Knowledge graph embedding |
+| [TransH](../openhgnn/output/TransH)[AAAI 2014] |  | :heavy_check_mark: |  |  | Knowledge graph embedding |
+| [TransR](../openhgnn/output/TransR)[AAAI 2015] |  | :heavy_check_mark: |  |  | Knowledge graph embedding |
+| [TransD](../openhgnn/output/TransD)[ACL 2015] |  | :heavy_check_mark: |  |  | Knowledge graph embedding |
+| [Metapath2vec](../openhgnn/output/metapath2vec)[KDD 2017] | :heavy_check_mark: |  |  |  | Representation learning |
+| [RGCN](../openhgnn/output/RGCN)[ESWC 2018] | :heavy_check_mark: | :heavy_check_mark: |  |  |  |
+| [HERec](../openhgnn/output/HERec)[TKDE 2018] | :heavy_check_mark: |  |  |  | Representation learning |
+| [HAN](../openhgnn/output/HAN)[WWW 2019] | :heavy_check_mark: | :heavy_check_mark: |  |  |  |
+| [KGCN](../openhgnn/output/KGCN)[WWW 2019] |  |  | :heavy_check_mark: |  |  |
+| [HetGNN](../openhgnn/output/HetGNN)[KDD 2019] | :heavy_check_mark: | :heavy_check_mark: |  |  |  |
+| [HeGAN](../openhgnn/output/HeGAN)[KDD 2019] | :heavy_check_mark: |  |  |  |  |
+| HGAT[EMNLP 2019] |  |  |  |  | Short text classification |
+| [GTN](../openhgnn/output/GTN)[NeurIPS 2019] & fastGTN | :heavy_check_mark: |  |  |  |  |
+| [RSHN](../openhgnn/output/RSHN)[ICDM 2019] | :heavy_check_mark: | :heavy_check_mark: |  |  |  |
+| [GATNE-T](../openhgnn/output/GATNE-T)[KDD 2019] |  | :heavy_check_mark: |  |  |  |
+| [DMGI](../openhgnn/output/DMGI)[AAAI 2020] | :heavy_check_mark: |  |  |  |  |
+| [MAGNN](../openhgnn/output/MAGNN)[WWW 2020] | :heavy_check_mark: |  |  |  |  |
+| [HGT](../openhgnn/output/HGT)[WWW 2020] |  |  |  |  | Heterogeneous transformer |
+| [CompGCN](../openhgnn/output/CompGCN)[ICLR 2020] | :heavy_check_mark: | :heavy_check_mark: |  |  |  |
+| [NSHE](../openhgnn/output/NSHE)[IJCAI 2020] | :heavy_check_mark: |  |  |  |  |
+| [NARS](../openhgnn/output/NARS)[arxiv] | :heavy_check_mark: |  |  |  |  |
+| [MHNF](../openhgnn/output/MHNF)[arxiv] | :heavy_check_mark: |  |  |  |  |
+| [HGSL](../openhgnn/output/HGSL)[AAAI 2021] | :heavy_check_mark: |  |  |  |  |
+| [HGNN-AC](../openhgnn/output/HGNN_AC)[WWW 2021] | :heavy_check_mark: |  |  |  |  |
+| [HeCo](../openhgnn/output/HeCo)[KDD 2021] | :heavy_check_mark: |  |  |  |  |
+| [SimpleHGN](../openhgnn/output/SimpleHGN)[KDD 2021] | :heavy_check_mark: |  |  |  |  |
+| [HPN](../openhgnn/output/HPN)[TKDE 2021] | :heavy_check_mark: | :heavy_check_mark: |  |  |  |
+| [RHGNN](../openhgnn/output/RHGNN)[arxiv] | :heavy_check_mark: |  |  |  |  |
+| [HDE](../openhgnn/output/HDE)[ICDM 2021] |  | :heavy_check_mark: |  |  |  |
+| [HetSANN](../openhgnn/output/HGT)[AAAI 2020] | :heavy_check_mark: |  |  |  |  |
+| [ieHGCN](../openhgnn/output/HGT)[TKDE 2021] | :heavy_check_mark: |  |  |  |  |
+| [KTN](../openhgnn/output/KTN)[NeurIPS 2022] | :heavy_check_mark: |  |  |  |  |
+| [HGDL](./docs/source/models/hgdl.rst)[NeurIPS 2024] | :heavy_check_mark: |  |  |  | v0.9 |
+| [HGEN](./docs/source/models/hgen.rst)[IJCAI 2025] | :heavy_check_mark: |  |  |  | v0.9 |
+| [HGSketch](./docs/source/models/hgsketch.rst)[SIGIR 2025] |  |  |  |  | v0.9, graph-level representation / graph classification pipeline |
+| [HGOT](./docs/source/models/hgot.rst)[ICML 2025] | :heavy_check_mark: |  |  |  | v0.9 |
+| [RMR](./docs/source/models/rmr.rst)[KDD 2024] | :heavy_check_mark: |  |  |  | v0.9 |
+| [HERO](./docs/source/models/hero.rst)[ICLR 2024] | :heavy_check_mark: |  |  |  | v0.9, heterogeneous version |
+| [HERO_homo](./docs/source/models/hero.rst)[ICLR 2024] | :heavy_check_mark: |  |  |  | v0.9, homogeneous version |
+| [SEHTGNN](./docs/source/models/sehtgnn.rst)[NeurIPS 2025] | :heavy_check_mark: | :heavy_check_mark: |  | :heavy_check_mark: | v0.9 |
+| [HTGformer](./docs/source/models/htgformer.rst)[SIGIR 2025] | :heavy_check_mark: | :heavy_check_mark: |  | :heavy_check_mark: | v0.9 |
+| [HCMGNN](./docs/source/models/hcmgnn.rst)[IJCAI 2024] |  |  | :heavy_check_mark: |  | v0.9 |
+| [RelGT](./docs/source/models/relgt.rst)[arXiv 2025] |  | :heavy_check_mark: |  |  | v0.9, RelBench task |
+
+### v0.9 model statistics
+
+| Item | Count | Note |
+| --- | ---: | --- |
+| New model contributions | 10 | Counted by paper/model contribution |
+| New registered model names | 11 | `HERO` and `HERO_homo` are registered separately |
+| Current registered model names | 83 | Based on `openhgnn.models.SUPPORTED_MODELS` |
+| Current registered task/flow entries | 17 | Based on `openhgnn.tasks.SUPPORTED_TASKS` |
+
+v0.9 model contributions: HGDL, HGEN, HGSketch, HGOT, RMR, HERO/HERO_homo, SEHTGNN, HTGformer, HCMGNN, and RelGT.
+
+For v0.9 model reproduction entries, tasks, datasets, and remaining
+documentation notes, see the [v0.9 release notes](./docs/source/release/v0.9.rst)
+and the [model reproduction guide](./docs/source/get_started/reproduce_model.rst).
 
 ### Candidate models
 
