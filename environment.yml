@@ -1,4 +1,4 @@
-name: openhgnn-v0.8
+name: openhgnn
 channels:
   - pytorch
   - dglteam
@@ -6,7 +6,7 @@ channels:
 dependencies:
   - python=3.11
   - pip
-  - pytorch=2.4.1
+  - pytorch=2.4.0
   - pip:
       - -c constraints.txt
       - -r requirements.txt
