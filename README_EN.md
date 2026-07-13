@@ -25,7 +25,7 @@ of heterogeneous graph.
 We release OpenHGNN v0.9.
 
 - Added 10 model contributions, corresponding to 11 registered model names: HGDL, HGEN, HGSketch, HGOT, RMR, HERO/HERO_homo, SEHTGNN, HTGformer, HCMGNN, and RelGT.
-- The current version registers 83 model names and 17 task/flow entries.
+- The current version registers 86 model names and 17 task/flow entries.
 - Added the `node_regression` task for continuous node-label prediction.
 - Updated documentation entry points, quick start, model overview, task overview, and model PR checklist.
 - Strengthened model contribution standards around DGL implementation, trainerflow, dataset, README, and smoke-test requirements.
@@ -162,7 +162,7 @@ We released OpenHGNN v0.2.
 
 Current version statistics:
 
-- Registered model names: 83.
+- Registered model names: 86.
 - Registered task/flow entries: 17.
 - v0.9 model contributions: 10. `HERO` and `HERO_homo` are two registered names for one model contribution.
 - v0.9 task addition: `node_regression`.
@@ -347,7 +347,7 @@ python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_con
 
 ### Supported Models with specific task
 
-The current version registers 83 model names. The table below tracks the main model-task coverage maintained in README. Use `openhgnn list models` for the complete registered model list.
+The current version registers 86 model names. The table below tracks the main model-task coverage maintained in README. Use `openhgnn list models` for the complete registered model list.
 
 | Model | Node classification | Link prediction | Recommendation | Node regression | Notes |
 | --- | --- | --- | --- | --- | --- |
@@ -383,6 +383,8 @@ The current version registers 83 model names. The table below tracks the main mo
 | [HetSANN](../openhgnn/output/HGT)[AAAI 2020] | :heavy_check_mark: |  |  |  |  |
 | [ieHGCN](../openhgnn/output/HGT)[TKDE 2021] | :heavy_check_mark: |  |  |  |  |
 | [KTN](../openhgnn/output/KTN)[NeurIPS 2022] | :heavy_check_mark: |  |  |  |  |
+| [HCAN](./docs/source/models/hcan.rst)[ICDE 2025] | :heavy_check_mark: | :heavy_check_mark: |  |  | V-HCAN |
+| [D-HCAN](./docs/source/models/hcan.rst)[ICDE 2025] | :heavy_check_mark: |  |  |  | Decoupled variant |
 | [HGDL](./docs/source/models/hgdl.rst)[NeurIPS 2024] | :heavy_check_mark: |  |  |  | v0.9 |
 | [HGEN](./docs/source/models/hgen.rst)[IJCAI 2025] | :heavy_check_mark: |  |  |  | v0.9 |
 | [HGSketch](./docs/source/models/hgsketch.rst)[SIGIR 2025] |  |  |  |  | v0.9, graph-level representation / graph classification pipeline |
@@ -401,7 +403,7 @@ The current version registers 83 model names. The table below tracks the main mo
 | --- | ---: | --- |
 | New model contributions | 10 | Counted by paper/model contribution |
 | New registered model names | 11 | `HERO` and `HERO_homo` are registered separately |
-| Current registered model names | 83 | Based on `openhgnn.models.SUPPORTED_MODELS` |
+| Current registered model names | 86 | Based on `openhgnn.models.SUPPORTED_MODELS` |
 | Current registered task/flow entries | 17 | Based on `openhgnn.tasks.SUPPORTED_TASKS` |
 
 v0.9 model contributions: HGDL, HGEN, HGSketch, HGOT, RMR, HERO/HERO_homo, SEHTGNN, HTGformer, HCMGNN, and RelGT.

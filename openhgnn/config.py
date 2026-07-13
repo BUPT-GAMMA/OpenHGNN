@@ -11,7 +11,7 @@ class Config(object):
     def __init__(self, file_path, model, dataset, task, gpu):
         conf = configparser.ConfigParser( )
         try:
-            conf.read(file_path)
+            conf.read(file_path, encoding="utf-8")
         except:
             print("failed!")
         # training dataset path
@@ -61,6 +61,55 @@ class Config(object):
             self.gamma = conf.getfloat('HGDL', 'gamma')
             self.mini_batch_flag = conf.getboolean('HGDL', 'mini_batch_flag')
             self.evaluate_interval = conf.getint('HGDL', 'evaluate_interval')
+
+        elif self.model_name == 'HCAN':
+            self.num_heads = conf.getint("HCAN", "num_heads")
+            self.hidden_dim = conf.getint("HCAN", "hidden_dim")
+            self.out_dim = conf.getint("HCAN", "out_dim")
+            self.num_layers = conf.getint("HCAN", "num_layers")
+            self.max_hop = conf.getint("HCAN", "max_hop")
+            self.dropout = conf.getfloat("HCAN", "dropout")
+            self.attn_activation = conf.get(
+                "HCAN", "attn_activation", fallback="identity"
+            )
+            self.lr = conf.getfloat(
+                "HCAN",
+                "learning_rate",
+                fallback=conf.getfloat("HCAN", "lr", fallback=0.001),
+            )
+            self.weight_decay = conf.getfloat("HCAN", "weight_decay")
+            self.max_epoch = conf.getint("HCAN", "max_epoch")
+            self.patience = conf.getint("HCAN", "patience")
+            self.early_stop_metric = conf.get(
+                "HCAN", "early_stop_metric", fallback="loss"
+            )
+            self.mini_batch_flag = conf.getboolean(
+                "HCAN", "mini_batch_flag", fallback=False
+            )
+
+        elif self.model_name in ['DHCAN', 'D-HCAN']:
+            self.hidden_dim = conf.getint("DHCAN", "hidden_dim")
+            self.out_dim = conf.getint("DHCAN", "out_dim")
+            self.num_layers = conf.getint("DHCAN", "num_layers")
+            self.max_hop = conf.getint("DHCAN", "max_hop")
+            self.dropout = conf.getfloat("DHCAN", "dropout")
+            self.lr = conf.getfloat(
+                "DHCAN",
+                "learning_rate",
+                fallback=conf.getfloat("DHCAN", "lr", fallback=0.001),
+            )
+            self.weight_decay = conf.getfloat("DHCAN", "weight_decay")
+            self.max_epoch = conf.getint("DHCAN", "max_epoch")
+            self.patience = conf.getint("DHCAN", "patience")
+            self.cache_device = conf.get("DHCAN", "cache_device", fallback="cpu")
+            self.cache_target_on_gpu = conf.getboolean(
+                "DHCAN", "cache_target_on_gpu", fallback=True
+            )
+            self.batch_size = conf.getint("DHCAN", "batch_size", fallback=65536)
+            self.mini_batch_flag = conf.getboolean(
+                "DHCAN", "mini_batch_flag", fallback=False
+            )
+
         elif self.model_name == 'MHGCN':
             self.lr = conf.getfloat("MHGCN", "lr")
             self.weight_decay = conf.getfloat("MHGCN", "weight_decay")

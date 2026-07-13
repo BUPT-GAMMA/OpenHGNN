@@ -196,6 +196,35 @@ class NodeClassification(BaseFlow):
 
         super(NodeClassification, self).preprocess()
 
+    def _early_stop_step(self, stopper, val_loss, valid_metric):
+        early_stop_metric = getattr(self.args, 'early_stop_metric', 'loss')
+        if early_stop_metric is None:
+            early_stop_metric = 'loss'
+        early_stop_metric = str(early_stop_metric)
+        if early_stop_metric.lower() == 'loss':
+            return stopper.loss_step(val_loss, self.model)
+
+        if early_stop_metric.lower() == 'f1':
+            metric_candidates = ['Micro_f1', 'Macro_f1']
+        else:
+            metric_candidates = [early_stop_metric]
+
+        score = None
+        for metric_name in metric_candidates:
+            for key, value in valid_metric.items():
+                if key.lower() == metric_name.lower():
+                    score = value
+                    break
+            if score is not None:
+                break
+        if score is None:
+            raise ValueError(
+                'early_stop_metric={} is not found in validation metrics {}.'.format(
+                    early_stop_metric, list(valid_metric.keys())
+                )
+            )
+        return stopper.step_score(score, self.model)
+
     def train(self):
         self.preprocess()
         stopper = EarlyStopping(self.args.patience, self._checkpoint)
@@ -240,7 +269,9 @@ class NodeClassification(BaseFlow):
                 self.writer.add_scalars('loss', {'train': train_loss, 'valid': val_loss}, global_step=epoch)
                 for mode in modes:
                     self.writer.add_scalars(f'metric_{mode}', metric_dict[mode], global_step=epoch)
-                early_stop = stopper.loss_step(val_loss, self.model)
+                early_stop = self._early_stop_step(
+                    stopper, val_loss, metric_dict['valid']
+                )
                 if early_stop:
                     self.logger.train_info('Early Stop!\tEpoch:' + str(epoch))
                     break

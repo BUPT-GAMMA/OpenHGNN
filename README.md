@@ -23,7 +23,7 @@ OpenHGNN是一个基于 [DGL [Deep Graph Library]](https://github.com/dmlc/dgl) 
 我们更新了0.9版本。
 
 - 新增10个模型贡献，对应11个注册模型名：HGDL、HGEN、HGSketch、HGOT、RMR、HERO/HERO_homo、SEHTGNN、HTGformer、HCMGNN、RelGT。
-- 当前版本共注册83个模型名和17个任务/流程入口。
+- 当前版本共注册86个模型名和17个任务/流程入口。
 - 新增 `node_regression` 任务，支持连续值节点标签预测。
 - 更新文档入口、快速开始、模型导览、任务导览和模型PR审查规范。
 - 加强模型贡献的标准化检查，包括DGL实现、trainerflow、dataset、README和smoke test要求。
@@ -163,7 +163,7 @@ OpenHGNN荣获启智社区优秀孵化项⽬奖！详细链接：https://mp.weix
 
 当前版本统计：
 
-- 注册模型名：83个。
+- 注册模型名：86个。
 - 注册任务/流程入口：17个。
 - v0.9新增模型贡献：10个，其中 `HERO` 和 `HERO_homo` 是同一模型贡献下的两个注册名。
 - v0.9新增任务：`node_regression`。
@@ -346,7 +346,7 @@ python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_con
 
 ### Supported Models with specific task / 特定任务下支持的模型
 
-当前版本共注册83个模型名。下表列出README中维护的主要模型与任务覆盖情况；完整注册列表可以通过 `openhgnn list models` 查看。表格中的链接给出了模型的基本使用方法。
+当前版本共注册86个模型名。下表列出README中维护的主要模型与任务覆盖情况；完整注册列表可以通过 `openhgnn list models` 查看。表格中的链接给出了模型的基本使用方法。
 
 | 模型 | 节点分类 | 链路预测 | 推荐 | 节点回归 | 其他/说明 |
 | --- | --- | --- | --- | --- | --- |
@@ -382,6 +382,8 @@ python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_con
 | [HetSANN](./openhgnn/output/HGT)[AAAI 2020] | :heavy_check_mark: |  |  |  |  |
 | [ieHGCN](./openhgnn/output/HGT)[TKDE 2021] | :heavy_check_mark: |  |  |  |  |
 | [KTN](./openhgnn/output/KTN)[NeurIPS 2022] | :heavy_check_mark: |  |  |  |  |
+| [HCAN](./docs/source/models/hcan.rst)[ICDE 2025] | :heavy_check_mark: | :heavy_check_mark: |  |  | V-HCAN |
+| [D-HCAN](./docs/source/models/hcan.rst)[ICDE 2025] | :heavy_check_mark: |  |  |  | 解耦版本 |
 | [HGDL](./docs/source/models/hgdl.rst)[NeurIPS 2024] | :heavy_check_mark: |  |  |  | v0.9新增 |
 | [HGEN](./docs/source/models/hgen.rst)[IJCAI 2025] | :heavy_check_mark: |  |  |  | v0.9新增 |
 | [HGSketch](./docs/source/models/hgsketch.rst)[SIGIR 2025] |  |  |  |  | v0.9新增，图级表示/graph classification pipeline |
@@ -400,7 +402,7 @@ python main.py -m MAGNN -d imdb4MAGNN -t node_classification -g 0 --use_best_con
 | --- | ---: | --- |
 | 新增模型贡献 | 10 | 按论文/模型贡献计数 |
 | 新增注册模型名 | 11 | `HERO` 和 `HERO_homo` 分别注册 |
-| 当前注册模型名 | 83 | 以 `openhgnn.models.SUPPORTED_MODELS` 为准 |
+| 当前注册模型名 | 86 | 以 `openhgnn.models.SUPPORTED_MODELS` 为准 |
 | 当前注册任务/流程入口 | 17 | 以 `openhgnn.tasks.SUPPORTED_TASKS` 为准 |
 
 v0.9新增模型贡献包括：HGDL、HGEN、HGSketch、HGOT、RMR、HERO/HERO_homo、SEHTGNN、HTGformer、HCMGNN、RelGT。

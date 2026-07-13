@@ -69,6 +69,9 @@ SUPPORTED_MODELS = {
     'HGDL':'openhgnn.models.HGDL',
     'MHGCN':'openhgnn.models.MHGCN',
     'BPHGNN' : 'openhgnn.models.BPHGNN',
+    'HCAN': 'openhgnn.models.HCAN',
+    'DHCAN': 'openhgnn.models.HCAN',
+    'D-HCAN': 'openhgnn.models.HCAN',
     "MetaHIN": "openhgnn.models.MetaHIN",
     'HGA':'openhgnn.models.HGA',
     'RHINE': 'openhgnn.models.RHINE',
@@ -220,6 +223,7 @@ from .HERO_homo import HEROHomo
 
 from .RMR import RMR
 from .HGOT import HGOT
+from .HCAN import HCAN, DHCAN
 
 
 __all__ = [
@@ -227,6 +231,8 @@ __all__ = [
     'BPHGNN',
     "HMPNN",
     'BaseModel',
+    'HCAN',
+    'DHCAN',
     'CompGCN',
     'HetGNN',
     'RGCN',

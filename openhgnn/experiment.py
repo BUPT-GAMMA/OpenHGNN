@@ -69,6 +69,8 @@ class Experiment(object):
         'lightGCN': 'lightGCN_trainer',
         'HMPNN':'KTN_trainer',
         'SeHGNN': 'SeHGNN_trainer',
+        'DHCAN': 'dhcan_trainer',
+        'D-HCAN': 'dhcan_trainer',
         'Grail': 'Grail_trainer',
         'ComPILE': 'ComPILE_trainer',
         'AdapropT':'AdapropT_trainer',
