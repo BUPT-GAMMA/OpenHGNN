@@ -64,6 +64,7 @@ SUPPORTED_FLOWS = {
     'SIAN_trainer': 'openhgnn.trainerflow.SIAN_trainer',
     'entity_classification': 'openhgnn.trainerflow.entity_classification',
     'node_classification': 'openhgnn.trainerflow.node_classification',
+    'dhcan_trainer': 'openhgnn.trainerflow.dhcan_trainer',
     'node_classification_ac': 'openhgnn.trainerflow.node_classfication_ac',
     'distmult': 'openhgnn.trainerflow.dist_mult',
     'link_prediction': 'openhgnn.trainerflow.link_prediction',

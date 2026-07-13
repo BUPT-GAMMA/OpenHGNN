@@ -1023,7 +1023,10 @@ class OGB_NodeClassification(NodeClassificationDataset):
         self.train_idx, self.valid_idx, self.test_idx = split_idx["train"][self.category], split_idx["valid"][
             self.category], split_idx["test"][self.category]
         self.g, self.label_dict = dataset[0]
-        self.SeHGNN_g = self.mag4sehgnn(dataset)
+        model_name = getattr(kwargs.get('args'), 'model_name', None)
+        self.SeHGNN_g = (
+            self.mag4sehgnn(dataset) if model_name == 'SeHGNN' else None
+        )
         self.g = self.mag4HGT(self.g)
         self.label = self.label_dict[self.category].squeeze(dim=-1)
         # 2-dim label
