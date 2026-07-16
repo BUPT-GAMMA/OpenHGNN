@@ -158,6 +158,8 @@ cython_debug/
 
 # downloaded data
 *.zip
+openhgnn/dataset/HGAdapter/
+openhgnn/output/HGAdapter/*.pt
 *.bin
 *.pt
 *.mat
@@ -182,4 +184,3 @@ openhgnn/dataset/data/*
 
 # history
 .history
-
