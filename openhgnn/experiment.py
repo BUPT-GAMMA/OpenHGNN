@@ -88,6 +88,7 @@ class Experiment(object):
         'HGPrompt':'HGPrompt_trainer',
         'HGMAE':'HGMAE_trainer',
         'HGA':'hga_trainer',
+        'HGAdapter':'hg_adapter_trainer',
         'RHINE':'rhine_trainer',
         'FedHGNN':'FED_REC_trainer',
         'HGEN': 'HGEN_trainer',

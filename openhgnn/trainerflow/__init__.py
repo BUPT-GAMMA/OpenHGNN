@@ -56,6 +56,7 @@ SUPPORTED_FLOWS = {
     'BPHGNN_trainer':'openhgnn.trainerflow.BPHGNN_trainer',    
     'HGMAE':'openhgnn.trainerflow.HGMAE_trainer',
     'hga_trainer':'openhgnn.trainerflow.HGATrainer',
+    'hg_adapter_trainer':'openhgnn.trainerflow.hg_adapter_trainer',
     'rhine_trainer':'openhgnn.trainerflow.RHINETrainer',
     'FED_REC_trainer':'openhgnn.trainerflow.FED_Recommendation',
     'HGDL_trainer':'openhgnn.trainerflow.HGDL_trainer',

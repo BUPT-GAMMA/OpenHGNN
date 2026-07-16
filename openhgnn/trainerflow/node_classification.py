@@ -8,7 +8,12 @@ from ..utils import EarlyStopping, to_hetero_idx, to_homo_feature, to_homo_idx
 import warnings
 from torch.utils.tensorboard import SummaryWriter
 import dgl.graphbolt as gb
-import tkinter as tk
+try:
+    import tkinter as tk
+except ModuleNotFoundError:  # headless Python builds do not ship Tk support
+    tk = None
+
+TK_END = tk.END if tk is not None else 'end'
 
 @register_flow("node_classification")
 class NodeClassification(BaseFlow):
@@ -204,7 +209,7 @@ class NodeClassification(BaseFlow):
 
             if self.args.output_widget != None:
                 #   这里直接用main.py中传入的参数output_widget（GUI输出框），把内容输出到GUI中
-                self.args.output_widget.insert(tk.END, f"当前是第{epoch}个epoch  \n")
+                self.args.output_widget.insert(TK_END, f"当前是第{epoch}个epoch  \n")
                 self.args.output_widget.see(tk.END)
                 self.args.output_widget.update_idletasks()
                 ####
@@ -227,7 +232,7 @@ class NodeClassification(BaseFlow):
 
                 #   这里直接用main.py中传入的参数output_widget（GUI输出框），把内容输出到GUI中
                 if self.args.output_widget != None:
-                    self.args.output_widget.insert(tk.END, f"第{epoch}个epoch中:" +
+                    self.args.output_widget.insert(TK_END, f"第{epoch}个epoch中:" +
                                                 f"Train LOSS : {train_loss:.4f}  ," +
                                                 f"Valid LOSS : {val_loss:.4f} ,"  +
                                                 f"日志测试信息:{self.logger.metric2str(metric_dict)}.  \n "

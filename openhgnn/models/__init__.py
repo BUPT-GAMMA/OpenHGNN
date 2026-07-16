@@ -71,6 +71,7 @@ SUPPORTED_MODELS = {
     'BPHGNN' : 'openhgnn.models.BPHGNN',
     "MetaHIN": "openhgnn.models.MetaHIN",
     'HGA':'openhgnn.models.HGA',
+    'HGAdapter':'openhgnn.models.HGAdapter',
     'RHINE': 'openhgnn.models.RHINE',
     'FedHGNN':'openhgnn.models.FedHGNN',
     'HCMGNN':'openhgnn.models.HCMGNN',

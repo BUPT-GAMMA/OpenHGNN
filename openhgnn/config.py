@@ -164,6 +164,21 @@ class Config(object):
             self.batch_size=conf.getint("HGA", "batch_size")
             self.num_layers = conf.getint('HGA','num_layers')
 
+        elif self.model_name == 'HGAdapter':
+            self.lr = conf.getfloat('HGAdapter', 'lr')
+            self.weight_decay = conf.getfloat('HGAdapter', 'weight_decay')
+            self.dropout = conf.getfloat('HGAdapter', 'dropout')
+            self.patience = conf.getint('HGAdapter', 'patience')
+            self.max_epoch = conf.getint('HGAdapter', 'max_epoch')
+            self.embedding_dim = conf.getint('HGAdapter', 'embedding_dim')
+            self.bottleneck_dim = conf.getint('HGAdapter', 'bottleneck_dim')
+            self.hetero_bottleneck_dim = conf.getint('HGAdapter', 'hetero_bottleneck_dim')
+            self.lambda_reconstruction = conf.getfloat('HGAdapter', 'lambda_reconstruction')
+            self.lambda_margin = conf.getfloat('HGAdapter', 'lambda_margin')
+            self.margin = conf.getfloat('HGAdapter', 'margin')
+            self.hg_adapter_root = conf.get('HGAdapter', 'hg_adapter_root')
+            self.mini_batch_flag = False
+
         elif self.model_name == "RHINE":
             self.emb_dim=conf.getint("RHINE", "emb_dim")
             self.mini_batch_flag = conf.getboolean("RHINE", "mini_batch_flag")

@@ -143,6 +143,9 @@ def build_dataset(dataset, task, *args, **kwargs):
     elif dataset in ['acm4HGA','dblp4HGA']:
         _dataset = 'hga_'+ task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
+    elif dataset in ['acm4HGAdapter', 'dblp4HGAdapter', 'yelp4HGAdapter', 'aminer4HGAdapter']:
+        __import__('openhgnn.dataset.hg_adapter_dataset')
+        return DATASET_REGISTRY['hg_adapter_' + task](dataset, logger=kwargs['logger'], args=kwargs['args'])
     elif dataset in ['dblp4RHINE']:
         _dataset = 'rhine_'+task
         return DATASET_REGISTRY[_dataset](dataset, logger=kwargs['logger'],args = kwargs['args'])
