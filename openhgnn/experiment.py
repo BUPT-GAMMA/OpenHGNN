@@ -79,6 +79,7 @@ class Experiment(object):
         'NBF':'NBF_trainer',
         'Ingram': 'Ingram_trainer',
         'HTGformer': 'htgformer_trainer',
+        'HTHGN': 'hthgn_trainer',
         'DisenKGAT': 'DisenKGAT_trainer',
 ######################          add trainer_flow  here。 【model name】：【register name】
         'RelGT': 'RelGT_trainer',

@@ -41,6 +41,35 @@ class Config(object):
             self.patience = conf.getint("General", "patience")
             self.mini_batch_flag = conf.getboolean("General", "mini_batch_flag")
 ##############      add config.py    #################
+        elif self.model_name == 'HTHGN':
+            section = 'HTHGN'
+            self.seed = conf.getint(section, 'seed')
+            self.lr = conf.getfloat(section, 'lr')
+            self.weight_decay = conf.getfloat(section, 'weight_decay')
+            self.max_epoch = conf.getint(section, 'max_epoch')
+            self.patience = conf.getint(section, 'patience')
+            self.hidden_dim = conf.getint(section, 'hidden_dim')
+            self.num_layers = conf.getint(section, 'num_layers')
+            self.num_heads = conf.getint(section, 'num_heads')
+            self.time_window = conf.getint(section, 'time_window')
+            self.prediction_length = conf.getint(section, 'prediction_length')
+            self.negative_count = conf.getint(section, 'negative_count')
+            self.edge_ratio = conf.getfloat(section, 'edge_ratio')
+            self.eval_negative_ratio = conf.getfloat(section, 'eval_negative_ratio')
+            self.k = conf.getint(section, 'k')
+            self.p = conf.getint(section, 'p')
+            self.keep_original = conf.getboolean(section, 'keep_original')
+            self.hyperedge_type = conf.get(section, 'hyperedge_type')
+            self.hypernode_type = conf.get(section, 'hypernode_type')
+            self.norm = conf.getboolean(section, 'norm')
+            self.dropout = conf.getfloat(section, 'dropout')
+            self.num_repeats = conf.getint(section, 'num_repeats')
+            self.data_dir = conf.get(section, 'data_dir')
+            self.cache_dir = conf.get(section, 'cache_dir')
+            self.mini_batch_flag = False
+            self.graphbolt = False
+            self.use_uva = False
+
         elif self.model_name == 'HGSketch':
             self.K = conf.getint("HGSketch", "K")
             self.R = conf.getint("HGSketch", "R")

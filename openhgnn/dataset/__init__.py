@@ -124,6 +124,8 @@ def build_dataset(dataset, task, *args, **kwargs):
         return dataload
     elif dataset in ['ogbn_mag4HGformer', 'aminer4HGformer', 'yelp4HGformer', 'covid4HGformer']:
         return DATASET_REGISTRY['htgformer_dataset'](dataset, logger=kwargs.get('logger'), args=kwargs.get('args'))
+    elif dataset == 'yelp4HTHGN':
+        return DATASET_REGISTRY['hthgn_dataset'](dataset, logger=kwargs.get('logger'), args=kwargs.get('args'))
 
 
 #############
@@ -279,6 +281,7 @@ from .HypergraphDataset import HGraphDataset
 from .oag_dataset import OAGDataset
 from .sehtgnn_dataset import *
 from .htgformer_dataset import HTGformerDataset
+from .hthgn_dataset import HTHGNDataset
 
 
 

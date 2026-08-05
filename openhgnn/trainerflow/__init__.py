@@ -112,6 +112,7 @@ SUPPORTED_FLOWS = {
     'HGPrompt':'openhgnn.trainerflow.HGPrompt_trainer',
     'sehtgnn_trainer': 'openhgnn.trainerflow.sehtgnn_trainer',
     'htgformer_trainer': 'openhgnn.trainerflow.htgformer_trainer',
+    'hthgn_trainer': 'openhgnn.trainerflow.hthgn_trainer',
     'hero_trainer': "openhgnn.trainerflow.HERO_trainer",
     'hero_homo_trainer': "openhgnn.trainerflow.HERO_homo_trainer",
 
@@ -174,6 +175,7 @@ from .RedGNNT_trainer import RedGNNTTrainer
 from .HGPrompt import HGPrompt_trainer
 from .sehtgnn_trainer import SEHTGNNTrainer
 from .htgformer_trainer import HTGformerTrainer
+from .hthgn_trainer import HTHGNTrainer
 
 from .HERO_trainer import *
 from .HERO_homo_trainer import *
@@ -225,6 +227,7 @@ __all__ = [
     'RHINETrainer',
     'SEHTGNNTrainer',
     'HTGformerTrainer',
+    'HTHGNTrainer',
 
     'HGENTrainer',
     'RMR_trainer',
