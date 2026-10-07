@@ -120,6 +120,7 @@ SUPPORTED_FLOWS = {
     'HCMGNN_trainer':'openhgnn.trainerflow.HCMGNN_trainer',
     'rmr_trainer':'openhgnn.trainerflow.RMR_trainer',
     'HGEN_trainer': 'openhgnn.trainerflow.HGEN_trainer',
+    'LMSPS_trainer': 'openhgnn.trainerflow.LMSPS_trainer',
 }
 
 ######      add trainer_flow here
@@ -180,6 +181,7 @@ from .HERO_homo_trainer import *
 
 from .rmr_trainer import RMR_trainer
 from .HGEN_trainer import HGENTrainer
+from .LMSPS_trainer import LMSPStrainer
 
 
 #   don't add here
@@ -231,5 +233,6 @@ __all__ = [
     'HCMGNN_trainer',
     'HEROTrainer',
     'HEROHomoTrainer',
+    'LMSPStrainer',
 ]
 classes = __all__

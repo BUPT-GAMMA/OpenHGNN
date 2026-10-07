@@ -149,6 +149,7 @@ SUPPORTED_MODELS = {
     'RMR':'openhgnn.models.RMR',
     'HGOT': 'openhgnn.models.HGOT',
     'HGEN': 'openhgnn.models.HGEN',
+    'LMSPS': 'openhgnn.models.LMSPS',
 }
 
 #####       add model here
@@ -202,6 +203,7 @@ from .DSSL import DSSL
 from .lightGCN import lightGCN
 from .HMPNN import HMPNN
 from .SeHGNN import SeHGNN
+from .LMSPS import LMSPS
 from .Grail import Grail
 from .ComPILE import ComPILE
 from .AdapropT import AdapropT
@@ -284,5 +286,6 @@ __all__ = [
     'HCMGNN',
     'HERO',
     'HEROHomo',
+    'LMSPS',
 ]
 classes = __all__
